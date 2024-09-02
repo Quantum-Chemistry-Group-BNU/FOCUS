@@ -59,7 +59,11 @@ void params_ctns::read(ifstream& istrm){
          istringstream is(line.substr(12));
          is >> schmidt_file;
       }else if(line.substr(0,9)=="task_prop"){
-         task_prop = stoi(line.substr(9)); 
+         istringstream is(line.substr(9));
+         int number;
+         while (is >> number) {
+            task_prop.push_back(number);
+         }
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
       }else if(line.substr(0,12)=="restart_bond"){
@@ -281,7 +285,9 @@ void params_ctns::print() const{
    cout << "task_vmc = " << task_vmc << endl;
    cout << "task_expand = " << task_expand << endl;
    cout << "task_tononsu2 = " << task_tononsu2 << endl;
-   cout << "task_prop = " << task_prop << endl;
+   cout << "task_prop = ";
+   for(const auto& k : task_prop) std::cout << k << " ";
+   std::cout << std::endl;
    cout << "task_schmidt = " << task_schmidt << endl;
    cout << "schmidt_file = " << schmidt_file << endl;
    cout << "restart_sweep = " << restart_sweep << endl;

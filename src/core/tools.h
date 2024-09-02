@@ -74,6 +74,12 @@ std::vector<Tm> combine_vector(const std::vector<Tm>& v1,
    return v12;
 }
 
+template <typename Tm>
+bool is_in_vector(const std::vector<Tm>& v, const Tm key){
+   auto it = std::find(v.begin(), v.end(), key);
+   return (it != v.end());
+}
+
 // type information
 template <typename Tm>
 inline bool is_complex(){ return false; }

@@ -428,9 +428,9 @@
  * Properties for post-CI/DMRG calculations:
    - Wish list:
       - Overlap of two MPS? <MPS1|MPS2>
+      - <MPS1|H|MPS2>
       - 1-RDM: <MPS1|p^+q|MPS2> -> <Epq>, <Tpq>
       - 2-RDM: <MPS1|p^+q^+rs|MPS2> (p>q,r<s) => MOST IMPORTANT
-      - <MPS2|H|MPS2>
    - Possible applications:
       - Spin-spin correlation function
       - Natural orbitals
@@ -441,8 +441,16 @@
    - Applied to FeMoco
 
  * Implementation for MPS:
-   - savebin
+   - keyword: savebin & task_prop
+   - overlap [DONE@2024/09/02]
+   - hamiltonian
 
+   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
+   // <MPS[N]|ap^+aq|MPS'[N]>
+   // <MPS[N-2]|apaq|MPS[N]>
+   // <MPS[N-1]|ap|MPS[N]>
+   // How to deal with SU(2) case? 
+   // In particular, the singlet embedding case!
 	
    - Brute-force RDM & TDM algorithm:
       - non-spin-adapted: [DONE@2024/06/02]
@@ -468,13 +476,4 @@
    - GPU version:
       - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
    - Singlet embedding for SOC - <Tpq>?
-
-   // We may also need 
-   // <MPS|MPS'>
-   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
-   // <MPS[N-1]|ap|MPS[N]>
-   // <MPS[N-2]|apaq|MPS[N]>
-   // <MPS[N]|ap^+aq|MPS'[N]>
-   // How to deal with SU(2) case? 
-   // In particular, the singlet embedding case!
 

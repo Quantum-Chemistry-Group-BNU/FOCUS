@@ -30,22 +30,48 @@ void MPSPROP(const input::schedule& schd){
    }
 
    //-----------------------------------------------------------------
-   // The driver prop only support MPS with the same kind (topo,Qm,Tm)
+   // The driver mpsprop only support MPS with the same kind (topo,Qm,Tm)
    //-----------------------------------------------------------------
 
    // initialization of MPS
    ctns::comb<Qm,Tm> icomb;
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
-      icomb.display_shape();
-      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+      assert(icomb.topo.ifmps);
+      if(rank == 0){
+         icomb.display_shape();
+         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+      }
    }
    ctns::comb<Qm,Tm> icomb2;
    if(schd.ctns.rcanon2_file.size()>0){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
-      icomb2.display_shape();
-      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon2_file);
+      assert(icomb2.topo.ifmps);
+      if(rank == 0){
+         icomb2.display_shape();
+         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
+      }
    }
+
+   // task_prop
+   if(rank == 0){
+      std::map<int,std::string> tasks = {{1,"overlap"},{2,"hamiltonian"},{3,"rdm1"},{4,"rdm2"}};
+      std::cout << "\n" << tools::line_separator2 << std::endl;
+      std::cout << "task_prop:";
+      for(const auto& key : schd.ctns.task_prop){
+         std::cout << " " << tasks.at(key);
+      }
+      std::cout << std::endl;
+      std::cout << tools::line_separator2 << std::endl;
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,1)){
+      if(rank == 0){
+         auto smat = get_Smat(icomb, icomb2);
+         std::cout << "\nMPS overlap:" << std::endl;
+         smat.print("<MPS1|MPS2>", schd.ctns.outprec);
+      }
+   } // task_prop
 
 /*
    // read integral
