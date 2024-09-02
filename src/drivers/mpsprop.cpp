@@ -18,7 +18,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Qm, typename Tm>  
-void PROPERTY(const input::schedule& schd){
+void MPSPROP(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -26,7 +26,7 @@ void PROPERTY(const input::schedule& schd){
 #endif
    // consistency check for dtype
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in PROPERTY!");
+      tools::exit("error: inconsistent dtype in MPSPROP!");
    }
 
    //-----------------------------------------------------------------
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]){
    }
 #endif
    if(!schd.ctns.run){
-      if(rank == 0) std::cout << "\ncheck input again, there is no task for PROPERTY!" << std::endl;
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for MPSPROP!" << std::endl;
       return 0;
    }
 
@@ -146,23 +146,23 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      PROPERTY<ctns::qkind::qZ2,double>(schd);
+      MPSPROP<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      PROPERTY<ctns::qkind::qZ2,std::complex<double>>(schd);
+      MPSPROP<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      PROPERTY<ctns::qkind::qN,double>(schd);
+      MPSPROP<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      PROPERTY<ctns::qkind::qN,std::complex<double>>(schd);
+      MPSPROP<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      PROPERTY<ctns::qkind::qNSz,double>(schd);
+      MPSPROP<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      PROPERTY<ctns::qkind::qNSz,std::complex<double>>(schd);
+      MPSPROP<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      PROPERTY<ctns::qkind::qNK,std::complex<double>>(schd);
+      MPSPROP<ctns::qkind::qNK,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNS"){
-      PROPERTY<ctns::qkind::qNS,double>(schd);
+      MPSPROP<ctns::qkind::qNS,double>(schd);
    }else if(schd.ctns.qkind == "cNS"){
-      PROPERTY<ctns::qkind::qNS,std::complex<double>>(schd);
+      MPSPROP<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind
@@ -174,6 +174,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0) tools::finish("PROPERTY");	   
+   if(rank == 0) tools::finish("MPSPROP");	   
    return 0;
 }

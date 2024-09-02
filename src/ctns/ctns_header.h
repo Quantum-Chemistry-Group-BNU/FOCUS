@@ -27,6 +27,6 @@
 #include "ctns_entropy.h"
 #include "oodmrg/oodmrg.h"
 
-#include "property/rdm_simple.h"
+#include "mpsprop/rdm_simple.h"
 
 #endif
