@@ -15,7 +15,8 @@ namespace fock{
             const std::vector<Tm>& civec1,
             const std::vector<Tm>& civec2,
             linalg::matrix<Tm>& rdm1){
-         std::cout << "\nfock:get_rdm1" << std::endl;
+         auto t0 = tools::get_time();
+         std::cout << "\nfock:get_rdm1 rdm1.shape=" << rdm1.rows() << "," << rdm1.cols() << std::endl;
          for(size_t i=0; i<space.size(); i++){
             // c1[i]*<Di|p^+q|Di>c2[i]
             std::vector<int> olst;
@@ -35,6 +36,8 @@ namespace fock{
                rdm1(q0,p0) += sgn*tools::conjugate(civec1[j])*civec2[i];
             }
          }
+         auto t1 = tools::get_time();
+         tools::timing("fock:get_rdm1", t0, t1);
       }
 
    // rdm2[(p0p1),(q0q1)] = <Psi|p0^+p1^+q1q0|Psi> (p0>p1, q0>q1)
@@ -43,7 +46,8 @@ namespace fock{
             const std::vector<Tm>& civec1,
             const std::vector<Tm>& civec2,
             linalg::matrix<Tm>& rdm2){
-         std::cout << "\nfock:get_rdm2" << std::endl;
+         auto t0 = tools::get_time();
+         std::cout << "\nfock:get_rdm2 rdm2.shape=" << rdm2.rows() << "," << rdm2.cols() << std::endl;
          for(size_t i=0; i<space.size(); i++){
             // c1[i]*<Di|p0^+p1^+p1p0|Di>c2[i]
             std::vector<int> olst;
@@ -93,6 +97,8 @@ namespace fock{
                }
             } // j
          } // i
+         auto t1 = tools::get_time();
+         tools::timing("fock:get_rdm2", t0, t1);
       }
 
    // from rdm2 for particle number conserving wf
@@ -195,6 +201,39 @@ namespace fock{
             const double ecore=0.0){
          auto rdm1 = get_rdm1_from_rdm2(rdm2);
          return get_etot(rdm2, rdm1, int2e, int1e, ecore);
+      }
+
+   template <typename Tm>
+      Tm get_rdm12(const onspace& space,
+            const linalg::matrix<Tm>& vs,
+            const int iroot,
+            const int jroot,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore,
+            linalg::matrix<Tm>& rdm1,
+            linalg::matrix<Tm>& rdm2){
+         std::cout << "\nfock:get_rdm12 k=" << rdm1.rows() << std::endl;
+         auto t0 = tools::get_time();
+         size_t dim = space.size();
+         std::vector<Tm> civec1(vs.col(iroot), vs.col(iroot)+dim);
+         std::vector<Tm> civec2(vs.col(jroot), vs.col(jroot)+dim);
+         get_rdm1(space, civec1, civec2, rdm1);
+         get_rdm2(space, civec1, civec2, rdm2);
+         Tm Hij;
+         if(iroot == jroot){
+            Hij = get_etot(rdm2, rdm1, int2e, int1e, ecore);
+         }else{
+            Hij = get_etot(rdm2, rdm1, int2e, int1e, 0.0);
+         }
+         std::cout << "\nCheck: I,J=" << iroot << "," << jroot
+            << " H(I,J)=" << std::fixed << std::setprecision(12) << Hij 
+            << std::endl;
+         rdm1.save_text("rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm2.save_text("rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         auto t1 = tools::get_time();
+         tools::timing("fock:get_rdm12", t0, t1);
+         return Hij;
       }
 
 } // fock

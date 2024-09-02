@@ -36,11 +36,19 @@ void FCI(const input::schedule& schd){
    if(schd.ci.ifanalysis){ 
       for(int i=0; i<nroots; i++){
          std::cout << "\nstate " << i << " energy = "  
-            << std::setprecision(12) << es[i] 
+            << std::fixed << std::setprecision(12) << es[i] 
             << std::endl;
          std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
          coeff_population(fci_space, vi, schd.ci.cthrd);
       }
+   }
+   // rdm
+   if(schd.ci.rdm){
+      int k = int1e.sorb;
+      int k2 = k*(k-1)/2;
+      linalg::matrix<Tm> rdm1(k,k), rdm2(k2,k2);
+      assert(schd.ci.iroot < nroots and schd.ci.jroot < nroots);
+      fci::get_rdm12(fci_space, vs, schd.ci.iroot, schd.ci.jroot, int2e, int1e, ecore, rdm1, rdm2);
    }
 }
 

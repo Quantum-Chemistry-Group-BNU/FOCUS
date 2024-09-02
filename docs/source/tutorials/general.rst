@@ -28,7 +28,7 @@ A typical input file
    scratch ./scratch
    perfcomm 27
 
-   $sci
+   $ci
    dets
    0 2 4 6 8 10 12 14 16 18 20 22 24 36 38   1 3 15 17 19 21 23 25 27 29 31 33 35 37 39
    end

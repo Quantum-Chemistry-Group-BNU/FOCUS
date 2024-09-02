@@ -17,9 +17,9 @@ namespace fci{
             const std::vector<Tm>& civec2,
             linalg::matrix<Tm>& rdm1,
             const bool debug = false){
-         auto t0 = tools::get_time();
-         std::cout << "\nfci:get_rdm1" << std::endl;
          const bool Htype = tools::is_complex<Tm>();
+         auto t0 = tools::get_time();
+         std::cout << "\nfci:get_rdm1 rdm1.shape=" << rdm1.rows() << "," << rdm1.cols() << std::endl;
          // initialization 
          rdm1 = 0.0;
          // setup product_space
@@ -140,7 +140,7 @@ namespace fci{
             linalg::matrix<Tm>& rdm2,
             const bool debug = false){
          auto t0 = tools::get_time();
-         std::cout << "\nfci:get_rdm2" << std::endl;
+         std::cout << "\nfci:get_rdm2 rdm2.shape=" << rdm2.rows() << ","<< rdm2.cols() << std::endl;
          // initialization 
          rdm2 = 0.0;
          // connected  
@@ -200,6 +200,43 @@ namespace fci{
             std::cout << "rdm2_diff=" << std::setprecision(12) << rdm2_diff << std::endl;
             if(rdm2_diff>1.e-8) tools::exit("error: difference is larger than thresh!");
          }
+      }
+
+   template <typename Tm>
+      Tm get_rdm12(const fock::onspace& space,
+            const linalg::matrix<Tm>& vs,
+            const int iroot,
+            const int jroot,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore,
+            linalg::matrix<Tm>& rdm1,
+            linalg::matrix<Tm>& rdm2,
+            const bool debug = false){
+         const bool Htype = tools::is_complex<Tm>();
+         std::cout << "\nfci:get_rdm12 Htype=" << Htype << " k=" << rdm1.rows() << std::endl;
+         auto t0 = tools::get_time();
+         size_t dim = space.size();
+         std::vector<Tm> civec1(vs.col(iroot), vs.col(iroot)+dim);
+         std::vector<Tm> civec2(vs.col(jroot), vs.col(jroot)+dim);
+         fci::sparse_hamiltonian<Tm> sparseH;
+         sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
+         fci::get_rdm1(space, civec1, civec2, rdm1, debug);
+         fci::get_rdm2(sparseH, space, civec1, civec2, rdm2, debug);
+         Tm Hij;
+         if(iroot == jroot){
+            Hij = fock::get_etot(rdm2, rdm1, int2e, int1e, ecore);
+         }else{
+            Hij = fock::get_etot(rdm2, rdm1, int2e, int1e, 0.0);
+         }
+         std::cout << "\nCheck: I,J=" << iroot << "," << jroot
+            << " H(I,J)=" << std::fixed << std::setprecision(12) << Hij 
+            << std::endl;
+         rdm1.save_text("rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm2.save_text("rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         auto t1 = tools::get_time();
+         tools::timing("fci:get_rdm12", t0, t1);
+         return Hij;
       }
 
 } // fci

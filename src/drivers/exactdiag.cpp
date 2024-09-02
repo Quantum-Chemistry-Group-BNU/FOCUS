@@ -10,6 +10,7 @@
 #include "core/matrix.h"
 #include "core/linalg.h"
 #include "core/analysis.h"
+#include "core/simplerdm.h"
 
 using namespace std;
 using namespace fock;
@@ -79,6 +80,15 @@ void ED(const input::schedule& schd){
       const int iop = 0;
       coeff_population(fci_space, vi, schd.ci.cthrd, iop);
    } // i
+
+   // rdm
+   if(schd.ci.rdm){
+      int k = int1e.sorb;
+      int k2 = k*(k-1)/2;
+      linalg::matrix<Tm> rdm1(k,k), rdm2(k2,k2);
+      assert(schd.ci.iroot < nroots and schd.ci.jroot < nroots);
+      get_rdm12(fci_space, vs, schd.ci.iroot, schd.ci.jroot, int2e, int1e, ecore, rdm1, rdm2);
+   }
 }
 
 int main(int argc, char *argv[]){
