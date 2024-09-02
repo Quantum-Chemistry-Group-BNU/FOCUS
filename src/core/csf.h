@@ -18,7 +18,7 @@ namespace fock{
             repr = _repr;  
          }
          csfstate(const std::string& s){
-            onstate _repr(s, 1);
+            onstate _repr(s);
             repr = _repr;
             // consistency check
             auto tsinter = intermediate_tsarray();
@@ -63,7 +63,7 @@ namespace fock{
          double Sdiag_sample(const int nsample=10000, const int nprt=10) const;
          double Sdiag_exact() const;
          // print
-         std::string to_string() const{ return repr.to_string2(true); }
+         std::string to_string() const{ return repr.to_string(true); }
          friend std::ostream& operator <<(std::ostream& os, const csfstate& state);
       public:
          onstate repr; // internal representation - step vector |d> (d=0,1,2,3)

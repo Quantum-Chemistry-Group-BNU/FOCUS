@@ -26,19 +26,19 @@ int tests::test_onstate(){
       cout << "i=" << i << " occ=" << state1[i] << endl;
    };
    cout << "state1=" << state1.to_string() << endl;
-   cout << "state1=" << state1.to_string2() << endl; 
+   cout << "state1=" << state1.to_string1() << endl; 
 
    // test constructor from string
-   fock::onstate state2("00000101");
+   fock::onstate state2("00000101",1);
    cout << "state2=" << state2.to_string() << endl;
-   cout << "state2=" << state2.to_string2() << endl; 
+   cout << "state2=" << state2.to_string1() << endl; 
 
    // test assignment
    fock::onstate state3(state1.size());
    state3 = state1;
    state3[1] = 1;
    cout << "state3=" << state3.to_string() << endl; 
-   cout << "state3=" << state3.to_string2() << endl; 
+   cout << "state3=" << state3.to_string1() << endl; 
 
    // test count
    cout << "Ne1=" << " " << state1.nelec() 
@@ -53,7 +53,7 @@ int tests::test_onstate(){
 
    // test copy
    fock::onstate state4(state3);
-   cout << "state3=" << state3.to_string2() << endl; 
+   cout << "state3=" << state3.to_string() << endl; 
    cout << state4.diff_num(state3) << endl;
    cout << state4.diff_num(state1) << endl;
 
@@ -61,7 +61,7 @@ int tests::test_onstate(){
    fock::onstate non;
    cout << "non=" << non << endl;
    cout << "non=" << non.to_string() << endl;
-   cout << "non=" << non.to_string2() << endl;
+   cout << "non=" << non.to_string1() << endl;
 
    // test cre/ann
    cout << "input\n" << state4 << endl;
@@ -124,12 +124,12 @@ int tests::test_onstate(){
 
    // test kramers
    cout << "input\n" << state4 << endl;
-   cout << state4.to_string2() << endl;
+   cout << state4.to_string() << endl;
    cout << state4.nelec_a() << "," << state4.nelec_b() << endl;
    cout << "is_standard=" << state4.is_standard() << endl;
    fock::onstate state5 = state4.flip();
    cout << "flip=" << state5 << endl;
-   cout << "flip=" << state5.to_string2() << endl;
+   cout << "flip=" << state5.to_string() << endl;
    cout << (state4 == state5) << endl;
    cout << (state4 < state5) << endl;
   
@@ -153,16 +153,16 @@ int tests::test_onstate(){
    cout << state5 << endl;
    cout << state4 << endl; 
 
-   cout << state4.to_string2() << endl;
+   cout << state4.to_string() << endl;
    cout << "norb_single=" << state4.norb_single() << endl;
    cout << "norb_double=" << state4.norb_double() << endl;
    cout << "norb_vacant=" << state4.norb_vacant() << endl;
    cout << state4.norb_single()
 	   +state4.norb_double()
 	   +state4.norb_vacant() << endl;
-   cout << state4.to_string2() << endl;
+   cout << state4.to_string() << endl;
    cout << state4.parity_flip() << endl;
-   cout << state4.flip().to_string2() << endl;
+   cout << state4.flip().to_string() << endl;
    cout << state4.flip().parity_flip() << endl;
 
    vector<int> olst,vlst;
@@ -191,9 +191,9 @@ int tests::test_onstate(){
    cout << endl;
 
    // test for diff_orb 
-   fock::onstate state_v1("0000");
-   fock::onstate state_v2("1011");
-   fock::onstate state_v3("0101");
+   fock::onstate state_v1("0000",1);
+   fock::onstate state_v2("1011",1);
+   fock::onstate state_v3("0101",1);
    vector<int> cre, ann;
 
    cre.clear();

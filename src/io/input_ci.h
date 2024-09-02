@@ -1,5 +1,5 @@
-#ifndef INPUT_SCI_H
-#define INPUT_SCI_H
+#ifndef INPUT_CI_H
+#define INPUT_CI_H
 
 #include <iostream>
 #include <vector>
@@ -12,7 +12,7 @@
 namespace input{
 
    // SCI
-   struct params_sci{
+   struct params_ci{
       private:
          // serialize
          friend class boost::serialization::access;

@@ -15,12 +15,12 @@ void SCI(const input::schedule& schd){
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
    // SCI
-   int nroots = schd.sci.nroots;
+   int nroots = schd.ci.nroots;
    onspace sci_space;
    vector<double> es;
    linalg::matrix<Tm> vs;
-   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
-   if(!schd.sci.load){
+   auto ci_file = schd.scratch+"/"+schd.ci.ci_file;
+   if(!schd.ci.load){
       fci::sparse_hamiltonian<Tm> sparseH;
       sci::ci_solver(schd, sparseH, es, vs, sci_space, int2e, int1e, ecore);
       fci::ci_save(sci_space, es, vs, ci_file);
@@ -29,32 +29,32 @@ void SCI(const input::schedule& schd){
    }
    int dim = sci_space.size();
    // print the ci vectors
-   if(schd.sci.ifanalysis){ 
+   if(schd.ci.ifanalysis){ 
       for(int i=0; i<nroots; i++){
          std::cout << "\nstate " << i << " energy = "  
             << std::setprecision(12) << es[i] 
             << std::endl;
          std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-         coeff_population(sci_space, vi, schd.sci.cthrd);
+         coeff_population(sci_space, vi, schd.ci.cthrd);
       }
    }
    // pt2 for single root
-   if(schd.sci.ifpt2){
-      int iroot = schd.sci.iroot;
+   if(schd.ci.ifpt2){
+      int iroot = schd.ci.iroot;
       assert(iroot < nroots);
       std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
       sci::pt2_solver(schd, es[iroot], vi, sci_space, int2e, int1e, ecore);
    }
    // rdm
-   if(schd.sci.rdm){
+   if(schd.ci.rdm){
       // compute sparse_hamiltonian
       const bool Htype = tools::is_complex<Tm>();
       fci::sparse_hamiltonian<Tm> sparseH2;
       sparseH2.get_hamiltonian(sci_space, int2e, int1e, ecore, Htype);
       int k = int1e.sorb;
       int k2 = k*(k-1)/2;
-      int iroot = schd.sci.iroot;
-      int jroot = schd.sci.jroot;
+      int iroot = schd.ci.iroot;
+      int jroot = schd.ci.jroot;
       linalg::matrix<Tm> rdm2(k2,k2);
       std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
       std::vector<Tm> vj(vs.col(jroot), vs.col(jroot)+dim);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
    }
    input::schedule schd;
    schd.read(fname);
-   if(!schd.sci.run){
+   if(!schd.ci.run){
       std::cout << "\ncheck input again, there is no task for SCI!" << std::endl;
       return 0;
    }

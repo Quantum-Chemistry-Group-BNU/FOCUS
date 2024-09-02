@@ -28,7 +28,7 @@ void VMC(const input::schedule& schd,
    onspace sci_space;
    vector<double> es;
    linalg::matrix<Tm> vs;
-   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;	   
+   auto ci_file = schd.scratch+"/"+schd.ci.ci_file;	   
    fci::ci_load(sci_space, es, vs, ci_file);
 
    // read integral

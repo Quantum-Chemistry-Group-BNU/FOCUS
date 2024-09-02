@@ -12,8 +12,8 @@ using namespace input;
 //
 // SCI
 //
-void params_sci::read(ifstream& istrm){
-   if(debug_input) cout << "params_sci::read" << endl; 
+void params_ci::read(ifstream& istrm){
+   if(debug_input) cout << "params_ci::read" << endl; 
    run = true;
    // helpers 
    vector<int> sweep_iter; 
@@ -122,8 +122,8 @@ void params_sci::read(ifstream& istrm){
    } // size
 }
 
-void params_sci::print() const{
-   cout << "\n===== params_sci::print =====" << endl;
+void params_ci::print() const{
+   cout << "\n===== params_ci::print =====" << endl;
    cout << "nroots = " << nroots << endl;
    cout << "no. of unique seeds = " << nseeds << endl;
    // print det_seeds = {|det>}

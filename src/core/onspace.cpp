@@ -24,7 +24,7 @@ onspace fock::get_fci_space(const int k){
    for(size_t i=0; i<std::pow(2,k); i++){
       std::string s = std::bitset<kmax>(i).to_string(); // string conversion
       auto sub = s.substr(kmax-k,kmax); // 00000a
-      auto state = onstate(sub);
+      auto state = onstate(sub,1);
       space.push_back(state);
    }
    return space;
@@ -36,7 +36,7 @@ onspace fock::get_fci_space(const int k, const int n){
    onspace space;
    string s = string(k-n,'0')+string(n,'1');
    do{
-      space.push_back(onstate(s));
+      space.push_back(onstate(s,1));
    }while(next_permutation(s.begin(), s.end()));
    return space;
 }
@@ -60,7 +60,7 @@ onspace fock::get_fci_space_single(const int k, const int n){
    string s = string(k-n,'a')+string(n,'b');
    do{
       // flip is added to be consistent with ordering in the previous function
-      space.push_back( onstate(s, 1).flip() ); 
+      space.push_back( onstate(s).flip() ); 
    }while(next_permutation(s.begin(), s.end()));
    return space;
 }

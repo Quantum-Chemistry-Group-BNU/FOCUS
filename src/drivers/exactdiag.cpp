@@ -63,7 +63,7 @@ void ED(const input::schedule& schd){
    linalg::eig_solver(H, es, vs); // Hc=ce
 
    // print
-   int nroots = schd.sci.nroots;
+   int nroots = schd.ci.nroots;
    int dim = fci_space.size();
    std::cout << "\nsummary of FCI energies:" << std::endl;
    for(int i=0; i<nroots; i++){
@@ -77,7 +77,7 @@ void ED(const input::schedule& schd){
          << std::endl;
       std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
       const int iop = 0;
-      coeff_population(fci_space, vi, schd.sci.cthrd, iop);
+      coeff_population(fci_space, vi, schd.ci.cthrd, iop);
    } // i
 }
 

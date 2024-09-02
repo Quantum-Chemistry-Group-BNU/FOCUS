@@ -5,9 +5,9 @@
 using namespace std;
 using namespace fock;
 
-// constructor from "01011" [iop=0] or "02ab"/"02ud" [iop!=0] (read from right to left)
+// constructor from "01011" [iop=1] or "02ab"/"02ud" [iop=0] (read from right to left)
 onstate::onstate(const string& s, const int iop){
-   if(iop == 0){
+   if(iop == 1){
       _size = s.size();
       _len = (_size-1)/64+1;
       _repr = new unsigned long[_len];
@@ -16,7 +16,7 @@ onstate::onstate(const string& s, const int iop){
       for(int i=0; i<_size; i++){
          (*this)[i] = (s[_size-1-i]=='1')? 1 : 0;
       }
-   }else{
+   }else if(iop == 0){
       int size = s.size();
        _size = 2*size;
       _len = (_size-1)/64+1;
@@ -36,6 +36,9 @@ onstate::onstate(const string& s, const int iop){
             (*this)[2*i+1]=1;
          }
       } // i
+   }else{
+      std::cout << "error: no such option for iop=" << iop << std::endl;
+      exit(1);
    }
 }
 
@@ -115,12 +118,12 @@ onstate& onstate::operator =(onstate&& state){
 
 // print (must declare fock::operator)
 ostream& fock::operator <<(ostream& os, const onstate& state){
-   os << state.to_string2();
+   os << state.to_string();
    return os;
 }
 
 // print 01 string: "010011" (read from right to left)
-string onstate::to_string() const{
+string onstate::to_string1() const{
    string s; // loop from left to right for +=
    for(int i = _size-1; i >= 0; i--){
       s += (*this)[i] ? '1' : '0'; 
@@ -129,7 +132,7 @@ string onstate::to_string() const{
 }
 
 // print 2ab0 string
-string onstate::to_string2(const bool ifcsf) const{
+string onstate::to_string(const bool ifcsf) const{
    assert(_size%2 == 0); // only for even no. of basis function 
    string s; 
    int nodd,neven; 

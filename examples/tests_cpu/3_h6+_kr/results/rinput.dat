@@ -3,7 +3,7 @@ twom 1
 integral_file moleinfo/fmole.info 
 scratch ./scratch
 
-$sci
+$ci
 dets 
 0 1 2 3 4    
 #3 5 7 8 9

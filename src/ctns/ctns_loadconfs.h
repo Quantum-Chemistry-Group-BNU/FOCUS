@@ -394,7 +394,7 @@ namespace ctns{
          // loop over space
          size_t size = confs.size();
          for(int i=0; i<size; i++){
-            fock::onstate state(confs[i], 1);
+            fock::onstate state(confs[i]);
             space[i] = state;
             auto detmps = det2mps<Qm,Tm>(icomb.topo, state, false);
             detmps.rwfuns[0] *= coeffs[i]; // save coefficients here

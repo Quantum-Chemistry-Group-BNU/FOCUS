@@ -21,7 +21,7 @@ namespace sci{
          // space = {|Di>}
          const int k = int1e.sorb;
          int ndet = 0;
-         for(const auto& det : schd.sci.det_seeds){
+         for(const auto& det : schd.ci.det_seeds){
             // consistency check
             std::cout << ndet << "-th det: ";
             for(auto k : det) std::cout << k << " ";
@@ -35,7 +35,7 @@ namespace sci{
             fock::onstate state(k); 
             for(int i : det) state[i] = 1;
             // check Ms value if necessary
-            if(schd.sci.checkms and state.twom() != schd.twom){
+            if(schd.ci.checkms and state.twom() != schd.twom){
                std::cout << "error: inconsistent twom:"
                          << " twom[input]=" << schd.twom
                          << " twom[det]=" << state.twom() 
@@ -50,7 +50,7 @@ namespace sci{
                space.push_back(state);
             }
             // flip determinant 
-            if(schd.sci.flip){
+            if(schd.ci.flip){
                auto state1 = state.flip();
                auto search1 = varSpace.find(state1);
                if(search1 == varSpace.end()){
@@ -69,18 +69,18 @@ namespace sci{
                << std::endl;
          }
          // selected CISD space
-         double eps1 = schd.sci.eps0;
+         double eps1 = schd.ci.eps0;
          std::vector<double> cmax(nsub,1.0);
-         expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
+         expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.ci.flip);
          nsub = space.size();
          // set up initial states
-         if(schd.sci.nroots > nsub) tools::exit("error: subspace is too small in sci::get_initial!");
+         if(schd.ci.nroots > nsub) tools::exit("error: subspace is too small in sci::get_initial!");
          linalg::matrix<Tm> H = fock::get_Hmat(space, int2e, int1e, ecore);
          std::vector<double> esol(nsub);
          linalg::matrix<Tm> vsol;
          linalg::eig_solver(H, esol, vsol);
          // save
-         int neig = schd.sci.nroots;
+         int neig = schd.ci.nroots;
          es.resize(neig);
          vs.resize(nsub, neig);
          linalg::xcopy(neig, esol.data(), es.data());
@@ -122,12 +122,12 @@ namespace sci{
          // start increment selected CI subspace
          bool ifconv = false;
          int nsub = space.size(); 
-         int neig = schd.sci.nroots;
-         for(int iter=0; iter<schd.sci.maxiter; iter++){
+         int neig = schd.ci.nroots;
+         for(int iter=0; iter<schd.ci.maxiter; iter++){
             std::cout << "\n---------------------" << std::endl;
-            std::cout << "iter=" << iter << " eps1=" << std::scientific << schd.sci.eps1[iter] << std::endl;
+            std::cout << "iter=" << iter << " eps1=" << std::scientific << schd.ci.eps1[iter] << std::endl;
             std::cout << "---------------------" << std::endl;
-            double eps1 = schd.sci.eps1[iter];
+            double eps1 = schd.ci.eps1[iter];
             // compute cmax[i] = \sqrt{\sum_j|vj[i]|^2} for screening
             std::vector<double> cmax(nsub,0.0);
             for(int j=0; j<neig; j++){
@@ -138,13 +138,13 @@ namespace sci{
             std::transform(cmax.begin(), cmax.end(), cmax.begin(),
                   [](const double& x){ return std::pow(x,0.5); });
             // expand 
-            expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.sci.flip);
+            expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.ci.flip);
             int nsub0 = nsub;
             nsub = space.size(); // nsub >= nsub0
             // update auxilliary data structure 
             sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype, nsub0);
             // set up Davidson solver 
-            linalg::dvdsonSolver<Tm> solver(nsub, neig, schd.sci.crit_v, schd.sci.maxcycle);
+            linalg::dvdsonSolver<Tm> solver(nsub, neig, schd.ci.crit_v, schd.ci.maxcycle);
             solver.Diag = sparseH.diag.data();
             using std::placeholders::_1;
             using std::placeholders::_2;
@@ -164,11 +164,11 @@ namespace sci{
             std::vector<bool> conv(neig);
             std::cout << std::endl;
             for(int i=0; i<neig; i++){
-               conv[i] = std::abs(esol1[i]-esol[i]) < schd.sci.deltaE; 
+               conv[i] = std::abs(esol1[i]-esol[i]) < schd.ci.deltaE; 
                std::vector<Tm> vtmp(vsol1.col(i),vsol1.col(i)+nsub);
                double SvN = fock::coeff_entropy(vtmp); 
                std::cout << "sci: iter=" << iter
-                  << " eps1=" << std::scientific << std::setprecision(3) << schd.sci.eps1[iter]
+                  << " eps1=" << std::scientific << std::setprecision(3) << schd.ci.eps1[iter]
                   << " nsub=" << nsub 
                   << " i=" << i 
                   << " e=" << std::defaultfloat << std::setprecision(12) << esol1[i] 
@@ -182,16 +182,16 @@ namespace sci{
             esol = esol1;
             vsol = vsol1;
             ifconv = (count(conv.begin(), conv.end(), true) == neig);
-            if(iter>=schd.sci.miniter && ifconv){
+            if(iter>=schd.ci.miniter && ifconv){
                std::cout << "\nsci convergence is achieved for threshold deltaE=" 
-                  << std::scientific << schd.sci.deltaE 
+                  << std::scientific << schd.ci.deltaE 
                   << std::endl;
                break;
             }
          } // iter
          if(!ifconv){
-            std::cout << "\nsci convergence failure: out of maxiter=" << schd.sci.maxiter 
-               << " for threshsold deltaE=" << std::scientific << schd.sci.deltaE
+            std::cout << "\nsci convergence failure: out of maxiter=" << schd.ci.maxiter 
+               << " for threshsold deltaE=" << std::scientific << schd.ci.deltaE
                << std::endl;
          }
          std::cout << std::endl;

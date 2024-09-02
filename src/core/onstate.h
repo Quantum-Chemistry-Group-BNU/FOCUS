@@ -104,7 +104,7 @@ namespace fock{
          onstate& operator =(onstate&& state);
 
          // special constructors
-         // from "01011" [iop=0] or "02ab" [iop!=0] (read from right to left)
+         // from "01011" [iop=1] or "02ab" [iop=0] (read from right to left)
          onstate(const std::string& on, const int iop=0);
          // merge two states with different spins - neglect phases
          onstate(const onstate& state_a, const onstate& state_b);
@@ -143,8 +143,8 @@ namespace fock{
             return {_repr[i/64] , 1ULL << i%64}; 
          }
          // print
-         std::string to_string() const;
-         std::string to_string2(const bool ifcsf=false) const;
+         std::string to_string(const bool ifcsf=false) const;
+         std::string to_string1() const;
          friend std::ostream& operator <<(std::ostream& os, const onstate& state);
 
          // comparison [from high position] 

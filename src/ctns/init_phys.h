@@ -21,46 +21,46 @@ namespace ctns{
             rbasis.resize(2);
             // |00> & |11>
             rbasis[0].sym = qsym(isym,0,0);
-            rbasis[0].space.push_back(fock::onstate("00"));
-            rbasis[0].space.push_back(fock::onstate("11"));
+            rbasis[0].space.push_back(fock::onstate("0"));
+            rbasis[0].space.push_back(fock::onstate("2"));
             rbasis[0].coeff = linalg::identity_matrix<Tm>(2);
             // a=|01> & b=|10>
             rbasis[1].sym = qsym(isym,1,0);
-            rbasis[1].space.push_back(fock::onstate("01")); // a
-            rbasis[1].space.push_back(fock::onstate("10")); // b
+            rbasis[1].space.push_back(fock::onstate("a")); // a
+            rbasis[1].space.push_back(fock::onstate("b")); // b
             rbasis[1].coeff = linalg::identity_matrix<Tm>(2);
          }else if(isym == 1){
             rbasis.resize(3);
             // |00>
             rbasis[0].sym = qsym(isym,0,0);
-            rbasis[0].space.push_back(fock::onstate("00"));
+            rbasis[0].space.push_back(fock::onstate("0"));
             rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
             // |11>
             rbasis[1].sym = qsym(isym,2,0);
-            rbasis[1].space.push_back(fock::onstate("11"));
+            rbasis[1].space.push_back(fock::onstate("2"));
             rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
             // a=|01> & b=|10>
             rbasis[2].sym = qsym(isym,1,0);
-            rbasis[2].space.push_back(fock::onstate("01")); // a
-            rbasis[2].space.push_back(fock::onstate("10")); // b
+            rbasis[2].space.push_back(fock::onstate("a")); // a
+            rbasis[2].space.push_back(fock::onstate("b")); // b
             rbasis[2].coeff = linalg::identity_matrix<Tm>(2);
          }else if(isym == 2){
             rbasis.resize(4);
             // |00>
             rbasis[0].sym = qsym(isym,0,0);
-            rbasis[0].space.push_back(fock::onstate("00"));
+            rbasis[0].space.push_back(fock::onstate("0"));
             rbasis[0].coeff = linalg::identity_matrix<Tm>(1);
             // |11>
             rbasis[1].sym = qsym(isym,2,0);
-            rbasis[1].space.push_back(fock::onstate("11"));
+            rbasis[1].space.push_back(fock::onstate("2"));
             rbasis[1].coeff = linalg::identity_matrix<Tm>(1);
             // |01>
             rbasis[2].sym = qsym(isym,1,1);
-            rbasis[2].space.push_back(fock::onstate("01")); // a
+            rbasis[2].space.push_back(fock::onstate("a")); // a
             rbasis[2].coeff = linalg::identity_matrix<Tm>(1);
             // |10>
             rbasis[3].sym = qsym(isym,1,-1);
-            rbasis[3].space.push_back(fock::onstate("10")); // b
+            rbasis[3].space.push_back(fock::onstate("b")); // b
             rbasis[3].coeff = linalg::identity_matrix<Tm>(1);
          }else{
             tools::exit("error: no such case in get_rbasis_phys!");

@@ -9,7 +9,7 @@
 
 #include "../core/serialization.h"
 
-#include "input_sci.h"
+#include "input_ci.h"
 #include "input_ctns.h"
 #include "input_post.h"
 #include "input_vmc.h"
@@ -32,7 +32,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & scratch & dtype & nelec & twom & twos & integral_file 
                   & perfcomm 
-                  & sci & ctns & post & vmc;
+                  & ci & ctns & post & vmc;
             }
       public:
          void read(std::string fname="input.dat");
@@ -47,7 +47,7 @@ namespace input{
          std::string integral_file = "mole.info";
          int perfcomm = 0;
          // --- Methods --- 
-         params_sci sci;
+         params_ci ci;
          params_ctns ctns;
          params_post post;
          params_vmc vmc;

@@ -4,7 +4,7 @@ twom -1
 integral_file moleinfo/fmole.info
 scratch ./scratch
 
-$sci
+$ci
 nroots 3
 schedule # fake
 0 1.e-5

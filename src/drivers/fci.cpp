@@ -23,23 +23,23 @@ void FCI(const input::schedule& schd){
       int nb = (schd.nelec - schd.twom)/2;
       fci_space = get_fci_space(int1e.sorb/2, na, nb);
    }
-   int nroots = schd.sci.nroots;
+   int nroots = schd.ci.nroots;
    int dim = fci_space.size();
    vector<double> es(nroots);
    linalg::matrix<Tm> vs(dim, nroots);
-   auto ci_file = schd.scratch+"/"+schd.sci.ci_file;
+   auto ci_file = schd.scratch+"/"+schd.ci.ci_file;
    fci::sparse_hamiltonian<Tm> sparseH;
    fci::ci_solver(sparseH, es, vs, fci_space, int2e, int1e, ecore);
    fci::ci_save(fci_space, es, vs, ci_file);
    sparseH.dump(schd.scratch+"/sparseH.bin");
    // print the ci vectors
-   if(schd.sci.ifanalysis){ 
+   if(schd.ci.ifanalysis){ 
       for(int i=0; i<nroots; i++){
          std::cout << "\nstate " << i << " energy = "  
             << std::setprecision(12) << es[i] 
             << std::endl;
          std::vector<Tm> vi(vs.col(i), vs.col(i)+dim);
-         coeff_population(fci_space, vi, schd.sci.cthrd);
+         coeff_population(fci_space, vi, schd.ci.cthrd);
       }
    }
 }

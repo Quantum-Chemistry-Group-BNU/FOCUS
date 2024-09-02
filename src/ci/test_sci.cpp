@@ -30,7 +30,7 @@ int tests::test_sci(){
    integral::load(int2e, int1e, ecore, schd.integral_file);
   
    // selected CI
-   int nroots = schd.sci.nroots;
+   int nroots = schd.ci.nroots;
    vector<double> es;
    matrix<DTYPE> vs;
    onspace sci_space;

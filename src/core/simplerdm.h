@@ -118,7 +118,10 @@ namespace fock{
             }
          }
          double diff = rdm1.diff_hermitian();
-         assert(diff < 1.e-8);
+         if(diff < 1.e-8){
+            std::cout << "error: rdm1.diff_hermitian=" << diff << std::endl;
+            exit(1);
+         }
          // normalization
          double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)
          int n2 = round(dn2);

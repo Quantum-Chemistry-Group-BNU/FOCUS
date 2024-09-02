@@ -4,7 +4,7 @@ twom 0
 integral_file moleinfo/rmole.info
 scratch ./scratch
 
-$sci
+$ci
 dets 
 0 1 2 3
 end
