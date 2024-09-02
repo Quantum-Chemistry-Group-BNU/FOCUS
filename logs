@@ -443,9 +443,12 @@
  * Implementation for MPS:
    - keyword: savebin & task_prop
    - overlap [DONE@2024/09/02]
-   - hamiltonian
+   - rdm1 (rNSz and rNS for spin-free 1RDM) [DONE@2024/09/XX]
+      - driver
 
-   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
+   - rdm2 (rNSz and rNS for spin-free 2RDM)
+   - rdm1t (Tpq-1RDM)
+   - <MPS|H|MPS'> using rdm1,rdm2 (enable different bra and ket in oper_renorm)
    // <MPS[N]|ap^+aq|MPS'[N]>
    // <MPS[N-2]|apaq|MPS[N]>
    // <MPS[N-1]|ap|MPS[N]>

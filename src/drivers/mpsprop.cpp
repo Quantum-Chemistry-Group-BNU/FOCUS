@@ -51,70 +51,112 @@ void MPSPROP(const input::schedule& schd){
          icomb2.display_shape();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
       }
+   }else{
+      auto icomb_tmp = icomb;
+      icomb2 = std::move(icomb_tmp);
+   }
+   if(schd.ctns.rcanon_file.size() == 0){
+      tools::exit("error: MPS1 must be given!");
    }
 
    // task_prop
    if(rank == 0){
-      std::map<int,std::string> tasks = {{1,"overlap"},{2,"hamiltonian"},{3,"rdm1"},{4,"rdm2"}};
+      std::map<int,std::string> tasks = {{0,"overlap"},{1,"rdm1"},{2,"rdm2"}};
       std::cout << "\n" << tools::line_separator2 << std::endl;
       std::cout << "task_prop:";
       for(const auto& key : schd.ctns.task_prop){
          std::cout << " " << tasks.at(key);
       }
       std::cout << std::endl;
+      std::cout << " MPS1 = " << schd.ctns.rcanon_file << std::endl;
+      std::cout << " MPS2 = " << schd.ctns.rcanon2_file << std::endl;
       std::cout << tools::line_separator2 << std::endl;
    }
 
-   if(tools::is_in_vector(schd.ctns.task_prop,1)){
+   if(tools::is_in_vector(schd.ctns.task_prop,0)){
       if(rank == 0){
-         auto smat = get_Smat(icomb, icomb2);
-         std::cout << "\nMPS overlap:" << std::endl;
-         smat.print("<MPS1|MPS2>", schd.ctns.outprec);
+         auto Sij = get_Smat(icomb, icomb2);
+         std::cout << std::endl;
+         Sij.print("<MPS1|MPS2>", schd.ctns.outprec);
       }
-   } // task_prop
+   } 
+   
+   if(tools::is_in_vector(schd.ctns.task_prop,1)){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      // compute rdm1 
+      int k = 2*icomb.get_nphysical();
+      linalg::matrix<Tm> rdm1(k,k);
+      ctns::get_rdm1(icomb, icomb2, schd, scratch, rdm1); 
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,2)){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      // compute rdm1 
+      int k = 2*icomb.get_nphysical();
+      int k2 = k*(k-1)/2;
+      linalg::matrix<Tm> rdm2(k2,k2);
+      ctns::get_rdm2(icomb, icomb2, schd, scratch, rdm2); 
+   }
 
 /*
-   // read integral
-   integral::two_body<Tm> int2e;
-   integral::one_body<Tm> int1e;
-   double ecore;
-   if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
+   if(tools::is_in_vector(schd.ctns.task_prop,2)){
+      // read integral
+      integral::two_body<Tm> int2e;
+      integral::one_body<Tm> int1e;
+      double ecore;
+      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
 #ifndef SERIAL
-   if(size > 1){
-      boost::mpi::broadcast(schd.world, ecore, 0);
-      boost::mpi::broadcast(schd.world, int1e, 0);
-      mpi_wrapper::broadcast(schd.world, int2e, 0);
-   }
+      if(size > 1){
+         boost::mpi::broadcast(schd.world, ecore, 0);
+         boost::mpi::broadcast(schd.world, int1e, 0);
+         mpi_wrapper::broadcast(schd.world, int2e, 0);
+      }
 #endif
+      // compute Hij
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
+      if(rank == 0){
+         std::cout << std::endl;
+         Hij.print("<MPS1|H|MPS2>", schd.ctns.outprec);
+      }
+   }
 */
 
-/*
+   /*
    // task
    if(schd.ctns.task_prop == 1){
-      // reduce density matrix
-      if(rank == 0){
-         auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-         auto rdm2 = ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-         Tm etot = fock::get_etot(rdm2,rdm1,int2e,int1e) + ecore;
-         cout << "etot(rdm)=" << setprecision(12) << etot << endl;
-      }
+   // reduce density matrix
+   if(rank == 0){
+   auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+   auto rdm2 = ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
+   Tm etot = fock::get_etot(rdm2,rdm1,int2e,int1e) + ecore;
+   cout << "etot(rdm)=" << setprecision(12) << etot << endl;
+   }
    }else if(schd.ctns.task_prop == 2){
-      // transition density matrix
-      if(rank == 0){
-         auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-         auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-         Tm Hij = fock::get_etot(tdm2,tdm1,int2e,int1e);
-         auto smat = get_Smat(icomb, icomb2);
-         Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
-         cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
-      }
+   // transition density matrix
+   if(rank == 0){
+   auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+   auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+   Tm Hij = fock::get_etot(tdm2,tdm1,int2e,int1e);
+   auto smat = get_Smat(icomb, icomb2);
+   Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
+   cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
+   }
    }else if(schd.ctns.task_prop == 3){
-      // single-site entropy analysis
-      if(rank == 0){
-         auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
-      }
+   // single-site entropy analysis
+   if(rank == 0){
+   auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
+   }
    } // task_prop
-*/
+   */
 }
 
 int main(int argc, char *argv[]){
