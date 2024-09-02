@@ -14,18 +14,19 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
    :caption: Getting started
 
    getstart/installation
+   getstart/basics
+   getstart/benchmark
+   getstart/scripts
+   getstart/problems
 
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
-   tutorials/general
    tutorials/ci
    tutorials/ctns
    tutorials/sadmrg
    tutorials/mpsprop
-   tutorials/benchmark
-   tutorials/scripts
 
 .. toctree::
    :maxdepth: 1
@@ -39,10 +40,4 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
    methods/se
    methods/kr
    methods/oodmrg
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Known problems
-
-   problems/problems
 
