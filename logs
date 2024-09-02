@@ -440,7 +440,10 @@
  * Use SCI to prepare benchmark! [DONE@2024/09/02]
    - Applied to FeMoco
 
- * DMRG implementation:	
+ * Implementation for MPS:
+   - savebin
+
+	
    - Brute-force RDM & TDM algorithm:
       - non-spin-adapted: [DONE@2024/06/02]
          - Application of local op to MPS:
@@ -465,4 +468,13 @@
    - GPU version:
       - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
    - Singlet embedding for SOC - <Tpq>?
+
+   // We may also need 
+   // <MPS|MPS'>
+   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
+   // <MPS[N-1]|ap|MPS[N]>
+   // <MPS[N-2]|apaq|MPS[N]>
+   // <MPS[N]|ap^+aq|MPS'[N]>
+   // How to deal with SU(2) case? 
+   // In particular, the singlet embedding case!
 

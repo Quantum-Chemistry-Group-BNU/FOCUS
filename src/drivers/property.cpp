@@ -18,7 +18,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Qm, typename Tm>  
-void RDM(const input::schedule& schd){
+void PROPERTY(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -26,13 +26,28 @@ void RDM(const input::schedule& schd){
 #endif
    // consistency check for dtype
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in RDM!");
+      tools::exit("error: inconsistent dtype in PROPERTY!");
    }
 
    //-----------------------------------------------------------------
    // The driver prop only support MPS with the same kind (topo,Qm,Tm)
    //-----------------------------------------------------------------
 
+   // initialization of MPS
+   ctns::comb<Qm,Tm> icomb;
+   if(schd.ctns.rcanon_file.size()>0){
+      ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
+      icomb.display_shape();
+      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+   }
+   ctns::comb<Qm,Tm> icomb2;
+   if(schd.ctns.rcanon2_file.size()>0){
+      ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
+      icomb2.display_shape();
+      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon2_file);
+   }
+
+/*
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
@@ -45,21 +60,9 @@ void RDM(const input::schedule& schd){
       mpi_wrapper::broadcast(schd.world, int2e, 0);
    }
 #endif
+*/
 
-   // initialization of MPS
-   ctns::comb<Qm,Tm> icomb;
-   if(schd.ctns.rcanon_file.size()>0){
-      ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
-      icomb.display_shape();
-      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.ctns.rcanon_file);
-   }
-   ctns::comb<Qm,Tm> icomb2;
-   if(schd.ctns.rcanon2_file.size()>0){
-      ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
-      icomb2.display_shape();
-      if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.ctns.rcanon2_file);
-   }
-
+/*
    // task
    if(schd.ctns.task_prop == 1){
       // reduce density matrix
@@ -85,16 +88,7 @@ void RDM(const input::schedule& schd){
          auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
       }
    } // task_prop
-
-   // We may also need 
-   // <MPS|MPS'>
-   // <MPS|H|MPS'> (enable different bra and ket in oper_renorm)
-   // <MPS[N-1]|ap|MPS[N]>
-   // <MPS[N-2]|apaq|MPS[N]>
-   // <MPS[N]|ap^+aq|MPS'[N]>
-
-   // How to deal with SU(2) case? 
-   // In particular, the singlet embedding case!
+*/
 }
 
 int main(int argc, char *argv[]){
@@ -133,7 +127,7 @@ int main(int argc, char *argv[]){
    }
 #endif
    if(!schd.ctns.run){
-      if(rank == 0) std::cout << "\ncheck input again, there is no task for RDM!" << std::endl;
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for PROPERTY!" << std::endl;
       return 0;
    }
 
@@ -152,23 +146,23 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      RDM<ctns::qkind::qZ2,double>(schd);
+      PROPERTY<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      RDM<ctns::qkind::qZ2,std::complex<double>>(schd);
+      PROPERTY<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      RDM<ctns::qkind::qN,double>(schd);
+      PROPERTY<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      RDM<ctns::qkind::qN,std::complex<double>>(schd);
+      PROPERTY<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      RDM<ctns::qkind::qNSz,double>(schd);
+      PROPERTY<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      RDM<ctns::qkind::qNSz,std::complex<double>>(schd);
+      PROPERTY<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      RDM<ctns::qkind::qNK,std::complex<double>>(schd);
-//   }else if(schd.ctns.qkind == "rNS"){
-//      RDM<ctns::qkind::qNS,double>(schd);
-//   }else if(schd.ctns.qkind == "cNS"){
-//      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
+      PROPERTY<ctns::qkind::qNK,std::complex<double>>(schd);
+   }else if(schd.ctns.qkind == "rNS"){
+      PROPERTY<ctns::qkind::qNS,double>(schd);
+   }else if(schd.ctns.qkind == "cNS"){
+      PROPERTY<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind
@@ -180,6 +174,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0) tools::finish("RDM");	   
+   if(rank == 0) tools::finish("PROPERTY");	   
    return 0;
 }

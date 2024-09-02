@@ -12,7 +12,7 @@ Configuration Interaction (CI)
 exactdiag.x
 ===========
 
-This will use functions in ``core`` to construct the Hamiltonian matrix and then diagonalize
+This will use functions in ``core`` to construct the Hamiltonian matrix using Slater-Condon rule and then diagonalize. It is just for benchmark purpose.
 
 Input:
 
