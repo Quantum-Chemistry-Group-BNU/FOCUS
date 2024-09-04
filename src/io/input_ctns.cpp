@@ -84,6 +84,8 @@ void params_ctns::read(ifstream& istrm){
          alg_rcoper = stoi(line.substr(10));
       }else if(line.substr(0,9)=="alg_decim"){
          alg_decim = stoi(line.substr(9));
+      }else if(line.substr(0,7)=="alg_rdm"){
+         alg_rdm = stoi(line.substr(7));
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
       }else if(line.substr(0,7)=="ifdist1"){
@@ -263,7 +265,7 @@ void params_ctns::read(ifstream& istrm){
       exit(1);
    }
    // nccl
-   bool usecpu = (alg_hvec <= 10 || alg_renorm <=10);
+   bool usecpu = (alg_hvec <= 10 || alg_renorm <=10 || alg_rdm <= 10);
    if(usecpu && ifnccl){
       std::cout << "error: ifnccl=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
       exit(1);
@@ -321,6 +323,7 @@ void params_ctns::print() const{
    cout << "alg_renorm = " << alg_renorm << endl;
    cout << "alg_rinter = " << alg_rinter << endl;
    cout << "alg_rcoper = " << alg_rcoper << endl;
+   cout << "alg_rdm = " << alg_rdm << endl;
    cout << "alg_decim = " << alg_decim << endl;
    cout << "notrunc = " << notrunc << endl;
    cout << "ifdist1 = " << ifdist1 << endl;

@@ -100,6 +100,7 @@ namespace input{
                   & fromnosym
                   & ooparams
                   & inputconf & saveconfs & loadconfs;
+                  & alg_rdm
             }
       public:
          void read(std::ifstream& istrm);
@@ -141,11 +142,12 @@ namespace input{
          std::vector<params_sweep> ctrls;
          // algorithm
          int alg_hvec = 3;
-         int alg_renorm = 2;
          int alg_hinter = 0;
          int alg_hcoper = 0;
+         int alg_renorm = 2;
          int alg_rinter = 0;
          int alg_rcoper = 0;
+         int alg_rdm = 0;
          int alg_decim = 1;
          bool notrunc = false;
          bool ifdist1 = false;
