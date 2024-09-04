@@ -446,7 +446,8 @@
    - RDMs:
       - generation of patterns
       - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
-      - propagation of operators 
+      - propagation of operators [DONE@2024/09/04]
          - rdm_env  
-      - assemble
+      - compute and assemble rdm?
+
 
