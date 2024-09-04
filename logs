@@ -428,19 +428,19 @@
  * Properties for post-CI/DMRG calculations:
    - Wish list:
       - Overlap of two MPS? <MPS1|MPS2>
-      - <MPS1|H|MPS2>
       - 1-RDM: <MPS1|p^+q|MPS2> -> <Epq>, <Tpq>
-      - 2-RDM: <MPS1|p^+q^+rs|MPS2> (p>q,r<s) => MOST IMPORTANT
+      - 2-RDM: <MPS1|p^+q^+rs|MPS2> (p>q,r<s) => MOST IMPORTANT [!!!]
+      - <MPS1|H|MPS2>
    - Possible applications:
-      - Spin-spin correlation function
       - Natural orbitals
       - RDM-based orbital optimization (CASSCF, QIO, ...) 
+      - Spin-spin correlation function (RDM)
       - Other measures of electron correlation? Shee's work?							
  
  * Use SCI to prepare benchmark! [DONE@2024/09/02]
    - Applied to FeMoco
 
- * Implementation for MPS:
+ * Implementation of RDM for MPS:
    - keyword: savebin & task_prop
    - overlap [DONE@2024/09/02]
    - RDMs:
@@ -449,5 +449,4 @@
       - propagation of operators [DONE@2024/09/04]
          - rdm_env  
       - compute and assemble rdm?
-
 
