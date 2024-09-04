@@ -122,9 +122,9 @@ namespace ctns{
             if(is_same){
                qops.oplist = "C";
             }else{
-               //qops.oplist = "CD";
-               std::cout << "error: not implemented yet";
-               exit(1);
+               qops.oplist = "C";
+               //std::cout << "error: not implemented yet";
+               //exit(1);
             }
          }else if(order == 2){
             if(is_same){
@@ -207,13 +207,13 @@ namespace ctns{
          // declare a fake int2e
          integral::two_body<Tm> int2e;
          if(alg_renorm == 0){
+/*
 
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site2, int2e, qops1, qops2, qops, ifdist1);
             // initialize of qops
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
 
-/*
          }else if(alg_renorm == 1){
 
             // symbolic formulae + dynamic allocation of memory

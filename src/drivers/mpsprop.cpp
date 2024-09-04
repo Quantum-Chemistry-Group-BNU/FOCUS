@@ -63,7 +63,7 @@ void MPSPROP(const input::schedule& schd){
       is_same = true;
    }
 
-   // task_prop
+   // display task_prop
    if(rank == 0){
       std::map<int,std::string> tasks = {{0,"overlap"},{1,"rdm1"},{2,"rdm2"}};
       std::cout << "\n" << tools::line_separator2 << std::endl;
@@ -72,13 +72,20 @@ void MPSPROP(const input::schedule& schd){
          std::cout << " " << tasks.at(key);
       }
       std::cout << std::endl;
-      std::cout << " MPS1 = " << schd.ctns.rcanon_file << " nroot=" << icomb.get_nroots() << " iroot=" << schd.ctns.iroot << std::endl;
-      std::cout << " MPS2 = " << schd.ctns.rcanon2_file << " nroot=" << icomb2.get_nroots() << " jroot=" << schd.ctns.jroot << std::endl;
+      std::cout << " MPS1 = " << schd.ctns.rcanon_file 
+         << " nroot=" << icomb.get_nroots() 
+         << " iroot=" << schd.ctns.iroot 
+         << std::endl;
+      std::cout << " MPS2 = " << schd.ctns.rcanon2_file 
+         << " nroot=" << icomb2.get_nroots() 
+         << " jroot=" << schd.ctns.jroot 
+         << std::endl;
       std::cout << tools::line_separator2 << std::endl;
       assert(schd.ctns.iroot <= icomb.get_nroots());
       assert(schd.ctns.jroot <= icomb2.get_nroots());
    }
 
+   // 0: overlap
    if(tools::is_in_vector(schd.ctns.task_prop,0)){
       if(rank == 0){
          auto Sij = get_Smat(icomb, icomb2);
@@ -86,7 +93,8 @@ void MPSPROP(const input::schedule& schd){
          Sij.print("<MPS1|MPS2>", schd.ctns.outprec);
       }
    } 
-  
+ 
+   // 1: rdm1 
    if(tools::is_in_vector(schd.ctns.task_prop,1)){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
@@ -95,9 +103,10 @@ void MPSPROP(const input::schedule& schd){
       // compute rdm1 
       int k = 2*icomb.get_nphysical();
       linalg::matrix<Tm> rdm1(k,k);
-      ctns::get_rdm1(is_same, icomb, icomb2, schd, scratch, rdm1); 
+      ctns::get_rdm(1, is_same, icomb, icomb2, schd, scratch, rdm1); 
    }
 
+   // 2: rdm2
    if(tools::is_in_vector(schd.ctns.task_prop,2)){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
@@ -107,7 +116,7 @@ void MPSPROP(const input::schedule& schd){
       int k = 2*icomb.get_nphysical();
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm2(k2,k2);
-      ctns::get_rdm2(is_same, icomb, icomb2, schd, scratch, rdm2); 
+      ctns::get_rdm(2, is_same, icomb, icomb2, schd, scratch, rdm2); 
    }
 
 /*

@@ -68,7 +68,6 @@ namespace ctns{
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
-               auto t0x = tools::get_time();
                const auto& dbond = sweeps.seq[ibond];
                auto tp0 = icomb.topo.get_type(dbond.p0);
                auto tp1 = icomb.topo.get_type(dbond.p1);

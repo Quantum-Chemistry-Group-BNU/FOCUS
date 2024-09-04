@@ -28,7 +28,6 @@
 #include "oodmrg/oodmrg.h"
 
 #include "rdm/rdm_simple.h"
-#include "rdm/ctns_rdm1.h"
-#include "rdm/ctns_rdm2.h"
+#include "rdm/ctns_rdm.h"
 
 #endif
