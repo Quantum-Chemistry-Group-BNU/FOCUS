@@ -1,12 +1,13 @@
 #ifndef CTNS_RDM_H
 #define CTNS_RDM_H
 
-#include "rdm_env.h"
-#include "rdm_util.h"
 #include "../sweep_init.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
+#include "rdm_env.h"
+#include "rdm_patterns.h"
+#include "ctns_rdm1.h"
 
 namespace ctns{
 
@@ -60,6 +61,9 @@ namespace ctns{
          auto tpatterns = all_type_patterns(order);
          auto fpatterns = all_first_type_patterns(order);
          auto lpatterns = all_last_type_patterns(order);
+         display_patterns(tpatterns);
+         display_patterns(fpatterns);
+         display_patterns(lpatterns);
 
          // pool for handling operators
          qoper_pool<Qm::ifabelian,Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
@@ -75,9 +79,8 @@ namespace ctns{
          const int isweep = 0;
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
+            int isite = dbond.p0.first;
             assert(dbond.forward);
-            auto tp0 = icomb.topo.get_type(dbond.p0);
-            auto tp1 = icomb.topo.get_type(dbond.p1);
             std::string superblock;
             if(dbond.forward){
                superblock = dbond.is_cturn()? "lr" : "lc";
@@ -87,6 +90,7 @@ namespace ctns{
             if(debug){
                std::cout << "\nibond=" << ibond << "/seqsize=" << sweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
+                  << " isite=" << isite
                   << " superblock=" << superblock
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
@@ -160,12 +164,23 @@ namespace ctns{
                wf3ket.print("wf3ket",schd.ctns.verbose-2);
             }
 
-            // assemble rdms
-            // spin-recoupling
-            // reorder indices to physical
-            std::cout << std::endl;
-            std::cout << "Assemble RDMs ..." << std::endl;
-            std::cout << std::endl;
+            // construct patterns
+            std::vector<type_pattern> patterns = tpatterns;
+            if(isite == 1){
+               std::copy(fpatterns.begin(), fpatterns.end(), std::back_inserter(patterns));
+            }else if(isite == icomb.get_nphysical()-2){
+               std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(patterns));
+            }
+            if(order == 1){
+               get_rdm1(icomb, isite, qops_dict, wf3bra, wf3ket,
+                    patterns, schd, scratch, rdm);
+            /*
+            }else if(order == 2){
+               get_rdm2();
+            */
+            }else{
+               tools::exit("error: order is not supported!");
+            }
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation
@@ -199,7 +214,7 @@ namespace ctns{
             timing.te = tools::get_time();
 
             // save site and renormalize operators
-            auto& qops  = qops_pool[frop];
+            auto& qops = qops_pool[frop];
             const auto& lqops = qops_pool.at(fneed[0]);
             const auto& rqops = qops_pool.at(fneed[1]);
             const auto& cqops = qops_pool.at(fneed[2]);

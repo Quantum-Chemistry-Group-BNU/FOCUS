@@ -1,19 +1,15 @@
 #ifndef CTNS_RDM1_H
 #define CTNS_RDM1_H
 
-#include "rdm_env.h"
-#include "rdm_util.h"
-#include "../sweep_init.h"
-#ifndef SERIAL
-#include "../core/mpi_wrapper.h"
-#endif
-
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void get_rdm1(const bool is_same,
-            const comb<Qm,Tm>& icomb,
-            const comb<Qm,Tm>& icomb2,
+      void get_rdm1(const comb<Qm,Tm>& icomb,
+            const int isite,
+            const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict, 
+            const qtensor3<Qm::ifabelian,Tm>& wf3bra,
+            const qtensor3<Qm::ifabelian,Tm>& wf3ket,
+            const std::vector<type_pattern>& patterns,
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm1){
@@ -30,6 +26,11 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
+         display_patterns(patterns);
+         // assemble rdms
+         // spin-recoupling
+         // reorder indices to physical
+         // Compute RDMs
 
          if(debug){
             auto t1 = tools::get_time();

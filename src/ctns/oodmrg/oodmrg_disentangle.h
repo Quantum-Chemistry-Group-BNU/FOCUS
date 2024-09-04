@@ -101,8 +101,6 @@ namespace ctns{
          double maxdwt = -1.0;
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
-            auto tp0 = icomb.topo.get_type(dbond.p0);
-            auto tp1 = icomb.topo.get_type(dbond.p1);
             std::string superblock;
             if(dbond.forward){
                superblock = dbond.is_cturn()? "lr" : "lc1";

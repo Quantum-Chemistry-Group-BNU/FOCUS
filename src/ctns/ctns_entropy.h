@@ -32,8 +32,6 @@ namespace ctns{
          const int dmax = icomb_tmp.get_dmax();
          for(int ibond=0; ibond<fsweep_seq.size(); ibond++){
             const auto& dbond = fsweep_seq[ibond];
-            auto tp0 = icomb_tmp.topo.get_type(dbond.p0);
-            auto tp1 = icomb_tmp.topo.get_type(dbond.p1);
             std::string superblock;
             if(dbond.forward){
                superblock = dbond.is_cturn()? "lr" : "lc1";

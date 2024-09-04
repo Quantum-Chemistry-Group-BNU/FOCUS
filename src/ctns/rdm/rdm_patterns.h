@@ -1,5 +1,5 @@
-#ifndef RDM_UTIL_H
-#define RDM_UTIL_H
+#ifndef RDM_PATTERNS_H
+#define RDM_PATTERNS_H
 
 namespace ctns{
 
@@ -143,7 +143,7 @@ namespace ctns{
       return tpatterns;
    }
 
-   std::vector<type_pattern> all_type_patterns(const int order){
+   inline std::vector<type_pattern> all_type_patterns(const int order){
       std::vector<type_pattern> tpatterns;
       auto patterns = number_patterns(order);
       for(const auto& pt : patterns){
@@ -153,7 +153,7 @@ namespace ctns{
       return tpatterns;
    }
 
-   std::vector<type_pattern> all_first_type_patterns(const int order){
+   inline std::vector<type_pattern> all_first_type_patterns(const int order){
       std::vector<type_pattern> tpatterns;
       auto patterns = first_number_patterns(order);
       for(const auto& pt : patterns){
@@ -163,7 +163,7 @@ namespace ctns{
       return tpatterns;
    }
 
-   std::vector<type_pattern> all_last_type_patterns(const int order){
+   inline std::vector<type_pattern> all_last_type_patterns(const int order){
       std::vector<type_pattern> tpatterns;
       auto patterns = last_number_patterns(order);
       for(const auto& pt : patterns){
@@ -171,6 +171,13 @@ namespace ctns{
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
       return tpatterns;
+   }
+
+   inline void display_patterns(const std::vector<type_pattern>& patterns){
+      std::cout << "ctns::display_patterns size=" << patterns.size() << std::endl;
+      for(int i=0; i<patterns.size(); i++){
+         std::cout << " i=" << i << " " << patterns[i].to_string() << std::endl;
+      }
    }
 
 } // ctns
