@@ -29,11 +29,12 @@ void MPSPROP(const input::schedule& schd){
       tools::exit("error: inconsistent dtype in MPSPROP!");
    }
 
-   //-----------------------------------------------------------------
+   //---------------------------------------------------------------------
    // The driver mpsprop only support MPS with the same kind (topo,Qm,Tm)
-   //-----------------------------------------------------------------
+   //---------------------------------------------------------------------
 
    // initialization of MPS
+   bool exist1 = false;
    ctns::comb<Qm,Tm> icomb;
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
@@ -42,21 +43,24 @@ void MPSPROP(const input::schedule& schd){
          icomb.display_shape();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
       }
+      exist1 = true;
    }
+   if(schd.ctns.rcanon_file.size() == 0){
+      tools::exit("error: MPS1 must be given!");
+   }
+   bool is_same = false;
    ctns::comb<Qm,Tm> icomb2;
    if(schd.ctns.rcanon2_file.size()>0){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
-      assert(icomb2.topo.ifmps);
+      assert(icomb2.topo.ifmps); // must be MPS
       if(rank == 0){
          icomb2.display_shape();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
       }
    }else{
-      auto icomb_tmp = icomb;
-      icomb2 = std::move(icomb_tmp);
-   }
-   if(schd.ctns.rcanon_file.size() == 0){
-      tools::exit("error: MPS1 must be given!");
+      auto jcomb = icomb;
+      icomb2 = std::move(jcomb);
+      is_same = true;
    }
 
    // task_prop
@@ -68,9 +72,11 @@ void MPSPROP(const input::schedule& schd){
          std::cout << " " << tasks.at(key);
       }
       std::cout << std::endl;
-      std::cout << " MPS1 = " << schd.ctns.rcanon_file << std::endl;
-      std::cout << " MPS2 = " << schd.ctns.rcanon2_file << std::endl;
+      std::cout << " MPS1 = " << schd.ctns.rcanon_file << " nroot=" << icomb.get_nroots() << " iroot=" << schd.ctns.iroot << std::endl;
+      std::cout << " MPS2 = " << schd.ctns.rcanon2_file << " nroot=" << icomb2.get_nroots() << " jroot=" << schd.ctns.jroot << std::endl;
       std::cout << tools::line_separator2 << std::endl;
+      assert(schd.ctns.iroot <= icomb.get_nroots());
+      assert(schd.ctns.jroot <= icomb2.get_nroots());
    }
 
    if(tools::is_in_vector(schd.ctns.task_prop,0)){
@@ -80,7 +86,7 @@ void MPSPROP(const input::schedule& schd){
          Sij.print("<MPS1|MPS2>", schd.ctns.outprec);
       }
    } 
-   
+  
    if(tools::is_in_vector(schd.ctns.task_prop,1)){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
@@ -89,7 +95,7 @@ void MPSPROP(const input::schedule& schd){
       // compute rdm1 
       int k = 2*icomb.get_nphysical();
       linalg::matrix<Tm> rdm1(k,k);
-      ctns::get_rdm1(icomb, icomb2, schd, scratch, rdm1); 
+      ctns::get_rdm1(is_same, icomb, icomb2, schd, scratch, rdm1); 
    }
 
    if(tools::is_in_vector(schd.ctns.task_prop,2)){
@@ -101,7 +107,7 @@ void MPSPROP(const input::schedule& schd){
       int k = 2*icomb.get_nphysical();
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm2(k2,k2);
-      ctns::get_rdm2(icomb, icomb2, schd, scratch, rdm2); 
+      ctns::get_rdm2(is_same, icomb, icomb2, schd, scratch, rdm2); 
    }
 
 /*

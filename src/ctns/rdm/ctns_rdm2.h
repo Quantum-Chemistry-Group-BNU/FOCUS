@@ -4,7 +4,8 @@
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void get_rdm2(const comb<Qm,Tm>& icomb,
+      void get_rdm2(const bool is_same,
+            const comb<Qm,Tm>& icomb,
             const comb<Qm,Tm>& icomb2,
             const input::schedule& schd,
             const std::string scratch,

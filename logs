@@ -443,40 +443,9 @@
  * Implementation for MPS:
    - keyword: savebin & task_prop
    - overlap [DONE@2024/09/02]
-   - rdm1 (rNSz and rNS for spin-free 1RDM) [DONE@2024/09/XX]
-      - driver
-
-   - rdm2 (rNSz and rNS for spin-free 2RDM)
-   - rdm1t (Tpq-1RDM)
-   - <MPS|H|MPS'> using rdm1,rdm2 (enable different bra and ket in oper_renorm)
-   // <MPS[N]|ap^+aq|MPS'[N]>
-   // <MPS[N-2]|apaq|MPS[N]>
-   // <MPS[N-1]|ap|MPS[N]>
-   // How to deal with SU(2) case? 
-   // In particular, the singlet embedding case!
-	
-   - Brute-force RDM & TDM algorithm:
-      - non-spin-adapted: [DONE@2024/06/02]
-         - Application of local op to MPS:
-         - Contract <bMPS|kMPS> to get RDM/TDM
-         - quantum information measure:
-            - single orbital entropy [or just from 1,2-RDMs]
-      - spin-adapted case? 
-         - What is the correct math for applying operators?
-   - Batch algorithm for RDMs: THIS SHOUDLD BE SIMPLE FOLLOWING CHAN'S PAPER!!!
-   - Optimized algorithm via reusing intermediates
-      - non-spin-adapted case: 
-         - one-body RDM:
-         - two-body RDM:
-      - spin-adapted case:
-         - one-body RDM:
-         - two-body RDM:
-      - transition PDM:
-         - between same spins
-         - between singlet embedding wavefunction?
-      - between different spins (for SOC)
-         - perturbative SOC via state interaction
-   - GPU version:
-      - using batch algorithm! [GENERATE FORMULAE IS IMPORTANT!!!]
-   - Singlet embedding for SOC - <Tpq>?
+   - RDMs:
+      - rdm_env  
+      - generation of patterns
+      - loop structure using onedot [DONE@2024/09/04] 
+      - assemble
 
