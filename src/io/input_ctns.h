@@ -99,8 +99,8 @@ namespace input{
                   & savebin 
                   & fromnosym
                   & ooparams
-                  & inputconf & saveconfs & loadconfs;
-                  & alg_rdm
+                  & inputconf & saveconfs & loadconfs
+                  & alg_rdm;
             }
       public:
          void read(std::ifstream& istrm);

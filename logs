@@ -444,8 +444,9 @@
    - keyword: savebin & task_prop
    - overlap [DONE@2024/09/02]
    - RDMs:
-      - rdm_env  
       - generation of patterns
-      - loop structure using onedot [DONE@2024/09/04] 
+      - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
+      - propagation of operators 
+         - rdm_env  
       - assemble
 

@@ -4,6 +4,9 @@
 #include "rdm_env.h"
 #include "rdm_util.h"
 #include "../sweep_init.h"
+#ifndef SERIAL
+#include "../core/mpi_wrapper.h"
+#endif
 
 namespace ctns{
 
@@ -18,30 +21,35 @@ namespace ctns{
          // copy MPS
          auto icomb = combi;
          auto icomb2 = combj;
-         int size = 1, rank = 0;
+         int size = 1, rank = 0, maxthreads = 1;
 #ifndef SERIAL
          size = icomb.world.size();
          rank = icomb.world.rank();
-#endif  
+#endif
+#ifdef _OPENMP
+         maxthreads = omp_get_max_threads();
+#endif
          const bool ifab = Qm::ifabelian;
+         const int alg_rdm = schd.ctns.alg_rdm;
+         const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0); 
          if(debug){ 
             std::cout << "\nctns::get_rdm1 ifab=" << ifab
+               << " alg_rdm=" << alg_rdm
+               << " alg_renorm=" << alg_renorm
+               << " mpsize=" << size
+               << " maxthreads=" << maxthreads
                << std::endl;
          }
          auto t0 = tools::get_time();
 
          const int order = 1; // 1-RDM
 
-         /*
          // prepare environments {C,D} [both are required for icomb != icomb2]
          rdm_env_right(order, is_same, icomb, icomb2, schd, scratch);
-         */
 
-         /*
          // build operators on the left dot
-         oper_init_dotL(icomb, int2e, int1e, schd, scratch);
-         */
+         rdm_init_dotL(order, icomb, schd, scratch);
 
          // initialization of single MPS
          sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
@@ -65,6 +73,7 @@ namespace ctns{
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             auto t0x = tools::get_time();
             const auto& dbond = sweep_seq[ibond];
+            assert(dbond.forward);
             auto tp0 = icomb.topo.get_type(dbond.p0);
             auto tp1 = icomb.topo.get_type(dbond.p1);
             std::string superblock;
@@ -85,35 +94,9 @@ namespace ctns{
             // check partition
             auto dims = icomb.topo.check_partition(dots, dbond, debug, schd.ctns.verbose);
 
-            assert(dbond.forward);
-            // load MPS central site (use copy to avoid some problems in guess, where cpsi is changed)
-            auto wf3bra = icomb.cpsi[0];
-            auto wf3ket = icomb2.cpsi[0];
-            size_t ndimbra = wf3bra.size();
-            size_t ndimket = wf3ket.size();
-            if(debug){
-               std::cout << "wf3bra(diml,dimr,dimc)=("
-                  << wf3bra.info.qrow.get_dimAll() << ","
-                  << wf3bra.info.qcol.get_dimAll() << ","
-                  << wf3bra.info.qmid.get_dimAll() << ")"
-                  << " nnz=" << ndimbra << ":"
-                  << tools::sizeMB<Tm>(ndimbra) << "MB"
-                  << std::endl;
-               wf3bra.print("wf3bra",schd.ctns.verbose-2);
-               std::cout << "wf3ket(diml,dimr,dimc)=("
-                  << wf3ket.info.qrow.get_dimAll() << ","
-                  << wf3ket.info.qcol.get_dimAll() << ","
-                  << wf3ket.info.qmid.get_dimAll() << ")"
-                  << " nnz=" << ndimket << ":"
-                  << tools::sizeMB<Tm>(ndimket) << "MB"
-                  << std::endl;
-               wf3ket.print("wf3ket",schd.ctns.verbose-2);
-            }
-
-            /*
             // load operators
             auto fneed = icomb.topo.get_fqops(dots, dbond, scratch, debug && schd.ctns.verbose>0);
-            qops_pool.fetch_to_memory(fneed, alg_hvec>10 || alg_renorm>10);
+            qops_pool.fetch_to_memory(fneed, alg_rdm>10 || alg_renorm>10);
             const qoper_dictmap<ifab,Tm> qops_dict = {
                {"l",qops_pool.at(fneed[0])},
                {"r",qops_pool.at(fneed[1])},
@@ -140,20 +123,46 @@ namespace ctns{
             auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
             // prefetch files for the next bond
             if(schd.ctns.async_fetch){
-               if(alg_hvec>10 && alg_renorm>10){
+               if(alg_rdm>10 && alg_renorm>10){
                   const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
                   qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
                }
                qops_pool[frop]; // just declare a space for frop
                qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
             }
-            */
             timing.ta = tools::get_time();
             timing.tb = tools::get_time();
+
+            // load MPS central site (use copy to avoid some problems in guess, where cpsi is changed)
+            auto wf3bra = icomb.cpsi[0];
+            auto wf3ket = icomb2.cpsi[0];
+            size_t ndimbra = wf3bra.size();
+            size_t ndimket = wf3ket.size();
+            if(debug){
+               std::cout << "wf3bra(diml,dimr,dimc)=("
+                  << wf3bra.info.qrow.get_dimAll() << ","
+                  << wf3bra.info.qcol.get_dimAll() << ","
+                  << wf3bra.info.qmid.get_dimAll() << ")"
+                  << " nnz=" << ndimbra << ":"
+                  << tools::sizeMB<Tm>(ndimbra) << "MB"
+                  << std::endl;
+               wf3bra.print("wf3bra",schd.ctns.verbose-2);
+               std::cout << "wf3ket(diml,dimr,dimc)=("
+                  << wf3ket.info.qrow.get_dimAll() << ","
+                  << wf3ket.info.qcol.get_dimAll() << ","
+                  << wf3ket.info.qmid.get_dimAll() << ")"
+                  << " nnz=" << ndimket << ":"
+                  << tools::sizeMB<Tm>(ndimket) << "MB"
+                  << std::endl;
+               wf3ket.print("wf3ket",schd.ctns.verbose-2);
+            }
 
             // assemble rdms
             // spin-recoupling
             // reorder indices to physical
+            std::cout << std::endl;
+            std::cout << "Assemble RDMs ..." << std::endl;
+            std::cout << std::endl;
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation
@@ -187,12 +196,10 @@ namespace ctns{
             timing.te = tools::get_time();
 
             // save site and renormalize operators
-            /*
-               auto& qops  = qops_pool[frop];
-               const auto& lqops = qops_pool.at(fneed[0]);
-               const auto& rqops = qops_pool.at(fneed[1]);
-               const auto& cqops = qops_pool.at(fneed[2]);
-               */
+            auto& qops  = qops_pool[frop];
+            const auto& lqops = qops_pool.at(fneed[0]);
+            const auto& rqops = qops_pool.at(fneed[1]);
+            const auto& cqops = qops_pool.at(fneed[2]);
             const auto p = dbond.get_current();
             const auto& pdx = icomb.topo.rindex.at(p);
             std::string fname;
@@ -200,44 +207,22 @@ namespace ctns{
             if(superblock == "lc"){
                icomb.sites[pdx] = rotbra.split_lc(wf3bra.info.qrow, wf3bra.info.qmid);
                icomb2.sites[pdx] = rotket.split_lc(wf3ket.info.qrow, wf3ket.info.qmid);
-               /*
-                  qops_pool.clear_from_memory({fneed[1]}, fneed_next);
-                  oper_renorm("lc", icomb, p, int2e, int1e, schd,
-                  lqops, cqops, qops, fname, timing, fmmtask);
-                  */
+               qops_pool.clear_from_memory({fneed[1]}, fneed_next);
+               rdm_renorm(order, "lc", is_same, icomb, icomb2, p, schd,
+                     lqops, cqops, qops, fname, timing, fmmtask);
             }else if(superblock == "cr"){
                icomb.sites[pdx] = rotbra.split_cr(wf3bra.info.qmid, wf3bra.info.qcol);
                icomb2.sites[pdx] = rotket.split_cr(wf3ket.info.qmid, wf3ket.info.qcol);
-               /*
-                  qops_pool.clear_from_memory({fneed[0]}, fneed_next);
-                  oper_renorm("cr", icomb, p, int2e, int1e, schd,
-                  cqops, rqops, qops, fname, timing, fmmtask);
-                  */
+               qops_pool.clear_from_memory({fneed[0]}, fneed_next);
+               rdm_renorm(order, "cr", is_same, icomb, icomb2, p, schd,
+                     cqops, rqops, qops, fname, timing, fmmtask);
             }else{
                tools::exit("error: superblock=lr is not supported yet!");
             }
             timing.tf = tools::get_time();
 
-            // save on disk
-            /*
-               auto t0 = tools::get_time();
-               qops_pool.join_and_erase(fneed, fneed_next);
-               icomb.world.barrier();
-               auto t1 = tools::get_time();
-               qops_pool.save_to_disk(frop, schd.ctns.async_save, fneed_next);
-               auto t2 = tools::get_time();
-               qops_pool.remove_from_disk(fdel, schd.ctns.async_remove);
-               if(debug){
-               auto t3 = tools::get_time();
-               std::cout << "----- TIMING FOR cleanup: "
-               << tools::get_duration(t3-t0) << " S"
-               << " T(join&erase/save/remove)="
-               << tools::get_duration(t1-t0) << ","
-               << tools::get_duration(t2-t1) << ","
-               << tools::get_duration(t3-t2) << " -----"
-               << std::endl;
-               }
-               */
+            // 4. cleanup operators
+            qops_pool.cleanup_sweep(fneed, fneed_next, frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
 
             timing.t1 = tools::get_time();
             if(debug){

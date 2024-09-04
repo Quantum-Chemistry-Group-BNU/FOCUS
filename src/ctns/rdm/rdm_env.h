@@ -12,16 +12,14 @@
 
 namespace ctns{
 
-/*
    template <typename Qm, typename Tm>
-      void oper_init_dotL(const comb<Qm,Tm>& icomb,
-            const integral::two_body<Tm>& int2e,
-            const integral::one_body<Tm>& int1e,
+      void rdm_init_dotL(const int order,
+            const comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch){
-
          const int isym = Qm::isym;
          const bool ifkr = Qm::ifkr;
+         const int sorb = icomb.get_nphysical()*2;
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -30,7 +28,7 @@ namespace ctns{
          const auto& iomode = schd.ctns.iomode;
          const bool debug = (rank==0);
          if(debug){
-            std::cout << "\nctns::oper_init_dotL isym=" << isym 
+            std::cout << "\nctns::rdm_init_dotL isym=" << isym 
                << " ifkr=" << ifkr 
                << " singlet=" << schd.ctns.singlet
                << std::endl;
@@ -42,7 +40,7 @@ namespace ctns{
          //---------------------------------------------
          int kp = icomb.topo.get_node(p).porb;
          qoper_dict<Qm::ifabelian,Tm> qops;
-         oper_init_dot(qops, isym, ifkr, kp, int2e, int1e, size, rank);
+         rdm_init_dot(order, sorb, qops, isym, ifkr, kp, size, rank);
          //---------------------------------------------
          std::string fop = oper_fname(scratch, p, "l");
          if(isym == 3 and schd.ctns.singlet){
@@ -55,9 +53,8 @@ namespace ctns{
          //---------------------------------------------
 
          auto t1 = tools::get_time();
-         if(debug) tools::timing("ctns::oper_init_dotL", t0, t1);
+         if(debug) tools::timing("ctns::rdm_init_dotL", t0, t1);
       } 
-*/
 
    // initialization of operators for
    // (1) dot operators [c]
