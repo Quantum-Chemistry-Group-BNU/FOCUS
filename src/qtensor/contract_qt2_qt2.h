@@ -40,6 +40,31 @@ namespace ctns{
          return qt2;
       }
 
+   // formula: tr(A^*B^T) = \sum_{rc} qt2a(r,c)^* qt2b(r,c)
+   template <typename Tm>
+      Tm contract_qt2_qt2_full(const stensor2<Tm>& qt2a, 
+            const stensor2<Tm>& qt2b){
+         assert(qt2a.dir_row() == !qt2b.dir_row());
+         assert(qt2a.dir_col() == !qt2b.dir_col());
+         assert(qt2a.info.qrow == qt2b.info.qrow);
+         assert(qt2a.info.qcol == qt2b.info.qcol);
+         Tm val = 0.0;
+         qsym sym = qt2a.info.sym + qt2b.info.sym;
+         if(!sym.is_zero()) return val;
+         // loop over internal indices
+         int br, bc;
+         for(int i=0; i<qt2a.info._nnzaddr.size(); i++){
+            int idx = qt2a.info._nnzaddr[i];
+            qt2a.info._addr_unpack(idx,br,bc);
+            auto blka = qt2a(br,bc);
+            auto blkb = qt2b(br,bc);
+            if(blka.size() == 0 or blkb.size() == 0);
+            assert(blka.size() == blkb.size());
+            val += linalg::xdot(blka.size(), blka.data(), blkb.data());
+         } // i
+         return val;
+      }
+
 } // ctns
 
 #endif

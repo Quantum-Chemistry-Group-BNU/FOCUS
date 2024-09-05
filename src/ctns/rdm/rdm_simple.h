@@ -92,7 +92,9 @@ namespace ctns{
                      int pl = 2*image1[kl] + spin_l;
                      auto pij = tools::canonical_pair0(pi,pj);
                      auto pkl = tools::canonical_pair0(pk,pl);
-                     rdm2(pij,pkl) = smat(iroot1,iroot2);
+                     Tm sgn1 = (pi>pj)? 1 : -1;
+                     Tm sgn2 = (pk<pl)? 1 : -1;
+                     rdm2(pij,pkl) = sgn1*sgn2*smat(iroot1,iroot2);
                   } // l
                } // k
             } // j

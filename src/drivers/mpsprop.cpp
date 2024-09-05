@@ -76,7 +76,7 @@ void MPSPROP(const input::schedule& schd){
          << " nroot=" << icomb.get_nroots() 
          << " iroot=" << schd.ctns.iroot 
          << std::endl;
-      std::cout << " MPS2 = " << schd.ctns.rcanon2_file 
+      std::cout << " MPS2 = " << (is_same? "none" : schd.ctns.rcanon2_file) 
          << " nroot=" << icomb2.get_nroots() 
          << " jroot=" << schd.ctns.jroot 
          << std::endl;
@@ -103,10 +103,18 @@ void MPSPROP(const input::schedule& schd){
       // compute rdm1 
       int k = 2*icomb.get_nphysical();
       linalg::matrix<Tm> rdm1(k,k);
-      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1);
+   
+      auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+      tdm1.save_txt("tdm1", schd.ctns.outprec);
+      std::cout << "trace=" << tdm1.trace() << std::endl;
 
+      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1);
       // natural occupation and natural orbitals
 
+      std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
+      std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
+      tdm1 -= rdm1;
+      std::cout << "diff=" << tdm1.normF() << std::endl;
    }
 
    // 2: rdm2
@@ -246,10 +254,10 @@ int main(int argc, char *argv[]){
       MPSPROP<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
       MPSPROP<ctns::qkind::qNK,std::complex<double>>(schd);
-   }else if(schd.ctns.qkind == "rNS"){
-      MPSPROP<ctns::qkind::qNS,double>(schd);
-   }else if(schd.ctns.qkind == "cNS"){
-      MPSPROP<ctns::qkind::qNS,std::complex<double>>(schd);
+//   }else if(schd.ctns.qkind == "rNS"){
+//      MPSPROP<ctns::qkind::qNS,double>(schd);
+//   }else if(schd.ctns.qkind == "cNS"){
+//      MPSPROP<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind

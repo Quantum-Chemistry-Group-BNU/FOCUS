@@ -255,7 +255,7 @@ namespace ctns{
                   std::string rcanon_file = schd.scratch+"/oo_rcanon_d"+std::to_string(dcut); 
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
-                  urot_min.save_text("urot", schd.ctns.outprec);
+                  urot_min.save_txt("urot", schd.ctns.outprec);
                }
             } // rank-0
          } // iter

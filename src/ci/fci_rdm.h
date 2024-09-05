@@ -232,8 +232,8 @@ namespace fci{
          std::cout << "\nCheck: I,J=" << iroot << "," << jroot
             << " H(I,J)=" << std::fixed << std::setprecision(12) << Hij 
             << std::endl;
-         rdm1.save_text("rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
-         rdm2.save_text("rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm1.save_txt("rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm2.save_txt("rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
          auto t1 = tools::get_time();
          tools::timing("fci:get_rdm12", t0, t1);
          return Hij;

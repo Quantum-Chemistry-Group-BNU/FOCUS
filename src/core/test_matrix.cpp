@@ -104,8 +104,8 @@ int tests::test_matrix(){
    cout << endl;
 
    // io
-   iden.save_text("iden");
-   cmat.save_text("cmat");
+   iden.save_txt("iden");
+   cmat.save_txt("cmat");
    
    iden.save("iden");
    cmat.save("cmat");

@@ -446,16 +446,22 @@
    - RDMs:
       - generation of patterns
       - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
-      - propagation of operators [DONE@2024/09/04]
-         - rdm_env
-         - support Id in dot and oper_dict [DONE@2024/09/05] 
-         - support Id in renorm 
-         - support local operators in renorm
-      - reference implementation alg_rdm=0
-         - compute and assemble rdm1?
+      - case 0: nonsu2 & is_same case:
+         - propagation of operators [DONE@2024/09/04]
+            - rdm_env
+            - support Id in dot and oper_dict [DONE@2024/09/05] 
+            - support Id in renorm 
+            - support local operators in renorm
+         - reference implementation alg_rdm=0
+            - compute rdm1 [DONE@2024/09/05] 
+            - assemble rdm1
+            - compute rdm2
+               - treatment of |+-|
+            - assemble rdm2
+         - parallel version (reduction of rdm)
+         - optimized implementation
+      - case 1: nonsu2 & !is_same:
+      - case 2: su2 & is_same:
+         - spin recoupling?
+      - case 3: su2 & !is_same:
 
-
-         - compute and assemble rdm2?
-      - optimized implementation
-      - su2 version
- 

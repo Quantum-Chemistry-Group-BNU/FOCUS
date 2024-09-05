@@ -1,8 +1,10 @@
 #ifndef CTNS_RDM1_H
 #define CTNS_RDM1_H
 
-namespace ctns{
+#include "rdm_string.h"
 
+namespace ctns{
+   
    template <typename Qm, typename Tm>
       void rdm_compute(const int order,
             const comb<Qm,Tm>& icomb,
@@ -34,7 +36,6 @@ namespace ctns{
 
          display_patterns(patterns);
 
-
          const std::map<std::string,std::pair<char,bool>> str2optype = {
             {"",{'I',0}},
             {"+",{'C',0}},
@@ -48,7 +49,10 @@ namespace ctns{
             {"+--",{'W',0}},
             {"++--",{'U',0}}
          };
-         
+         const std::map<char,int> op2parity = {
+            {'I',0},{'C',1},{'A',0},{'B',0}
+         };
+
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
@@ -80,7 +84,7 @@ namespace ctns{
             const auto& cdagger = coptype.second;
             const auto& rkey = roptype.first; 
             const auto& rdagger = roptype.second;
-            std::cout << "i=" << i 
+            std::cout << "\ni=" << i 
                << " pattern=" << pattern.to_string() 
                << " opkey=" << lkey << ldagger 
                << ":" << ckey << cdagger 
@@ -92,17 +96,54 @@ namespace ctns{
             std::cout << "cops=" << cops.size() << std::endl;
             const auto& rops = rqops(rkey);
             std::cout << "rops=" << rops.size() << std::endl;
-            //const auto& lops = lqops.at("");
+            int lparity = op2parity.at(lkey);
+            int cparity = op2parity.at(ckey);
+            int rparity = op2parity.at(rkey);
 
             if(alg_rdm == 0){
 
+               // assemble rdms
+               for(const auto& rpr : rops){
+                  const auto& rdx = rpr.first;
+                  const auto& rop = rpr.second;
+                  auto rstr = get_calst(rkey, rdx, rdagger);
+                  auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
+                  for(const auto& cpr : cops){
+                     const auto& cdx = cpr.first;
+                     const auto& cop = cpr.second;
+                     auto cstr = get_calst(ckey, cdx, cdagger);
+                     auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
+                     if((cparity+rparity)%2 == 1) opxwf2.row_signed();
+                     auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
+                     for(const auto& lpr : lops){
+                        const auto& ldx = lpr.first;
+                        auto lop = ldagger? lpr.second.H() : lpr.second;
+                        auto lstr = get_calst(lkey, ldx, ldagger);
+                        if(tools::is_complex<Tm>()) lop = lop.conj();
+                        Tm val = contract_qt2_qt2_full(lop, op2); 
+                        rdmstring rdmstr(lstr, cstr, rstr);
+                        auto rdmstr2 = rdmstr;
+                        Tm sgn = rdmstr2.sort();
+                        std::cout << "ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
+                           << " rdmstr=" << rdmstr.to_string()
+                           << " rdmstr2=" << rdmstr2.to_string()
+                           << " sgn=" << sgn 
+                           << " val=" << std::setprecision(schd.ctns.outprec) << val
+                           << std::endl;
+                        auto ijdx = rdmstr2.get_ijdx();
+                        rdm1(ijdx.first,ijdx.second) = sgn*val;
+                     }
+                  }
+               }
+
+               // spin-recoupling for su2 case
             
-            }
+               // reorder indices to physical
             
-            // assemble rdms
-            // spin-recoupling
-            // reorder indices to physical
-         }
+            } // alg_rdm
+         } // pattern
+         
+         //exit(1);
 
          if(debug){
             auto t1 = tools::get_time();
