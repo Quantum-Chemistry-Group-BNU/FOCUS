@@ -447,6 +447,15 @@
       - generation of patterns
       - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
       - propagation of operators [DONE@2024/09/04]
-         - rdm_env  
-      - compute and assemble rdm?
+         - rdm_env
+         - support Id in dot and oper_dict [DONE@2024/09/05] 
+         - support Id in renorm 
+         - support local operators in renorm
+      - reference implementation alg_rdm=0
+         - compute and assemble rdm1?
 
+
+         - compute and assemble rdm2?
+      - optimized implementation
+      - su2 version
+ 

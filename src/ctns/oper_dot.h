@@ -66,6 +66,18 @@ namespace ctns{
 #endif
       }
 
+   // Identity
+   template <typename Tm>
+      void oper_dot_opI(oper_dict<Tm>& qops){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opI" << std::endl; 
+         // [[1. 0. 0. 0.]
+         //  [0. 1. 0. 0.]
+         //  [0. 0. 1. 0.]
+         //  [0. 0. 0. 1.]]
+         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(4);
+         qops('I')[0].from_matrix(mat);
+      }
+
    // kA^+
    template <typename Tm>
       void oper_dot_opC(oper_dict<Tm>& qops,

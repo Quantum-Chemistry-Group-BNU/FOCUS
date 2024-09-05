@@ -103,7 +103,7 @@ void MPSPROP(const input::schedule& schd){
       // compute rdm1 
       int k = 2*icomb.get_nphysical();
       linalg::matrix<Tm> rdm1(k,k);
-      ctns::get_rdm(1, is_same, icomb, icomb2, schd, scratch, rdm1);
+      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1);
 
       // natural occupation and natural orbitals
 
@@ -119,7 +119,7 @@ void MPSPROP(const input::schedule& schd){
       int k = 2*icomb.get_nphysical();
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm2(k2,k2);
-      ctns::get_rdm(2, is_same, icomb, icomb2, schd, scratch, rdm2);
+      ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2);
 
       // hamiltonian matrix elements if needed 
 /*

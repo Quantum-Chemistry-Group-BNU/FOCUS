@@ -125,7 +125,7 @@ namespace ctns{
          std::string center = "";
          std::string right  = "";
    };
-
+         
    inline std::vector<type_pattern> gen_type_patterns(const std::tuple<int,int,int>& num_pattern,
          const int ncre,
          const int nann,

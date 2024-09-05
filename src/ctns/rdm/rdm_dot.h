@@ -31,7 +31,7 @@ namespace ctns{
          qops.qbra = qphys;
          qops.qket = qphys;
          if(order == 1){
-            qops.oplist = "CB";
+            qops.oplist = "ICB";
          }else if(order == 2){
             //qops.oplist = "CAB...34body...";
          }else{
@@ -41,6 +41,7 @@ namespace ctns{
          // initialize memory
          qops.init(true);
          // compute local operators on dot
+         oper_dot_opI(qops);
          oper_dot_opC(qops, kp);
          oper_dot_opB(qops, kp);
       }

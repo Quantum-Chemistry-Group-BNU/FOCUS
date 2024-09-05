@@ -120,15 +120,15 @@ namespace ctns{
          }
          if(order == 1){ 
             if(is_same){
-               qops.oplist = "C";
+               qops.oplist = "IC";
             }else{
-               qops.oplist = "C";
+               qops.oplist = "IC";
                //std::cout << "error: not implemented yet";
                //exit(1);
             }
          }else if(order == 2){
             if(is_same){
-               qops.oplist = "CAB";
+               qops.oplist = "ICAB";
             }else{
                std::cout << "error: not implemented yet";
                //qops.oplist = "CABD";
@@ -207,13 +207,12 @@ namespace ctns{
          // declare a fake int2e
          integral::two_body<Tm> int2e;
          if(alg_renorm == 0){
-/*
 
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site2, int2e, qops1, qops2, qops, ifdist1);
             // initialize of qops
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
-
+/*
          }else if(alg_renorm == 1){
 
             // symbolic formulae + dynamic allocation of memory
@@ -557,35 +556,6 @@ namespace ctns{
                }
             } // blksize>0
             timing.tf9 = tools::get_time();
-
-#ifndef SERIAL
-            if(ifdist1 and size > 1 and schd.ctns.ifnccl){
-#ifndef NCCL
-               std::cout << "error: NCCL must be used for comm[opS,opH] for ifnccl=true!" << std::endl;
-               exit(1);
-#else
-               // Use NCCL to perform reduction for opS and opH on GPU directly
-               // Sp[iproc] += \sum_i Sp[i]
-               auto opS_index = qops.oper_index_op('S');
-               for(int p : opS_index){
-                  int iproc = distribute1(ifkr,size,p);
-                  auto& opS = qops('S')[p];
-                  size_t opsize = opS.size();
-                  size_t off = qops._offset[std::make_pair('S',p)];
-                  Tm* dev_ptr = qops._dev_data+off;
-                  nccl_comm.reduce(dev_ptr, opsize, iproc);
-                  if(iproc != rank) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
-               }
-               // H[0] += \sum_i H[i]
-               auto& opH = qops('H')[0];
-               size_t opsize = opH.size();
-               size_t off = qops._offset[std::make_pair('H',0)];
-               Tm* dev_ptr = qops._dev_data+off;
-               nccl_comm.reduce(dev_ptr, opsize, 0);
-               if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
-#endif
-            }
-#endif // SERIAL
             timing.tf10 = tools::get_time();
             
             qops.to_cpu();
@@ -603,7 +573,8 @@ namespace ctns{
                   << std::endl;
             }
 #endif // GPU
-*/ 
+
+*/
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);

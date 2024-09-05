@@ -22,7 +22,7 @@ namespace ctns{
    // return the spin and parity of operator (key,index)
    inline std::pair<int,int> get_spin_parity(const char key, const int index){
        int tk, pk;
-       if(key == 'H'){
+       if(key == 'H' || key == 'I'){
           tk = 0;
           pk = 0;
        }else if(key == 'C' || key == 'S'){
@@ -162,6 +162,17 @@ namespace ctns{
             if(rank != 0) qops('H')[0].set_zero();
          }
 #endif
+      }
+
+   // Identity
+   template <typename Tm>
+      void oper_dot_opI(opersu2_dict<Tm>& qops){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opI" << std::endl; 
+         // [[1. 0. 0.]
+         //  [0. 1. 0.]
+         //  [0. 0. 1.]]
+         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(3);
+         qops('I')[0].from_matrix(mat);
       }
 
    // kA^+

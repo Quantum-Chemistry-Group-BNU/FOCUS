@@ -162,6 +162,15 @@ namespace ctns{
                   qops.mpisize, qops.mpirank, ifdist1);
             rfuns.push_back(Hx);
          }
+         // opI
+         if(qops.oplist.find('I') != std::string::npos){
+            Hx_functor<Tm> Hx("I");
+            Hx.opxwf = bind(&oper_normxwf_opI<Tm>,
+                  std::cref(superblock), std::cref(site),
+                  std::cref(qops1), std::cref(qops2),
+                  false);
+            rfuns.push_back(Hx);
+         }
          return rfuns;
       }
 

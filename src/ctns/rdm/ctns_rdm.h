@@ -12,7 +12,7 @@
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void get_rdm(const int order,
+      void rdm_sweep(const int order,
             const bool is_same,
             const comb<Qm,Tm>& combi,
             const comb<Qm,Tm>& combj,
@@ -36,7 +36,7 @@ namespace ctns{
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0); 
          if(debug){ 
-            std::cout << "\nctns::get_rdm"
+            std::cout << "\nctns::rdm_sweep"
                << " order=" << order
                << " ifab=" << ifab
                << " alg_rdm=" << alg_rdm
@@ -172,7 +172,7 @@ namespace ctns{
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(patterns));
             }
             if(order == 1){
-               get_rdm1(icomb, isite, qops_dict, wf3bra, wf3ket,
+               rdm_compute(order, icomb, isite, qops_dict, wf3bra, wf3ket,
                     patterns, schd, scratch, rdm);
             /*
             }else if(order == 2){
@@ -262,7 +262,7 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("ctns::get_rdm", t0, t1);
+            tools::timing("ctns::rdm_sweep", t0, t1);
          }
       }
 

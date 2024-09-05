@@ -101,6 +101,10 @@ namespace ctns{
             qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
             }
+            // check existence
+            bool ifexist(const char key) const{
+               return _opdict.find(key) != _opdict.end();
+            }
             // helpers
             size_t size() const{ return _size; };
             size_t opsize() const{ return _opsize; };
@@ -140,7 +144,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "CABPQSH";
+         std::string opseq = "ICABPQSH";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
@@ -203,7 +207,7 @@ namespace ctns{
          std::vector<int> index;
          if(key == 'C'){
             index = cindex;
-         }else if(key == 'H'){
+         }else if(key == 'H' || key == 'I'){
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
@@ -239,7 +243,7 @@ namespace ctns{
       }else if(key == 'B'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opB(isym, pr.first, pr.second);
-      }else if(key == 'H'){
+      }else if(key == 'H' || key == 'I'){
          sym_op = qsym(isym,0,0);	   
       }else if(key == 'S'){
          sym_op = get_qsym_opS(isym, idx);
