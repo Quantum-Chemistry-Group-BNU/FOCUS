@@ -30,7 +30,8 @@ namespace ctns{
                void serialize(Archive & ar, const unsigned int version){
                   ar & sorb & isym & ifkr & qbra & qket 
                      & cindex & krest & oplist 
-                     & mpisize & mpirank & ifdist2;
+                     & mpisize & mpirank & ifdist2
+                     & ifhermi;
                }
          public:
             // constructor
@@ -120,6 +121,7 @@ namespace ctns{
             int mpisize = 1;
             int mpirank = 0;
             bool ifdist2 = false; // whether distribute two-index object
+            bool ifhermi = true; // whether to use hermicity to reduce no. of B/N
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,qoper_map<ifab,Tm>> _opdict;
@@ -144,7 +146,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "ICABPQSH";
+         std::string opseq = "ICABPQSHTFMN";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
@@ -211,12 +213,13 @@ namespace ctns{
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
-         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q'){
+         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' ||
+               key == 'M' || key == 'N'){
             std::vector<int> index2;
-            if(key == 'A'){
+            if(key == 'A' || key == 'M'){
                index2 = oper_index_opA(cindex, ifkr);
-            }else if(key == 'B'){
-               index2 = oper_index_opB(cindex, ifkr);
+            }else if(key == 'B' || key == 'N'){
+               index2 = oper_index_opB(cindex, ifkr, ifhermi);
             }else if(key == 'P'){
                index2 = oper_index_opP(krest, ifkr);
             }else if(key == 'Q'){
@@ -228,6 +231,13 @@ namespace ctns{
             }else{
                index = std::move(index2);
             }
+         //
+         // ZL@20240905: just for dot operators
+         //
+         }else if(key == 'F'){
+            index = {cindex[0]};
+         }else if(key == 'T'){
+            index = {cindex[0]+1,cindex[0]}; 
          }
          return index;
       }
@@ -243,6 +253,12 @@ namespace ctns{
       }else if(key == 'B'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opB(isym, pr.first, pr.second);
+      }else if(key == 'M'){
+         auto pr = oper_unpack(idx);
+         sym_op = get_qsym_opM(isym, pr.first, pr.second);
+      }else if(key == 'N'){
+         auto pr = oper_unpack(idx);
+         sym_op = get_qsym_opN(isym, pr.first, pr.second);
       }else if(key == 'H' || key == 'I'){
          sym_op = qsym(isym,0,0);	   
       }else if(key == 'S'){
@@ -253,6 +269,13 @@ namespace ctns{
       }else if(key == 'Q'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opQ(isym, pr.first, pr.second);
+      //
+      // ZL@20240905: just for dot operators
+      //
+      }else if(key == 'F'){
+         sym_op = qsym(isym,0,0);
+      }else if(key == 'T'){
+         sym_op = get_qsym_opD(isym, idx);
       }
       return sym_op;
    } 

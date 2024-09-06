@@ -176,6 +176,21 @@ namespace linalg{
                }
                file.close();
             }
+            void load_txt(const std::string& fname){
+               std::ifstream file(fname+".txt");
+               if (!file.is_open()) {
+                  tools::exit("error: fail to open file "+fname+".txt");
+               }
+               std::string line;
+               for(int i=0; i<_rows; i++){
+                  std::getline(file, line);
+                  std::stringstream ss(line);
+                  for(int j=0; j<_cols; j++){
+                     ss >> _data[j*_rows+i];
+                  }
+               }
+               file.close();
+            }
             // binary
             void save(const std::string& fname) const{
                std::ofstream ofs(fname, std::ios::binary);

@@ -163,6 +163,23 @@ namespace ctns{
       }
       return sym_op;
    }
+   // kA/kB
+   inline qsym get_qsym_opD(const short isym, const int p){
+      int spin = p%2;
+      qsym sym_op;
+      if(isym == 0 or isym == 1){
+         sym_op = qsym(isym,-1,0);
+      }else if(isym == 2){ 
+         sym_op = (spin==0)? qsym(isym,-1,-1) : qsym(isym,-1,+1);
+      }else if(isym == 3){
+         assert(spin == 0); // must be of alpha spin
+         sym_op = qsym(isym,-1,1); // C[1/2]
+      }else{
+         std::cout << "error: no such option for get_qsym_opD! isym=" << isym << std::endl;
+         exit(1);
+      }
+      return sym_op;
+   }
    // Apq = p^+q^+
    inline qsym get_qsym_opA(const short isym, const int p, const int q){
       int spin1 = p%2, spin2 = q%2;
@@ -190,6 +207,33 @@ namespace ctns{
       }
       return sym_op;
    }
+   // opM = p*q (p<q)
+   inline qsym get_qsym_opM(const short isym, const int p, const int q){
+      int spin1 = p%2, spin2 = q%2;
+      qsym sym_op;
+      if(isym == 0){
+         sym_op = qsym(isym,0,0);
+      }else if(isym == 1){
+         sym_op = qsym(isym,-2,0);
+      }else if(isym == 2){
+         if(spin1 != spin2){
+            sym_op = qsym(isym,-2,0);
+         }else{
+            sym_op = (spin1==0)? qsym(isym,-2,-2) : qsym(isym,-2,+2);
+         }
+      }else if(isym == 3){
+         assert(spin1 == 0);
+         if(spin1 != spin2){
+            sym_op = qsym(isym,-2,0); // Mpq[0]
+         }else{
+            sym_op = qsym(isym,-2,2); // Mpq[1]
+         }
+      }else{
+         std::cout << "error: no such option for get_qsym_opM! isym=" << isym << std::endl;
+         exit(1);
+      }
+      return sym_op;
+   }
    // Bps = p^+s
    inline qsym get_qsym_opB(const short isym, const int p, const int s){
       int spin1 = p%2, spin2 = s%2;
@@ -211,6 +255,31 @@ namespace ctns{
          }
       }else{
          std::cout << "error: no such option for get_qsym_opB! isym=" << isym << std::endl;
+         exit(1);
+      }
+      return sym_op;
+   }
+   // opN = ps^+
+   inline qsym get_qsym_opN(const short isym, const int p, const int s){
+      int spin1 = p%2, spin2 = s%2;
+      qsym sym_op;
+      if(isym == 0 or isym == 1){
+         sym_op = qsym(isym,0,0);
+      }else if(isym == 2){
+         if(spin1 == spin2){
+            sym_op = qsym(isym,0,0);
+         }else{
+            sym_op = (spin1==0)? qsym(isym,0,-2) : qsym(isym,0,+2);
+         }
+      }else if(isym == 3){
+         assert(spin1 == 0);
+         if(spin1 == spin2){
+            sym_op = qsym(isym,0,0); // Nps[0]
+         }else{
+            sym_op = qsym(isym,0,2); // Nps[1]
+         }
+      }else{
+         std::cout << "error: no such option for get_qsym_opN! isym=" << isym << std::endl;
          exit(1);
       }
       return sym_op;

@@ -18,7 +18,8 @@ namespace ctns{
             const comb<Qm,Tm>& combj,
             const input::schedule& schd,
             const std::string scratch,
-            linalg::matrix<Tm>& rdm){
+            linalg::matrix<Tm>& rdm,
+            const linalg::matrix<Tm>& tdm){
          const int dots = 1;
          // copy MPS
          auto icomb = combi;
@@ -58,9 +59,9 @@ namespace ctns{
          sweep_init_single(icomb2, schd.ctns.jroot, schd.ctns.singlet);
 
          // assemble RDM by sweep
-         auto tpatterns = all_type_patterns(order);
-         auto fpatterns = all_first_type_patterns(order);
-         auto lpatterns = all_last_type_patterns(order);
+         auto tpatterns = all_type_patterns(order, is_same);
+         auto fpatterns = all_first_type_patterns(order, is_same);
+         auto lpatterns = all_last_type_patterns(order, is_same);
          display_patterns(tpatterns);
          display_patterns(fpatterns);
          display_patterns(lpatterns);
@@ -171,16 +172,8 @@ namespace ctns{
             }else if(isite == icomb.get_nphysical()-2){
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(patterns));
             }
-            if(order == 1){
-               rdm_compute(order, icomb, isite, qops_dict, wf3bra, wf3ket,
-                    patterns, schd, scratch, rdm);
-            /*
-            }else if(order == 2){
-               get_rdm2();
-            */
-            }else{
-               tools::exit("error: order is not supported!");
-            }
+            rdm_compute(order, is_same, icomb, isite, qops_dict, wf3bra, wf3ket,
+                    patterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation

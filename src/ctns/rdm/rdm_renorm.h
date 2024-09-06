@@ -109,6 +109,7 @@ namespace ctns{
             assert(check_consistency(site2.info.qrow, qops1.qket));
             assert(check_consistency(site2.info.qmid, qops2.qket));
          }else if(superblock == "lr"){
+            tools::exit("error: rdm_renorm does not support superblock=lr yet!");
             qops.krest = node.corbs;
             qops.qbra = site.info.qmid;
             qops.qket = site2.info.qmid;
@@ -116,22 +117,33 @@ namespace ctns{
             assert(check_consistency(site.info.qcol, qops2.qbra));
             assert(check_consistency(site2.info.qrow, qops1.qket));
             assert(check_consistency(site2.info.qcol, qops2.qket));
-            tools::exit("error: rdm_renorm does not support superblock=lr yet!");
          }
          if(order == 1){ 
             if(is_same){
-               qops.oplist = "IC";
+               // icomb = icomb2
+               if(superblock == "cr"){
+                  qops.oplist = "I";
+               }else if(superblock == "lc"){
+                  qops.oplist = "IC";
+               }
             }else{
-               qops.oplist = "IC";
-               //std::cout << "error: not implemented yet";
-               //exit(1);
+               // icomb != icomb2
+               std::cout << "error: not implemented yet";
+               exit(1);
             }
          }else if(order == 2){
             if(is_same){
-               qops.oplist = "ICAB";
+               // icomb = icomb2
+               if(superblock == "cr"){
+                  // Note that in the partition scheme, the right block contains only "C" operator.
+                  // see the generation of patterns.
+                  qops.oplist = "IC";
+               }else if(superblock == "lc"){
+                  qops.oplist = "ICAB";
+               }
             }else{
+               // icomb != icomb2
                std::cout << "error: not implemented yet";
-               //qops.oplist = "CABD";
                exit(1);
             }
          }else{

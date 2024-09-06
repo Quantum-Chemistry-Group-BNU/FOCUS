@@ -7,6 +7,7 @@ namespace ctns{
    
    template <typename Qm, typename Tm>
       void rdm_compute(const int order,
+            const bool is_same,
             const comb<Qm,Tm>& icomb,
             const int isite,
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict, 
@@ -15,7 +16,8 @@ namespace ctns{
             const std::vector<type_pattern>& patterns,
             const input::schedule& schd,
             const std::string scratch,
-            linalg::matrix<Tm>& rdm1){
+            linalg::matrix<Tm>& rdm1,
+            const linalg::matrix<Tm>& tdm1){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -45,12 +47,13 @@ namespace ctns{
             {"+-",{'B',0}},
             {"-+",{'B',1}},
             // coper
-            {"++-",{'T',0}},
-            {"+--",{'W',0}},
-            {"++--",{'U',0}}
+            {"+--",{'T',0}},
+            {"++-",{'T',1}},
+            {"++--",{'F',0}}
          };
          const std::map<char,int> op2parity = {
-            {'I',0},{'C',1},{'A',0},{'B',0}
+            {'I',0},{'C',1},{'A',0},{'B',0},
+            {'T',1},{'F',0}
          };
 
          const auto& lqops = qops_dict.at("l");
@@ -124,14 +127,22 @@ namespace ctns{
                         rdmstring rdmstr(lstr, cstr, rstr);
                         auto rdmstr2 = rdmstr;
                         Tm sgn = rdmstr2.sort();
+                        auto ijdx = rdmstr2.get_ijdx();
+                        size_t idx = ijdx.first;
+                        size_t jdx = ijdx.second;
+                        rdm1(idx,jdx) = sgn*val;
+                        double diff = std::abs(sgn*val - tdm1(idx,jdx));
                         std::cout << "ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
                            << " rdmstr=" << rdmstr.to_string()
                            << " rdmstr2=" << rdmstr2.to_string()
                            << " sgn=" << sgn 
-                           << " val=" << std::setprecision(schd.ctns.outprec) << val
+                           << " val=" << std::setprecision(schd.ctns.outprec) << sgn*val
+                           << " idx,jdx=" << idx << "," << jdx
+                           << " tdm=" << tdm1(idx,jdx)
+                           << " diff=" << diff
                            << std::endl;
-                        auto ijdx = rdmstr2.get_ijdx();
-                        rdm1(ijdx.first,ijdx.second) = sgn*val;
+                        assert(diff < 1.e-10);
+                        if(is_same) rdm1(jdx,idx) = tools::conjugate(rdm1(idx,jdx));
                      }
                   }
                }

@@ -108,7 +108,7 @@ void MPSPROP(const input::schedule& schd){
       tdm1.save_txt("tdm1", schd.ctns.outprec);
       std::cout << "trace=" << tdm1.trace() << std::endl;
 
-      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1);
+      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
       // natural occupation and natural orbitals
 
       std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
@@ -127,57 +127,66 @@ void MPSPROP(const input::schedule& schd){
       int k = 2*icomb.get_nphysical();
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm2(k2,k2);
-      ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2);
+
+      auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+      tdm2.save_txt("tdm2", schd.ctns.outprec);
+      std::cout << "trace=" << tdm2.trace() << std::endl;
+
+      auto tdm2fci = rdm2;
+      tdm2fci.load_txt("rdm2.0.0");
+      std::cout << "trace=" << tdm2fci.trace() << std::endl;
+      tdm2fci -= tdm2;
+      std::cout << "diff=" << tdm2fci.normF() << std::endl;
+      assert(tdm2fci.normF() < 1.e-10);
+
+      ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
+
+      //auto tdm2 = tdm2fci;
+      std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;
+      std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
+      auto ddm2 = tdm2 - rdm2;
+      std::cout << "diff=" << ddm2.normF() << std::endl;
+      if(ddm2.normF() > 1.e-10){
+         for(int i=0; i<ddm2.rows(); i++){
+            for(int j=0; j<ddm2.cols(); j++){
+               if(std::abs(ddm2(i,j))>1.e-10){
+                  auto p0p1 = tools::inverse_pair0(i);
+                  auto q0q1 = tools::inverse_pair0(j);
+                  auto p0 = p0p1.first;
+                  auto p1 = p0p1.second;
+                  auto q0 = q0q1.first;
+                  auto q1 = q0q1.second;
+                  std::cout << "i,j=" << i << "," << j
+                     << " tdm2=" << tdm2(i,j)
+                     << " rdm2=" << rdm2(i,j)
+                     << " diff=" << ddm2(i,j)
+                     << " p0+p1+q1+q0=" << p0 << "," << p1 << ","
+                     << q1 << "," << q0 
+                     << " spatial="
+                     << p0/2 << (p0%2==0? "A+" : "B+")
+                     << p1/2 << (p1%2==0? "A+" : "B+")
+                     << q1/2 << (q1%2==0? "A"  : "B")
+                     << q0/2 << (q0%2==0? "A"  : "B")
+                     << std::endl;
+               }
+            }
+         }
+      } 
 
       // hamiltonian matrix elements if needed 
-/*
-   if(tools::is_in_vector(schd.ctns.task_prop,2)){
-      // read integral
-      integral::two_body<Tm> int2e;
-      integral::one_body<Tm> int1e;
-      double ecore;
-      if(rank == 0) integral::load(int2e, int1e, ecore, schd.integral_file);
-#ifndef SERIAL
-      if(size > 1){
-         boost::mpi::broadcast(schd.world, ecore, 0);
-         boost::mpi::broadcast(schd.world, int1e, 0);
-         mpi_wrapper::broadcast(schd.world, int2e, 0);
-      }
-#endif
-      // compute Hij
-      auto scratch = schd.scratch+"/sweep";
-      io::remove_scratch(scratch, (rank == 0));
-      io::create_scratch(scratch, (rank == 0));
-      auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
       if(rank == 0){
-         std::cout << std::endl;
-         Hij.print("<MPS1|H|MPS2>", schd.ctns.outprec);
+         integral::two_body<Tm> int2e;
+         integral::one_body<Tm> int1e;
+         double ecore;
+         integral::load(int2e, int1e, ecore, schd.integral_file);
+         auto rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
+         auto Sij = rdm1.trace()/Tm(schd.nelec);
+         auto Hij = get_etot(rdm2, rdm1, int2e, int1e) + Sij*ecore; 
+         std::cout << "Hij=" << std::setprecision(schd.ctns.outprec) << Hij << std::endl;
       }
-   }
-*/
    }
 
    /*
-   // task
-   if(schd.ctns.task_prop == 1){
-   // reduce density matrix
-   if(rank == 0){
-   auto rdm1 = ctns::rdm1_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-   auto rdm2 = ctns::rdm2_simple(icomb, icomb, schd.ctns.iroot, schd.ctns.iroot);
-   Tm etot = fock::get_etot(rdm2,rdm1,int2e,int1e) + ecore;
-   cout << "etot(rdm)=" << setprecision(12) << etot << endl;
-   }
-   }else if(schd.ctns.task_prop == 2){
-   // transition density matrix
-   if(rank == 0){
-   auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-   auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-   Tm Hij = fock::get_etot(tdm2,tdm1,int2e,int1e);
-   auto smat = get_Smat(icomb, icomb2);
-   Hij += smat(schd.ctns.iroot,schd.ctns.jroot)*ecore; 
-   cout << "<i|H|j>(rdm)=" << setprecision(12) << Hij << endl;
-   }
-   }else if(schd.ctns.task_prop == 3){
    // single-site entropy analysis
    if(rank == 0){
    auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);

@@ -446,7 +446,7 @@
    - RDMs:
       - generation of patterns
       - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
-      - case 0: nonsu2 & is_same case:
+      - case 0: nonsu2 & is_same case: [DONE@2024/09/06]
          - propagation of operators [DONE@2024/09/04]
             - rdm_env
             - support Id in dot and oper_dict [DONE@2024/09/05] 
@@ -457,11 +457,14 @@
             - assemble rdm1
             - compute rdm2
                - treatment of |+-|
-            - assemble rdm2
-         - parallel version (reduction of rdm)
-         - optimized implementation
+               - support ifhermi in dot
+            - assemble rdm2: simple version [DONE@2024/09/06]
+            - is_same: reduction of patterns
+            - check Hij
       - case 1: nonsu2 & !is_same:
       - case 2: su2 & is_same:
          - spin recoupling?
       - case 3: su2 & !is_same:
+      - parallel version (reduction of rdm)
+      - optimized implementation
 

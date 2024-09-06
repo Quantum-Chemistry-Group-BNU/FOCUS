@@ -103,8 +103,11 @@ namespace fock{
 
    // from rdm2 for particle number conserving wf
    template <typename Tm>
-      linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2){
-         std::cout << "\nfock:get_rdm1_from_rdm2: ";
+      linalg::matrix<Tm> get_rdm1_from_rdm2(const linalg::matrix<Tm>& rdm2,
+            const bool checkHermicity=true, 
+            const int nelec=-1){
+         const double thresh = 1.e-10;
+         std::cout << "\nfock:get_rdm1_from_rdm2: nelec=" << nelec;
          int k2 = rdm2.rows();
          auto pr = tools::inverse_pair0(k2-1);
          assert(pr.first == pr.second+1);
@@ -123,27 +126,36 @@ namespace fock{
                }
             }
          }
-         double diff = rdm1.diff_hermitian();
-         if(diff < 1.e-8){
-            std::cout << "error: rdm1.diff_hermitian=" << diff << std::endl;
-            exit(1);
+         if(checkHermicity){
+            double diff = rdm1.diff_hermitian();
+            if(diff > thresh){
+               std::cout << "error: rdm1.diff_hermitian=" << diff 
+                  << " is greater than thresh= " << thresh 
+                  << std::endl;
+               exit(1);
+            }
          }
-         // normalization
-         double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)
-         int n2 = round(dn2);
-         assert(n2 > 0);
-         if(std::abs(dn2 - n2)>1.e-8){
-            std::cout << std::scientific << std::setprecision(12);
-            std::cout << "n2=n(n-1)" << n2 << " while dn2=" << dn2 << " diff=" << dn2-n2 << std::endl;
-            tools::exit("error: get_rdm1_from_rdm2 does not work for non-integer electron number!");
+         int ne;
+         if(nelec == -1){
+            // normalization
+            double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)
+            int n2 = round(dn2);
+            assert(n2 > 0);
+            if(std::abs(dn2 - n2) > thresh){
+               std::cout << std::scientific << std::setprecision(12);
+               std::cout << "n2=n(n-1)" << n2 << " while dn2=" << dn2 << " diff=" << dn2-n2 << std::endl;
+               tools::exit("error: get_rdm1_from_rdm2 does not work for non-integer electron number!");
+            }
+            if(n2 == 0) tools::exit("error: get_rdm1_from_rdm2 does not work for ne = 1");
+            // find nelec
+            auto pp = tools::inverse_pair0(n2/2-1);
+            assert(pp.first == pp.second+1);
+            ne = pp.first+1;
+         }else{
+            ne = nelec;
          }
-         if(n2 == 0) tools::exit("error: get_rdm1_from_rdm2 does not work for ne = 1");
-         // find nelec
-         auto pp = tools::inverse_pair0(n2/2-1);
-         assert(pp.first == pp.second+1);
-         int ne = pp.first+1;
          rdm1 *= 1.0/(ne-1.0);
-         std::cout << "tr(RDM1)=" << rdm1.trace() << std::endl;
+         std::cout << " tr(RDM1)=" << rdm1.trace() << std::endl;
          return rdm1;
       }
 

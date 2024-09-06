@@ -1,5 +1,5 @@
-#ifndef CTNS_RDM_SIMPLE_H
-#define CTNS_RDM_SIMPLE_H
+#ifndef RDM_SIMPLE_H
+#define RDM_SIMPLE_H
 
 #include "../oper_dot_local.h"
 #include "../../core/simplerdm.h"
@@ -137,7 +137,7 @@ namespace ctns{
                nb = smat(iroot1,iroot1); 
             }
             {
-               auto opDabba = get_dot_opDabba<Tm>(Qm::isym);
+               auto opDabba = get_dot_opFabba<Tm>(Qm::isym);
                icomb2.sites[norb-1-i] = contract_qt3_qt2("c", csite, opDabba);
                auto smat = get_Smat(icomb1,icomb2);
                nanb = smat(iroot1,iroot1);

@@ -90,7 +90,7 @@ namespace ctns{
       }
 
    template <typename Tm>
-      stensor2<Tm> get_dot_opDabba(const int isym){
+      stensor2<Tm> get_dot_opFabba(const int isym){
          auto qphys = get_qbond_phys(isym);
          stensor2<Tm> op(qsym(isym,0,0),qphys,qphys);
          linalg::matrix<Tm> mat(4,4);
@@ -109,7 +109,7 @@ namespace ctns{
       stensor2<Tm> get_dot_opTaba(const int isym){
          auto qphys = get_qbond_phys(isym);
          auto sym = get_qsym_opS(isym,1);
-         stensor2<Tm> op(qsym(isym,0,0),qphys,qphys);
+         stensor2<Tm> op(sym,qphys,qphys);
          linalg::matrix<Tm> mat(4,4);
          // c[0].dot(a[1].dot(a[0]))
          // [[0. 0. 0. 0.]
@@ -125,7 +125,7 @@ namespace ctns{
       stensor2<Tm> get_dot_opTbba(const int isym){
          auto qphys = get_qbond_phys(isym);
          auto sym = get_qsym_opS(isym,0);
-         stensor2<Tm> op(qsym(isym,0,0),qphys,qphys);
+         stensor2<Tm> op(sym,qphys,qphys);
          linalg::matrix<Tm> mat(4,4);
          // c[1].dot(a[1].dot(a[0]))
          // [[0. 0. 0. 0.]

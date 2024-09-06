@@ -28,6 +28,26 @@ namespace ctns{
          // (p1^+ p2)^+ = p2^+ p1
          calst[0] = std::make_pair((!ifdagger? pr.first : pr.second), 1);
          calst[1] = std::make_pair((!ifdagger? pr.second : pr.first), 0);
+      // just for dot operators 
+      }else if(key == 'T'){
+         calst.resize(3);
+         if(idx%2 == 1){
+            // a+ba and (a+ba)^+=a+b+a
+            calst[0] = std::make_pair(idx-1, 1);
+            calst[1] = std::make_pair(idx  , (!ifdagger? 0 : 1));
+            calst[2] = std::make_pair(idx-1, 0);
+         }else{
+            // b+ab and (b+ab)^+=b+a+b
+            calst[0] = std::make_pair(idx+1, 1);
+            calst[1] = std::make_pair(idx  , (!ifdagger? 0 : 1));
+            calst[2] = std::make_pair(idx+1, 0);
+         }
+      }else if(key == 'F'){
+         calst.resize(4);
+         calst[0] = std::make_pair(idx, 1);
+         calst[1] = std::make_pair(idx+1, 1);
+         calst[2] = std::make_pair(idx+1, 0);
+         calst[3] = std::make_pair(idx, 0);
       }else{
          tools::exit("error: not implemented yet in get_calst!");
       }
@@ -85,8 +105,13 @@ namespace ctns{
                idx = calst[0].first;
                jdx = calst[1].first; 
             }else if(order == 2){
+               // RDM2(p0p1,q0q1)=<p0+p1+q1q0> (p0>p1,q1<q0)
+               assert(calst[0] > calst[1]);
+               assert(calst[2] < calst[3]);
                idx = calst[0].first*(calst[0].first-1)/2 + calst[1].first;
-               jdx = calst[2].first*(calst[3].first-1)/2 + calst[3].first; 
+               jdx = calst[3].first*(calst[3].first-1)/2 + calst[2].first;
+            }else{
+               tools::exit("error: order>2 is not supported yet in get_ijdx"); 
             }
             return std::make_pair(idx,jdx);
          }

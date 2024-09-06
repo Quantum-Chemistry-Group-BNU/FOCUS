@@ -81,9 +81,25 @@ namespace ctns{
       int num = ifkr? k*k : k*(2*k-1);
       return num;
    }
-   inline int oper_num_opB(const int cindex1_size, const bool& ifkr){
+   inline int oper_num_opB(const int cindex1_size, const bool& ifkr, const bool ifhermi=true){
       int k = ifkr? cindex1_size : cindex1_size/2;
-      int num = ifkr? k*(k+1) : k*(2*k+1);
+      int num;
+      // ZL@20240906
+      if(ifhermi){
+         // ifkr = false:
+         //    B[pAsA](p<=s),B[pBsB](p<=s),B[pAsB] => Bps (p<=s)
+         //    K(K+1)/2      K(K+1)/2      K*K  = K(K+1)+K*K = K*(2K+1)
+         // ifkr = true;
+         //    B[pAsA](p<=s),B[pAsB](p<=s)
+         //    K(K+1)/2      K(K+1)/2  = K(K+1)
+         num = ifkr? k*(k+1) : k*(2*k+1); 
+      }else{
+         // ifkr = false
+         //    B[pAsA],B[pBsB],B[pAsB],B[pBsA]  = 4K*K
+         // ifkr = true
+         //    B[pAsA],B[pAsB]   = 2K*K
+         num = ifkr? 2*k*k   : 4*k*k;
+      }
       return num;
    }
    inline int oper_num_opP(const int krest_size, const bool& ifkr){
@@ -119,22 +135,28 @@ namespace ctns{
       return distribute2vec('A', ifkr, size, aindex, rank, sorb);
    }
 
-   inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr){
+   inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr, const bool ifhermi=true){
       std::vector<int> bindex;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
-            if(p1 <= q1){
+            if(ifhermi){
+               if(p1 <= q1){
+                  bindex.push_back( oper_pack(p1,q1) );
+                  if(ifkr) bindex.push_back( oper_pack(p1,q1+1) );
+               }
+            }else{
+               // ZL@20240906 for general case
                bindex.push_back( oper_pack(p1,q1) );
-               if(ifkr) bindex.push_back( oper_pack(p1,q1+1) );
+               if(ifkr) bindex.push_back( oper_pack(p1,q1+1) ); 
             }
          }
       }
-      assert(bindex.size() == oper_num_opB(cindex1.size(),ifkr));
+      assert(bindex.size() == oper_num_opB(cindex1.size(),ifkr,ifhermi));
       return bindex;
    }
    inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, const bool& ifkr,
-         const int size, const int rank, const int sorb){
-      std::vector<int> bindex = oper_index_opB(cindex1, ifkr);
+         const int size, const int rank, const int sorb, const bool ifhermi=true){
+      std::vector<int> bindex = oper_index_opB(cindex1, ifkr, ifhermi);
       return distribute2vec('B', ifkr, size, bindex, rank, sorb);
    }
 
@@ -306,14 +328,20 @@ namespace ctns{
    //      pA+sA and pA+sB: K*(K+1)/2+K*(K+1)/2=K(K+1) (reduction by half)
    inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& cindex1,
          const std::vector<int>& cindex2,
-         const bool& ifkr){
+         const bool& ifkr,
+         const bool ifhermi=true){
       std::vector<std::pair<int,int>> info;
       int iformula; 
       // 1. p1<q1: B[p1,q1] = p1^+q1 * I2
       iformula = 1;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
-            if(p1 <= q1){
+            if(ifhermi){
+               if(p1 <= q1){
+                  info.emplace_back(oper_pack(p1,q1),iformula);
+                  if(ifkr) info.emplace_back(oper_pack(p1,q1+1),iformula);
+               }
+            }else{
                info.emplace_back(oper_pack(p1,q1),iformula);
                if(ifkr) info.emplace_back(oper_pack(p1,q1+1),iformula);
             }
@@ -323,7 +351,12 @@ namespace ctns{
       iformula = 2;
       for(int p2 : cindex2){
          for(int q2 : cindex2){
-            if(p2 <= q2){
+            if(ifhermi){
+               if(p2 <= q2){
+                  info.emplace_back(oper_pack(p2,q2),iformula);
+                  if(ifkr) info.emplace_back(oper_pack(p2,q2+1),iformula);
+               }
+            }else{
                info.emplace_back(oper_pack(p2,q2),iformula);
                if(ifkr) info.emplace_back(oper_pack(p2,q2+1),iformula);
             }
@@ -333,17 +366,26 @@ namespace ctns{
       // 4. p1>q2: B[q2,p1] = q2 * p1^+ = -p1^+ * q2
       for(int p1 : cindex1){
          for(int q2 : cindex2){
-            int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
-            iformula = (p1<q2)? 3 : 4;
-            info.emplace_back(index,iformula);
-            if(ifkr){ // Opposite-spin part:
-               index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
+            if(ifhermi){
+               int index = (p1<q2)? oper_pack(p1,q2) : oper_pack(q2,p1);
+               iformula = (p1<q2)? 3 : 4;
                info.emplace_back(index,iformula);
+               if(ifkr){ // Opposite-spin part:
+                  index = (p1<q2)? oper_pack(p1,q2+1) : oper_pack(q2,p1+1);
+                  info.emplace_back(index,iformula);
+               }
+            }else{
+               info.emplace_back(oper_pack(p1,q2),3);
+               info.emplace_back(oper_pack(q2,p1),4);
+               if(ifkr){
+                 info.emplace_back(oper_pack(p1,q2+1),3);
+                 info.emplace_back(oper_pack(q2,p1+1),4);
+               } 
             }
          }
       }
       int kc = cindex1.size()+cindex2.size();
-      assert(info.size() == oper_num_opB(kc,ifkr));
+      assert(info.size() == oper_num_opB(kc,ifkr,ifhermi));
       return info;
    }
 

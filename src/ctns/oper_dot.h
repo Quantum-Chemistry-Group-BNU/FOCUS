@@ -13,6 +13,7 @@
 
 #include "init_phys.h"
 #include "oper_dict.h"
+#include "oper_dot_local.h"
 
 namespace ctns{
 
@@ -166,6 +167,17 @@ namespace ctns{
             matbb(3,3) = 1;
             qops('B')[oper_pack(kb,kb)].from_matrix(matbb);
             if(debug_oper_dot) qops('B')[oper_pack(kb,kb)].to_matrix().print("c1^+c1");
+         }
+         if(!qops.ifhermi){
+            // c[1].dot(a[0])
+            // [[0. 0. 0. 0.]
+            //  [0. 0. 0. 0.]
+            //  [0. 0. 0. 0.]
+            //  [0. 0. 1. 0.]]
+            linalg::matrix<Tm> matba(4,4);
+            matba(3,2) = 1;
+            qops('B')[oper_pack(kb,ka)].from_matrix(matba);
+            if(debug_oper_dot) qops('B')[oper_pack(kb,ka)].to_matrix().print("c1^+c0");
          }
       }
 
@@ -554,6 +566,50 @@ namespace ctns{
                }
             } // isym
          } // ifkr
+      }
+
+   // F = a^+b^+ba 
+   template <typename Tm>
+      void oper_dot_opF(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opF" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // 0110 (*<01||01>)
+         // c[0].dot(c[1].dot(a[1].dot(a[0])))
+         // [[0. 0. 0. 0.]
+         //  [0. 1. 0. 0.]
+         //  [0. 0. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(1,1) = 1;
+         qops('F')[ka].from_matrix(mat);
+         if(debug_oper_dot) qops('F')[ka].to_matrix().print("c0+c1+c1c0");  
+      }
+
+   // T = {a^+ba,b^+ba} 
+   template <typename Tm>
+      void oper_dot_opT(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opT" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // c[0].dot(a[1].dot(a[0]))
+         // [[0. 0. 0. 0.]
+         //  [0. 0. 0. 0.]
+         //  [0. 1. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(2,1) = 1;
+         qops('T')[kb].from_matrix(mat); // aba
+         if(not qops.ifkr){
+            // c[1].dot(a[1].dot(a[0]))
+            // [[0. 0. 0. 0.]
+            //  [0. 0. 0. 0.]
+            //  [0. 0. 0. 0.]
+            //  [0. 1. 0. 0.]]
+            linalg::matrix<Tm> mat(4,4);
+            mat(3,1) = 1;
+            qops('T')[ka].from_matrix(-mat); // b^+ab = -b^+ba (just for convenience 
+         }
       }
 
 } // ctns

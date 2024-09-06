@@ -32,18 +32,21 @@ namespace ctns{
          qops.qket = qphys;
          if(order == 1){
             qops.oplist = "ICB";
-         }else if(order == 2){
-            //qops.oplist = "CAB...34body...";
-         }else{
-            std::cout << "error: rdm_init_dot does not support order=" << order << std::endl;
-            exit(1);
+         }else if(order >= 2){
+            qops.oplist = "ICABTF";
          }
          // initialize memory
+         qops.ifhermi = false; 
          qops.init(true);
          // compute local operators on dot
          oper_dot_opI(qops);
          oper_dot_opC(qops, kp);
          oper_dot_opB(qops, kp);
+         if(order >= 2){
+            oper_dot_opA(qops, kp);
+            oper_dot_opT(qops, kp);
+            oper_dot_opF(qops, kp);
+         }
       }
 
 } // ctns

@@ -68,12 +68,14 @@ namespace ctns{
                +std::to_string(right.size())+":"
                +left+"|"+center+"|"+right; 
          }
-         bool valid(const int ncre, const int nann, const int dot=1) const{
-            return (this->valid_dotop(dot)) and
-               (this->get_ncre() == ncre) and 
-               (this->get_nann() == nann);
+         bool valid(const int ncre, const int nann, const std::string dots) const{
+            bool valid = (this->get_ncre() == ncre) and (this->get_nann() == nann);
+            for(const auto& dot : dots){
+               valid = valid and (this->valid_dotop(dot));
+            }
+            return valid; 
          }
-         bool valid_dotop(const int dot) const{
+         bool valid_dotop(const char dot) const{
             //
             // because for RDM, operators must be of form p+q+rs
             // then assuming operators are ordered by spatial orbitals
@@ -84,11 +86,11 @@ namespace ctns{
             //    "+++", "++-", "+--", "---": ...
             //
             std::string str;
-            if(dot == 0){
+            if(dot == 'l'){
               str = left;
-            }else if(dot == 1){
+            }else if(dot == 'c'){
               str = center;
-            }else if(dot == 2){
+            }else if(dot == 'r'){
               str = right;
             }
             bool valid = true;
@@ -120,6 +122,29 @@ namespace ctns{
          int get_nann_left() const{ return std::count(left.begin(), left.end(), '-'); }
          int get_nann_center() const{ return std::count(center.begin(), center.end(), '-'); }
          int get_nann_right() const{ return std::count(right.begin(), right.end(), '-'); }
+         type_pattern adjoint() const{
+            type_pattern adj = *this;
+            std::reverse(adj.left.begin(), adj.left.end());
+            std::transform(adj.left.begin(), adj.left.end(), adj.left.begin(), [](char c){
+               return (c == '+') ? '-' : '+';
+            });
+            std::reverse(adj.center.begin(), adj.center.end());
+            std::transform(adj.center.begin(), adj.center.end(), adj.center.begin(), [](char c){
+               return (c == '+') ? '-' : '+';
+            });
+            std::reverse(adj.right.begin(), adj.right.end());
+            std::transform(adj.right.begin(), adj.right.end(), adj.right.begin(), [](char c){
+               return (c == '+') ? '-' : '+';
+            });
+            return adj;
+         }
+         bool operator ==(const type_pattern& tp) const{
+            return left == tp.left and center == tp.center and right == tp.right; 
+         }
+         // https://en.cppreference.com/w/cpp/language/ascii + is smaller than -
+         bool operator <(const type_pattern& tp) const{
+            return this->to_string() < tp.to_string();
+         }
       public:
          std::string left   = "";
          std::string center = "";
@@ -129,46 +154,17 @@ namespace ctns{
    inline std::vector<type_pattern> gen_type_patterns(const std::tuple<int,int,int>& num_pattern,
          const int ncre,
          const int nann,
-         const int dot=1){
+         const std::string dots){
       std::vector<type_pattern> tpatterns;
       for(int ts=0; ts<std::pow(2,std::get<0>(num_pattern)); ts++){
          for(int td=0; td<std::pow(2,std::get<1>(num_pattern)); td++){
             for(int te=0; te<std::pow(2,std::get<2>(num_pattern)); te++){
                type_pattern tpattern(num_pattern, ts, td, te);
-               if(!tpattern.valid(ncre, nann, dot)) continue;
+               // check whether the pattern is valid
+               if(!tpattern.valid(ncre, nann, dots)) continue;
                tpatterns.push_back(tpattern);
             }
          }
-      }
-      return tpatterns;
-   }
-
-   inline std::vector<type_pattern> all_type_patterns(const int order){
-      std::vector<type_pattern> tpatterns;
-      auto patterns = number_patterns(order);
-      for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, 1);
-         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
-      }
-      return tpatterns;
-   }
-
-   inline std::vector<type_pattern> all_first_type_patterns(const int order){
-      std::vector<type_pattern> tpatterns;
-      auto patterns = first_number_patterns(order);
-      for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, 0);
-         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
-      }
-      return tpatterns;
-   }
-
-   inline std::vector<type_pattern> all_last_type_patterns(const int order){
-      std::vector<type_pattern> tpatterns;
-      auto patterns = last_number_patterns(order);
-      for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, 2);
-         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
       return tpatterns;
    }
@@ -178,6 +174,62 @@ namespace ctns{
       for(int i=0; i<patterns.size(); i++){
          std::cout << " i=" << i << " " << patterns[i].to_string() << std::endl;
       }
+   }
+
+   // remove patterns that can be related with other patterns by Hermitian operation
+   // which can reduce computation roughly by half for icomb = icomb2
+   inline std::vector<type_pattern> remove_hermitian(const std::vector<type_pattern>& tpatterns){
+      std::vector<type_pattern> tpatterns_new;
+      for(int i=0; i<tpatterns.size(); i++){
+         /*
+         std::cout << "i=" << i << " tp=" << tpatterns[i].to_string()
+            << " tp.adj=" << tpatterns[i].adjoint().to_string()
+            << " smaller=" << (tpatterns[i]<tpatterns[i].adjoint())
+            << std::endl;
+         */
+         auto tpadj = tpatterns[i].adjoint();
+         if(std::find(tpatterns_new.begin(), tpatterns_new.end(), tpatterns[i]) == tpatterns_new.end() and
+               std::find(tpatterns_new.begin(), tpatterns_new.end(), tpadj) == tpatterns_new.end()){
+            tpatterns_new.push_back( std::min(tpatterns[i],tpadj) );
+         }
+      }
+      return tpatterns_new;
+   } 
+
+   inline std::vector<type_pattern> all_type_patterns(const int order,
+         const bool is_same){
+      std::vector<type_pattern> tpatterns;
+      auto patterns = number_patterns(order);
+      for(const auto& pt : patterns){
+         auto tps = gen_type_patterns(pt, order, order, "c");
+         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
+      }
+      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      return tpatterns;
+   }
+
+   inline std::vector<type_pattern> all_first_type_patterns(const int order,
+         const bool is_same){
+      std::vector<type_pattern> tpatterns;
+      auto patterns = first_number_patterns(order);
+      for(const auto& pt : patterns){
+         auto tps = gen_type_patterns(pt, order, order, "lc");
+         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
+      }
+      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      return tpatterns;
+   }
+
+   inline std::vector<type_pattern> all_last_type_patterns(const int order,
+         const bool is_same){
+      std::vector<type_pattern> tpatterns;
+      auto patterns = last_number_patterns(order);
+      for(const auto& pt : patterns){
+         auto tps = gen_type_patterns(pt, order, order, "cr");
+         std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
+      }
+      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      return tpatterns;
    }
 
 } // ctns
