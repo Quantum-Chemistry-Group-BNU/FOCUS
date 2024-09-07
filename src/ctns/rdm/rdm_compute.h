@@ -1,5 +1,5 @@
-#ifndef CTNS_RDM1_H
-#define CTNS_RDM1_H
+#ifndef RDM_COMPUTE_H
+#define RDM_COMPUTE_H
 
 #include "rdm_string.h"
 

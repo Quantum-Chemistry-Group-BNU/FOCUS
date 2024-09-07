@@ -62,6 +62,7 @@ void MPSPROP(const input::schedule& schd){
       icomb2 = std::move(jcomb);
       is_same = (schd.ctns.iroot == schd.ctns.jroot);
    }
+   is_same = false;
 
    // display task_prop
    if(rank == 0){

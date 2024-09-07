@@ -443,10 +443,10 @@
  * Implementation of RDM for MPS:
    - keyword: savebin & task_prop
    - overlap [DONE@2024/09/02]
-   - RDMs:
+   - RDMs for nonsu2 case:
       - generation of patterns
       - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
-      - case 0: nonsu2 & is_same case: [DONE@2024/09/06]
+      - is_same=true: RDM [DONE@2024/09/06]
          - propagation of operators [DONE@2024/09/04]
             - rdm_env
             - support Id in dot and oper_dict [DONE@2024/09/05] 
@@ -461,16 +461,26 @@
             - assemble rdm2: simple version [DONE@2024/09/06]
             - is_same: reduction of patterns
             - check Hij
-      - case 1: nonsu2 & !is_same:
-         - rdm1 [DONE@2024/09/07]
+      - is_same=false: TDM [DONE@2024/09/07]
+         - rdm1 [DONE@2024/09/06]
             - support D operators 
-         - rdm2
+         - rdm2 [DONE@2024/09/07]
             - support {D,M} dot operators 
             - support {D,M} in renorm
-            - rethinking about patterns is "-+" needed?
-      - case 2: su2 & is_same:
-         - spin recoupling?
-      - case 3: su2 & !is_same:
-      - parallel version (reduction of rdm)
-      - optimized implementation
+            - rethinking about whether patterns is "-+" needed? no if all opB are kept
+   - RDMs for su2 case: 
+      - is_same=true:
+         - rdm1
+            - assemble?
+            - spin recoupling?
+         - rdm2
+      - is_same=false:
+         - rdm1
+         - rdm2
+
+   - Parallel version (reduction of rdm)
+
+   - Optimized implementation
+
+   - GPU version [batch algorithm?]
 

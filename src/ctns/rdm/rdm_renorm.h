@@ -228,10 +228,25 @@ namespace ctns{
          integral::two_body<Tm> int2e;
          if(alg_renorm == 0){
 
+            std::cout << std::endl;
+            site2.print("site2");
+            std::cout << std::endl;
+            site.print("site");
+            std::cout << std::endl;
+            qops1.print("qops1");
+            std::cout << std::endl;
+            qops2.print("qops2");
+            std::cout << std::endl;
+            qops.print("qops");
+            std::cout << std::endl;
+
+            std::cout << "lzdA" << std::endl;
             // oldest version
             auto rfuns = oper_renorm_functors(superblock, site2, int2e, qops1, qops2, qops, ifdist1);
+            std::cout << "lzdB" << std::endl;
             // initialize of qops
             oper_renorm_kernel(superblock, rfuns, site, qops, schd.ctns.verbose);
+            std::cout << "lzdC" << std::endl;
 /*
          }else if(alg_renorm == 1){
 

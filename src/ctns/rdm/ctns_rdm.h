@@ -7,7 +7,7 @@
 #endif
 #include "rdm_env.h"
 #include "rdm_patterns.h"
-#include "ctns_rdm1.h"
+#include "rdm_compute.h"
 
 namespace ctns{
 
