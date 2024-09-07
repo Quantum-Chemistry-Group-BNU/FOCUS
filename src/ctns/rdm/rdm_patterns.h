@@ -187,14 +187,26 @@ namespace ctns{
             << " smaller=" << (tpatterns[i]<tpatterns[i].adjoint())
             << std::endl;
          */
-         auto tpadj = tpatterns[i].adjoint();
-         if(std::find(tpatterns_new.begin(), tpatterns_new.end(), tpatterns[i]) == tpatterns_new.end() and
+         const auto& tp = tpatterns[i];
+         auto tpadj = tp.adjoint();
+         if(std::find(tpatterns_new.begin(), tpatterns_new.end(), tp) == tpatterns_new.end() and
                std::find(tpatterns_new.begin(), tpatterns_new.end(), tpadj) == tpatterns_new.end()){
-            tpatterns_new.push_back( std::min(tpatterns[i],tpadj) );
+            tpatterns_new.push_back( std::min(tp,tpadj) );
          }
       }
       return tpatterns_new;
-   } 
+   }
+
+   // is_same = false: B is fully constructed, which is sufficient for all 2-TDMs
+   inline std::vector<type_pattern> remove_minusplus(const std::vector<type_pattern>& tpatterns){
+      std::vector<type_pattern> tpatterns_new;
+      for(int i=0; i<tpatterns.size(); i++){
+         const auto& tp = tpatterns[i];
+         if(tp.left == "-+" || tp.center == "-+" || tp.right == "-+") continue;
+         tpatterns_new.push_back( tp );
+      }
+      return tpatterns_new;
+   }
 
    inline std::vector<type_pattern> all_type_patterns(const int order,
          const bool is_same){
@@ -204,7 +216,8 @@ namespace ctns{
          auto tps = gen_type_patterns(pt, order, order, "c");
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
-      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      if(is_same) tpatterns = remove_hermitian(tpatterns);
+      if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }
 
@@ -217,6 +230,7 @@ namespace ctns{
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
       if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }
 
@@ -229,6 +243,7 @@ namespace ctns{
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
       if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }
 

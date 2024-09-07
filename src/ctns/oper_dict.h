@@ -146,7 +146,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "ICABPQSHTFMN";
+         std::string opseq = "ICABPQSHTFDM";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
@@ -181,7 +181,7 @@ namespace ctns{
                   std::cout << " List of op" << key << ": ";
                   auto op_index = this->oper_index_op(key);
                   for(int idx : op_index){
-                     if(key == 'H' || key == 'C' || key == 'S'){
+                     if(key == 'H' || key == 'C' || key == 'S' || key == 'D'){
                         std::cout << "(" << idx << ") ";
                      }else{
                         auto pq = oper_unpack(idx);
@@ -207,18 +207,17 @@ namespace ctns{
    template <bool ifab, typename Tm>
       std::vector<int> qoper_dict<ifab,Tm>::oper_index_op(const char key) const{
          std::vector<int> index;
-         if(key == 'C'){
+         if(key == 'C' || key == 'D'){
             index = cindex;
          }else if(key == 'H' || key == 'I'){
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
-         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' ||
-               key == 'M' || key == 'N'){
+         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M'){
             std::vector<int> index2;
             if(key == 'A' || key == 'M'){
                index2 = oper_index_opA(cindex, ifkr);
-            }else if(key == 'B' || key == 'N'){
+            }else if(key == 'B'){
                index2 = oper_index_opB(cindex, ifkr, ifhermi);
             }else if(key == 'P'){
                index2 = oper_index_opP(krest, ifkr);
@@ -231,9 +230,7 @@ namespace ctns{
             }else{
                index = std::move(index2);
             }
-         //
          // ZL@20240905: just for dot operators
-         //
          }else if(key == 'F'){
             index = {cindex[0]};
          }else if(key == 'T'){
@@ -247,6 +244,8 @@ namespace ctns{
       qsym sym_op;
       if(key == 'C'){
          sym_op = get_qsym_opC(isym, idx);
+      }else if(key == 'D'){
+         sym_op = get_qsym_opD(isym, idx);
       }else if(key == 'A'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opA(isym, pr.first, pr.second);
@@ -256,9 +255,6 @@ namespace ctns{
       }else if(key == 'M'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opM(isym, pr.first, pr.second);
-      }else if(key == 'N'){
-         auto pr = oper_unpack(idx);
-         sym_op = get_qsym_opN(isym, pr.first, pr.second);
       }else if(key == 'H' || key == 'I'){
          sym_op = qsym(isym,0,0);	   
       }else if(key == 'S'){

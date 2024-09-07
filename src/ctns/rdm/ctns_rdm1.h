@@ -4,7 +4,7 @@
 #include "rdm_string.h"
 
 namespace ctns{
-   
+
    template <typename Qm, typename Tm>
       void rdm_compute(const int order,
             const bool is_same,
@@ -38,7 +38,7 @@ namespace ctns{
 
          display_patterns(patterns);
 
-         const std::map<std::string,std::pair<char,bool>> str2optype = {
+         const std::map<std::string,std::pair<char,bool>> str2optype_same = {
             {"",{'I',0}},
             {"+",{'C',0}},
             {"-",{'C',1}},
@@ -46,13 +46,29 @@ namespace ctns{
             {"--",{'A',1}},
             {"+-",{'B',0}},
             {"-+",{'B',1}},
-            // coper
+            // only needed for dot operators: cop, lop[fpattern], rop[lpattern]
             {"+--",{'T',0}},
             {"++-",{'T',1}},
             {"++--",{'F',0}}
          };
+         const std::map<std::string,std::pair<char,bool>> str2optype_diff = {
+            {"",{'I',0}},
+            {"+",{'C',0}},
+            {"-",{'D',0}},
+            {"++",{'A',0}},
+            {"--",{'M',0}},
+            {"+-",{'B',0}},
+            // only needed for dot operators: cop, lop[fpattern], rop[lpattern]
+            {"+--",{'T',0}},
+            {"++-",{'T',1}},
+            {"++--",{'F',0}}
+         };
+         auto& str2optype = is_same? str2optype_same : str2optype_diff;
+
          const std::map<char,int> op2parity = {
-            {'I',0},{'C',1},{'A',0},{'B',0},
+            {'I',0},
+            {'C',1},{'D',1},
+            {'A',0},{'B',0},{'M',0},
             {'T',1},{'F',0}
          };
 
@@ -63,21 +79,26 @@ namespace ctns{
          rqops.print("rqops");
          cqops.print("cqops");
 
-         const auto& lop = lqops('I').at(0);
-         const auto& cop = cqops('I').at(0);
-         const auto& rop = rqops('I').at(0);
-         auto ldiff = linalg::deviationFromIdentity(lop.to_matrix());
-         auto cdiff = linalg::deviationFromIdentity(cop.to_matrix());
-         auto rdiff = linalg::deviationFromIdentity(rop.to_matrix());
-         std::cout << "ldiff,cdiff,rdiff=" << ldiff << ","
-            << cdiff << "," << rdiff << "," << std::endl;
-         assert(ldiff < 1.e-10);
-         assert(cdiff < 1.e-10);
-         assert(rdiff < 1.e-10);
+         if(is_same){
+            const auto& lop = lqops('I').at(0);
+            const auto& cop = cqops('I').at(0);
+            const auto& rop = rqops('I').at(0);
+            auto ldiff = linalg::deviationFromIdentity(lop.to_matrix());
+            auto cdiff = linalg::deviationFromIdentity(cop.to_matrix());
+            auto rdiff = linalg::deviationFromIdentity(rop.to_matrix());
+            std::cout << "ldiff,cdiff,rdiff=" << ldiff << ","
+               << cdiff << "," << rdiff << "," << std::endl;
+            assert(ldiff < 1.e-10);
+            assert(cdiff < 1.e-10);
+            assert(rdiff < 1.e-10);
+         }
 
          // compute RDMs by pattern
          for(int i=0; i<patterns.size(); i++){
             const auto& pattern = patterns[i];
+            std::cout << "\ni=" << i 
+               << " pattern=" << pattern.to_string()
+               << std::endl;
             const auto& loptype = str2optype.at(pattern.left);
             const auto& coptype = str2optype.at(pattern.center);
             const auto& roptype = str2optype.at(pattern.right);
@@ -109,11 +130,13 @@ namespace ctns{
                for(const auto& rpr : rops){
                   const auto& rdx = rpr.first;
                   const auto& rop = rpr.second;
+                  std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
                   for(const auto& cpr : cops){
                      const auto& cdx = cpr.first;
                      const auto& cop = cpr.second;
+                     std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
                      auto cstr = get_calst(ckey, cdx, cdagger);
                      auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                      if((cparity+rparity)%2 == 1) opxwf2.row_signed();
@@ -121,6 +144,7 @@ namespace ctns{
                      for(const auto& lpr : lops){
                         const auto& ldx = lpr.first;
                         auto lop = ldagger? lpr.second.H() : lpr.second;
+                        std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();
                         Tm val = contract_qt2_qt2_full(lop, op2); 
@@ -148,12 +172,12 @@ namespace ctns{
                }
 
                // spin-recoupling for su2 case
-            
+
                // reorder indices to physical
-            
+
             } // alg_rdm
          } // pattern
-         
+
          //exit(1);
 
          if(debug){

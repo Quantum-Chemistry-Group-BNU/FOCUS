@@ -259,31 +259,6 @@ namespace ctns{
       }
       return sym_op;
    }
-   // opN = ps^+
-   inline qsym get_qsym_opN(const short isym, const int p, const int s){
-      int spin1 = p%2, spin2 = s%2;
-      qsym sym_op;
-      if(isym == 0 or isym == 1){
-         sym_op = qsym(isym,0,0);
-      }else if(isym == 2){
-         if(spin1 == spin2){
-            sym_op = qsym(isym,0,0);
-         }else{
-            sym_op = (spin1==0)? qsym(isym,0,-2) : qsym(isym,0,+2);
-         }
-      }else if(isym == 3){
-         assert(spin1 == 0);
-         if(spin1 == spin2){
-            sym_op = qsym(isym,0,0); // Nps[0]
-         }else{
-            sym_op = qsym(isym,0,2); // Nps[1]
-         }
-      }else{
-         std::cout << "error: no such option for get_qsym_opN! isym=" << isym << std::endl;
-         exit(1);
-      }
-      return sym_op;
-   }
    // Sp: qsym of ap^+Sp must be zero
    inline qsym get_qsym_opS(const short isym, const int p){
       auto symC = get_qsym_opC(isym, p);

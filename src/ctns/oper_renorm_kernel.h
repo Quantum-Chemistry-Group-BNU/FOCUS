@@ -103,7 +103,7 @@ namespace ctns{
          }
          // opB
          if(qops.oplist.find('B') != std::string::npos){
-            auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr);
+            auto binfo = oper_combine_opB(qops1.cindex, qops2.cindex, qops.ifkr, qops.ifhermi); // for RDMs
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
                int iproc = distribute2('B',qops.ifkr, qops.mpisize, index, qops.sorb);
@@ -162,6 +162,7 @@ namespace ctns{
                   qops.mpisize, qops.mpirank, ifdist1);
             rfuns.push_back(Hx);
          }
+         // ZL@20240906: for RDM calculations
          // opI
          if(qops.oplist.find('I') != std::string::npos){
             Hx_functor<Tm> Hx("I");
@@ -170,6 +171,35 @@ namespace ctns{
                   std::cref(qops1), std::cref(qops2),
                   false);
             rfuns.push_back(Hx);
+         }
+         // opD
+         if(qops.oplist.find('D') != std::string::npos){
+            auto info = oper_combine_opC(qops1.cindex, qops2.cindex);
+            for(const auto& pr : info){
+               int index = pr.first, iformula = pr.second;
+               Hx_functor<Tm> Hx("D", index, iformula);
+               Hx.opxwf = bind(&oper_normxwf_opD<Tm>, 
+                     std::cref(superblock), std::cref(site), 
+                     std::cref(qops1), std::cref(qops2),
+                     index, iformula, false);
+               rfuns.push_back(Hx);
+            }
+         }
+         // opM
+         if(qops.oplist.find('M') != std::string::npos){
+            auto ainfo = oper_combine_opA(qops1.cindex, qops2.cindex, qops.ifkr);
+            for(const auto& pr : ainfo){
+               int index = pr.first, iformula = pr.second;
+               int iproc = distribute2('A',qops.ifkr, qops.mpisize, index, qops.sorb);
+               if(iproc == qops.mpirank){
+                  Hx_functor<Tm> Hx("M", index, iformula);
+                  Hx.opxwf = bind(&oper_normxwf_opM<Tm>, 
+                        std::cref(superblock), std::cref(site), 
+                        std::cref(qops1), std::cref(qops2),
+                        index, iformula, false);
+                  rfuns.push_back(Hx);
+               }
+            }
          }
          return rfuns;
       }

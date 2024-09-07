@@ -462,6 +462,12 @@
             - is_same: reduction of patterns
             - check Hij
       - case 1: nonsu2 & !is_same:
+         - rdm1 [DONE@2024/09/07]
+            - support D operators 
+         - rdm2
+            - support {D,M} dot operators 
+            - support {D,M} in renorm
+            - rethinking about patterns is "-+" needed?
       - case 2: su2 & is_same:
          - spin recoupling?
       - case 3: su2 & !is_same:

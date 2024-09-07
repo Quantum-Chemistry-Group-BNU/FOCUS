@@ -14,6 +14,7 @@ namespace ctns{
 
    template <typename Qm, typename Tm>
       void rdm_init_dotL(const int order,
+            const bool is_same,
             const comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch){
@@ -40,7 +41,7 @@ namespace ctns{
          //---------------------------------------------
          int kp = icomb.topo.get_node(p).porb;
          qoper_dict<Qm::ifabelian,Tm> qops;
-         rdm_init_dot(order, sorb, qops, isym, ifkr, kp, size, rank);
+         rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
          //---------------------------------------------
          std::string fop = oper_fname(scratch, p, "l");
          if(isym == 3 and schd.ctns.singlet){
@@ -61,6 +62,7 @@ namespace ctns{
    // (2) boundary operators [l/r]
    template <typename Qm, typename Tm>
       void rdm_init_dotCR(const int order,
+            const bool is_same,
             const comb<Qm,Tm>& icomb,
             const std::string scratch,
             const int iomode){
@@ -86,7 +88,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               rdm_init_dot(order, sorb, qops, isym, ifkr, kp, size, rank);
+               rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -104,7 +106,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               rdm_init_dot(order, sorb, qops, isym, ifkr, kp, size, rank);
+               rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -151,7 +153,7 @@ namespace ctns{
          
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
-         rdm_init_dotCR(order, icomb, scratch, iomode);
+         rdm_init_dotCR(order, is_same, icomb, scratch, iomode);
          auto ta = tools::get_time();
          t_init = tools::get_duration(ta-t0);
 

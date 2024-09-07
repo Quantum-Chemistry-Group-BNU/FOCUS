@@ -118,6 +118,8 @@ namespace ctns{
             assert(check_consistency(site2.info.qrow, qops1.qket));
             assert(check_consistency(site2.info.qcol, qops2.qket));
          }
+         // RDMs:
+         qops.ifhermi = is_same;
          if(order == 1){ 
             if(is_same){
                // icomb = icomb2
@@ -128,8 +130,11 @@ namespace ctns{
                }
             }else{
                // icomb != icomb2
-               std::cout << "error: not implemented yet";
-               exit(1);
+               if(superblock == "cr"){
+                  qops.oplist = "I";
+               }else if(superblock == "lc"){
+                  qops.oplist = "ICD";
+               }
             }
          }else if(order == 2){
             if(is_same){
@@ -143,8 +148,11 @@ namespace ctns{
                }
             }else{
                // icomb != icomb2
-               std::cout << "error: not implemented yet";
-               exit(1);
+               if(superblock == "cr"){
+                  qops.oplist = "ICD";
+               }else if(superblock == "lc"){
+                  qops.oplist = "ICABDM";
+               }
             }
          }else{
             std::cout << "error: rdm_renorm does not support order=" << order << std::endl;

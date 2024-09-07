@@ -60,7 +60,7 @@ void MPSPROP(const input::schedule& schd){
    }else{
       auto jcomb = icomb;
       icomb2 = std::move(jcomb);
-      is_same = true;
+      is_same = (schd.ctns.iroot == schd.ctns.jroot);
    }
 
    // display task_prop
@@ -71,14 +71,16 @@ void MPSPROP(const input::schedule& schd){
       for(const auto& key : schd.ctns.task_prop){
          std::cout << " " << tasks.at(key);
       }
-      std::cout << std::endl;
-      std::cout << " MPS1 = " << schd.ctns.rcanon_file 
+      std::cout << "   is_same=" << is_same << std::endl;
+      std::cout << " MPS1:"
          << " nroot=" << icomb.get_nroots() 
          << " iroot=" << schd.ctns.iroot 
+         << " file=" << schd.ctns.rcanon_file 
          << std::endl;
-      std::cout << " MPS2 = " << (is_same? "none" : schd.ctns.rcanon2_file) 
+      std::cout << " MPS2:" 
          << " nroot=" << icomb2.get_nroots() 
          << " jroot=" << schd.ctns.jroot 
+         << " file=" << schd.ctns.rcanon2_file
          << std::endl;
       std::cout << tools::line_separator2 << std::endl;
       assert(schd.ctns.iroot <= icomb.get_nroots());
@@ -108,6 +110,17 @@ void MPSPROP(const input::schedule& schd){
       tdm1.save_txt("tdm1", schd.ctns.outprec);
       std::cout << "trace=" << tdm1.trace() << std::endl;
 
+      // compared against CI
+      auto tdm1fci = rdm1;
+      tdm1fci.load_txt("rdm1."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
+      std::cout << "trace=" << tdm1fci.trace() << std::endl;
+      auto diff2 = tdm1fci + tdm1;
+      if(diff2.normF() < 1.e-10) tdm1 *= -1; // may differ by sign
+      auto diff1 = tdm1fci - tdm1;
+      std::cout << "diff[+]=" << diff2.normF() 
+         << " diff[-]=" << diff1.normF() << std::endl;
+      assert(diff1.normF() < 1.e-10);
+
       ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
       // natural occupation and natural orbitals
 
@@ -132,12 +145,16 @@ void MPSPROP(const input::schedule& schd){
       tdm2.save_txt("tdm2", schd.ctns.outprec);
       std::cout << "trace=" << tdm2.trace() << std::endl;
 
+      // compared against CI
       auto tdm2fci = rdm2;
-      tdm2fci.load_txt("rdm2.0.0");
+      tdm2fci.load_txt("rdm2."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
       std::cout << "trace=" << tdm2fci.trace() << std::endl;
-      tdm2fci -= tdm2;
-      std::cout << "diff=" << tdm2fci.normF() << std::endl;
-      assert(tdm2fci.normF() < 1.e-10);
+      auto diff2 = tdm2fci + tdm2;
+      if(diff2.normF() < 1.e-10) tdm2 *= -1; // may differ by sign
+      auto diff1 = tdm2fci - tdm2;
+      std::cout << "diff[+]=" << diff2.normF() 
+         << " diff[-]=" << diff1.normF() << std::endl;
+      assert(diff1.normF() < 1.e-10);
 
       ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
 

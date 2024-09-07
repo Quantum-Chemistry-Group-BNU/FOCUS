@@ -16,12 +16,22 @@ namespace ctns{
       }else if(key == 'C'){
          calst.resize(1);
          calst[0] = std::make_pair(idx,(!ifdagger? 1 : 0));
+      }else if(key == 'D'){
+         calst.resize(1);
+         calst[0] = std::make_pair(idx,(!ifdagger? 0 : 1));
       }else if(key == 'A'){
          calst.resize(2);
          auto pr = oper_unpack(idx);
          // (p1^+ p2^+)^+ (p1<p2) = p2 p1 (p2>p1)
          calst[0] = std::make_pair((!ifdagger? pr.first : pr.second), (!ifdagger? 1 : 0));
          calst[1] = std::make_pair((!ifdagger? pr.second : pr.first), (!ifdagger? 1 : 0));
+      }else if(key == 'M'){
+         calst.resize(2);
+         auto pr = oper_unpack(idx);
+         // (p1 p2) (p1<p2) [dagger does not apper]
+         assert(!ifdagger);
+         calst[0] = std::make_pair(pr.first, 0);
+         calst[1] = std::make_pair(pr.second, 0);
       }else if(key == 'B'){
          calst.resize(2);
          auto pr = oper_unpack(idx);

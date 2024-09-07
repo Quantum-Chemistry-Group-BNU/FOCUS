@@ -48,16 +48,6 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
-         // prepare environments {C,D} [both are required for icomb != icomb2]
-         rdm_env_right(order, is_same, icomb, icomb2, schd, scratch);
-
-         // build operators on the left dot
-         rdm_init_dotL(order, icomb, schd, scratch);
-
-         // initialization of single MPS
-         sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
-         sweep_init_single(icomb2, schd.ctns.jroot, schd.ctns.singlet);
-
          // assemble RDM by sweep
          auto tpatterns = all_type_patterns(order, is_same);
          auto fpatterns = all_first_type_patterns(order, is_same);
@@ -65,6 +55,16 @@ namespace ctns{
          display_patterns(tpatterns);
          display_patterns(fpatterns);
          display_patterns(lpatterns);
+
+         // prepare environments {C,D} [both are required for icomb != icomb2]
+         rdm_env_right(order, is_same, icomb, icomb2, schd, scratch);
+
+         // build operators on the left dot
+         rdm_init_dotL(order, is_same, icomb, schd, scratch);
+
+         // initialization of single MPS
+         sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
+         sweep_init_single(icomb2, schd.ctns.jroot, schd.ctns.singlet);
 
          // pool for handling operators
          qoper_pool<Qm::ifabelian,Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);

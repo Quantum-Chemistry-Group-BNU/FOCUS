@@ -110,6 +110,37 @@ namespace ctns{
          }
       }
 
+   // for RDM: kA
+   template <typename Tm>
+      void oper_dot_opD(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opD" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // dagger of c[0] = kA^+
+         // [[0. 0. 0. 0.]
+         //  [0. 0. 0. 1.]
+         //  [1. 0. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(3,1) = 1;
+         mat(0,2) = 1;
+         qops('D')[ka].from_matrix(mat);
+         if(debug_oper_dot) qops('D')[ka].to_matrix().print("c0");
+         // dagger of c[1] = kB^+ 
+         if(not qops.ifkr){
+            // also store dagger of c[1] = kB^+
+            // [[ 0.  0.  0.  0.]
+            //  [ 0.  0. -1.  0.]
+            //  [ 0.  0.  0.  0.]
+            //  [ 1.  0.  0.  0.]]
+            linalg::matrix<Tm> mat(4,4);
+            mat(2,1) = -1;
+            mat(0,3) = 1;
+            qops('D')[kb].from_matrix(mat);
+            if(debug_oper_dot) qops('D')[kb].to_matrix().print("c1");
+         }
+      }
+
    // A[kA,kB] = kA^+kB^+
    template <typename Tm>
       void oper_dot_opA(oper_dict<Tm>& qops,
@@ -125,6 +156,23 @@ namespace ctns{
          mat(1,0) = 1;
          qops('A')[oper_pack(ka,kb)].from_matrix(mat);
          if(debug_oper_dot) qops('A')[oper_pack(ka,kb)].to_matrix().print("c0^+c1^+");
+      }
+
+   // M[kA,kB] = kA kB
+   template <typename Tm>
+      void oper_dot_opM(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opM" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // dagger of -c[0].dot(c[1])
+         // [[0. 0. 0. 0.]
+         //  [1. 0. 0. 0.]
+         //  [0. 0. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(0,1) = -1;
+         qops('M')[oper_pack(ka,kb)].from_matrix(mat);
+         if(debug_oper_dot) qops('M')[oper_pack(ka,kb)].to_matrix().print("c0 c1");
       }
 
    // B[kA,kA] = kA^+kA, B[kA,kB] = kA^+kB
