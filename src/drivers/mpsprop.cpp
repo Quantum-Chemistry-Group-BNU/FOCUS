@@ -119,12 +119,11 @@ void MPSPROP(const input::schedule& schd){
          auto diff2 = tdm1fci + tdm1;
          if(diff2.normF() < 1.e-10) tdm1 *= -1; // may differ by sign
          auto diff1 = tdm1fci - tdm1;
-         std::cout << "diff[+]=" << diff2.normF() 
-            << " diff[-]=" << diff1.normF() << std::endl;
+         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
          assert(diff1.normF() < 1.e-10);
       }
 #ifndef SERIAL
-      if(size > 1) boost::mpi::broadcast(icomb.world, rdm1, 0);
+      if(size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
 #endif
 
       ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
@@ -132,8 +131,24 @@ void MPSPROP(const input::schedule& schd){
       if(rank == 0){
          std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
          std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
-         tdm1 -= rdm1;
-         std::cout << "diff=" << tdm1.normF() << std::endl;
+         auto ddm1 = tdm1 - rdm1;
+         std::cout << "diff=" << ddm1.normF() << std::endl;
+         if(ddm1.normF() > 1.e-10){
+            for(int i=0; i<ddm1.rows(); i++){
+               for(int j=0; j<ddm1.cols(); j++){
+                  if(std::abs(ddm1(i,j))>1.e-10){
+                     std::cout << "i,j=" << i << "," << j
+                        << " tdm1=" << tdm1(i,j)
+                        << " rdm1=" << rdm1(i,j)
+                        << " diff=" << ddm1(i,j)
+                        << " spatial="
+                        << i/2 << (i%2==0? "A+" : "B+")
+                        << j/2 << (j%2==0? "A" : "B")
+                        << std::endl;
+                  }
+               }
+            }
+         }
       }
 
       // natural occupation and natural orbitals
@@ -150,50 +165,56 @@ void MPSPROP(const input::schedule& schd){
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm2(k2,k2);
 
-      auto tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-      tdm2.save_txt("tdm2", schd.ctns.outprec);
-      std::cout << "trace=" << tdm2.trace() << std::endl;
+      linalg::matrix<Tm> tdm2;
+      if(rank == 0){
+         tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         tdm2.save_txt("tdm2", schd.ctns.outprec);
+         std::cout << "trace=" << tdm2.trace() << std::endl;
 
-      // compared against CI
-      auto tdm2fci = rdm2;
-      tdm2fci.load_txt("rdm2."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
-      std::cout << "trace=" << tdm2fci.trace() << std::endl;
-      auto diff2 = tdm2fci + tdm2;
-      if(diff2.normF() < 1.e-10) tdm2 *= -1; // may differ by sign
-      auto diff1 = tdm2fci - tdm2;
-      std::cout << "diff[+]=" << diff2.normF() 
-         << " diff[-]=" << diff1.normF() << std::endl;
-      assert(diff1.normF() < 1.e-10);
+         // compared against CI
+         auto tdm2fci = rdm2;
+         tdm2fci.load_txt("rdm2."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
+         std::cout << "trace=" << tdm2fci.trace() << std::endl;
+         auto diff2 = tdm2fci + tdm2;
+         if(diff2.normF() < 1.e-10) tdm2 *= -1; // may differ by sign
+         auto diff1 = tdm2fci - tdm2;
+         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
+         assert(diff1.normF() < 1.e-10);
+      }
+#ifndef SERIAL
+      if(size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
+#endif
 
       ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
 
-      //auto tdm2 = tdm2fci;
-      std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;
-      std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
-      auto ddm2 = tdm2 - rdm2;
-      std::cout << "diff=" << ddm2.normF() << std::endl;
-      if(ddm2.normF() > 1.e-10){
-         for(int i=0; i<ddm2.rows(); i++){
-            for(int j=0; j<ddm2.cols(); j++){
-               if(std::abs(ddm2(i,j))>1.e-10){
-                  auto p0p1 = tools::inverse_pair0(i);
-                  auto q0q1 = tools::inverse_pair0(j);
-                  auto p0 = p0p1.first;
-                  auto p1 = p0p1.second;
-                  auto q0 = q0q1.first;
-                  auto q1 = q0q1.second;
-                  std::cout << "i,j=" << i << "," << j
-                     << " tdm2=" << tdm2(i,j)
-                     << " rdm2=" << rdm2(i,j)
-                     << " diff=" << ddm2(i,j)
-                     << " p0+p1+q1+q0=" << p0 << "," << p1 << ","
-                     << q1 << "," << q0 
-                     << " spatial="
-                     << p0/2 << (p0%2==0? "A+" : "B+")
-                     << p1/2 << (p1%2==0? "A+" : "B+")
-                     << q1/2 << (q1%2==0? "A"  : "B")
-                     << q0/2 << (q0%2==0? "A"  : "B")
-                     << std::endl;
+      if(rank == 0){
+         std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;
+         std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
+         auto ddm2 = tdm2 - rdm2;
+         std::cout << "diff=" << ddm2.normF() << std::endl;
+         if(ddm2.normF() > 1.e-10){
+            for(int i=0; i<ddm2.rows(); i++){
+               for(int j=0; j<ddm2.cols(); j++){
+                  if(std::abs(ddm2(i,j))>1.e-10){
+                     auto p0p1 = tools::inverse_pair0(i);
+                     auto q0q1 = tools::inverse_pair0(j);
+                     auto p0 = p0p1.first;
+                     auto p1 = p0p1.second;
+                     auto q0 = q0q1.first;
+                     auto q1 = q0q1.second;
+                     std::cout << "i,j=" << i << "," << j
+                        << " tdm2=" << tdm2(i,j)
+                        << " rdm2=" << rdm2(i,j)
+                        << " diff=" << ddm2(i,j)
+                        << " p0+p1+q1+q0=" << p0 << "," << p1 << ","
+                        << q1 << "," << q0 
+                        << " spatial="
+                        << p0/2 << (p0%2==0? "A+" : "B+")
+                        << p1/2 << (p1%2==0? "A+" : "B+")
+                        << q1/2 << (q1%2==0? "A"  : "B")
+                        << q0/2 << (q0%2==0? "A"  : "B")
+                        << std::endl;
+                  }
                }
             }
          }

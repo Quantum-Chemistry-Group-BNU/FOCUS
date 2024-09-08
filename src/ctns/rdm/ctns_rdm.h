@@ -53,9 +53,9 @@ namespace ctns{
          auto fpatterns = all_first_type_patterns(order, is_same);
          auto lpatterns = all_last_type_patterns(order, is_same);
          if(rank == 0){
-            display_patterns(tpatterns);
-            display_patterns(fpatterns);
-            display_patterns(lpatterns);
+            display_patterns(tpatterns, "tpatterns");
+            display_patterns(fpatterns, "fpatterns");
+            display_patterns(lpatterns, "lpatterns");
          }
 
          // prepare environments {C,D} [both are required for icomb != icomb2]
@@ -168,14 +168,14 @@ namespace ctns{
             }
 
             // construct patterns
-            std::vector<type_pattern> patterns = tpatterns;
+            std::vector<type_pattern> allpatterns = tpatterns;
             if(isite == 1){
-               std::copy(fpatterns.begin(), fpatterns.end(), std::back_inserter(patterns));
+               std::copy(fpatterns.begin(), fpatterns.end(), std::back_inserter(allpatterns));
             }else if(isite == icomb.get_nphysical()-2){
-               std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(patterns));
+               std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(allpatterns));
             }
             rdm_assemble(order, is_same, icomb, isite, qops_dict, wf3bra, wf3ket,
-                    patterns, schd, scratch, rdm, tdm);
+                    allpatterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation
@@ -254,6 +254,14 @@ namespace ctns{
             sweeps.summary(isweep, size);
          }
          qops_pool.finalize();
+
+         /*
+#ifndef SERIAL
+         if(size > 1){
+            mpi_wrapper::reduce(icomb.world, rdm.data(), rdm.size(), 0);
+         }
+#endif
+         */
 
          if(debug){
             auto t1 = tools::get_time();

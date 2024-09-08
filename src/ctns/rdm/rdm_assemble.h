@@ -4,6 +4,52 @@
 #include "rdm_string.h"
 
 namespace ctns{
+   
+   template <bool ifab, typename Tm>   
+      void setup_evalmap(const std::string num_string,
+            const qoper_map<ifab,Tm>& lops, 
+            const qoper_map<ifab,Tm>& rops, 
+            std::map<int,bool>& leval, 
+            std::map<int,bool>& reval,
+            const int size, 
+            const int rank){
+         // select cases
+         if(num_string == "020" || num_string == "002" || num_string == "200" ||
+               num_string == "031" || num_string == "121" || num_string == "301" ||
+               num_string == "310" || num_string == "400" || num_string == "022" ||
+               num_string == "011" || num_string == "040" || num_string == "013" ||
+               num_string == "004"){
+            for(const auto& rpr : rops){
+               const auto& rdx = rpr.first;
+               reval[rdx] = (rdx % size == rank);
+            }
+            for(const auto& lpr : lops){
+               const auto& ldx = lpr.first;
+               leval[ldx] = true;
+            }
+         }else if(num_string == "110" || num_string == "101" || num_string == "112" ||
+               num_string == "130" || num_string == "103"){
+            for(const auto& rpr : rops){
+               const auto& rdx = rpr.first;
+               reval[rdx] = true;
+            }
+            for(const auto& lpr : lops){
+               const auto& ldx = lpr.first;
+               leval[ldx] = (ldx % size == rank);
+            }
+         }else if(num_string == "220" || num_string == "211" || num_string == "202"){
+            for(const auto& rpr : rops){
+               const auto& rdx = rpr.first;
+               reval[rdx] = true;      
+            }
+            for(const auto& lpr : lops){
+               const auto& ldx = lpr.first;
+               leval[ldx] = true;
+            }
+         }else{
+            tools::exit("error: no such option for num_string="+num_string);
+         }
+      }
 
    template <typename Qm, typename Tm>
       void rdm_assemble(const int order,
@@ -13,7 +59,7 @@ namespace ctns{
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict, 
             const qtensor3<Qm::ifabelian,Tm>& wf3bra,
             const qtensor3<Qm::ifabelian,Tm>& wf3ket,
-            const std::vector<type_pattern>& patterns,
+            const std::vector<type_pattern>& allpatterns,
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm1,
@@ -36,7 +82,7 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
-         if(rank == 0) display_patterns(patterns);
+         if(rank == 0) display_patterns(allpatterns, "allpatterns");
 
          const std::map<std::string,std::pair<char,bool>> str2optype_same = {
             {"",{'I',0}},
@@ -97,8 +143,8 @@ namespace ctns{
          }
 
          // assemble RDMs by pattern
-         for(int i=0; i<patterns.size(); i++){
-            const auto& pattern = patterns[i];
+         for(int i=0; i<allpatterns.size(); i++){
+            const auto& pattern = allpatterns[i];
             const auto& loptype = str2optype.at(pattern.left);
             const auto& coptype = str2optype.at(pattern.center);
             const auto& roptype = str2optype.at(pattern.right);
@@ -125,12 +171,18 @@ namespace ctns{
                   << ":" << rops.size()  
                   << std::endl;
             }
+            
+            // for parallel computation
+            std::map<int,bool> reval;
+            std::map<int,bool> leval;
+            setup_evalmap(pattern.num_string(), lops, rops, leval, reval, size, rank);
 
             if(alg_rdm == 0){
 
                // assemble rdms
                for(const auto& rpr : rops){
                   const auto& rdx = rpr.first;
+                  if(!reval[rdx]) continue;
                   const auto& rop = rpr.second;
                   std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
                   auto rstr = get_calst(rkey, rdx, rdagger);
@@ -145,6 +197,7 @@ namespace ctns{
                      auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
                      for(const auto& lpr : lops){
                         const auto& ldx = lpr.first;
+                        if(!leval[ldx]) continue;
                         auto lop = ldagger? lpr.second.H() : lpr.second;
                         std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
                         auto lstr = get_calst(lkey, ldx, ldagger);
@@ -178,6 +231,7 @@ namespace ctns{
                // assemble rdms
                for(const auto& rpr : rops){
                   const auto& rdx = rpr.first;
+                  if(!reval[rdx]) continue;
                   const auto& rop = rpr.second;
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
@@ -190,6 +244,7 @@ namespace ctns{
                      auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
                      for(const auto& lpr : lops){
                         const auto& ldx = lpr.first;
+                        if(!leval[ldx]) continue;
                         auto lop = ldagger? lpr.second.H() : lpr.second;
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();

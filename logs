@@ -475,13 +475,16 @@
          - support {D,M} in renorm
          - rethinking about whether patterns is "-+" needed? no if all opB are kept
    - Optimized parallel CPU version:
+      - MPI (reduction of rdm)
+         - driver [DONE@2024/09/08]
+         - partition of workload to avoid redundant calculations
+
       - add timing for each pattern and all
       - computational cost:
          - prepare env via rdm_renom("cr",...): O(K2D3)
          - assemble: O(K2D3+K4D2) deminated by patterns 2|1|1
          - left renorm via rdm_renorm("lc",...): O(K3D3) [most expensive part?]
-      - OpenMP 
-      - MPI (reduction of rdm)
-      - rdm_renorm support other options for alg_renorm (this is important)
+      - rdm_renorm support other options for alg_renorm (this is important?)
       - check timing for large system?
+      - OpenMP 
 

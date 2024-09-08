@@ -62,11 +62,13 @@ namespace ctns{
             center = integer2binaryString(std::get<1>(num_pattern), td);
             right  = integer2binaryString(std::get<2>(num_pattern), te);
          }
-         std::string to_string() const{ 
+         std::string num_string() const{
             return std::to_string(left.size())
                +std::to_string(center.size())
-               +std::to_string(right.size())+":"
-               +left+"|"+center+"|"+right; 
+               +std::to_string(right.size());
+         }
+         std::string to_string() const{ 
+            return this->num_string()+":"+left+"|"+center+"|"+right; 
          }
          bool valid(const int ncre, const int nann, const std::string dots) const{
             bool valid = (this->get_ncre() == ncre) and (this->get_nann() == nann);
@@ -169,8 +171,9 @@ namespace ctns{
       return tpatterns;
    }
 
-   inline void display_patterns(const std::vector<type_pattern>& patterns){
-      std::cout << "ctns::display_patterns size=" << patterns.size() << std::endl;
+   inline void display_patterns(const std::vector<type_pattern>& patterns,
+         const std::string name){
+      std::cout << "ctns::display_patterns name=" << name << " size=" << patterns.size() << std::endl;
       for(int i=0; i<patterns.size(); i++){
          std::cout << " i=" << i << " " << patterns[i].to_string() << std::endl;
       }
