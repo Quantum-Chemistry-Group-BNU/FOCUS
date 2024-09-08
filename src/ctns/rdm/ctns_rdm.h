@@ -7,7 +7,7 @@
 #endif
 #include "rdm_env.h"
 #include "rdm_patterns.h"
-#include "rdm_compute.h"
+#include "rdm_assemble.h"
 
 namespace ctns{
 
@@ -52,9 +52,11 @@ namespace ctns{
          auto tpatterns = all_type_patterns(order, is_same);
          auto fpatterns = all_first_type_patterns(order, is_same);
          auto lpatterns = all_last_type_patterns(order, is_same);
-         display_patterns(tpatterns);
-         display_patterns(fpatterns);
-         display_patterns(lpatterns);
+         if(rank == 0){
+            display_patterns(tpatterns);
+            display_patterns(fpatterns);
+            display_patterns(lpatterns);
+         }
 
          // prepare environments {C,D} [both are required for icomb != icomb2]
          rdm_env_right(order, is_same, icomb, icomb2, schd, scratch);
@@ -65,7 +67,7 @@ namespace ctns{
          // initialization of single MPS
          sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
          sweep_init_single(icomb2, schd.ctns.jroot, schd.ctns.singlet);
-
+         
          // pool for handling operators
          qoper_pool<Qm::ifabelian,Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
          // generate sweep sequence
@@ -172,7 +174,7 @@ namespace ctns{
             }else if(isite == icomb.get_nphysical()-2){
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(patterns));
             }
-            rdm_compute(order, is_same, icomb, isite, qops_dict, wf3bra, wf3ket,
+            rdm_assemble(order, is_same, icomb, isite, qops_dict, wf3bra, wf3ket,
                     patterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();
 

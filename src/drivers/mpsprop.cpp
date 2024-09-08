@@ -62,7 +62,6 @@ void MPSPROP(const input::schedule& schd){
       icomb2 = std::move(jcomb);
       is_same = (schd.ctns.iroot == schd.ctns.jroot);
    }
-   is_same = false;
 
    // display task_prop
    if(rank == 0){
@@ -107,28 +106,37 @@ void MPSPROP(const input::schedule& schd){
       int k = 2*icomb.get_nphysical();
       linalg::matrix<Tm> rdm1(k,k);
    
-      auto tdm1 = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
-      tdm1.save_txt("tdm1", schd.ctns.outprec);
-      std::cout << "trace=" << tdm1.trace() << std::endl;
+      linalg::matrix<Tm> tdm1;
+      if(rank == 0){
+         tdm1  = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         tdm1.save_txt("tdm1", schd.ctns.outprec);
+         std::cout << "trace=" << tdm1.trace() << std::endl;
 
-      // compared against CI
-      auto tdm1fci = rdm1;
-      tdm1fci.load_txt("rdm1."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
-      std::cout << "trace=" << tdm1fci.trace() << std::endl;
-      auto diff2 = tdm1fci + tdm1;
-      if(diff2.normF() < 1.e-10) tdm1 *= -1; // may differ by sign
-      auto diff1 = tdm1fci - tdm1;
-      std::cout << "diff[+]=" << diff2.normF() 
-         << " diff[-]=" << diff1.normF() << std::endl;
-      assert(diff1.normF() < 1.e-10);
+         // compared against CI
+         auto tdm1fci = rdm1;
+         tdm1fci.load_txt("rdm1."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
+         std::cout << "trace=" << tdm1fci.trace() << std::endl;
+         auto diff2 = tdm1fci + tdm1;
+         if(diff2.normF() < 1.e-10) tdm1 *= -1; // may differ by sign
+         auto diff1 = tdm1fci - tdm1;
+         std::cout << "diff[+]=" << diff2.normF() 
+            << " diff[-]=" << diff1.normF() << std::endl;
+         assert(diff1.normF() < 1.e-10);
+      }
+#ifndef SERIAL
+      if(size > 1) boost::mpi::broadcast(icomb.world, rdm1, 0);
+#endif
 
       ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
-      // natural occupation and natural orbitals
 
-      std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
-      std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
-      tdm1 -= rdm1;
-      std::cout << "diff=" << tdm1.normF() << std::endl;
+      if(rank == 0){
+         std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
+         std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
+         tdm1 -= rdm1;
+         std::cout << "diff=" << tdm1.normF() << std::endl;
+      }
+
+      // natural occupation and natural orbitals
    }
 
    // 2: rdm2

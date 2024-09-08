@@ -1,12 +1,12 @@
-#ifndef RDM_COMPUTE_H
-#define RDM_COMPUTE_H
+#ifndef RDM_ASSEMBLE_H
+#define RDM_ASSEMBLE_H
 
 #include "rdm_string.h"
 
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void rdm_compute(const int order,
+      void rdm_assemble(const int order,
             const bool is_same,
             const comb<Qm,Tm>& icomb,
             const int isite,
@@ -27,7 +27,7 @@ namespace ctns{
          const int alg_rdm = schd.ctns.alg_rdm;
          const bool debug = (rank==0); 
          if(debug){ 
-            std::cout << "ctns::rdm_compute"
+            std::cout << "ctns::rdm_assemble"
                << " order=" << order
                << " ifab=" << ifab
                << " alg_rdm=" << alg_rdm
@@ -36,7 +36,7 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
-         display_patterns(patterns);
+         if(rank == 0) display_patterns(patterns);
 
          const std::map<std::string,std::pair<char,bool>> str2optype_same = {
             {"",{'I',0}},
@@ -75,10 +75,13 @@ namespace ctns{
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
-         lqops.print("lqops");
-         rqops.print("rqops");
-         cqops.print("cqops");
+         if(rank == 0){
+            lqops.print("lqops");
+            rqops.print("rqops");
+            cqops.print("cqops");
+         }
 
+         // Check identity operator
          if(is_same){
             const auto& lop = lqops('I').at(0);
             const auto& cop = cqops('I').at(0);
@@ -86,19 +89,16 @@ namespace ctns{
             auto ldiff = linalg::deviationFromIdentity(lop.to_matrix());
             auto cdiff = linalg::deviationFromIdentity(cop.to_matrix());
             auto rdiff = linalg::deviationFromIdentity(rop.to_matrix());
-            std::cout << "ldiff,cdiff,rdiff=" << ldiff << ","
+            std::cout << "rank=" << rank << " ldiff,cdiff,rdiff=" << ldiff << ","
                << cdiff << "," << rdiff << "," << std::endl;
             assert(ldiff < 1.e-10);
             assert(cdiff < 1.e-10);
             assert(rdiff < 1.e-10);
          }
 
-         // compute RDMs by pattern
+         // assemble RDMs by pattern
          for(int i=0; i<patterns.size(); i++){
             const auto& pattern = patterns[i];
-            std::cout << "\ni=" << i 
-               << " pattern=" << pattern.to_string()
-               << std::endl;
             const auto& loptype = str2optype.at(pattern.left);
             const auto& coptype = str2optype.at(pattern.center);
             const auto& roptype = str2optype.at(pattern.right);
@@ -108,21 +108,23 @@ namespace ctns{
             const auto& cdagger = coptype.second;
             const auto& rkey = roptype.first; 
             const auto& rdagger = roptype.second;
-            std::cout << "\ni=" << i 
-               << " pattern=" << pattern.to_string() 
-               << " opkey=" << lkey << ldagger 
-               << ":" << ckey << cdagger 
-               << ":" << rkey << rdagger 
-               << std::endl;
             const auto& lops = lqops(lkey);
-            std::cout << "lops=" << lops.size() << std::endl;
             const auto& cops = cqops(ckey);
-            std::cout << "cops=" << cops.size() << std::endl;
             const auto& rops = rqops(rkey);
-            std::cout << "rops=" << rops.size() << std::endl;
             int lparity = op2parity.at(lkey);
             int cparity = op2parity.at(ckey);
             int rparity = op2parity.at(rkey);
+            if(rank == 0){
+               std::cout << "\ni=" << i 
+                  << " pattern=" << pattern.to_string() 
+                  << " opkey=" << lkey << ldagger 
+                  << ":" << ckey << cdagger 
+                  << ":" << rkey << rdagger
+                  << " sizes=" << lops.size()
+                  << ":" << cops.size()  
+                  << ":" << rops.size()  
+                  << std::endl;
+            }
 
             if(alg_rdm == 0){
 
@@ -170,19 +172,48 @@ namespace ctns{
                      }
                   }
                }
+            
+            }else if(alg_rdm == 1){
 
-               // spin-recoupling for su2 case
+               // assemble rdms
+               for(const auto& rpr : rops){
+                  const auto& rdx = rpr.first;
+                  const auto& rop = rpr.second;
+                  auto rstr = get_calst(rkey, rdx, rdagger);
+                  auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
+                  for(const auto& cpr : cops){
+                     const auto& cdx = cpr.first;
+                     const auto& cop = cpr.second;
+                     auto cstr = get_calst(ckey, cdx, cdagger);
+                     auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
+                     if((cparity+rparity)%2 == 1) opxwf2.row_signed();
+                     auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
+                     for(const auto& lpr : lops){
+                        const auto& ldx = lpr.first;
+                        auto lop = ldagger? lpr.second.H() : lpr.second;
+                        auto lstr = get_calst(lkey, ldx, ldagger);
+                        if(tools::is_complex<Tm>()) lop = lop.conj();
+                        Tm val = contract_qt2_qt2_full(lop, op2); 
+                        rdmstring rdmstr(lstr, cstr, rstr);
+                        auto rdmstr2 = rdmstr;
+                        Tm sgn = rdmstr2.sort();
+                        auto ijdx = rdmstr2.get_ijdx();
+                        size_t idx = ijdx.first;
+                        size_t jdx = ijdx.second;
+                        rdm1(idx,jdx) = sgn*val;
+                        if(is_same) rdm1(jdx,idx) = tools::conjugate(rdm1(idx,jdx));
+                     }
+                  }
+               }
 
-               // reorder indices to physical
-
+            }else{
+               tools::exit("error: no such option for alg_rdm");
             } // alg_rdm
          } // pattern
 
-         //exit(1);
-
          if(debug){
             auto t1 = tools::get_time();
-            tools::timing("ctns::rdm_compute", t0, t1);
+            tools::timing("ctns::rdm_assemble", t0, t1);
          }
       }
 
