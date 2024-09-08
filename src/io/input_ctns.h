@@ -93,7 +93,7 @@ namespace input{
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_file & rcanon2_file
                   & iomode & async_fetch & async_save & async_remove & ifnccl
-                  & iroot & nsample & nprt & pthrd
+                  & iroot & jroot & nsample & nprt & pthrd
                   & tosu2 & thresh_tosu2 & singlet 
                   & diagcheck
                   & savebin 

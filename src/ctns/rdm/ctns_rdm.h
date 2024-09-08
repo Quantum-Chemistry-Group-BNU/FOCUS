@@ -242,7 +242,7 @@ namespace ctns{
             timing.t1 = tools::get_time();
             if(debug){
                get_sys_status();
-               timing.analysis("rdm", schd.ctns.verbose>0);
+               timing.analysis("local rdm", schd.ctns.verbose>0);
             }
          } // ibond
          if(debug){
