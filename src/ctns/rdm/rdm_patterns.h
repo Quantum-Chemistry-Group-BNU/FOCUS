@@ -202,7 +202,7 @@ namespace ctns{
             // qL+pL-sC+rC- (q>p,r<s) and pL-qL+sC+rC- (p<q). Therefore, only pL+qL-rC+sC- (p<q,r<s)
             // needs to be computed, as with ifhermi=true the part qL+pL-sC+rC- (q>p,r<s) will 
             // emerge using rdm(i,j) = tools::conjugate(rdm(j,i)). 
-            if(tpstr != "220:-+|+-" and tpstr != "202:-+||+-"){
+            if(tpstr != "220:-+|+-|" and tpstr != "202:-+||+-"){
                tpatterns_new.push_back( std::min(tp,tpadj) );
             }
          }
