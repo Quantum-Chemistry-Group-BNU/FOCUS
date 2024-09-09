@@ -1,6 +1,6 @@
 
-mpsprop.x
-#########
+rdm.x
+#####
 
 Properties of MPS
 

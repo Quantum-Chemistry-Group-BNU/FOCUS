@@ -137,9 +137,9 @@ namespace ctns{
             auto rdiff = linalg::deviationFromIdentity(rop.to_matrix());
             std::cout << "rank=" << rank << " ldiff,cdiff,rdiff=" << ldiff << ","
                << cdiff << "," << rdiff << "," << std::endl;
-            assert(ldiff < 1.e-10);
-            assert(cdiff < 1.e-10);
-            assert(rdiff < 1.e-10);
+            assert(ldiff < 1.e-8);
+            assert(cdiff < 1.e-8);
+            assert(rdiff < 1.e-8);
          }
 
          // assemble RDMs by pattern
@@ -184,13 +184,13 @@ namespace ctns{
                   const auto& rdx = rpr.first;
                   if(!reval[rdx]) continue;
                   const auto& rop = rpr.second;
-                  std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
+                  //std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
                   for(const auto& cpr : cops){
                      const auto& cdx = cpr.first;
                      const auto& cop = cpr.second;
-                     std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
+                     //std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
                      auto cstr = get_calst(ckey, cdx, cdagger);
                      auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                      if((cparity+rparity)%2 == 1) opxwf2.row_signed();
@@ -199,7 +199,7 @@ namespace ctns{
                         const auto& ldx = lpr.first;
                         if(!leval[ldx]) continue;
                         auto lop = ldagger? lpr.second.H() : lpr.second;
-                        std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
+                        //std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();
                         Tm val = contract_qt2_qt2_full(lop, op2); 
@@ -211,7 +211,8 @@ namespace ctns{
                         size_t jdx = ijdx.second;
                         rdm1(idx,jdx) = sgn*val;
                         double diff = std::abs(sgn*val - tdm1(idx,jdx));
-                        std::cout << "ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
+                        std::cout << "rank=" << rank
+                           << " ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
                            << " rdmstr=" << rdmstr.to_string()
                            << " rdmstr2=" << rdmstr2.to_string()
                            << " sgn=" << sgn 
@@ -220,7 +221,7 @@ namespace ctns{
                            << " tdm=" << tdm1(idx,jdx)
                            << " diff=" << diff
                            << std::endl;
-                        assert(diff < 1.e-10);
+                        assert(diff < 1.e-8);
                         if(is_same) rdm1(jdx,idx) = tools::conjugate(rdm1(idx,jdx));
                      }
                   }

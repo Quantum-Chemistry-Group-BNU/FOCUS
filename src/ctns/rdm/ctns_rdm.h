@@ -255,13 +255,11 @@ namespace ctns{
          }
          qops_pool.finalize();
 
-         /*
 #ifndef SERIAL
          if(size > 1){
             mpi_wrapper::reduce(icomb.world, rdm.data(), rdm.size(), 0);
          }
 #endif
-         */
 
          if(debug){
             auto t1 = tools::get_time();

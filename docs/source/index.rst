@@ -26,7 +26,7 @@ Currently, it support FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic 
    tutorials/ci
    tutorials/ctns
    tutorials/sadmrg
-   tutorials/mpsprop
+   tutorials/rdm
 
 .. toctree::
    :maxdepth: 1

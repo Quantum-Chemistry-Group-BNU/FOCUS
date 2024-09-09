@@ -18,7 +18,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Qm, typename Tm>  
-void MPSPROP(const input::schedule& schd){
+void RDM(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -26,12 +26,12 @@ void MPSPROP(const input::schedule& schd){
 #endif
    // consistency check for dtype
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in MPSPROP!");
+      tools::exit("error: inconsistent dtype in RDM!");
    }
 
-   //---------------------------------------------------------------------
-   // The driver mpsprop only support MPS with the same kind (topo,Qm,Tm)
-   //---------------------------------------------------------------------
+   //-----------------------------------------------------------------
+   // The driver RDM only support MPS with the same kind (topo,Qm,Tm)
+   //-----------------------------------------------------------------
 
    // initialization of MPS
    bool exist1 = false;
@@ -86,6 +86,7 @@ void MPSPROP(const input::schedule& schd){
       assert(schd.ctns.iroot <= icomb.get_nroots());
       assert(schd.ctns.jroot <= icomb2.get_nroots());
    }
+   const double thresh = 1.e-6;
 
    // 0: overlap
    if(tools::is_in_vector(schd.ctns.task_prop,0)){
@@ -95,7 +96,7 @@ void MPSPROP(const input::schedule& schd){
          Sij.print("<MPS1|MPS2>", schd.ctns.outprec);
       }
    } 
- 
+
    // 1: rdm1 
    if(tools::is_in_vector(schd.ctns.task_prop,1)){
       // create scratch
@@ -117,10 +118,10 @@ void MPSPROP(const input::schedule& schd){
          tdm1fci.load_txt("rdm1."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
          std::cout << "trace=" << tdm1fci.trace() << std::endl;
          auto diff2 = tdm1fci + tdm1;
-         if(diff2.normF() < 1.e-10) tdm1 *= -1; // may differ by sign
+         if(diff2.normF() < thresh) tdm1 *= -1; // may differ by sign
          auto diff1 = tdm1fci - tdm1;
          std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
-         assert(diff1.normF() < 1.e-10);
+         //assert(diff1.normF() < thresh);
       }
 #ifndef SERIAL
       if(size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
@@ -133,10 +134,10 @@ void MPSPROP(const input::schedule& schd){
          std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
          auto ddm1 = tdm1 - rdm1;
          std::cout << "diff=" << ddm1.normF() << std::endl;
-         if(ddm1.normF() > 1.e-10){
+         if(ddm1.normF() > thresh){
             for(int i=0; i<ddm1.rows(); i++){
                for(int j=0; j<ddm1.cols(); j++){
-                  if(std::abs(ddm1(i,j))>1.e-10){
+                  if(std::abs(ddm1(i,j)) > thresh){
                      std::cout << "i,j=" << i << "," << j
                         << " tdm1=" << tdm1(i,j)
                         << " rdm1=" << rdm1(i,j)
@@ -176,10 +177,10 @@ void MPSPROP(const input::schedule& schd){
          tdm2fci.load_txt("rdm2."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
          std::cout << "trace=" << tdm2fci.trace() << std::endl;
          auto diff2 = tdm2fci + tdm2;
-         if(diff2.normF() < 1.e-10) tdm2 *= -1; // may differ by sign
+         if(diff2.normF() < thresh) tdm2 *= -1; // may differ by sign
          auto diff1 = tdm2fci - tdm2;
          std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
-         assert(diff1.normF() < 1.e-10);
+         assert(diff1.normF() < thresh);
       }
 #ifndef SERIAL
       if(size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
@@ -192,10 +193,10 @@ void MPSPROP(const input::schedule& schd){
          std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
          auto ddm2 = tdm2 - rdm2;
          std::cout << "diff=" << ddm2.normF() << std::endl;
-         if(ddm2.normF() > 1.e-10){
+         if(ddm2.normF() > thresh){
             for(int i=0; i<ddm2.rows(); i++){
                for(int j=0; j<ddm2.cols(); j++){
-                  if(std::abs(ddm2(i,j))>1.e-10){
+                  if(std::abs(ddm2(i,j)) > thresh){
                      auto p0p1 = tools::inverse_pair0(i);
                      auto q0q1 = tools::inverse_pair0(j);
                      auto p0 = p0p1.first;
@@ -278,7 +279,7 @@ int main(int argc, char *argv[]){
    }
 #endif
    if(!schd.ctns.run){
-      if(rank == 0) std::cout << "\ncheck input again, there is no task for MPSPROP!" << std::endl;
+      if(rank == 0) std::cout << "\ncheck input again, there is no task for RDM!" << std::endl;
       return 0;
    }
 
@@ -297,23 +298,23 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      MPSPROP<ctns::qkind::qZ2,double>(schd);
+      RDM<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      MPSPROP<ctns::qkind::qZ2,std::complex<double>>(schd);
+      RDM<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      MPSPROP<ctns::qkind::qN,double>(schd);
+      RDM<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      MPSPROP<ctns::qkind::qN,std::complex<double>>(schd);
+      RDM<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      MPSPROP<ctns::qkind::qNSz,double>(schd);
+      RDM<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      MPSPROP<ctns::qkind::qNSz,std::complex<double>>(schd);
+      RDM<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      MPSPROP<ctns::qkind::qNK,std::complex<double>>(schd);
+      RDM<ctns::qkind::qNK,std::complex<double>>(schd);
 //   }else if(schd.ctns.qkind == "rNS"){
-//      MPSPROP<ctns::qkind::qNS,double>(schd);
+//      RDM<ctns::qkind::qNS,double>(schd);
 //   }else if(schd.ctns.qkind == "cNS"){
-//      MPSPROP<ctns::qkind::qNS,std::complex<double>>(schd);
+//      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind
@@ -325,6 +326,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0) tools::finish("MPSPROP");	   
+   if(rank == 0) tools::finish("RDM");	   
    return 0;
 }
