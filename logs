@@ -479,9 +479,9 @@
          - driver [DONE@2024/09/08]
          - partition of workload to avoid redundant calculations [DONE@2024/09/09]
       - OpenMP for the left operators [DONE@2024/09/09]
-
       - add timing for each pattern and all
-      - check timing for large system?
-      - rdm_renorm support other options for alg_renorm (this is important?)
+     
+ 
       - femoco -> rdm1 does not match rdm from SCI
+      - rdm_renorm support other options for alg_renorm (this is important?)
 

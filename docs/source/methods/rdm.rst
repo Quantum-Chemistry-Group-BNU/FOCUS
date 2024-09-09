@@ -131,5 +131,18 @@ The computational cost for 2-RDMs comes from three parts:
 
 2. Assemble RDMs by patterns: :math:`O(K^2D^3+K^4D^2)` dominated by patterns 2|1|1
 
+.. code-block::
+
+    i=0 pattern=040:|++--| opkey=I0:F0:I0 sizes=1:1:1 TIMING=7.9e-05 S
+    i=1 pattern=031:|++-|- opkey=I0:T1:C1 sizes=1:2:76 TIMING=0.00614 S
+    i=2 pattern=130:+|+--| opkey=C0:T0:I0 sizes=74:2:1 TIMING=0.000187 S
+    i=3 pattern=121:+|+-|- opkey=C0:B0:C1 sizes=74:4:76 TIMING=0.0199 S
+    i=4 pattern=121:+|--|+ opkey=C0:A1:C0 sizes=74:1:76 TIMING=0.00609 S
+    i=5 pattern=220:++|--| opkey=A0:A1:I0 sizes=2701:1:1 TIMING=0.00153 S
+    i=6 pattern=220:+-|+-| opkey=B0:B0:I0 sizes=2775:4:1 TIMING=0.0057 S
+    i=7 pattern=211:++|-|- opkey=A0:C1:C1 sizes=2701:2:76 TIMING=0.208 S
+    i=8 pattern=211:-+|+|- opkey=B1:C0:C1 sizes=2775:2:76 TIMING=0.646 S
+    i=9 pattern=211:+-|+|- opkey=B0:C0:C1 sizes=2775:2:76 TIMING=0.218 S
+
 3. Left renormalization via ``rdm_renorm("lc",...)``: :math:`O(K^3D^3)` 
 

@@ -1,15 +1,13 @@
  
  * RDMs for su2 case:
-
    - is_same=true:
       - rdm1
+         - rdm_renorm: support su2 operators
          - assemble?
          - spin recoupling?
-
 ======================================================================
 Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
 ======================================================================
-
       - rdm2
    - is_same=false:
       - rdm1
@@ -48,7 +46,7 @@ Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
 
 ### TODOs: better performance ###
 
- * Decimation for su2 is not optimized/parallelized yet
+ * Decimation for su2 is not parallelized yet
 
  * Decimation on GPU?
    - cuSolver: svd
