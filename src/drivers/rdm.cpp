@@ -41,6 +41,7 @@ void RDM(const input::schedule& schd){
       assert(icomb.topo.ifmps);
       if(rank == 0){
          icomb.display_shape();
+         icomb.display_size();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
       }
       exist1 = true;
@@ -55,6 +56,7 @@ void RDM(const input::schedule& schd){
       assert(icomb2.topo.ifmps); // must be MPS
       if(rank == 0){
          icomb2.display_shape();
+         icomb2.display_size();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
       }
    }else{
