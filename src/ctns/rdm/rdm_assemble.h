@@ -11,43 +11,46 @@ namespace ctns{
             const int sorb,
             const qoper_map<ifab,Tm>& lops, 
             const qoper_map<ifab,Tm>& rops, 
-            std::map<int,bool>& leval, 
-            std::map<int,bool>& reval,
+            std::vector<int>& leval, 
+            std::vector<int>& reval,
             const int size, 
             const int rank){
          // select cases
-         if(num_string == "020" || num_string == "002" || num_string == "200" ||
+         if(num_string == "020" || num_string == "200" ||
                num_string == "031" || num_string == "121" || num_string == "301" ||
-               num_string == "310" || num_string == "400" || num_string == "022" ||
+               num_string == "310" || num_string == "400" || 
                num_string == "011" || num_string == "040" || num_string == "013" ||
                num_string == "004"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
-               reval[rdx] = (rdx % size == rank);
+               if(rdx % size == rank) reval.push_back(rdx);
             }
             for(const auto& lpr : lops){
                const auto& ldx = lpr.first;
-               leval[ldx] = true;
+               leval.push_back(ldx);
             }
          }else if(num_string == "110" || num_string == "101" || num_string == "112" ||
-               num_string == "130" || num_string == "103"){
+               num_string == "130" || num_string == "103" ||
+               // by putting 002 and 022 here, they will only be evaluated on rank-0
+               // which will avoid repeated calculations in different ranks for ifhermi=true 
+               num_string == "002" || num_string == "022"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
-               reval[rdx] = true;
+               reval.push_back(rdx);
             }
             for(const auto& lpr : lops){
                const auto& ldx = lpr.first;
-               leval[ldx] = (ldx % size == rank);
+               if(ldx % size == rank) leval.push_back(ldx);
             }
          }else if(num_string == "220" || num_string == "211" || num_string == "202"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
-               reval[rdx] = true;      
+               reval.push_back(rdx); 
             }
             char key;
             for(const auto& lpr : lops){
                const auto& ldx = lpr.first;
-               leval[ldx] = (distribute2(key, ifkr, size, ldx, sorb) == rank);
+               if(distribute2(key, ifkr, size, ldx, sorb) == rank) leval.push_back(ldx);
             }
          }else{
             tools::exit("error: no such option for num_string="+num_string);
@@ -176,8 +179,8 @@ namespace ctns{
             }
             
             // for parallel computation
-            std::map<int,bool> reval;
-            std::map<int,bool> leval;
+            std::vector<int> reval;
+            std::vector<int> leval;
             const bool ifkr = Qm::ifkr;
             int sorb = icomb.get_nphysical()*2;
             setup_evalmap(pattern.num_string(), ifkr, sorb, lops, rops, leval, reval, size, rank);
@@ -185,10 +188,8 @@ namespace ctns{
             if(alg_rdm == 0){
 
                // assemble rdms
-               for(const auto& rpr : rops){
-                  const auto& rdx = rpr.first;
-                  if(!reval[rdx]) continue;
-                  const auto& rop = rpr.second;
+               for(const auto& rdx : reval){
+                  const auto& rop = rops.at(rdx);
                   //std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
@@ -200,10 +201,8 @@ namespace ctns{
                      auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                      if((cparity+rparity)%2 == 1) opxwf2.row_signed();
                      auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
-                     for(const auto& lpr : lops){
-                        const auto& ldx = lpr.first;
-                        if(!leval[ldx]) continue;
-                        auto lop = ldagger? lpr.second.H() : lpr.second;
+                     for(const auto& ldx : leval){
+                        auto lop = ldagger? lops.at(ldx).H() : lops.at(ldx);
                         //std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();
@@ -238,10 +237,8 @@ namespace ctns{
             }else if(alg_rdm == 1){
 
                // assemble rdms
-               for(const auto& rpr : rops){
-                  const auto& rdx = rpr.first;
-                  if(!reval[rdx]) continue;
-                  const auto& rop = rpr.second;
+               for(const auto& rdx : reval){
+                  const auto& rop = rops.at(rdx);
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
                   for(const auto& cpr : cops){
@@ -250,11 +247,13 @@ namespace ctns{
                      auto cstr = get_calst(ckey, cdx, cdagger);
                      auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                      if((cparity+rparity)%2 == 1) opxwf2.row_signed();
-                     auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
-                     for(const auto& lpr : lops){
-                        const auto& ldx = lpr.first;
-                        if(!leval[ldx]) continue;
-                        auto lop = ldagger? lpr.second.H() : lpr.second;
+                     auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+                     for(int l=0; l<leval.size(); l++){
+                        const auto& ldx = leval[l];
+                        auto lop = ldagger? lops.at(ldx).H() : lops.at(ldx);
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();
                         Tm val = contract_qt2_qt2_full(lop, op2); 
@@ -264,8 +263,13 @@ namespace ctns{
                         auto ijdx = rdmstr2.get_ijdx();
                         size_t idx = ijdx.first;
                         size_t jdx = ijdx.second;
-                        rdm1(idx,jdx) = sgn*val;
-                        if(is_same) rdm1(jdx,idx) = tools::conjugate(rdm1(idx,jdx));
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                        {
+                           rdm1(idx,jdx) = sgn*val;
+                           if(is_same) rdm1(jdx,idx) = tools::conjugate(rdm1(idx,jdx));
+                        }
                      }
                   }
                }

@@ -86,6 +86,8 @@ void params_ctns::read(ifstream& istrm){
          alg_decim = stoi(line.substr(9));
       }else if(line.substr(0,7)=="alg_rdm"){
          alg_rdm = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="debug_rdm"){
+         debug_rdm = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
       }else if(line.substr(0,7)=="ifdist1"){
@@ -377,4 +379,5 @@ void params_ctns::print() const{
    cout << "inputconf = " << inputconf << endl;
    cout << "saveconfs = " << saveconfs << endl;
    cout << "loadconfs = " << loadconfs << endl;
+   cout << "debug_rdm = " << debug_rdm << endl;
 }

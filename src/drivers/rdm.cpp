@@ -108,7 +108,7 @@ void RDM(const input::schedule& schd){
       linalg::matrix<Tm> rdm1(k,k);
    
       linalg::matrix<Tm> tdm1;
-      if(rank == 0){
+      if(schd.ctns.debug_rdm and rank == 0){
          tdm1  = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
          tdm1.save_txt("tdm1", schd.ctns.outprec);
          std::cout << "trace=" << tdm1.trace() << std::endl;
@@ -124,12 +124,12 @@ void RDM(const input::schedule& schd){
          assert(diff1.normF() < thresh);
       }
 #ifndef SERIAL
-      if(size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
+      if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
 #endif
 
       ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
 
-      if(rank == 0){
+      if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
          std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
          auto ddm1 = tdm1 - rdm1;
@@ -151,7 +151,6 @@ void RDM(const input::schedule& schd){
             }
          }
       }
-
       // natural occupation and natural orbitals
    }
 
@@ -167,7 +166,7 @@ void RDM(const input::schedule& schd){
       linalg::matrix<Tm> rdm2(k2,k2);
 
       linalg::matrix<Tm> tdm2;
-      if(rank == 0){
+      if(schd.ctns.debug_rdm and rank == 0){
          tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
          tdm2.save_txt("tdm2", schd.ctns.outprec);
          std::cout << "trace=" << tdm2.trace() << std::endl;
@@ -183,12 +182,12 @@ void RDM(const input::schedule& schd){
          assert(diff1.normF() < thresh);
       }
 #ifndef SERIAL
-      if(size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
+      if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
 #endif
 
       ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
 
-      if(rank == 0){
+      if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;
          std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
          auto ddm2 = tdm2 - rdm2;

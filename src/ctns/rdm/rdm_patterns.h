@@ -147,6 +147,10 @@ namespace ctns{
          bool operator <(const type_pattern& tp) const{
             return this->to_string() < tp.to_string();
          }
+         // special pattern that the adjoint operation maps pattern to itself 
+         bool hermi() const{
+            return this->to_string() == this->adjoint().to_string();
+         }
       public:
          std::string left   = "";
          std::string center = "";
@@ -175,7 +179,9 @@ namespace ctns{
          const std::string name){
       std::cout << "ctns::display_patterns name=" << name << " size=" << patterns.size() << std::endl;
       for(int i=0; i<patterns.size(); i++){
-         std::cout << " i=" << i << " " << patterns[i].to_string() << std::endl;
+         std::cout << " i=" << i << " " << patterns[i].to_string() 
+            << " hermi=" << patterns[i].hermi()
+            << std::endl;
       }
    }
 

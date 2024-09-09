@@ -477,15 +477,11 @@
    - Optimized parallel CPU version:
       - MPI (reduction of rdm)
          - driver [DONE@2024/09/08]
-         - partition of workload to avoid redundant calculations
+         - partition of workload to avoid redundant calculations [DONE@2024/09/09]
+      - OpenMP for the left operators [DONE@2024/09/09]
 
       - add timing for each pattern and all
-      - computational cost:
-         - prepare env via rdm_renom("cr",...): O(K2D3)
-         - assemble: O(K2D3+K4D2) deminated by patterns 2|1|1
-         - left renorm via rdm_renorm("lc",...): O(K3D3) [most expensive part?]
-      - rdm_renorm support other options for alg_renorm (this is important?)
       - check timing for large system?
-      - OpenMP 
+      - rdm_renorm support other options for alg_renorm (this is important?)
       - femoco -> rdm1 does not match rdm from SCI
 
