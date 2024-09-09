@@ -31,6 +31,7 @@ namespace ctns{
             const comb<Qm,Tm>& icomb2,
             const int iroot1,
             const int iroot2){
+         auto t0 = tools::get_time();
          std::cout << "\nctns::rdm1_simple: iroot1=" << iroot1
             << " iroot2=" << iroot2 
             << std::endl;
@@ -40,6 +41,9 @@ namespace ctns{
          int sorb = 2*icomb2.get_nphysical();
          // rdm1[i,j] = <i^+j>
          linalg::matrix<Tm> rdm1(sorb,sorb);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) collapse(2)
+#endif
          for(int i=0; i<sorb; i++){
             for(int j=0; j<sorb; j++){
                int ki = i/2, spin_i = i%2;
@@ -50,9 +54,14 @@ namespace ctns{
                // map back to the actual orbital      
                int pi = 2*image1[ki] + spin_i;
                int pj = 2*image1[kj] + spin_j;
+#ifdef _OPENMP
+#pragma omp critical
+#endif
                rdm1(pi,pj) = smat(iroot1,iroot2);
             } // j
          } // i
+         auto t1 = tools::get_time();
+         tools::timing("ctns::rdm1_simple", t0, t1);
          return rdm1;
       }
 
@@ -62,6 +71,7 @@ namespace ctns{
             const int iroot1,
             const int iroot2,
             const bool debug=false){
+         auto t0 = tools::get_time();
          std::cout << "\nctns::rdm2_simple: iroot1=" << iroot1
             << " iroot2=" << iroot2 
             << std::endl;
@@ -72,33 +82,42 @@ namespace ctns{
          // rdm2[i,j,k,l] = <i^+j^+kl> (i>j,k<l)
          int sorb2 = sorb*(sorb-1)/2;
          linalg::matrix<Tm> rdm2(sorb2,sorb2);
-         for(int i=0; i<sorb; i++){
-            for(int j=0; j<i; j++){
-               for(int l=0; l<sorb; l++){
-                  for(int k=0; k<l; k++){
-                     int ki = i/2, spin_i = i%2;
-                     int kj = j/2, spin_j = j%2;
-                     int kk = k/2, spin_k = k%2;
-                     int kl = l/2, spin_l = l%2;
-                     auto icomb2l = apply_opC(icomb2, kl, spin_l, 0); // al|psi2>
-                     auto icomb2kl = apply_opC(icomb2l, kk, spin_k, 0); // akal|psi2>
-                     auto icomb2jkl = apply_opC(icomb2kl, kj, spin_j, 1); // aj^+akal|psi2>
-                     auto icomb2ijkl = apply_opC(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
-                     auto smat = get_Smat(icomb1,icomb2ijkl); // <psi1|ai^+aj^+akal|psi2>
-                     // map back to the actual orbital      
-                     int pi = 2*image1[ki] + spin_i;
-                     int pj = 2*image1[kj] + spin_j;
-                     int pk = 2*image1[kk] + spin_k;
-                     int pl = 2*image1[kl] + spin_l;
-                     auto pij = tools::canonical_pair0(pi,pj);
-                     auto pkl = tools::canonical_pair0(pk,pl);
-                     Tm sgn1 = (pi>pj)? 1 : -1;
-                     Tm sgn2 = (pk<pl)? 1 : -1;
-                     rdm2(pij,pkl) = sgn1*sgn2*smat(iroot1,iroot2);
-                  } // l
-               } // k
-            } // j
-         } // i
+         for(size_t ij=0; ij<sorb2; ij++){
+            auto ijpr = tools::inverse_pair0(ij);
+            int i = ijpr.first;
+            int j = ijpr.second;
+            std::cout << "ij/pair=" << ij << "," << sorb2 << " i,j=" << i << "," << j << std::endl;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+            for(size_t lk=0; lk<sorb2; lk++){
+               auto lkpr = tools::inverse_pair0(lk);
+               int l = lkpr.first;
+               int k = lkpr.second; 
+               int ki = i/2, spin_i = i%2;
+               int kj = j/2, spin_j = j%2;
+               int kk = k/2, spin_k = k%2;
+               int kl = l/2, spin_l = l%2;
+               auto icomb2l = apply_opC(icomb2, kl, spin_l, 0); // al|psi2>
+               auto icomb2kl = apply_opC(icomb2l, kk, spin_k, 0); // akal|psi2>
+               auto icomb2jkl = apply_opC(icomb2kl, kj, spin_j, 1); // aj^+akal|psi2>
+               auto icomb2ijkl = apply_opC(icomb2jkl, ki, spin_i, 1); // ai^+aj^+akal|psi2>
+               auto smat = get_Smat(icomb1,icomb2ijkl); // <psi1|ai^+aj^+akal|psi2>
+               // map back to the actual orbital      
+               int pi = 2*image1[ki] + spin_i;
+               int pj = 2*image1[kj] + spin_j;
+               int pk = 2*image1[kk] + spin_k;
+               int pl = 2*image1[kl] + spin_l;
+               auto pij = tools::canonical_pair0(pi,pj);
+               auto pkl = tools::canonical_pair0(pk,pl);
+               Tm sgn1 = (pi>pj)? 1 : -1;
+               Tm sgn2 = (pk<pl)? 1 : -1;
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+               rdm2(pij,pkl) = sgn1*sgn2*smat(iroot1,iroot2);
+            } // lk
+         } // ij
          if(debug){
             auto rdm1 = rdm1_simple(icomb1,icomb2,iroot1,iroot2);
             auto rdm1b = fock::get_rdm1_from_rdm2(rdm2);
@@ -106,6 +125,8 @@ namespace ctns{
             std::cout << "Check |rdm1b-rdm1|=" << diff << std::endl;
             assert(diff < 1.e-6);
          }
+         auto t1 = tools::get_time();
+         tools::timing("ctns::rdm2_simple", t0, t1);
          return rdm2;
       }
 

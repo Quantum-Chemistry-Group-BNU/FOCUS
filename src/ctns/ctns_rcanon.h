@@ -114,7 +114,7 @@ namespace ctns{
             tools::print_vector(s,"sigs");
          }
          // lowdin orthonormalization: wf2new = U*Vt 
-         auto wf2new = linalg::xgemm("N","N",U,Vt).T(); // for convience
+         auto wf2new = linalg::xgemm("N","N",U,Vt).T(); // T() for convenience
          // save the data back
          for(int i=0; i<nroots; i++){
             assert(wf2new.rows() == icomb.rwfuns[i].size());

@@ -480,9 +480,9 @@
          - partition of workload to avoid redundant calculations [DONE@2024/09/09]
       - OpenMP for the left operators [DONE@2024/09/09]
       - add timing for each pattern and all
-     
+      - Note: rdm1 for femoco does not match rdm from SCI (because converting two states are not perfectly done)
  
-      - femoco -> rdm1 does not match rdm from SCI
+   - rdm_renorm support other options for alg_renorm 
 
  * RDMs for su2 case:
    - is_same=true:
@@ -497,10 +497,4 @@ Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
    - is_same=false:
       - rdm1
       - rdm2
-
- * Further optimized RDM implementation:
-   - profiling for FeMoCo with D>=8000
-   - rdm_renorm support other options for alg_renorm 
-   - optimize IO (prefetch?)
-   - GPU algorithm?
 
