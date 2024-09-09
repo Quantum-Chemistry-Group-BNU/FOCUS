@@ -43,6 +43,7 @@ namespace ctns{
       return ifkr? (index/2)%size : index%size; 
    }
 
+   // note that: key is currently not used.
    inline int distribute2(const char key, const bool ifkr, const int size, const int index, const int sorb){
       auto pq = oper_unpack(index);
       int p = pq.first;

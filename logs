@@ -487,4 +487,5 @@
       - rdm_renorm support other options for alg_renorm (this is important?)
       - check timing for large system?
       - OpenMP 
+      - femoco -> rdm1 does not match rdm from SCI
 

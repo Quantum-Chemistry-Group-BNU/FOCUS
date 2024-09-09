@@ -7,6 +7,8 @@ namespace ctns{
    
    template <bool ifab, typename Tm>   
       void setup_evalmap(const std::string num_string,
+            const bool ifkr,
+            const int sorb,
             const qoper_map<ifab,Tm>& lops, 
             const qoper_map<ifab,Tm>& rops, 
             std::map<int,bool>& leval, 
@@ -42,9 +44,10 @@ namespace ctns{
                const auto& rdx = rpr.first;
                reval[rdx] = true;      
             }
+            char key;
             for(const auto& lpr : lops){
                const auto& ldx = lpr.first;
-               leval[ldx] = true;
+               leval[ldx] = (distribute2(key, ifkr, size, ldx, sorb) == rank);
             }
          }else{
             tools::exit("error: no such option for num_string="+num_string);
@@ -175,7 +178,9 @@ namespace ctns{
             // for parallel computation
             std::map<int,bool> reval;
             std::map<int,bool> leval;
-            setup_evalmap(pattern.num_string(), lops, rops, leval, reval, size, rank);
+            const bool ifkr = Qm::ifkr;
+            int sorb = icomb.get_nphysical()*2;
+            setup_evalmap(pattern.num_string(), ifkr, sorb, lops, rops, leval, reval, size, rank);
 
             if(alg_rdm == 0){
 
@@ -212,7 +217,10 @@ namespace ctns{
                         rdm1(idx,jdx) = sgn*val;
                         double diff = std::abs(sgn*val - tdm1(idx,jdx));
                         std::cout << "rank=" << rank
+                           << " pattern=" << pattern.to_string() 
                            << " ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
+                           << " rdmstr=" << rdmstr.to_string1()
+                           << " rdmstr2=" << rdmstr2.to_string1()
                            << " rdmstr=" << rdmstr.to_string()
                            << " rdmstr2=" << rdmstr2.to_string()
                            << " sgn=" << sgn 

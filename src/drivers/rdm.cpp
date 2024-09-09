@@ -121,7 +121,7 @@ void RDM(const input::schedule& schd){
          if(diff2.normF() < thresh) tdm1 *= -1; // may differ by sign
          auto diff1 = tdm1fci - tdm1;
          std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
-         //assert(diff1.normF() < thresh);
+         assert(diff1.normF() < thresh);
       }
 #ifndef SERIAL
       if(size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
@@ -144,7 +144,7 @@ void RDM(const input::schedule& schd){
                         << " diff=" << ddm1(i,j)
                         << " spatial="
                         << i/2 << (i%2==0? "A+" : "B+")
-                        << j/2 << (j%2==0? "A" : "B")
+                        << j/2 << (j%2==0? "A-" : "B-")
                         << std::endl;
                   }
                }
@@ -212,8 +212,8 @@ void RDM(const input::schedule& schd){
                         << " spatial="
                         << p0/2 << (p0%2==0? "A+" : "B+")
                         << p1/2 << (p1%2==0? "A+" : "B+")
-                        << q1/2 << (q1%2==0? "A"  : "B")
-                        << q0/2 << (q0%2==0? "A"  : "B")
+                        << q1/2 << (q1%2==0? "A-" : "B-")
+                        << q0/2 << (q0%2==0? "A-" : "B-")
                         << std::endl;
                   }
                }
@@ -235,7 +235,7 @@ void RDM(const input::schedule& schd){
    }
 
    /*
-   // single-site entropy analysis
+   // single-site entropy analysis: obtainable from 2-RDM
    if(rank == 0){
    auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
    }

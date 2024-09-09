@@ -194,7 +194,17 @@ namespace ctns{
          auto tpadj = tp.adjoint();
          if(std::find(tpatterns_new.begin(), tpatterns_new.end(), tp) == tpatterns_new.end() and
                std::find(tpatterns_new.begin(), tpatterns_new.end(), tpadj) == tpatterns_new.end()){
-            tpatterns_new.push_back( std::min(tp,tpadj) );
+            auto tpmin = std::min(tp,tpadj);
+            auto tpstr = tpmin.to_string();
+            // these two patterns are also not needed, because they will be formed from
+            // "220:+-|+-" and "202:+-||+-". For instance,
+            // pL+qL-rC+sC- (p<q,r<s) is equivalent to qL-pL+rC+sC- (q>p), and by hermitian
+            // qL+pL-sC+rC- (q>p,r<s) and pL-qL+sC+rC- (p<q). Therefore, only pL+qL-rC+sC- (p<q,r<s)
+            // needs to be computed, as with ifhermi=true the part qL+pL-sC+rC- (q>p,r<s) will 
+            // emerge using rdm(i,j) = tools::conjugate(rdm(j,i)). 
+            if(tpstr != "220:-+|+-" and tpstr != "202:-+||+-"){
+               tpatterns_new.push_back( std::min(tp,tpadj) );
+            }
          }
       }
       return tpatterns_new;

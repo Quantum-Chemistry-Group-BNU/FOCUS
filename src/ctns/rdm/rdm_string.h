@@ -130,7 +130,15 @@ namespace ctns{
             std::string str="";
             for(int i=0; i<calst.size(); i++){
                str += std::to_string(calst[i].first/2)
-                    + (calst[i].first%2? "A" : "B")
+                    + (calst[i].first%2==0? "A" : "B")
+                    + (calst[i].second? "+" : "-");
+            }
+            return str;
+         }
+         std::string to_string1() const{
+            std::string str="";
+            for(int i=0; i<calst.size(); i++){
+               str += std::to_string(calst[i].first)
                     + (calst[i].second? "+" : "-");
             }
             return str;
