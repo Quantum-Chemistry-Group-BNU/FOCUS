@@ -1,18 +1,4 @@
  
- * RDMs for su2 case:
-   - is_same=true:
-      - rdm1
-         - rdm_renorm: support su2 operators
-         - assemble?
-         - spin recoupling?
-======================================================================
-Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
-======================================================================
-      - rdm2
-   - is_same=false:
-      - rdm1
-      - rdm2
-
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,

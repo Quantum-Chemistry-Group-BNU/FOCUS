@@ -483,5 +483,24 @@
      
  
       - femoco -> rdm1 does not match rdm from SCI
-      - rdm_renorm support other options for alg_renorm (this is important?)
+
+ * RDMs for su2 case:
+   - is_same=true:
+      - rdm1
+         - rdm_renorm: support su2 operators
+         - assemble?
+         - spin recoupling?
+======================================================================
+Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
+======================================================================
+      - rdm2
+   - is_same=false:
+      - rdm1
+      - rdm2
+
+ * Further optimized RDM implementation:
+   - profiling for FeMoCo with D>=8000
+   - rdm_renorm support other options for alg_renorm 
+   - optimize IO (prefetch?)
+   - GPU algorithm?
 

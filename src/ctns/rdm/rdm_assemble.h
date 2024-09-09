@@ -11,7 +11,6 @@ namespace ctns{
       void rdm_assemble(const int order,
             const bool is_same,
             const comb<Qm,Tm>& icomb,
-            const int isite,
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict, 
             const qtensor3<Qm::ifabelian,Tm>& wf3bra,
             const qtensor3<Qm::ifabelian,Tm>& wf3ket,
@@ -33,7 +32,6 @@ namespace ctns{
                << " order=" << order
                << " ifab=" << ifab
                << " alg_rdm=" << alg_rdm
-               << " isite=" << isite
                << std::endl;
          }
          auto t0 = tools::get_time();

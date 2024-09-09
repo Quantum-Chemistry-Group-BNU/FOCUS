@@ -174,7 +174,7 @@ namespace ctns{
             }else if(isite == icomb.get_nphysical()-2){
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(allpatterns));
             }
-            rdm_assemble(order, is_same, icomb, isite, qops_dict, wf3bra, wf3ket,
+            rdm_assemble(order, is_same, icomb, qops_dict, wf3bra, wf3ket,
                     allpatterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();
 
@@ -243,6 +243,7 @@ namespace ctns{
             if(debug){
                get_sys_status();
                timing.analysis("local rdm", schd.ctns.verbose>0);
+               sweeps.timing_sweep[0].accumulate(timing, "sweep rdm", schd.ctns.verbose>0);
             }
          } // ibond
          if(debug){
