@@ -204,7 +204,7 @@ namespace ctns{
             int nroots = eopt.size();
             for(int i=0; i<nroots; i++){
                std::cout << "optimized energies:"
-                  << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+                  << " e[" << i << "]=" << std::fixed << std::setprecision(12) << eopt[i]
                   << std::endl;
             } // i
             std::cout << " deff=" << deff
@@ -265,7 +265,7 @@ namespace ctns{
                << " isweep=" << isweep 
                << " ibond=" << ibond 
                << " dots=" << dots
-               << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+               << " e[" << i << "]=" << std::fixed << std::setprecision(12) << eopt[i]
                << " nmvp=" << nmvp
                << std::endl;
          } // i
@@ -329,7 +329,7 @@ namespace ctns{
             << " nmvp=" << opt_result[isweep][ibond].nmvp;
          nmvp += opt_result[isweep][ibond].nmvp;      
          // print energy
-         std::cout << std::defaultfloat << std::setprecision(12);
+         std::cout << std::fixed << std::setprecision(12);
          const auto& eopt = opt_result[isweep][ibond].eopt;
          for(int j=0; j<nroots; j++){ 
             std::cout << " e[" << j << "]=" << eopt[j];
@@ -347,17 +347,17 @@ namespace ctns{
       auto dwt_ptr = std::minmax_element(dwt.begin(), dwt.end());
       int pos_dwt_min = std::distance(dwt.begin(), dwt_ptr.first);
       int pos_dwt_max = std::distance(dwt.begin(), dwt_ptr.second);
-      std::cout << " eav_max=" << std::defaultfloat << std::setprecision(12) << *eav_ptr.second
+      std::cout << " eav_max=" << std::fixed << std::setprecision(12) << *eav_ptr.second
          << " [ibond=" << pos_eav_max << "] "
          << " dwt_min=" << std::scientific << std::setprecision(3) << *dwt_ptr.first 
          << " [ibond=" << pos_dwt_min << "]"
          << std::endl;
-      std::cout << " eav_min=" << std::defaultfloat << std::setprecision(12) << *eav_ptr.first 
+      std::cout << " eav_min=" << std::fixed << std::setprecision(12) << *eav_ptr.first 
          << " [ibond=" << pos_eav_min << "] "
          << " dwt_max=" << std::scientific << std::setprecision(3) << *dwt_ptr.second
          << " [ibond=" << pos_dwt_max << "]"
          << std::endl;
-      std::cout << " eav_diff=" << std::defaultfloat << std::setprecision(12)
+      std::cout << " eav_diff=" << std::fixed << std::setprecision(12)
          << (*eav_ptr.second - *eav_ptr.first) << std::endl;
       // minimal energy   
       min_result[isweep] = opt_result[isweep][pos_eav_min];
@@ -371,7 +371,7 @@ namespace ctns{
             << " deff=" << opt_result[isweep][pos_eav_min].deff
             << " dwt=" << std::showpos << std::scientific << std::setprecision(3)
             << opt_result[isweep][pos_eav_min].dwt << std::noshowpos
-            << " e[" << i << "]=" << std::defaultfloat << std::setprecision(12) << eopt[i]
+            << " e[" << i << "]=" << std::fixed << std::setprecision(12) << eopt[i]
             << std::endl;
       } // i
 
@@ -416,10 +416,10 @@ namespace ctns{
          std::cout << std::setw(13) << jsweep
             << std::setw(8) << ctrl.dcut << " "
             << std::showpos << std::scientific << std::setprecision(3) << dwt
-            << std::noshowpos << std::defaultfloat << std::setprecision(12);
+            << std::noshowpos << std::fixed << std::setprecision(12);
          for(int j=0; j<nroots; j++){ 
             std::cout << " e[" << j << "]=" 
-               << std::defaultfloat << std::setprecision(12) << eopt_jsweep[j] << " ("
+               << std::fixed << std::setprecision(12) << eopt_jsweep[j] << " ("
                << std::scientific << std::setprecision(3) << eopt_jsweep[j]-eopt_isweep[j] << ")";
          } // jstate
          std::cout << std::endl;
