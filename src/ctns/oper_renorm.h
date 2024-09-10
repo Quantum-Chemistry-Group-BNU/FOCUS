@@ -29,11 +29,8 @@
 
 namespace ctns{
 
-   const bool debug_oper_renorm = false; 
+   const bool debug_oper_renorm = false;
    extern const bool debug_oper_renorm;
-
-   const bool debug_oper_rbasis = false;
-   extern const bool debug_oper_rbasis;
 
    const double thresh_opdiff = 1.e-9;
    extern const double thresh_opdiff;
@@ -60,6 +57,7 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         const bool skipId = true;
          const int alg_renorm = schd.ctns.alg_renorm;
          const int isym = Qm::isym;
          const bool ifkr = Qm::ifkr;
@@ -194,7 +192,7 @@ namespace ctns{
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             // initialization of qops inside
-            symbolic_kernel_renorm(superblock, rtasks, site, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
+            symbolic_kernel_renorm(superblock, rtasks, site, site, qops1, qops2, qops, skipId, schd.ctns.ifdist1, schd.ctns.verbose);
 
          }else if(alg_renorm == 2){
 
@@ -674,6 +672,7 @@ namespace ctns{
             mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
             if(rank != 0) opH.set_zero();
 #ifdef GPU
+            // send the collected opS and opH backto GPU
             if(alg_renorm>10){
                if(opS_index.size()>0){
                   int p0 = opS_index[0];
@@ -720,8 +719,9 @@ namespace ctns{
                      oper_check_rbasis(icomb, icomb, p, qops, key, size, rank);
                   }else if(key == 'P' || key == 'Q'){
                      oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank);
-                     // check opS and opH only if ifdist1=true   
-                  }else if((key == 'S' || key == 'H') and ifdist1){
+                  // check opS and opH only if ifdist1=true [opS and opH collected on rank-0]
+                  // or size==1 [serial version, no matter what value ifdist1 is] 
+                  }else if((key == 'S' || key == 'H') and (size == 1 || ifdist1)){
                      oper_check_rbasis(icomb, icomb, p, qops, key, int2e, int1e, size, rank, ifdist1);
                   }
                }

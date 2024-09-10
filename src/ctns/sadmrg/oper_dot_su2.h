@@ -25,7 +25,7 @@ namespace ctns{
        if(key == 'H' || key == 'I'){
           tk = 0;
           pk = 0;
-       }else if(key == 'C' || key == 'S' || key == 'D'){
+       }else if(key == 'C' || key == 'D' || key == 'S'){
           tk = 1;
           pk = 1;
        }else if(key == 'A' || key == 'P'){

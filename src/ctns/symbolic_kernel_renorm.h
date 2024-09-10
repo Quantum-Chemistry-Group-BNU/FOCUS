@@ -15,12 +15,14 @@ namespace ctns{
             const oper_dictmap<Tm>& qops_dict,
             const char key,
             const symbolic_task<Tm>& formulae,
-            const stensor3<Tm>& wf){
+            const stensor3<Tm>& wf,
+            const bool skipId){
          const bool debug = false;
          stensor3<Tm> Hwf;
          for(int it=0; it<formulae.size(); it++){
             const auto& HTerm = formulae.tasks[it];
             stensor3<Tm> opxwf;
+            bool applied = false;
             for(int idx=HTerm.size()-1; idx>=0; idx--){
                const auto& sop = HTerm.terms[idx];
                int len = sop.size();
@@ -43,7 +45,9 @@ namespace ctns{
                      << " index0=" << index0 
                      << std::endl;
                }
+               if(skipId and label == 'I') continue;
                const auto& qops = qops_dict.at(block);
+
                // form opsum = wt0*op0 + wt1*op1 + ...
                const auto& op0 = qops(label).at(index0);
                if(dagger) wt0 = tools::conjugate(wt0);
@@ -58,13 +62,16 @@ namespace ctns{
                   optmp += wtk*((nbark==0)? opk : opk.K(nbark));
                } // k
                if(dagger) linalg::xconj(optmp.size(), optmp.data());
+               
                // opN*|wf>
-               if(idx == HTerm.size()-1){
-                  opxwf = contract_opxwf(block,wf,optmp,dagger);
+               if(!applied){
+                  opxwf = contract_opxwf(block, wf, optmp, dagger); // optmp[block]*|wf>
+                  applied = true;
                }else{
-                  opxwf = contract_opxwf(block,opxwf,optmp,dagger);
+                  opxwf = contract_opxwf(block,opxwf,optmp,dagger); // optmp[block]*|opxwf>
                }
-               // impose antisymmetry here
+               
+               // impose antisymmetry by adding fermionic signs here
                if(block == block2 and parity){ 
                   if(block1 == "l"){ // lc or lr
                      opxwf.row_signed();
@@ -73,6 +80,7 @@ namespace ctns{
                   }
                }
             } // idx
+            assert(applied); // ZL@20240910 must be applied, otherwise the formula is empty
             if(it == 0) Hwf.init(opxwf.info);
             linalg::xaxpy(Hwf.size(), 1.0, opxwf.data(), Hwf.data());
          } // it
@@ -87,6 +95,7 @@ namespace ctns{
             const opersu2_dict<Tm>& qops1,
             const opersu2_dict<Tm>& qops2,
             opersu2_dict<Tm>& qops,
+            const bool skipId,
             const bool ifdist1,
             const int verbose){
          std::cout << "error: no implementation of symbolic_kernel_renorm for su2!" << std::endl;
@@ -100,6 +109,7 @@ namespace ctns{
             const oper_dict<Tm>& qops1,
             const oper_dict<Tm>& qops2,
             oper_dict<Tm>& qops,
+            const bool skipId,
             const bool ifdist1,
             const int verbose){
          if(qops.mpirank==0 and verbose>1){
@@ -144,7 +154,7 @@ namespace ctns{
                formula.display("formula", 1);
             }
             if(size == 0) continue;
-            auto opxwf = symbolic_renorm_single(block1, block2, qops_dict, key, formula, site2);
+            auto opxwf = symbolic_renorm_single(block1, block2, qops_dict, key, formula, site2, skipId);
             auto op = contract_qt3_qt3(superblock, site, opxwf);
             if(key == 'H') op += op.H();
             if(key == 'H' && qops.ifkr) op += op.K();

@@ -54,6 +54,7 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         const bool skipId = is_same;
          const int sorb = icomb.get_nphysical()*2;
          const int alg_renorm = schd.ctns.alg_renorm;
          const int isym = Qm::isym;
@@ -239,7 +240,7 @@ namespace ctns{
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             // initialization of qops inside
-            symbolic_kernel_renorm(superblock, rtasks, site, site2, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
+            symbolic_kernel_renorm(superblock, rtasks, site, site2, qops1, qops2, qops, skipId, schd.ctns.ifdist1, schd.ctns.verbose);
 
 /*
          }else if(alg_renorm == 2){

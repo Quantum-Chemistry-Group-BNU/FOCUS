@@ -65,7 +65,7 @@ namespace ctns{
          }
          // opB
          if(oplist.find('B') != std::string::npos){
-            bool ifDop = oplist.find('D') != std::string:npos; 
+            bool ifDop = oplist.find('D') != std::string::npos; 
             counter["B"] = 0;
             auto binfo = oper_combine_opB(cindex1, cindex2, ifkr);
             for(const auto& pr : binfo){
@@ -186,7 +186,7 @@ namespace ctns{
                int iproc = distribute2('M',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
                   auto opM = symbolic_normxwf_opM<Tm>(block1, block2, index, iformula, ifkr);
-                  formulae.append(std::make_tuple('M', index, opA));
+                  formulae.append(std::make_tuple('M', index, opM));
                   counter["M"] += opM.size();
                   if(ifsave){
                      std::cout << "idx=" << idx++;

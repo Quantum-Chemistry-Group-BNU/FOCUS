@@ -10,6 +10,9 @@
 
 namespace ctns{
 
+   const bool debug_oper_rbasis = true;
+   extern const bool debug_oper_rbasis;
+
    const bool debug_rops = true;
    extern const bool debug_rops;
 

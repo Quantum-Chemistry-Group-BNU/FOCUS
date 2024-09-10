@@ -671,13 +671,17 @@ namespace ctns{
          const double scale = 0.5; 
          if(!ifdist1 or rank==0){ 
             // 1. H1*I2
-            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), symbolic_oper(block2,'I',0), scale);
-            H1.ispins.push_back(std::make_tuple(0,0,0));
-            formulae.append(H1);
+            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), scale);
+            auto I2 = symbolic_prod<Tm>(symbolic_oper(block2,'I',0));
+            auto H1_I2 = H1.product(I2);
+            H1_I2.ispins.push_back(std::make_tuple(0,0,0));
+            formulae.append(H1_I2);
             // 2. I1*H2
-            auto H2 = symbolic_prod<Tm>(symbolic_oper(block1,'I',0), symbolic_oper(block2,'H',0), scale);
-            H2.ispins.push_back(std::make_tuple(0,0,0));
-            formulae.append(H2);
+            auto I1 = symbolic_prod<Tm>(symbolic_oper(block1,'I',0));
+            auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'H',0), scale);
+            auto I1_H2 = I1.product(H2);
+            I1_H2.ispins.push_back(std::make_tuple(0,0,0));
+            formulae.append(I1_H2);
          }
          // One-index operators
          // 3. sum_p1 p1^+ Sp1^2 + h.c. 

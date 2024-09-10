@@ -484,6 +484,8 @@
          - problem can be resolved by using very small thresh_proj=1.e-18
    - rdm_renorm support other options for alg_renorm 
       - add identity for formulae in nonsu2 case, which becomes consistent with su2 case.
+        However, identity operator does not allowed to have coefficient. This will simplify coding,
+        because we can simpy skip it.
       - symbolic formulae support for {I,C,D,A,B,M}
       - skip identity?
       - oper_renorm

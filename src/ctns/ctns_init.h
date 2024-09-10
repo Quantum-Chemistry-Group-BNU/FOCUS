@@ -11,6 +11,7 @@
 #include "ctns_comb.h"
 #include "init_phys.h"
 #include "init_bipart.h"
+#include "oper_rbasis.h" // debug_oper_rbasis
 
 const bool debug_init = true;
 extern const bool debug_init;
@@ -378,7 +379,11 @@ namespace ctns{
          const bool ifortho = true;
          const bool debug = false;
          auto icomb_new = icomb;
-         rcanon_canonicalize(icomb_new, ifortho, debug);
+         // performing canonicalization can change renormalized basis,
+         // and hence should not be used when performing debug_oper_rbasis
+         if(!debug_oper_rbasis){
+            rcanon_canonicalize(icomb_new, ifortho, debug);
+         }
 
          auto smat0b = get_Smat(icomb_new);
          std::cout << std::endl;
