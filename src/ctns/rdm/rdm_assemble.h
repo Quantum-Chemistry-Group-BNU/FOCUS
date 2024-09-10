@@ -100,20 +100,20 @@ namespace ctns{
                // assemble rdms
                for(const auto& rdx : reval){
                   const auto& rop = rops.at(rdx);
-                  //std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
+                  std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
                   auto rstr = get_calst(rkey, rdx, rdagger);
                   auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
                   for(const auto& cpr : cops){
                      const auto& cdx = cpr.first;
                      const auto& cop = cpr.second;
-                     //std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
+                     std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
                      auto cstr = get_calst(ckey, cdx, cdagger);
                      auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                      if((cparity+rparity)%2 == 1) opxwf2.row_signed();
                      auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2); 
                      for(const auto& ldx : leval){
                         auto lop = ldagger? lops.at(ldx).H() : lops.at(ldx);
-                        //std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
+                        std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
                         auto lstr = get_calst(lkey, ldx, ldagger);
                         if(tools::is_complex<Tm>()) lop = lop.conj();
                         Tm val = contract_qt2_qt2_full(lop, op2); 

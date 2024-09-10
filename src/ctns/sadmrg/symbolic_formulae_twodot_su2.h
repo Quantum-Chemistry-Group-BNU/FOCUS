@@ -231,7 +231,6 @@ namespace ctns{
             }
 
          } // ifNC
-
          return formulae;
       }
 

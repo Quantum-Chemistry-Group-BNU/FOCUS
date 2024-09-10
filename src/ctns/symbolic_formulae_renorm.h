@@ -8,6 +8,7 @@
 
 namespace ctns{
 
+   // see oper_renorm_kernel.h
    template <typename Tm>
       renorm_tasks<Tm> gen_formulae_renorm(const std::string& oplist,
             const std::string& block1,
@@ -64,13 +65,14 @@ namespace ctns{
          }
          // opB
          if(oplist.find('B') != std::string::npos){
+            bool ifDop = oplist.find('D') != std::string:npos; 
             counter["B"] = 0;
             auto binfo = oper_combine_opB(cindex1, cindex2, ifkr);
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
                int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
                if(iproc == rank){
-                  auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr);
+                  auto opB = symbolic_normxwf_opB<Tm>(block1, block2, index, iformula, ifkr, ifDop);
                   formulae.append(std::make_tuple('B', index, opB));
                   counter["B"] += opB.size();
                   if(ifsave){
@@ -145,6 +147,51 @@ namespace ctns{
                if(ifsave){
                   std::cout << "idx=" << idx++;
                   opH.display("opH", print_level);
+               }
+            }
+         }
+         // ZL@20240909: for RDM calculations
+         // opI
+         if(oplist.find('I') != std::string::npos){
+            counter["I"] = 0;
+            auto opI = symbolic_normxwf_opI<Tm>(block1, block2);  
+            formulae.append(std::make_tuple('I', 0, opI));
+            counter["I"] += opI.size();
+            if(ifsave){
+               std::cout << "idx=" << idx++;
+               opI.display("opI", print_level);
+            }
+         }
+         // opD
+         if(oplist.find('D') != std::string::npos){
+            counter["D"] = 0;	   
+            auto info = oper_combine_opC(cindex1, cindex2);
+            for(const auto& pr : info){
+               int index = pr.first, iformula = pr.second;
+               auto opD = symbolic_normxwf_opD<Tm>(block1, block2, index, iformula);
+               formulae.append(std::make_tuple('D', index, opD));
+               counter["D"] += opD.size();
+               if(ifsave){
+                  std::cout << "idx=" << idx++;
+                  opD.display("opD["+std::to_string(index)+"]", print_level);
+               }
+            }
+         }
+         // opM
+         if(oplist.find('M') != std::string::npos){
+            counter["M"] = 0;
+            auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
+            for(const auto& pr : ainfo){
+               int index = pr.first, iformula = pr.second;
+               int iproc = distribute2('M',ifkr,size,index,int2e.sorb);
+               if(iproc == rank){
+                  auto opM = symbolic_normxwf_opM<Tm>(block1, block2, index, iformula, ifkr);
+                  formulae.append(std::make_tuple('M', index, opA));
+                  counter["M"] += opM.size();
+                  if(ifsave){
+                     std::cout << "idx=" << idx++;
+                     opM.display("opM["+std::to_string(index)+"]", print_level);
+                  }
                }
             }
          }

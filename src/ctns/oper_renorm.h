@@ -194,7 +194,7 @@ namespace ctns{
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             // initialization of qops inside
-            symbolic_kernel_renorm(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
+            symbolic_kernel_renorm(superblock, rtasks, site, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
 
          }else if(alg_renorm == 2){
 

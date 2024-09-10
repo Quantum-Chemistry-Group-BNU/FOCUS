@@ -675,7 +675,7 @@ namespace ctns{
             H1.ispins.push_back(std::make_tuple(0,0,0));
             formulae.append(H1);
             // 2. I1*H2
-            auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'I',0), symbolic_oper(block2,'H',0), scale);
+            auto H2 = symbolic_prod<Tm>(symbolic_oper(block1,'I',0), symbolic_oper(block2,'H',0), scale);
             H2.ispins.push_back(std::make_tuple(0,0,0));
             formulae.append(H2);
          }

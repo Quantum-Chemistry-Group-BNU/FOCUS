@@ -272,6 +272,11 @@ void params_ctns::read(ifstream& istrm){
       std::cout << "error: ifnccl=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
       exit(1);
    }
+   // alg_rdm=0 and debug_rdm
+   if(alg_rdm == 0 and !debug_rdm){
+      std::cout << "error: alg_rdm=0 should be used with debug_rdm=true!" << std::endl;
+      exit(1);
+   }
 }
 
 void params_ctns::print() const{

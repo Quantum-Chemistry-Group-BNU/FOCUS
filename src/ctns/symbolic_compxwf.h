@@ -30,10 +30,12 @@ namespace ctns{
          //     + <pq||s1r2> ar2*as1	  => -<pq||s1r2> as1*ar2
          //
          // 1. P1*I2
-         auto P1pq = symbolic_prod<Tm>(symbolic_oper(block1,'P',index));
+         auto P1pq = symbolic_prod<Tm>(symbolic_oper(block1,'P',index),
+               symbolic_oper(block2,'I',0));
          formulae.append(P1pq);
          // 2. I1*P2
-         auto P2pq = symbolic_prod<Tm>(symbolic_oper(block2,'P',index));
+         auto P2pq = symbolic_prod<Tm>(symbolic_oper(block1,'I',0),
+               symbolic_oper(block2,'P',index));
          formulae.append(P2pq);
          // 3. sum_{s1} sum_{r2} -<pq||s1r2> as1*ar2
          std::map<int,Tm> oij;
@@ -82,10 +84,12 @@ namespace ctns{
          //     + <pq2||sr1> aq2^+ar1 => -<pq2||sr1> ar1*aq2^+
          //
          // 1. Q1*I2
-         auto Q1ps = symbolic_prod<Tm>(symbolic_oper(block1,'Q',index));
+         auto Q1ps = symbolic_prod<Tm>(symbolic_oper(block1,'Q',index),
+               symbolic_oper(block2,'I',0));
          formulae.append(Q1ps);
          // 2. I1*Q2
-         auto Q2ps = symbolic_prod<Tm>(symbolic_oper(block2,'Q',index));
+         auto Q2ps = symbolic_prod<Tm>(symbolic_oper(block1,'I',0),
+               symbolic_oper(block2,'Q',index));
          formulae.append(Q2ps);
          // 3. <pq1||sr2> aq1^+*ar2 &  4. -<pr2||sq1> aq1*ar2^+
          std::map<int,Tm> o1ij, o2ij;
@@ -147,10 +151,12 @@ namespace ctns{
          int iproc = distribute1(ifkr,size,p);
          if(!ifdist1 or iproc==rank){
             // 1. S1*I2
-            auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index));
+            auto S1p = symbolic_prod<Tm>(symbolic_oper(block1,'S',index),
+                  symbolic_oper(block2,'I',0));
             formulae.append(S1p);
             // 2. I1*S2
-            auto S2p = symbolic_prod<Tm>(symbolic_oper(block2,'S',index));
+            auto S2p = symbolic_prod<Tm>(symbolic_oper(block1,'I',0),
+                  symbolic_oper(block2,'S',index));
             formulae.append(S2p);
          }
          // cross terms
@@ -771,10 +777,10 @@ namespace ctns{
          const double scale = ifkr? 0.25 : 0.5;
          if(!ifdist1 or rank==0){ 
             // 1. H1*I2
-            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), scale);
+            auto H1 = symbolic_prod<Tm>(symbolic_oper(block1,'H',0), symbolic_oper(block2,'I',0), scale);
             formulae.append(H1);
             // 2. I1*H2
-            auto H2 = symbolic_prod<Tm>(symbolic_oper(block2,'H',0), scale);
+            auto H2 = symbolic_prod<Tm>(symbolic_oper(block1,'I',0), symbolic_oper(block2,'H',0), scale);
             formulae.append(H2);
          }
          // One-index operators

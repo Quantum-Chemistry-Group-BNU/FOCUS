@@ -83,6 +83,7 @@ namespace ctns{
       void symbolic_kernel_renorm(const std::string superblock,
             const renorm_tasks<Tm>& rtasks,
             const stensor3su2<Tm>& site,
+            const stensor3su2<Tm>& site2,
             const opersu2_dict<Tm>& qops1,
             const opersu2_dict<Tm>& qops2,
             opersu2_dict<Tm>& qops,
@@ -95,6 +96,7 @@ namespace ctns{
       void symbolic_kernel_renorm(const std::string superblock,
             const renorm_tasks<Tm>& rtasks,
             const stensor3<Tm>& site,
+            const stensor3<Tm>& site2,
             const oper_dict<Tm>& qops1,
             const oper_dict<Tm>& qops2,
             oper_dict<Tm>& qops,
@@ -142,7 +144,7 @@ namespace ctns{
                formula.display("formula", 1);
             }
             if(size == 0) continue;
-            auto opxwf = symbolic_renorm_single(block1,block2,qops_dict,key,formula,site);
+            auto opxwf = symbolic_renorm_single(block1, block2, qops_dict, key, formula, site2);
             auto op = contract_qt3_qt3(superblock, site, opxwf);
             if(key == 'H') op += op.H();
             if(key == 'H' && qops.ifkr) op += op.K();

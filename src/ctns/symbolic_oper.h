@@ -12,7 +12,7 @@ namespace ctns{
    /*
       symbolic operator: op(block,label,index,dagger,parity) 
       block=l,c1,c2,r
-      label=H,A,P,B,Q,C,S
+      label=H,A,P,B,Q,C,S,[I,D,M for RDMs]
       index=integer
       */
    struct symbolic_oper{
@@ -29,7 +29,7 @@ namespace ctns{
             index = _index;
             dagger = _dagger;
             nbar = _nbar;
-            if(label == 'C' || label == 'S'){
+            if(label == 'C' || label == 'D' || label == 'S'){
                parity = true;
             }else{
                parity = false;
@@ -48,7 +48,7 @@ namespace ctns{
          // print
          friend std::ostream& operator <<(std::ostream& os, const symbolic_oper& op){
             os << op.symbol();
-            if(op.label == 'H' || op.label == 'C' || op.label == 'S'){
+            if(op.label == 'H' || op.label == 'I' || op.label == 'C' || op.label == 'D' || op.label == 'S'){
                os << "(" << op.index << ")";
             }else{
                auto pr = oper_unpack(op.index);

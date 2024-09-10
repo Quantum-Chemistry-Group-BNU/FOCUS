@@ -481,8 +481,13 @@
       - OpenMP for the left operators [DONE@2024/09/09]
       - add timing for each pattern and all
       - Note: rdm1 for femoco does not match rdm from SCI (because converting two states are not perfectly done)
- 
+         - problem can be resolved by using very small thresh_proj=1.e-18
    - rdm_renorm support other options for alg_renorm 
+      - add identity for formulae in nonsu2 case, which becomes consistent with su2 case.
+      - symbolic formulae support for {I,C,D,A,B,M}
+      - skip identity?
+      - oper_renorm
+      - hvec
 
  * RDMs for su2 case:
    - is_same=true:

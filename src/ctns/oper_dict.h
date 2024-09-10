@@ -181,7 +181,7 @@ namespace ctns{
                   std::cout << " List of op" << key << ": ";
                   auto op_index = this->oper_index_op(key);
                   for(int idx : op_index){
-                     if(key == 'H' || key == 'C' || key == 'S' || key == 'D'){
+                     if(key == 'H' || key == 'I' || key == 'C' || key == 'D' || key == 'S'){
                         std::cout << "(" << idx << ") ";
                      }else{
                         auto pq = oper_unpack(idx);

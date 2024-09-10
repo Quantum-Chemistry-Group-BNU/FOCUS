@@ -38,10 +38,14 @@ namespace ctns{
                ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
-            formulae.join(Hlc1);
+            auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
+            symbolic_task<Tm> Ic2r;
+            Ic2r.append(op2);
+            auto Hlc1_Ic2r = Hlc1.outer_product(Ic2r);
+            formulae.join(Hlc1_Ic2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++; 
-               Hlc1.display("Hlc1", print_level);
+               Hlc1.display("Hlc1_Ic2r", print_level);
             }
          }
          // H[c2r]
@@ -49,12 +53,17 @@ namespace ctns{
                ifkr, int2e.sorb, size, rank, ifdist1);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
-            formulae.join(Hc2r);
+            auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
+            symbolic_task<Tm> Ilc1;
+            Ilc1.append(op1);
+            auto Ilc1_Hc2r = Ilc1.outer_product(Hc2r);
+            formulae.join(Ilc1_Hc2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++;
-               Hc2r.display("Hc2r", print_level);
+               Hc2r.display("Ilc1_Hc2r", print_level);
             }
          }
+
          // One-index terms:
          // 3. sum_p1 p1^+[LC1]*Sp1^[C2R] + h.c.
          counter["CS"] = 0;
@@ -95,8 +104,10 @@ namespace ctns{
                Slc1_Cc2r.display("Slc1_Cc2r["+std::to_string(index)+"]", print_level);
             }
          }
+         
          // Two-index terms:
          if(ifNC){
+        
             // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
             counter["AP"] = 0;
             auto ainfo = oper_combine_opA(cindex_l, cindex_c1, ifkr);
@@ -143,7 +154,9 @@ namespace ctns{
                   }
                } // iproc
             }
+
          }else{
+            
             // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
             counter["PA"] = 0;
             auto ainfo = oper_combine_opA(cindex_c2, cindex_r, ifkr);
@@ -190,6 +203,7 @@ namespace ctns{
                   }
                } // iproc
             }
+
          } // ifNC
          return formulae;
       }

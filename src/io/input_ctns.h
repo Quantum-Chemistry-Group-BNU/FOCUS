@@ -147,7 +147,7 @@ namespace input{
          int alg_renorm = 2;
          int alg_rinter = 0;
          int alg_rcoper = 0;
-         int alg_rdm = 0;
+         int alg_rdm = 1;
          int alg_decim = 1;
          bool notrunc = false;
          bool ifdist1 = false;

@@ -33,17 +33,20 @@ namespace ctns{
          int idx = 0;
 
          if(ifNC){
+            
             // partition = l|cr
             // 1. H^l 
             counter["H1"] = 0;
             if(!ifdist1 or rank==0){ 
                const double scale = ifkr? 0.25 : 0.5;
                auto Hl = symbolic_prod<Tm>(symbolic_oper("l",'H',0), scale);
-               formulae.append(Hl);
+               auto Icr = symbolic_prod<Tm>(symbolic_oper("c",'I',0),symbolic_oper("r",'I',0));
+               auto Hl_Icr = Hl.product(Icr);
+               formulae.append(Hl_Icr);
                counter["H1"] = 1;
                if(ifsave){
                   std::cout << "idx=" << idx++;
-                  formulae.display("Hl", print_level);
+                  formulae.display("Hl_Icr", print_level);
                }
             }
             // 2. H^cr
@@ -51,10 +54,12 @@ namespace ctns{
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H2"] = Hcr.size();
             if(Hcr.size() > 0){
-               formulae.join(Hcr);
+               auto Il = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'I',0)));
+               auto Il_Hcr = Il.outer_product(Hcr);
+               formulae.join(Il_Hcr);
                if(ifsave){
                   std::cout << "idx=" << idx++;
-                  formulae.display("Hcr", print_level);
+                  formulae.display("Il_Hcr", print_level);
                }
             }
             // One-index terms:
@@ -125,29 +130,35 @@ namespace ctns{
                   Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", print_level);
                }
             }
+
          }else{
+            
             // partition = lc|r
             // 1. H^lc 
             auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H1"] = Hlc.size();
             if(Hlc.size() > 0){
-               formulae.join(Hlc);
+               auto Ir = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'I',0)));
+               auto Hlc_Ir = Hlc.outer_product(Ir);
+               formulae.join(Hlc_Ir);
                if(ifsave){ 
                   std::cout << "idx=" << idx++;
-                  formulae.display("Hlc", print_level);
+                  formulae.display("Hlc_Ir", print_level);
                }
             }
             // 2. H^r
             counter["H2"] = 0;
             if(!ifdist1 or rank==0){ 
                const double scale = ifkr? 0.25 : 0.5;
+               auto Ilc = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c",'I',0));
                auto Hr = symbolic_prod<Tm>(symbolic_oper("r",'H',0), scale);
-               formulae.append(Hr);
+               auto Ilc_Hr = Ilc.product(Hr);
+               formulae.append(Ilc_Hr);
                counter["H2"] = 1;
                if(ifsave){
                   std::cout << "idx=" << idx++;
-                  formulae.display("Hr", print_level);
+                  formulae.display("Ilc_Hr", print_level);
                }
             }
             // One-index terms:
@@ -218,6 +229,7 @@ namespace ctns{
                   Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", print_level);
                }
             }
+         
          } // ifNC
          return formulae;
       }
