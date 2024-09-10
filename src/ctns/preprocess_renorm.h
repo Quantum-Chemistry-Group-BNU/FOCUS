@@ -8,7 +8,8 @@ namespace ctns{
 
    template <typename Tm> 
       void preprocess_renorm(Tm* y,
-            const Tm* x,
+            const Tm* xbra,
+            const Tm* xket,
             const int& size,
             const int& rank,
             const size_t& ndim,
@@ -37,7 +38,7 @@ namespace ctns{
          Tm* work = new Tm[blksize*2];
          for(int i=0; i<Rlst.size(); i++){
             auto& Rblk = Rlst[i];
-            bool ifcal = Rblk.kernel(x, opaddr, work);
+            bool ifcal = Rblk.kernel(xbra, xket, opaddr, work);
             if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
          } // i
          delete[] work;
@@ -54,7 +55,7 @@ namespace ctns{
             #pragma omp for schedule(dynamic) nowait
             for(int i=0; i<Rlst.size(); i++){
                auto& Rblk = Rlst[i];
-               bool ifcal = Rblk.kernel(x, opaddr, work);
+               bool ifcal = Rblk.kernel(xbra, xket, opaddr, work);
                if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, yi+Rblk.offrop);
             } // i
             delete[] work;

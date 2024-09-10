@@ -492,12 +492,10 @@
          - alg_renorm = 1       DONE          DONE
          - alg_renorm = 2       DONE          ---- [not supported]
          - alg_renorm = 3       ----          ----
-         - alg_renorm = 4
+         - alg_renorm = 4       DONE          DONE [memory usage can be optimized]
          - alg_renorm = 5       ----          ----
-         - alg_renorm = 6
-         - alg_renorm = 7
-         - alg_renorm = 8
-         - alg_renorm = 9
+         - alg_renorm = 6-9     DONE          DONE
+         - alg_renorm = 16-19
       - sweep_hvec
          - alg_hvec = 0
          - alg_hvec = 1
@@ -505,10 +503,8 @@
          - alg_hvec = 3
          - alg_hvec = 4
          - alg_hvec = 5
-         - alg_hvec = 6
-         - alg_hvec = 7
-         - alg_hvec = 8
-         - alg_hvec = 9
+         - alg_hvec = 6-9
+         - alg_hvec = 16-19
 
  * RDMs for su2 case:
    - is_same=true:

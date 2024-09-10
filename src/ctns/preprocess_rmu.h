@@ -11,19 +11,21 @@ namespace ctns{
       struct Rmu_ptr{
          public:
             bool empty() const{ return terms==0; }
-            bool identity(const int i) const{ return loc[i]==-1; }
+            bool skip(const int i) const{ return loc[i]==-1; }
             void init(const bool ifDirect,
                   const int k, const int it,
                   const symbolic_task<Tm>& R_formulae,
                   const qoper_dictmap<ifab,Tm>& qops_dict,
                   const rintermediates<ifab,Tm>& rinter,
-                  const std::map<std::string,int>& oploc);
+                  const std::map<std::string,int>& oploc,
+                  const bool skipId);
             // onedot
             template <bool y=ifab, std::enable_if_t<y,int> = 0> 
             void gen_Rlist2(const int alg_rcoper,
                   Tm** opaddr, 
                   const std::string superblock,
                   const qinfo3type<ifab,Tm>& site_info, 
+                  const qinfo3type<ifab,Tm>& site2_info,
                   Rlist2<Tm>& Rlst2,
                   size_t& blksize,
                   size_t& blksize0,
@@ -34,6 +36,7 @@ namespace ctns{
                   Tm** opaddr, 
                   const std::string superblock,
                   const qinfo3type<ifab,Tm>& site_info, 
+                  const qinfo3type<ifab,Tm>& site2_info, 
                   Rlist2<Tm>& Rlst2,
                   size_t& blksize,
                   size_t& blksize0,
@@ -53,7 +56,7 @@ namespace ctns{
             int posInter = -1, lenInter = -1;
             size_t offInter = 0, ldaInter = 0;
             // intermediate spins {S1,S2,S12}
-            int tspins[3] = {-1,-1,-1}; 
+            int tspins[3] = {-1,-1,-1};
       };
 
    template <bool ifab, typename Tm>
@@ -62,7 +65,8 @@ namespace ctns{
             const symbolic_task<Tm>& R_formulae,
             const qoper_dictmap<ifab,Tm>& qops_dict,
             const rintermediates<ifab,Tm>& rinter,
-            const std::map<std::string,int>& oploc){
+            const std::map<std::string,int>& oploc,
+            const bool skipId){
          const auto& RTerm = R_formulae.tasks[it];
          for(int idx=RTerm.size()-1; idx>=0; idx--){
             const auto& sop = RTerm.terms[idx];
@@ -71,10 +75,10 @@ namespace ctns{
             const auto& dag = sop0.dagger;
             const auto& block = sop0.block;
             const auto& label = sop0.label;
-            if(label == 'I'){
+            if(label == 'I' and skipId){
                assert(sop.size() == 1);
                coeff *= sop.sums[0].first;
-               continue; // for su2 case, we add 'I' into formula
+               continue; // as we add 'I' into formula, we may need to skip it if skipId=true
             }
             terms += 1;
             const auto& index0 = sop0.index;
@@ -118,15 +122,17 @@ namespace ctns{
          }
       }
 
-   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] (Ol^dagger0[br,br'] Oc^dagger1[bm,bm']) psi[br',bc',bm']
-   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc']) psi[br',bc',bm']
-   // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm'] (Ol^dagger0[br,br'] Or^dagger1[bc,bc']) psi[br',bc',bm']
+   // Abelian case
+   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] (Ol^dagger0[br,br'] Oc^dagger1[bm,bm'] psi2[br',bc',bm'])
+   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc'] psi2[br',bc',bm'])
+   // lr: O[bm,bm'] = psi*[br,bc,bm] sigma[br,bc,bm'] (Ol^dagger0[br,br'] Or^dagger1[bc,bc'] psi2[br',bc',bm'])
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
       void Rmu_ptr<ifab,Tm>::gen_Rlist2(const int alg_rcoper,
             Tm** opaddr,
             const std::string superblock,
             const qinfo3type<ifab,Tm>& site_info,
+            const qinfo3type<ifab,Tm>& site2_info,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -154,30 +160,30 @@ namespace ctns{
                << superblock << std::endl;
             exit(1);
          }
-         int bi[3];  // psi[br',bc',bm']
+         int bi[3];  // psi2[br',bc',bm']
          int bo[3];  // sigma
          int bi2[3]; // psi*[br,bc,bm]
-         // loop over psi[br',bc',bm']
-         for(int i=0; i<site_info._nnzaddr.size(); i++){
-            int idx = site_info._nnzaddr[i];
-            site_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
+         // loop over psi2[br',bc',bm']
+         for(int i=0; i<site2_info._nnzaddr.size(); i++){
+            int idx = site2_info._nnzaddr[i];
+            site2_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
             Rblock<Tm> Rblk(terms,cterms,alg_rcoper);
             Rblk.icase = k3;
-            Rblk.offin = site_info._offset[idx]-1;
-            Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
-            Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
-            Rblk.dimin[2] = site_info.qmid.get_dim(bi[2]); // bm
+            Rblk.offin = site2_info._offset[idx]-1;
+            Rblk.dimin[0] = site2_info.qrow.get_dim(bi[0]); // br
+            Rblk.dimin[1] = site2_info.qcol.get_dim(bi[1]); // bc
+            Rblk.dimin[2] = site2_info.qmid.get_dim(bi[2]); // bm
             // finding the corresponding operator blocks: {bo[0],bo[1],bo[2]}
             bool symAllowed = true;
             Tm coeff_coper = 1.0;
             for(int k=0; k<3; k++){ // l,r,c
-               if(this->identity(k)){
+               if(this->skip(k)){
                   bo[k] = bi[k];
                   Rblk.dimout[k] = Rblk.dimin[k];
                }else{
                   Rblk.dagger[k] = dagger[k]^ifdagger;
                   bool iftrans = dagger[k]^ifdagger;
-                  bo[k] = iftrans? info[k]->_br2bc[bi[k]] : info[k]->_bc2br[bi[k]];
+                  bo[k] = iftrans? info[k]->_br2bc[bi[k]] : info[k]->_bc2br[bi[k]]; // out sector
                   if(bo[k] == -1){
                      symAllowed = false;
                      break;
@@ -221,15 +227,15 @@ namespace ctns{
             Rblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
             if(superblock == "lc"){
                // OlOc|lc> = Ol|l> * Oc|c> (-1)^{p(Oc)*p(l)}
-               int p0 = site_info.qrow.get_parity(bi[0]);
+               int p0 = site2_info.qrow.get_parity(bi[0]);
                if(parity[2] && p0==1) Rblk.coeff *= -1.0;
             }else if(superblock == "cr"){ 
                // OcOr|cr> = Oc|c> * Or|r> (-1)^{p(Or)*p(c)}
-               int p0 = site_info.qmid.get_parity(bi[2]);
+               int p0 = site2_info.qmid.get_parity(bi[2]);
                if(parity[1] && p0==1) Rblk.coeff *= -1.0;
             }else if(superblock == "lr"){
                // OlOr|lr> = Ol|l> * Or|r> (-1)^{p(Or)*p(l)} 
-               int p0 = site_info.qrow.get_parity(bi[0]);
+               int p0 = site2_info.qrow.get_parity(bi[0]);
                if(parity[1] && p0==1) Rblk.coeff *= -1.0;
             }
             // setup dimensions
@@ -252,14 +258,16 @@ namespace ctns{
          } // i
       }
 
-   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] (Ol^dagger0[br,br'] Oc^dagger1[bm,bm']) psi[br',bc',bm']
-   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc']) psi[br',bc',bm']
+   // Non-Abelian case: just work for MPS
+   // lc: O[bc,bc'] = psi*[br,bc,bm] sigma[br,bc',bm] (Ol^dagger0[br,br'] Oc^dagger1[bm,bm'] psi2[br',bc',bm'])
+   // cr: O[br,br'] = psi*[br,bc,bm] sigma[br',bc,bm] (Oc^dagger0[bm,bm'] Or^dagger1[bc,bc'] psi2[br',bc',bm'])
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<!y,int>>
       void Rmu_ptr<ifab,Tm>::gen_Rlist2(const int alg_rcoper,
             Tm** opaddr,
             const std::string superblock,
             const qinfo3type<ifab,Tm>& site_info,
+            const qinfo3type<ifab,Tm>& site2_info,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
             size_t& blksize0,
@@ -269,6 +277,9 @@ namespace ctns{
          const std::map<int,const qbond*> qmap = {{0,&site_info.qrow},
                                                   {1,&site_info.qcol},
                                                   {2,&site_info.qmid}};
+         const std::map<int,const qbond*> qmap2 = {{0,&site2_info.qrow},
+                                                   {1,&site2_info.qcol},
+                                                   {2,&site2_info.qmid}};
          int k1, k2, k3;
          if(superblock == "lc"){
             // OlOc|lc> = Ol|l> * Oc|c> (-1)^{p(Oc)*p(l)}
@@ -285,17 +296,17 @@ namespace ctns{
                << superblock << std::endl;
             exit(1);
          }
-         // loop over psi[br',bc',bm']
+         // loop over psi2[br',bc',bm']
          int bi[3], ts12;
-         for(int i=0; i<site_info._nnzaddr.size(); i++){
-            auto key = site_info._nnzaddr[i];
+         for(int i=0; i<site2_info._nnzaddr.size(); i++){
+            auto key = site2_info._nnzaddr[i];
             bi[0] = std::get<0>(key);
             bi[1] = std::get<1>(key);
             bi[2] = std::get<2>(key);
             ts12  = std::get<3>(key);
-            const auto& bo1vec = this->identity(k1)? std::vector<int>({bi[k1]}) : 
+            const auto& bo1vec = (this->skip(k1))? std::vector<int>({bi[k1]}) : 
                (dagger[k1]^ifdagger? info[k1]->_br2bc[bi[k1]] : info[k1]->_bc2br[bi[k1]]);
-            const auto& bo2vec = this->identity(k2)? std::vector<int>({bi[k2]}) : 
+            const auto& bo2vec = (this->skip(k2))? std::vector<int>({bi[k2]}) : 
                (dagger[k2]^ifdagger? info[k2]->_br2bc[bi[k2]] : info[k2]->_bc2br[bi[k2]]);
             for(const auto& bo1 : bo1vec){
                for(const auto& bo2 : bo2vec){
@@ -321,30 +332,36 @@ namespace ctns{
                      // determine the block
                      Rblock<Tm> Rblk(terms,cterms,alg_rcoper);
                      Rblk.icase = k3;
-                     Rblk.offin  = site_info.get_offset(bi[0],bi[1],bi[2],ts12)-1;
+                     Rblk.offin  = site2_info.get_offset(bi[0],bi[1],bi[2],ts12)-1;
+                     Rblk.dimin[0] = site2_info.qrow.get_dim(bi[0]); // br
+                     Rblk.dimin[1] = site2_info.qcol.get_dim(bi[1]); // bc
+                     Rblk.dimin[2] = site2_info.qmid.get_dim(bi[2]); // bm
                      Rblk.offin2 = offin2-1;
                      Rblk.offrop = offrop+offop-1; // add global offset
                      // update Rblk.dagger/loc/off
                      Tm coeff_coper = 1.0;
                      bool skip = false;
                      for(int k=0; k<3; k++){
-                        if(k!=k1 and k!=k2) continue;
-                        if(this->identity(k)) continue;
-                        Rblk.dagger[k] = dagger[k]^ifdagger;
-                        Rblk.loc[k] = loc[k];
-                        size_t offset = Rblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) :
-                           info[k]->get_offset(bo[k],bi[k]);
-                        assert(offset != 0);
-                        Rblk.off[k] = off[k]+offset-1;
-                        // sgn from bar{bar{Ts}} = (-1)^2s Ts
-                        if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
-                        if(k >= 2 && alg_rcoper == 1){
-                           assert(k == loc[k]); // op[c] cannot be intermediates
-                           Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
-                           coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
-                           if(std::abs(coeff_coper)<thresh_coper){
-                              skip = true;
-                              break;
+                        if(this->skip(k)){
+                           Rblk.dimout[k] = Rblk.dimin[k]; 
+                        }else{
+                           Rblk.dagger[k] = dagger[k]^ifdagger;
+                           Rblk.loc[k] = loc[k];
+                           size_t offset = Rblk.dagger[k]? info[k]->get_offset(bi[k],bo[k]) :
+                              info[k]->get_offset(bo[k],bi[k]);
+                           assert(offset != 0);
+                           Rblk.off[k] = off[k]+offset-1;
+                           Rblk.dimout[k] = Rblk.dagger[k]? info[k]->qcol.get_dim(bo[k]) : info[k]->qrow.get_dim(bo[k]);
+                           // su2 case: sgn from bar{bar{Ts}} = (-1)^2s Ts
+                           if(dagger[k] && ifdagger) coeff_coper *= parity[k]? -1.0 : 1.0;
+                           if(k >= 2 && alg_rcoper == 1){
+                              assert(k == loc[k]); // op[c] cannot be intermediates
+                              Tm coper = *(opaddr[loc[k]] + Rblk.off[k]);
+                              coeff_coper *= Rblk.dagger[k]? tools::conjugate(coper) : coper;
+                              if(std::abs(coeff_coper)<thresh_coper){
+                                 skip = true;
+                                 break;
+                              }
                            }
                         }
                      } // k
@@ -353,17 +370,17 @@ namespace ctns{
                      // <S1p|O1|S1><S2p|O2|S2>
                      int ts1p = (qmap.at(k1)->get_sym(bo[k1])).ts();
                      int ts2p = (qmap.at(k2)->get_sym(bo[k2])).ts();
-                     int ts1  = (qmap.at(k1)->get_sym(bi[k1])).ts();
-                     int ts2  = (qmap.at(k2)->get_sym(bi[k2])).ts();
+                     int ts1  = (qmap2.at(k1)->get_sym(bi[k1])).ts();
+                     int ts2  = (qmap2.at(k2)->get_sym(bi[k2])).ts();
                      coeff_coper *= std::sqrt((ts1p+1.0)*(ts2p+1.0)*(ts12+1.0)*(tspins[2]+1.0))*
                                     fock::wigner9j(ts1p,ts2p,ts12p,ts1,ts2,ts12,tspins[0],tspins[1],tspins[2]);
                      if(std::abs(coeff_coper)<thresh_coper) continue;
                      // sign from adjoint
-                     if(!this->identity(k1) && dagger[k1]^ifdagger){
+                     if(!this->skip(k1) && dagger[k1]^ifdagger){
                         int ts = tspins[0] + ts1p - ts1;
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts1+1.0)/(ts1p+1.0));
                      }
-                     if(!this->identity(k2) && dagger[k2]^ifdagger){
+                     if(!this->skip(k2) && dagger[k2]^ifdagger){
                         int ts = tspins[1] + ts2p - ts2;
                         coeff_coper *= ((ts/2)%2==0? 1.0 : -1.0)*std::sqrt((ts2+1.0)/(ts2p+1.0));
                      }
@@ -371,24 +388,18 @@ namespace ctns{
                      Rblk.coeff = (ifdagger? coeffH : coeff)*coeff_coper;
                      if(k3 == 1){
                         // OlOc|lc> = Ol|l> * Oc|c> (-1)^{p(Oc)*p(l)}
-                        int p0 = site_info.qrow.get_parity(bi[0]);
+                        int p0 = site2_info.qrow.get_parity(bi[0]);
                         if(parity[2] && p0==1) Rblk.coeff *= -1.0;
                      }else if(k3 == 0){ 
                         // OcOr|cr> = Oc|c> * Or|r> (-1)^{p(Or)*p(c)}
-                        int p0 = site_info.qmid.get_parity(bi[2]);
+                        int p0 = site2_info.qmid.get_parity(bi[2]);
                         if(parity[1] && p0==1) Rblk.coeff *= -1.0;
                      }else if(k3 == 2){
                         // OlOr|lr> = Ol|l> * Or|r> (-1)^{p(Or)*p(l)} 
-                        int p0 = site_info.qrow.get_parity(bi[0]);
+                        int p0 = site2_info.qrow.get_parity(bi[0]);
                         if(parity[1] && p0==1) Rblk.coeff *= -1.0;
                      }
                      // setup dimensions
-                     Rblk.dimin[0] = site_info.qrow.get_dim(bi[0]); // br
-                     Rblk.dimin[1] = site_info.qcol.get_dim(bi[1]); // bc
-                     Rblk.dimin[2] = site_info.qmid.get_dim(bi[2]); // bm
-                     Rblk.dimout[0] = site_info.qrow.get_dim(bo[0]);
-                     Rblk.dimout[1] = site_info.qcol.get_dim(bo[1]);
-                     Rblk.dimout[2] = site_info.qmid.get_dim(bo[2]);
                      Rblk.dimin2[0] = site_info.qrow.get_dim(bi2[0]);
                      Rblk.dimin2[1] = site_info.qcol.get_dim(bi2[1]);
                      Rblk.dimin2[2] = site_info.qmid.get_dim(bi2[2]);

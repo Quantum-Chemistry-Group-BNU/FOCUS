@@ -201,6 +201,7 @@ namespace ctns{
          Tm* workspace = nullptr;
 #ifdef GPU
          Tm* dev_site = nullptr;
+         Tm* dev_site2 = nullptr;
          Tm* dev_opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
          Tm* dev_workspace = nullptr;
          Tm* dev_red = nullptr;
@@ -242,7 +243,6 @@ namespace ctns{
             // initialization of qops inside
             symbolic_kernel_renorm(superblock, rtasks, site, site2, qops1, qops2, qops, skipId, schd.ctns.ifdist1, schd.ctns.verbose);
 
-/*
          }else if(alg_renorm == 4){
 
             // CPU: symbolic formulae + rintermediates + preallocation of workspace
@@ -257,7 +257,7 @@ namespace ctns{
 
             // GEMM list and GEMV list
             preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                  qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+                  qops, qops_dict, oploc, opaddr, rtasks, site, site2, skipId, rinter,
                   Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
 
             get_MMlist2(Rlst);
@@ -270,7 +270,7 @@ namespace ctns{
             }
 
             // initialization of qops inside
-            preprocess_renorm(qops._data, site._data, size, rank, qops._size, blksize, Rlst, opaddr);
+            preprocess_renorm(qops._data, site._data, site2._data, size, rank, qops._size, blksize, Rlst, opaddr);
 
          }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 
@@ -298,14 +298,14 @@ namespace ctns{
             size_t maxbatch = 0;
             if(!ifSingle){
                preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+                     qops, qops_dict, oploc, opaddr, rtasks, site, site2, skipId, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
                preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+                     qops, qops_dict, oploc, opaddr, rtasks, site, site2, skipId, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
@@ -364,21 +364,21 @@ namespace ctns{
             if(blksize > 0){
                if(!ifSingle){
                   if(!ifDirect){ 
-                     preprocess_renorm_batch(qops._data, site._data, size, rank, qops._size,
+                     preprocess_renorm_batch(qops._data, site._data, site2._data, size, rank, qops._size,
                            Rmmtasks, opaddr, workspace);
                   }else{
                      opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
-                     preprocess_renorm_batchDirect(qops._data, site._data, size, rank, qops._size,
+                     preprocess_renorm_batchDirect(qops._data, site._data, site2._data, size, rank, qops._size,
                            Rmmtasks, opaddr, workspace, 
                            rinter._data);
                   }
                }else{
                   if(!ifDirect){ 
-                     preprocess_renorm_batchSingle(qops._data, site._data, size, rank, qops._size,
+                     preprocess_renorm_batchSingle(qops._data, site._data, site2._data, size, rank, qops._size,
                            Rmmtask, opaddr, workspace);
                   }else{
                      opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
-                     preprocess_renorm_batchDirectSingle(qops._data, site._data, size, rank, qops._size,
+                     preprocess_renorm_batchDirectSingle(qops._data, site._data, site2._data, size, rank, qops._size,
                            Rmmtask, opaddr, workspace, 
                            rinter._data);
                   }
@@ -454,14 +454,14 @@ namespace ctns{
             size_t maxbatch = 0;
             if(!ifSingle){
                preprocess_formulae_Rlist2(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+                     qops, qops_dict, oploc, opaddr, rtasks, site, site2, skipId, rinter,
                      Rlst2, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                for(int i=0; i<Rlst2.size(); i++){
                   maxbatch = std::max(maxbatch, Rlst2[i].size());
                } // i
             }else{
                preprocess_formulae_Rlist(ifDirect, schd.ctns.alg_rcoper, superblock, 
-                     qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
+                     qops, qops_dict, oploc, opaddr, rtasks, site, site2, skipId, rinter,
                      Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
                maxbatch = Rlst.size();
             }
@@ -547,23 +547,27 @@ namespace ctns{
                dev_red = dev_workspace + batchsize*(blksize*2+blksize0);
                if(!ifSingle){
                   if(!ifDirect){
-                     preprocess_renorm_batchGPU(qops._dev_data, dev_site, size, rank, qops._size,
+                     preprocess_renorm_batchGPU(qops._dev_data, dev_site, dev_site2,
+                           size, rank, qops._size,
                            Rmmtasks, dev_opaddr, dev_workspace, 
                            dev_red);
                   }else{
                      dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
-                     preprocess_renorm_batchDirectGPU(qops._dev_data, dev_site, size, rank, qops._size,
+                     preprocess_renorm_batchDirectGPU(qops._dev_data, dev_site, dev_site2,
+                           size, rank, qops._size,
                            Rmmtasks, dev_opaddr, dev_workspace, 
                            rinter._dev_data, dev_red);
                   }
                }else{
                   if(!ifDirect){
-                     preprocess_renorm_batchGPUSingle(qops._dev_data, dev_site, size, rank, qops._size,
+                     preprocess_renorm_batchGPUSingle(qops._dev_data, dev_site, dev_site2,
+                           size, rank, qops._size,
                            Rmmtask, dev_opaddr, dev_workspace, 
                            dev_red);
                   }else{
                      dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
-                     preprocess_renorm_batchDirectGPUSingle(qops._dev_data, dev_site, size, rank, qops._size,
+                     preprocess_renorm_batchDirectGPUSingle(qops._dev_data, dev_site, dev_site2,
+                           size, rank, qops._size,
                            Rmmtask, dev_opaddr, dev_workspace, 
                            rinter._dev_data, dev_red);
                   }
@@ -588,7 +592,6 @@ namespace ctns{
             }
 #endif // GPU
 
-*/
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);

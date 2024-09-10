@@ -6,12 +6,15 @@ namespace ctns{
    const double thresh_coper = 1.e-16;
    extern const double thresh_coper;
 
+   // 0,1,2,3 is used for op[l,r,c1,c2]
    const int locInter = 4; // intermediates
    const int locIn    = 5; // x
    const int locOut   = 6; // y
+   const int locBra   = 7; // used in rlist for RDMs
    extern const int locInter;
    extern const int locIn;
    extern const int locOut;
+   extern const int locIn2;
 
    //
    // Determine batchsize dynamically:

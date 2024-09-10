@@ -16,6 +16,8 @@ namespace ctns{
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
             const QTm& site,
+            const QTm& site2,
+            const bool skipId,
             const rintermediates<ifab,Tm>& rinter,
             Rlist<Tm>& Rlst,
             size_t& blksize,
@@ -25,8 +27,8 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          Rlist2<Tm> Rlst2;
-         preprocess_formulae_Rlist2(ifDirect, alg_rcoper, superblock, qops, qops_dict, oploc, opaddr, rtasks, site, rinter,
-               Rlst2, blksize, blksize0, cost, debug);
+         preprocess_formulae_Rlist2(ifDirect, alg_rcoper, superblock, qops, qops_dict, oploc, opaddr, rtasks, 
+               site, site2, skipId, rinter, Rlst2, blksize, blksize0, cost, debug);
          size_t size = 0;
          for(int i=0; i<Rlst2.size(); i++){
             size += Rlst2[i].size();
@@ -56,6 +58,8 @@ namespace ctns{
             Tm** opaddr,
             const renorm_tasks<Tm>& rtasks,
             const QTm& site,
+            const QTm& site2,
+            const bool skipId,
             const rintermediates<ifab,Tm>& rinter,
             Rlist2<Tm>& Rlst2,
             size_t& blksize,
@@ -76,7 +80,7 @@ namespace ctns{
             for(int it=0; it<formula.size(); it++){
                Rmu[k][it].rinfo = const_cast<qinfo2type<ifab,Tm>*>(&qops(key).at(index).info);
                Rmu[k][it].offrop = qops._offset.at(std::make_pair(key,index));
-               Rmu[k][it].init(ifDirect, k, it, formula, qops_dict, rinter, oploc);
+               Rmu[k][it].init(ifDirect, k, it, formula, qops_dict, rinter, oploc, skipId);
             }
          } // it
          auto ta = tools::get_time();
@@ -93,9 +97,9 @@ namespace ctns{
             const auto& index = std::get<1>(task);
             const auto& formula = std::get<2>(task);
             for(int it=0; it<formula.size(); it++){
-               Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, false);
+               Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, site2.info, Rlst2, blksize, blksize0, cost, false);
                if(key == 'H'){
-                  Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, Rlst2, blksize, blksize0, cost, true);
+                  Rmu[k][it].gen_Rlist2(alg_rcoper, opaddr, superblock, site.info, site2.info, Rlst2, blksize, blksize0, cost, true);
                }
             }
          }

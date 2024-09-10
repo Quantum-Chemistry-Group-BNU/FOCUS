@@ -67,7 +67,7 @@ namespace ctns{
                mmlst2.resize(4);
                get_MMlist2_onedot(mmlst2);
             }
-            bool kernel(const Tm* x, Tm** opaddr, Tm* workspace) const;
+            bool kernel(const Tm* xbra, const Tm* xket, Tm** opaddr, Tm* workspace) const;
          public:
             int icase = -1; // 0:cr, 1:lc, 2:lr 
             int terms = 0; // no. of terms in Hmu 
@@ -208,7 +208,7 @@ namespace ctns{
             mm.transA = 'N';
             mm.LDB = mm.N;
             mm.transB = 'T';
-            mm.locA = locIn; mm.offA = offin2;
+            mm.locA = locBra; mm.offA = offin2;
             mm.locB = xloc;  mm.offB = xoff;
             mm.locC = yloc;  mm.offC = yoff;
             mmlst2[3].push_back(mm);
@@ -223,7 +223,7 @@ namespace ctns{
                mm.transA = 'C';
                mm.LDB = mm.K;
                mm.transB = 'N';
-               mm.locA = locIn; mm.offA = offin2+im*mm.M*mm.K;
+               mm.locA = locBra; mm.offA = offin2+im*mm.M*mm.K;
                mm.locB = xloc;  mm.offB = xoff+im*mm.N*mm.K;
                mm.locC = yloc;  mm.offC = yoff;
                if(ifbatch) mm.offC += im*mm.M*mm.N;
@@ -239,7 +239,7 @@ namespace ctns{
             mm.transA = 'C';
             mm.LDB = mm.K;
             mm.transB = 'N';
-            mm.locA = locIn; mm.offA = offin2;
+            mm.locA = locBra; mm.offA = offin2;
             mm.locB = xloc;  mm.offB = xoff;
             mm.locC = yloc;  mm.offC = yoff;
             mmlst2[3].push_back(mm);
@@ -248,16 +248,17 @@ namespace ctns{
 
    // Perform the actual matrix-matrix multiplication
    template <typename Tm>
-      bool Rblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{
+      bool Rblock<Tm>::kernel(const Tm* xbra, const Tm* xket, Tm** opaddr, Tm* workspace) const{
          const Tm alpha = 1.0; 
-         Tm* ptrs[7];
+         Tm* ptrs[8];
          ptrs[0] = opaddr[0]; // l
          ptrs[1] = opaddr[1]; // r
          ptrs[2] = opaddr[2]; // c
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4]; // inter
-         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[5] = const_cast<Tm*>(xket); 
          ptrs[6] = workspace;
+         ptrs[7] = const_cast<Tm*>(xbra); 
          bool ifcal = false;
          for(int i=0; i<mmlst2.size(); i++){
             for(int j=0; j<mmlst2[i].size(); j++){

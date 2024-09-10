@@ -56,11 +56,11 @@ namespace ctns{
             void inter(const int k, Tm** opaddr, const Tm* alphas){
                // perform GEMV_BATCH
                Tm* ptrs[6];
-               ptrs[0] = opaddr[0];
-               ptrs[1] = opaddr[1];
-               ptrs[2] = opaddr[2];
-               ptrs[3] = opaddr[3];
-               ptrs[4] = opaddr[4];
+               ptrs[0] = opaddr[0]; // l
+               ptrs[1] = opaddr[1]; // r
+               ptrs[2] = opaddr[2]; // c1
+               ptrs[3] = opaddr[3]; // c2
+               ptrs[4] = opaddr[4]; // inter
                ptrs[5] = const_cast<Tm*>(alphas);
                auto t0 = tools::get_time();
                imvbatch[k].kernel(batchinter, ptrs);
@@ -82,7 +82,7 @@ namespace ctns{
                } // i
             }
             // reduction
-            void reduction(const int k, const Tm* x, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
+            void reduction(const int k, Tm* workspace, Tm* y, Tm* dev_red=nullptr){
                auto t0 = tools::get_time();
 
                // 1. collect O(r,r') += \sum_c O(r,r',c) [axpy_batch]

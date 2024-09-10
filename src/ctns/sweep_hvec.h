@@ -80,7 +80,7 @@ namespace ctns{
             int alg_hvec;
             int alg_hinter;
             int alg_hcoper;
-            std::map<std::string,int> oploc;
+            std::map<std::string,int> oploc; // l,r,c1,c2,inter
             Tm* opaddr[5] = {nullptr,nullptr,nullptr,nullptr,nullptr};
             Hx_functors<Tm> Hx_funs; // hvec0
             symbolic_task<Tm> H_formulae; // hvec1,2

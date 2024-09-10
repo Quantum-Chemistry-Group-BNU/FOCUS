@@ -16,7 +16,8 @@ namespace ctns{
 
    template <typename Tm> 
       void preprocess_renorm_batchGPU(Tm* y,
-            const Tm* x,
+            const Tm* xbra,
+            const Tm* xket,
             const int& size,
             const int& rank,
             const size_t& ndim,
@@ -40,14 +41,15 @@ namespace ctns{
          double time_gemm=0.0;
          double time_reduction=0.0;
 
-         Tm* ptrs[7];
+         Tm* ptrs[8];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[5] = const_cast<Tm*>(xket);
          ptrs[6] = workspace;
+         ptrs[7] = const_cast<Tm*>(xbra);
 
          oper_timer.renorm.start();
          // loop over nonzero blocks
@@ -62,7 +64,7 @@ namespace ctns{
                auto t1gemm = tools::get_time();
                // reduction
                auto t0reduction = tools::get_time();
-               Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
+               Rmmtask.reduction(k, ptrs[6], y, dev_red);
                auto t1reduction = tools::get_time();
                // timing
                time_gemm += tools::get_duration(t1gemm-t0gemm);
@@ -81,7 +83,8 @@ namespace ctns{
 
    template <typename Tm> 
       void preprocess_renorm_batchDirectGPU(Tm* y,
-            const Tm* x,
+            const Tm* xbra,
+            const Tm* xket,
             const int& size,
             const int& rank,
             const size_t& ndim,
@@ -107,14 +110,15 @@ namespace ctns{
          double time_gemm=0.0;
          double time_reduction=0.0;
 
-         Tm* ptrs[7];
+         Tm* ptrs[8];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[5] = const_cast<Tm*>(xket);
          ptrs[6] = workspace;
+         ptrs[7] = const_cast<Tm*>(xbra);
 
          oper_timer.renorm.start();
          // loop over nonzero blocks
@@ -133,7 +137,7 @@ namespace ctns{
                auto t1gemm = tools::get_time();
                // reduction
                auto t0reduction = tools::get_time();
-               Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
+               Rmmtask.reduction(k, ptrs[6], y, dev_red);
                auto t1reduction = tools::get_time();
                // timing
                time_inter += tools::get_duration(t1inter-t0inter);
@@ -153,7 +157,8 @@ namespace ctns{
 
    template <typename Tm> 
       void preprocess_renorm_batchGPUSingle(Tm* y,
-            const Tm* x,
+            const Tm* xbra,
+            const Tm* xket,
             const int& size,
             const int& rank,
             const size_t& ndim,
@@ -177,14 +182,15 @@ namespace ctns{
          double time_gemm=0.0;
          double time_reduction=0.0;
 
-         Tm* ptrs[7];
+         Tm* ptrs[8];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[5] = const_cast<Tm*>(xket);
          ptrs[6] = workspace;
+         ptrs[7] = const_cast<Tm*>(xbra);
 
          oper_timer.renorm.start();
          // loop over nonzero blocks
@@ -196,7 +202,7 @@ namespace ctns{
             auto t1gemm = tools::get_time();
             // reduction
             auto t0reduction = tools::get_time();
-            Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
+            Rmmtask.reduction(k, ptrs[6], y, dev_red);
             auto t1reduction = tools::get_time();
             // timing
             time_gemm += tools::get_duration(t1gemm-t0gemm);
@@ -214,7 +220,8 @@ namespace ctns{
 
    template <typename Tm> 
       void preprocess_renorm_batchDirectGPUSingle(Tm* y,
-            const Tm* x,
+            const Tm* xbra,
+            const Tm* xket,
             const int& size,
             const int& rank,
             const size_t& ndim,
@@ -240,14 +247,15 @@ namespace ctns{
          double time_gemm=0.0;
          double time_reduction=0.0;
 
-         Tm* ptrs[7];
+         Tm* ptrs[8];
          ptrs[0] = opaddr[0];
          ptrs[1] = opaddr[1];
          ptrs[2] = opaddr[2];
          ptrs[3] = opaddr[3];
          ptrs[4] = opaddr[4];
-         ptrs[5] = const_cast<Tm*>(x);
+         ptrs[5] = const_cast<Tm*>(xket);
          ptrs[6] = workspace;
+         ptrs[7] = const_cast<Tm*>(xbra);
 
          oper_timer.renorm.start();
          // loop over nonzero blocks
@@ -263,7 +271,7 @@ namespace ctns{
             auto t1gemm = tools::get_time();
             // reduction
             auto t0reduction = tools::get_time();
-            Rmmtask.reduction(k, x, ptrs[6], y, dev_red);
+            Rmmtask.reduction(k, ptrs[6], y, dev_red);
             auto t1reduction = tools::get_time();
             // timing
             time_inter += tools::get_duration(t1inter-t0inter);
