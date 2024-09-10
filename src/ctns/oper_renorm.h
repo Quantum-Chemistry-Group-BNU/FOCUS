@@ -113,7 +113,7 @@ namespace ctns{
          // initialize
          qops.init();
          if(debug){ 
-            qops.print("qops");
+            qops.print("qops", schd.ctns.verbose-1);
             get_sys_status();
          }
 

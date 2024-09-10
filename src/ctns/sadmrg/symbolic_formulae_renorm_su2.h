@@ -16,6 +16,7 @@ namespace ctns{
             const std::vector<int>& cindex2,
             const std::vector<int>& krest,
             const bool ifkr,
+            const bool ifhermi,
             const integral::two_body<Tm>& int2e,
             const int& size,
             const int& rank,
@@ -66,7 +67,7 @@ namespace ctns{
          // opB
          if(oplist.find('B') != std::string::npos){
             counter["B"] = 0;
-            auto binfo = oper_combine_opB(cindex1, cindex2, ifkr);
+            auto binfo = oper_combine_opB(cindex1, cindex2, ifkr, ifhermi);
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
                int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
@@ -176,6 +177,7 @@ namespace ctns{
          const auto& cindex1 = qops1.cindex;
          const auto& cindex2 = qops2.cindex;
          const bool ifkr = qops.ifkr;
+         const bool ifhermi = qops.ifhermi;
          std::streambuf *psbuf, *backup;
          std::ofstream file;
          bool ifsave = !fname.empty();
@@ -202,7 +204,7 @@ namespace ctns{
          // generation of renorm
          std::map<std::string,int> counter;
          auto rformulae = gen_formulae_renorm_su2(qops.oplist,block1,block2,
-               cindex1,cindex2,qops.krest,ifkr,
+               cindex1,cindex2,qops.krest,ifkr,ifhermi,
                int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){

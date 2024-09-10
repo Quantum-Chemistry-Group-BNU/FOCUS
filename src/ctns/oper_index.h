@@ -82,7 +82,7 @@ namespace ctns{
       int num = ifkr? k*k : k*(2*k-1);
       return num;
    }
-   inline int oper_num_opB(const int cindex1_size, const bool& ifkr, const bool ifhermi=true){
+   inline int oper_num_opB(const int cindex1_size, const bool& ifkr, const bool ifhermi){
       int k = ifkr? cindex1_size : cindex1_size/2;
       int num;
       // ZL@20240906
@@ -330,7 +330,7 @@ namespace ctns{
    inline std::vector<std::pair<int,int>> oper_combine_opB(const std::vector<int>& cindex1,
          const std::vector<int>& cindex2,
          const bool& ifkr,
-         const bool ifhermi=true){
+         const bool ifhermi){
       std::vector<std::pair<int,int>> info;
       int iformula; 
       // 1. p1<q1: B[p1,q1] = p1^+q1 * I2

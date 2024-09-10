@@ -178,14 +178,14 @@ namespace ctns{
             if(level > 1){
                for(const auto& key : opseq){
                   if(exist[key] == 0) continue;
-                  std::cout << " List of op" << key << ": ";
+                  std::cout << " list of op" << key << ": ";
                   auto op_index = this->oper_index_op(key);
                   for(int idx : op_index){
                      if(key == 'H' || key == 'I' || key == 'C' || key == 'D' || key == 'S'){
                         std::cout << "(" << idx << ") ";
                      }else{
                         auto pq = oper_unpack(idx);
-                        std::cout << "(" << pq.first << "," << pq.second << ") ";
+                        std::cout << idx << ":(" << pq.first << "," << pq.second << ") ";
                      }
                   }
                   std::cout << std::endl;

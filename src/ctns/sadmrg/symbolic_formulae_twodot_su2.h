@@ -27,6 +27,7 @@ namespace ctns{
          int slc1 = cindex_l.size() + cindex_c1.size();
          int sc2r = cindex_c2.size() + cindex_r.size();
          const bool ifNC = (slc1 <= sc2r);
+         const bool ifhermi = true;
 
          symbolic_task<Tm> formulae;
          int idx = 0;
@@ -144,7 +145,7 @@ namespace ctns{
             }
             // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
             counter["BQ"] = 0;
-            auto binfo = oper_combine_opB(cindex_l, cindex_c1, ifkr);
+            auto binfo = oper_combine_opB(cindex_l, cindex_c1, ifkr, ifhermi);
             for(const auto& pr : binfo){
                int index = pr.first;
                auto ps = oper_unpack(index);
@@ -203,7 +204,7 @@ namespace ctns{
             }
             // 6. Bps^LC1*Qps^C2R + h.c. or Qqr^LC1*Bqr^C2R
             counter["QB"] = 0;
-            auto binfo = oper_combine_opB(cindex_c2, cindex_r, ifkr);
+            auto binfo = oper_combine_opB(cindex_c2, cindex_r, ifkr, ifhermi);
             for(const auto& pr : binfo){
                int index = pr.first;
                auto ps = oper_unpack(index);

@@ -306,11 +306,11 @@ namespace ctns{
       bool Hxblock<Tm>::kernel(const Tm* x, Tm** opaddr, Tm* workspace) const{ 
          const Tm alpha = 1.0, beta = 0.0;
          Tm* ptrs[7];
-         ptrs[0] = opaddr[0];
-         ptrs[1] = opaddr[1];
-         ptrs[2] = opaddr[2];
-         ptrs[3] = opaddr[3];
-         ptrs[4] = opaddr[4];
+         ptrs[0] = opaddr[0]; // l
+         ptrs[1] = opaddr[1]; // r
+         ptrs[2] = opaddr[2]; // c1
+         ptrs[3] = opaddr[3]; // c2
+         ptrs[4] = opaddr[4]; // inter
          ptrs[5] = const_cast<Tm*>(x);
          ptrs[6] = workspace;
          bool ifcal = false;

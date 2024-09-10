@@ -24,6 +24,7 @@ namespace ctns{
             const size_t& wfsize,
             const std::map<qsym,qinfo3<Tm>>& info_dict,
             Tm* workspace){
+         const bool skipId = true; // this function only work for oper_renorm, does not support rdm
          const bool debug = false;
          if(debug) formulae.display("formulae");
          if(formulae.size()==0){
@@ -40,22 +41,30 @@ namespace ctns{
             sym = wf.info.sym;
             opxwf0_info = const_cast<qinfo3<Tm>*>(&wf.info);
             opxwf0_data = wf.data();
+            bool applied = false;
+            int napplied = 0;
             for(int idx=HTerm.size()-1; idx>=0; idx--){
                const auto& sop = HTerm.terms[idx];
                const auto& sop0 = sop.sums[0].second;
                const auto& parity = sop0.parity;
                const auto& dagger = sop0.dagger;
                const auto& block = sop0.block;
+               char label  = sop0.label;
+               if(skipId and label == 'I') continue;
+               napplied += 1;
+
                // form operator
                auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
                if(dagger) linalg::xconj(optmp.size(), optmp.data());
+
                // opN*|wf> 
                sym += dagger? -optmp.info.sym : optmp.info.sym;
                opxwf_info = const_cast<qinfo3<Tm>*>(&info_dict.at(sym));
-               opxwf_data = workspace+opsize+(idx%2)*wfsize; 
+               opxwf_data = workspace+opsize+(napplied%2)*wfsize; 
                contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                      optmp.info, optmp.data(),
                      *opxwf_info, opxwf_data, dagger);
+            
                // impose antisymmetry here
                if(block == block2 and parity){ 
                   if(block1 == "l"){ // lc or lr

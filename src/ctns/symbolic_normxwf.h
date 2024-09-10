@@ -47,10 +47,9 @@ namespace ctns{
             int p = pq.first, sp = p%2;
             int q = pq.second, sq = q%2;
             // A[p1<q2] = p1+q2+
-            auto op1 = symbolic_oper(block1,'C',p);
             const bool ifnot_kros = !(ifkr && sp != sq);
-            auto op2 = ifnot_kros? symbolic_oper(block2,'C',q) : 
-               symbolic_oper(block2,'C',q-1).K(1);
+            auto op1 = symbolic_oper(block1,'C',p);
+            auto op2 = ifnot_kros? symbolic_oper(block2,'C',q) : symbolic_oper(block2,'C',q-1).K(1);
             auto op12 = symbolic_prod<Tm>(op1,op2);
             formulae.append(op12);
          }else if(iformula == 4){
@@ -59,8 +58,7 @@ namespace ctns{
             int q = qp.first, sq = q%2;
             // A[q2<p1] = q2+p1+ = -p1+q2+
             const bool ifnot_kros = !(ifkr && sp != sq);
-            auto op1 = ifnot_kros? symbolic_oper(block1,'C',p) :
-               symbolic_oper(block1,'C',p-1).K(1);
+            auto op1 = ifnot_kros? symbolic_oper(block1,'C',p) : symbolic_oper(block1,'C',p-1).K(1);
             auto op2 = symbolic_oper(block2,'C',q);
             auto op12 = symbolic_prod<Tm>(op1,op2,-1.0);
             formulae.append(op12);
@@ -92,8 +90,8 @@ namespace ctns{
             int p = pq.first, sp = p%2;
             int q = pq.second, sq = q%2;
             // B[p1q2] = p1+q2
-            auto op1 = symbolic_oper(block1,'C',p);
             const bool ifnot_kros = !(ifkr && sp != sq);
+            auto op1 = symbolic_oper(block1,'C',p);
             auto op2 = ifDop? symbolic_oper(block2,'D',q,false) :
                   (ifnot_kros? symbolic_oper(block2,'C',q,true) : symbolic_oper(block2,'C',q-1,true).K(1));
             auto op12 = symbolic_prod<Tm>(op1,op2);
@@ -165,10 +163,9 @@ namespace ctns{
             int p = pq.first, sp = p%2;
             int q = pq.second, sq = q%2;
             // A[p1<q2] = p1+q2+
-            auto op1 = symbolic_oper(block1,'D',p);
             const bool ifnot_kros = !(ifkr && sp != sq);
-            auto op2 = ifnot_kros? symbolic_oper(block2,'D',q) : 
-               symbolic_oper(block2,'D',q-1).K(1);
+            auto op1 = symbolic_oper(block1,'D',p);
+            auto op2 = ifnot_kros? symbolic_oper(block2,'D',q) : symbolic_oper(block2,'D',q-1).K(1);
             auto op12 = symbolic_prod<Tm>(op1,op2);
             formulae.append(op12);
          }else if(iformula == 4){
@@ -177,8 +174,7 @@ namespace ctns{
             int q = qp.first, sq = q%2;
             // A[q2<p1] = q2+p1+ = -p1+q2+
             const bool ifnot_kros = !(ifkr && sp != sq);
-            auto op1 = ifnot_kros? symbolic_oper(block1,'D',p) :
-               symbolic_oper(block1,'D',p-1).K(1);
+            auto op1 = ifnot_kros? symbolic_oper(block1,'D',p) : symbolic_oper(block1,'D',p-1).K(1);
             auto op2 = symbolic_oper(block2,'D',q);
             auto op12 = symbolic_prod<Tm>(op1,op2,-1.0);
             formulae.append(op12);

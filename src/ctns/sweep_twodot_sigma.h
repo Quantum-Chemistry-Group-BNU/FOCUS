@@ -286,10 +286,11 @@ namespace ctns{
          int sc2r = c2qops.cindex.size() + rqops.cindex.size();
          const bool ifNC = (slc1 <= sc2r);
          const bool ifkr = lqops.ifkr;
+         const bool ifhermi = true;
          auto ainfo = ifNC? oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr) :
             oper_combine_opA(c2qops.cindex, rqops.cindex, ifkr);
-         auto binfo = ifNC? oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr) :
-            oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr);
+         auto binfo = ifNC? oper_combine_opB(lqops.cindex, c1qops.cindex, ifkr, ifhermi) :
+            oper_combine_opB(c2qops.cindex, rqops.cindex, ifkr, ifhermi);
          auto afun = ifNC? &twodot_Hx_AP<Tm> : &twodot_Hx_PA<Tm>; 
          auto bfun = ifNC? &twodot_Hx_BQ<Tm> : &twodot_Hx_QB<Tm>;
          auto alabel = ifNC? "AP" : "PA";

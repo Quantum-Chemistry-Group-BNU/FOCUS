@@ -117,9 +117,9 @@ namespace ctns{
                + qops_dict.at("c").size();
             if(debug && schd.ctns.verbose>0){
                std::cout << "qops info: rank=" << rank << std::endl;
-               qops_dict.at("l").print("lqops");
-               qops_dict.at("r").print("rqops");
-               qops_dict.at("c").print("cqops");
+               qops_dict.at("l").print("lqops", schd.ctns.verbose-1);
+               qops_dict.at("r").print("rqops", schd.ctns.verbose-1);
+               qops_dict.at("c").print("cqops", schd.ctns.verbose-1);
                std::cout << " qops(tot)=" << opertot
                   << ":" << tools::sizeMB<Tm>(opertot) << "MB"
                   << ":" << tools::sizeGB<Tm>(opertot) << "GB"

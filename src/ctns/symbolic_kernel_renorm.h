@@ -114,6 +114,7 @@ namespace ctns{
             const int verbose){
          if(qops.mpirank==0 and verbose>1){
             std::cout << "ctns::symbolic_kernel_renorm"
+               << " skipId=" << skipId
                << " size(formulae)=" << rtasks.size() 
                << std::endl;
          }

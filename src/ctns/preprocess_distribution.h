@@ -236,11 +236,12 @@ namespace ctns{
                      block1 = "c"; cindex1 = cindex_c2;
                      block2 = "r"; cindex2 = cindex_r;
                   }
+                  bool ifhermi = false;
                   bool ifsave = true;
                   std::map<std::string,int> counter;
                   auto formulae = gen_formulae_renorm(oplist, block1, block2, 
                         cindex1, cindex2, krest,
-                        isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
+                        isym, ifkr, ifhermi, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
                   formulae.display("total");
