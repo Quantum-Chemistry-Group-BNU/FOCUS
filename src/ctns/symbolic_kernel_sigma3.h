@@ -35,6 +35,7 @@ namespace ctns{
          // temporary
          QInfo *opxwf0_info, *opxwf_info;
          Tm *opxwf0_data, *opxwf_data;
+         
          // rop*|wf>
          QInfo *wf0_info = const_cast<QInfo*>(&wf.info);
          Tm *wf0_data = wf.data();
@@ -50,10 +51,12 @@ namespace ctns{
                const auto& parity = sop0.parity;
                const auto& dagger = sop0.dagger;
                const auto& block = sop0.block;
+        
                // form operator
                auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
                const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
                if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
+        
                // op(dagger)*|wf>
                sym += op_dagger? -optmp.info.sym : optmp.info.sym;
                opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
@@ -61,6 +64,7 @@ namespace ctns{
                contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                      optmp.info, optmp.data(),
                      *opxwf_info, opxwf_data, op_dagger);
+        
                // impose antisymmetry here
                if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
                opxwf0_info = opxwf_info;
@@ -79,7 +83,8 @@ namespace ctns{
                }
             }
          } // it
-           // lop*|wf>
+         
+         // lop*|wf>
          double fac0 = ifdagger? bipart_op.Hsign() : 1.0;
          if(rformulae.size() != 0){
             wf0_info = opxwf_info;
@@ -97,10 +102,12 @@ namespace ctns{
                const auto& parity = sop0.parity;
                const auto& dagger = sop0.dagger;
                const auto& block = sop0.block;
+            
                // form operator
                auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
                const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
                if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
+            
                // op(dagger)*|wf>
                sym += op_dagger? -optmp.info.sym : optmp.info.sym;
                opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
@@ -108,6 +115,7 @@ namespace ctns{
                contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                      optmp.info, optmp.data(),
                      *opxwf_info, opxwf_data, op_dagger);
+            
                // impose antisymmetry here
                if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
                opxwf0_info = opxwf_info;

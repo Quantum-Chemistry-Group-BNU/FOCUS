@@ -41,7 +41,6 @@ namespace ctns{
             sym = wf.info.sym;
             opxwf0_info = const_cast<qinfo3<Tm>*>(&wf.info);
             opxwf0_data = wf.data();
-            bool applied = false;
             int napplied = 0;
             for(int idx=HTerm.size()-1; idx>=0; idx--){
                const auto& sop = HTerm.terms[idx];

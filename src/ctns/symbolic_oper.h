@@ -77,6 +77,10 @@ namespace ctns{
             lb = dagger? lb+"d" : lb;
             return  lb+"["+block+"]";
          }
+         // identity
+         bool is_identity() const{
+            return label == 'I';
+         }
       public:
          std::string block;
          char label;
@@ -150,8 +154,14 @@ namespace ctns{
                int len = this->size();
                return d*t + len*d*d;
             }
+            // whether the term is identity
+            bool is_identity() const{
+               return sums.size() == 1 and parity == false and
+                  std::abs(sums[0].first - 1.0) < 1.e-12 and
+                  sums[0].second.is_identity();
+            }
          public:
-            bool parity;
+            bool parity = false;
             std::vector<std::pair<Tm,symbolic_oper>> sums;
       };
 
@@ -227,7 +237,17 @@ namespace ctns{
             }
             // scale by a factor
             void scale(const double fac){ 
-               if(terms.size() > 0) terms[0].scale(fac);
+               if(terms.size() > 0){
+                  bool scaled = false;
+                  for(int i=0; i<terms.size(); i++){
+                     if(!terms[i].is_identity()){
+                        terms[i].scale(fac);
+                        scaled = true;
+                        break;
+                     }
+                  }
+                  assert(scaled);
+               }
             }
             // (o0o1o2)^H = (-1)^{p0*p1+p0*p2+p1*p2}*o0Ho1Ho2H 
             double Hsign() const{

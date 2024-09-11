@@ -68,7 +68,7 @@ namespace ctns{
                   opxwf = contract_opxwf(block, wf, optmp, dagger); // optmp[block]*|wf>
                   applied = true;
                }else{
-                  opxwf = contract_opxwf(block,opxwf,optmp,dagger); // optmp[block]*|opxwf>
+                  opxwf = contract_opxwf(block, opxwf, optmp, dagger); // optmp[block]*|opxwf>
                }
                
                // impose antisymmetry by adding fermionic signs here

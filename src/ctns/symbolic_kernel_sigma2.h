@@ -24,6 +24,7 @@ namespace ctns{
             const size_t& wfsize,
             Tm* workspace,
             const bool ifdagger){
+         const bool skipId = true;
          const bool debug = false;
          if(debug){ 
             std::cout << "iterm=" << it 
@@ -39,23 +40,30 @@ namespace ctns{
          sym = wf.info.sym;
          opxwf0_info = const_cast<QInfo*>(&wf.info);
          opxwf0_data = wf.data();
+         int napplied = 0;
          for(int idx=HTerm.size()-1; idx>=0; idx--){
             const auto& sop = HTerm.terms[idx];
             const auto& sop0 = sop.sums[0].second;
             const auto& parity = sop0.parity;
             const auto& dagger = sop0.dagger;
             const auto& block = sop0.block;
+            char label  = sop0.label;
+            if(skipId and label == 'I') continue;
+            napplied += 1;
+
             // form operator
             auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
             const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
             if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
+            
             // op(dagger)*|wf>
             sym += op_dagger? -optmp.info.sym : optmp.info.sym;
             opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
-            opxwf_data = workspace+opsize+(idx%2)*wfsize;
+            opxwf_data = workspace+opsize+(napplied%2)*wfsize;
             contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                   optmp.info, optmp.data(),
                   *opxwf_info, opxwf_data, op_dagger);
+         
             // impose antisymmetry here
             if(parity) cntr_signed(block, *opxwf_info, opxwf_data);
             opxwf0_info = opxwf_info;

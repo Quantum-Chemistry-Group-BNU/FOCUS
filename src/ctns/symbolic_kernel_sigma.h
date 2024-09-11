@@ -22,6 +22,7 @@ namespace ctns{
             const QTm& wf,
             QTm& Hwf,
             const bool ifdagger){
+         const bool skipId = true;
          const bool debug = false;
          if(debug){ 
             std::cout << "iterm=" << it 
@@ -31,6 +32,7 @@ namespace ctns{
          }
          // compute HTerm*|wf>
          QTm opxwf;
+         bool applied = false;
          for(int idx=HTerm.size()-1; idx>=0; idx--){
             const auto& sop = HTerm.terms[idx];
             int len = sop.size();
@@ -53,7 +55,9 @@ namespace ctns{
                   << " index0=" << index0 
                   << std::endl;
             }
+            if(skipId and label == 'I') continue;
             const auto& qops = qops_dict.at(block);
+
             // form opsum = wt0*op0 + wt1*op1 + ...
             const auto& op0 = qops(label).at(index0);
             if(dagger) wt0 = tools::conjugate(wt0);
@@ -69,12 +73,15 @@ namespace ctns{
             } // k
             const bool op_dagger = ifdagger^dagger; 
             if(op_dagger) linalg::xconj(optmp.size(), optmp.data());
+
             // (opN+opH)*|wf>
-            if(idx == HTerm.size()-1){
-               opxwf = contract_opxwf(block,wf,optmp,op_dagger);
+            if(!applied){
+               opxwf = contract_opxwf(block, wf, optmp, op_dagger); // optmp[block]*|wf>
+               applied = true;
             }else{
-               opxwf = contract_opxwf(block,opxwf,optmp,op_dagger);
+               opxwf = contract_opxwf(block, opxwf, optmp, op_dagger); // optmp[block]*|opxwf>
             }
+
             // impose antisymmetry here
             if(parity) opxwf.cntr_signed(block);
          } // idx
