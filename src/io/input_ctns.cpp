@@ -267,7 +267,7 @@ void params_ctns::read(ifstream& istrm){
       exit(1);
    }
    // nccl
-   bool usecpu = (alg_hvec <= 10 || alg_renorm <=10 || alg_rdm <= 10);
+   bool usecpu = (alg_hvec <= 10 || alg_renorm <=10);
    if(usecpu && ifnccl){
       std::cout << "error: ifnccl=true only for alg_hvec/alg_renorm>10 [gpu]!" << std::endl;
       exit(1);

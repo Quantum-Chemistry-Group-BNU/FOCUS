@@ -1,34 +1,6 @@
 #ifndef RDM_RENORM_H
 #define RDM_RENORM_H
 
-/*
-#include <type_traits>
-#include "ctns_sys.h"
-#include "sweep_data.h"
-#include "oper_timer.h"
-#include "oper_functors.h"
-#include "oper_normxwf.h"
-#include "oper_compxwf.h"
-#include "oper_rbasis.h"
-#include "oper_renorm_kernel.h"
-#include "symbolic_formulae_renorm.h"
-#include "sadmrg/symbolic_formulae_renorm_su2.h"
-#include "symbolic_kernel_renorm.h"
-#include "symbolic_kernel_renorm2.h"
-#include "preprocess_rformulae.h"
-#include "preprocess_renorm.h"
-#include "preprocess_renorm_batch.h"
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-#ifndef SERIAL
-#include "../core/mpi_wrapper.h"
-#endif
-#ifdef GPU
-#include "preprocess_renorm_batchGPU.h"
-#endif
-*/
-
 namespace ctns{
 
    // renormalize operators

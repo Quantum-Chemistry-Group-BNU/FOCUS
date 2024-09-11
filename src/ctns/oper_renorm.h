@@ -378,6 +378,7 @@ namespace ctns{
 
             size_t gpumem_site = sizeof(Tm)*site.size();
             dev_site = (Tm*)GPUmem.allocate(gpumem_site);
+            dev_site2 = dev_site;
             GPUmem.to_gpu(dev_site, site._data, gpumem_site);
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
