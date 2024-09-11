@@ -495,7 +495,7 @@
          - alg_renorm = 4       DONE          DONE [memory usage can be optimized]
          - alg_renorm = 5       ----          ----
          - alg_renorm = 6-9     DONE          DONE
-         - alg_renorm = 16-19   DONE          ????
+         - alg_renorm = 16-19   DONE          DONE
       - sweep_hvec
          - alg_hvec = 0         DONE
          - alg_hvec = 1         DONE

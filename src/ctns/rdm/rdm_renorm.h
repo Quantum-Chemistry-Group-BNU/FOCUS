@@ -388,9 +388,19 @@ namespace ctns{
             }
             timing.tf1 = tools::get_time();
 
+            // bra
             size_t gpumem_site = sizeof(Tm)*site.size();
             dev_site = (Tm*)GPUmem.allocate(gpumem_site);
             GPUmem.to_gpu(dev_site, site._data, gpumem_site);
+            // ket
+            if(is_same){
+               dev_site2 = dev_site;
+            }else{
+               size_t gpumem_site2 = sizeof(Tm)*site2.size();
+               dev_site2 = (Tm*)GPUmem.allocate(gpumem_site2);
+               GPUmem.to_gpu(dev_site2, site2._data, gpumem_site2);
+               gpumem_site += gpumem_site2;
+            }
             if(debug && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
