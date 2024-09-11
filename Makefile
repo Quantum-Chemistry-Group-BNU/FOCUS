@@ -1,5 +1,5 @@
 
-machine = mac #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -42,6 +42,9 @@ else ifeq ($(strip $(machine)), dell2)
       LFLAGS += -lboost_mpi-mt-x64
    endif
    GSLDIR = /usr/local
+   NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/install-lzd/lib64
+   NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/install-lzd/include
+
 else ifeq ($(strip $(machine)), jiageng)
    MATHLIB = ./mkl2022 #/public/software/intel/oneapi2021/mkl/latest #/public/software/anaconda/anaconda3-2022.5/lib
    BOOST = /public/home/bnulizdtest/boost/install-gcc
