@@ -24,6 +24,7 @@ namespace ctns{
             const size_t& wfsize,
             Tm* workspace,
             const bool ifdagger){
+         const bool skipId = true;
          const bool debug = false;
          if(debug){
             std::cout << "it=" << it;
@@ -45,13 +46,17 @@ namespace ctns{
             opxwf0_info = wf0_info;
             opxwf0_data = wf0_data;
             qsym sym = wf0_info->sym;
+            int napplied = 0;
             for(int idx=HTerm.size()-1; idx>=0; idx--){
                const auto& sop = HTerm.terms[idx];
                const auto& sop0 = sop.sums[0].second;
                const auto& parity = sop0.parity;
                const auto& dagger = sop0.dagger;
                const auto& block = sop0.block;
-        
+               char label  = sop0.label;
+               if(skipId and label == 'I') continue;
+               napplied += 1;
+
                // form operator
                auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
                const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
@@ -60,7 +65,7 @@ namespace ctns{
                // op(dagger)*|wf>
                sym += op_dagger? -optmp.info.sym : optmp.info.sym;
                opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
-               opxwf_data = workspace+opsize+(1+idx%2)*wfsize;
+               opxwf_data = workspace+opsize+(1+napplied%2)*wfsize;
                contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                      optmp.info, optmp.data(),
                      *opxwf_info, opxwf_data, op_dagger);
@@ -71,7 +76,7 @@ namespace ctns{
                opxwf0_data = opxwf_data;
             } // idx
             double fac = ifdagger? HTerm.Hsign() : 1.0;
-            if(lformulae.size() == 0){ // case: Hl 
+            if(lformulae.size() == 0){ // case: Hlr
                assert(opxwf_info->_size == Hwf.size());
                linalg::xaxpy(opxwf_info->_size, fac, opxwf_data, Hwf.data());
             }else{
@@ -96,13 +101,17 @@ namespace ctns{
             opxwf0_info = wf0_info;
             opxwf0_data = wf0_data;
             qsym sym = wf0_info->sym;
+            int napplied = 0;
             for(int idx=HTerm.size()-1; idx>=0; idx--){
                const auto& sop = HTerm.terms[idx];
                const auto& sop0 = sop.sums[0].second;
                const auto& parity = sop0.parity;
                const auto& dagger = sop0.dagger;
                const auto& block = sop0.block;
-            
+               char label  = sop0.label;
+               if(skipId and label == 'I') continue;
+               napplied += 1;
+
                // form operator
                auto optmp = symbolic_sum_oper(qops_dict, sop, workspace);
                const bool op_dagger = ifdagger^dagger; // (w op^d1)^d2 = (w^d1 op)^d1d2 
@@ -111,7 +120,7 @@ namespace ctns{
                // op(dagger)*|wf>
                sym += op_dagger? -optmp.info.sym : optmp.info.sym;
                opxwf_info = const_cast<QInfo*>(&info_dict.at(sym));
-               opxwf_data = workspace+opsize+(1+idx%2)*wfsize;
+               opxwf_data = workspace+opsize+(1+napplied%2)*wfsize;
                contract_opxwf_info(block, *opxwf0_info, opxwf0_data,
                      optmp.info, optmp.data(),
                      *opxwf_info, opxwf_data, op_dagger);

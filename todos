@@ -1,11 +1,12 @@
 
  * Further optimized RDM implementation:
+   - compare different options for alg_renorm and alg_rdm
    - profiling for FeMoCo with D>=8000
       - /public/home/bnulizdtest/tests/femoco/mpi8n2
       - memory issue for openmp?
    - optimize IO (prefetch?)
    - batch algorithm (BatchedGEMV) for patterns 211
-   - GPU algorithm?
+   - GPU assembling algorithm via batch?
  
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
