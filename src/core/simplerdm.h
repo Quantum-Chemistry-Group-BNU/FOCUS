@@ -295,23 +295,31 @@ namespace fock{
          int ks = rdm1.rows()/2;
          std::cout << "\nfock::entropy1site ks=" << ks << std::endl;
          std::vector<double> sp(ks);
-         std::vector<double> lambda(4);
+         std::vector<double> lambda(4*ks);
          double sum = 0.0;
          for(int i=0; i<ks; i++){
             double na = std::real(rdm1(2*i,2*i));
             double nb = std::real(rdm1(2*i+1,2*i+1));
             auto pair = tools::canonical_pair0(2*i,2*i+1);
             double nanb = std::real(rdm2(pair,pair));
-            lambda[3] = nanb;
-            lambda[2] = nb - nanb; // <dw+dw>=<nb*(1-na)>=<nb>-<nanb>
-            lambda[1] = na - nanb;
-            lambda[0] = 1.0 - na - nb + nanb;
-            sp[i] = entropy(lambda);
+            lambda[4*i+3] = nanb;
+            lambda[4*i+2] = nb - nanb; // <dw+dw>=<nb*(1-na)>=<nb>-<nanb>
+            lambda[4*i+1] = na - nanb;
+            lambda[4*i+0] = 1.0 - na - nb + nanb;
+            std::vector<double> lambda_i(4);
+            lambda_i[0] = lambda[4*i];
+            lambda_i[1] = lambda[4*i+1];
+            lambda_i[2] = lambda[4*i+2];
+            lambda_i[3] = lambda[4*i+3];
+            sp[i] = entropy(lambda_i);
             sum += sp[i];
          }
          if(debug){
             for(int i=0; i<ks; i++){
                std::cout << " i=" << i 
+                  << " lambda={" << std::fixed << std::setprecision(3)
+                  << "0:" << lambda[4*i] << ", a:" << lambda[4*i+1] 
+                  << ", b:" << lambda[4*i+2] << ", ab:" << lambda[4*i+3] << "}" 
                   << " Sp=" << std::fixed << std::setprecision(12) << sp[i]
                   << std::endl;
             }

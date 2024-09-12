@@ -141,6 +141,7 @@ namespace ctns{
          auto image1 = icomb1.topo.get_image1();
          int norb = icomb1.get_nphysical();
          std::vector<double> sp(norb);
+         std::vector<double> lambda(4*norb);
          auto icomb2 = icomb1;
          for(int i=0; i<norb; i++){
             auto csite = icomb2.sites[norb-1-i];
@@ -165,18 +166,25 @@ namespace ctns{
             }
             icomb2.sites[norb-1-i] = std::move(csite);
             // {|vac>,|up>,|dw>,|up,dw>}
-            std::vector<double> lambda(4);
-            lambda[3] = std::real(nanb); 
-            lambda[2] = std::real(nb - nanb); // <dw+dw>=<nb*(1-na)>=<nb>-<nanb> 
-            lambda[1] = std::real(na - nanb);
-            lambda[0] = std::real(1.0 - na - nb + nanb);
+            lambda[4*i+3] = std::real(nanb); 
+            lambda[4*i+2] = std::real(nb - nanb); // <dw+dw>=<nb*(1-na)>=<nb>-<nanb> 
+            lambda[4*i+1] = std::real(na - nanb);
+            lambda[4*i+0] = std::real(1.0 - na - nb + nanb);
+            std::vector<double> lambda_i(4);
+            lambda_i[0] = lambda[4*i];
+            lambda_i[1] = lambda[4*i+1];
+            lambda_i[2] = lambda[4*i+2];
+            lambda_i[3] = lambda[4*i+3];
             int pi = image1[i];
-            sp[pi] = fock::entropy(lambda); 
+            sp[pi] = fock::entropy(lambda_i);
          }
          if(debug){
             double sum = 0.0;
             for(int i=0; i<norb; i++){
                std::cout << " i=" << i
+                  << " lambda={" << std::fixed << std::setprecision(3)
+                  << "0:" << lambda[4*i] << ", a:" << lambda[4*i+1] 
+                  << ", b:" << lambda[4*i+2] << ", ab:" << lambda[4*i+3] << "}" 
                   << " Sp=" << std::fixed << std::setprecision(12) << sp[i] 
                   << std::endl;
                sum += sp[i];
