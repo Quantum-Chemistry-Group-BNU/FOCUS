@@ -27,6 +27,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       void reduce_opSH_gpu(qoper_dict<ifab,Tm>& qops,
             const int alg_renorm,
+            const bool ifkr,
             const int size,
             const int rank){
 #ifdef GPU
@@ -38,7 +39,7 @@ namespace ctns{
             // Sp[iproc] += \sum_i Sp[i]
             auto opS_index = qops.oper_index_op('S');
             for(int p : opS_index){
-               int iproc = distribute1(Qm::ifkr,size,p);
+               int iproc = distribute1(ifkr,size,p);
                auto& opS = qops('S')[p];
                size_t opsize = opS.size();
                size_t off = qops._offset[std::make_pair('S',p)];
@@ -191,13 +192,19 @@ namespace ctns{
          // 2.1 reduction of opS and opH on GPU
 #ifndef SERIAL
          if(ifdist1 and size > 1 and schd.ctns.ifnccl){
-            reduce_opSH_gpu(qops, alg_renorm, size, rank);
+            reduce_opSH_gpu(qops, alg_renorm, ifkr, size, rank);
          }
 #endif
          timing.tf10 = tools::get_time();
+
+#ifdef GPU
+         // send back to CPU
+         if(alg_renorm>10) qops.to_cpu();
+#endif         
+         timing.tf11 = tools::get_time();
          
          Renorm.finalize();
-         timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
 
          // debug_oper_renorm 
          if(debug_oper_renorm && rank == 0){
@@ -268,7 +275,6 @@ namespace ctns{
             reduce_opSH_cpu(qops, icomb, alg_renorm, size, rank);
          } 
 #endif 
-         timing.tf12 = tools::get_time();
 
          // qops is available on CPU, consistency check
          {

@@ -78,7 +78,7 @@ namespace ctns{
             Tm* dev_workspace = nullptr;
             Tm* dev_red = nullptr;
 #endif
-            size_t maxbatch=0, batchsize=0, gpumem_batch=0;
+            size_t maxbatch=0, batchsize=0, gpumem_site=0, gpumem_batch=0;
       };
 
    template <typename Qm, typename Tm, typename QTm>
@@ -298,7 +298,7 @@ namespace ctns{
             timing.tf3 = tools::get_time();
 
             // bra
-            size_t gpumem_site = sizeof(Tm)*site.size();
+            gpumem_site = sizeof(Tm)*site.size();
             dev_site = (Tm*)GPUmem.allocate(gpumem_site);
             GPUmem.to_gpu(dev_site, site._data, gpumem_site);
             // ket
@@ -360,7 +360,7 @@ namespace ctns{
 
                // generate Rmmtasks given batchsize
                const int batchblas = 2; // GPU
-               this->init_Rmmtask(ifSingle, batchblas, batchrenorm, fmmtask, rank, schd.ctns.verbose);
+               this->init_Rmmtask(ifSingle, batchblas, schd.ctns.batchrenorm, fmmtask, rank, schd.ctns.verbose);
             } // blksize>0
             timing.tf7 = tools::get_time();
             timing.tf8 = tools::get_time();
@@ -414,9 +414,6 @@ namespace ctns{
          }
 #ifdef GPU
          if(alg_renorm>10){
-            // send back to CPU
-            qops.to_cpu();
-            // free GPU space 
             GPUmem.deallocate(dev_site, gpumem_site);
             if(blksize > 0) GPUmem.deallocate(dev_workspace, gpumem_batch);
          }

@@ -68,9 +68,9 @@ namespace ctns{
          this->print_part(msg+": qops memset on cpu           ", dtf7, trenrm, dtacc);  // t8-t7
          this->print_part(msg+": preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);  // t9-t8
          this->print_part(msg+": reduction of opS & opH [nccl]", dtf9, trenrm, dtacc);  // t10-t9
-         this->print_part(msg+": qops memcpy g2c & free gpu   ", dtf10, trenrm, dtacc); // t11-t10
-         this->print_part(msg+": reduction of opS & opH [comm]", dtf11, trenrm, dtacc); // t12-t11
-         this->print_part(msg+": check consistency            ", dtf12, trenrm, dtacc); // t13-t12
+         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc); // t11-t10
+         this->print_part(msg+": deallocate cpu and gpu memory", dtf11, trenrm, dtacc); // t12-t11
+         this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc); // t13-t12
          this->print_part(msg+": after oper_renorm            ", dtfb, trenrm, dtacc);
       }
       void analysis(const std::string msg,

@@ -149,9 +149,15 @@ namespace ctns{
                qops1, qops2, qops, int2e, schd, size, rank, maxthreads, timing, fname, fmmtask);
          timing.tf10 = tools::get_time();
 
-         Renorm.finalize();
+#ifdef GPU
+         // send back to CPU
+         if(alg_renorm>10) qops.to_cpu();
+#endif
          timing.tf11 = tools::get_time();
+
+         Renorm.finalize();
          timing.tf12 = tools::get_time();
+
          timing.tf13 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
