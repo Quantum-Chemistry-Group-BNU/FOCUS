@@ -266,17 +266,24 @@ namespace fock{
 
    template <typename Tm>
       linalg::matrix<Tm> get_natorbs(const linalg::matrix<Tm>& rdm1s){
-         std::cout << "\nfock::get_natorbs ks=" << rdm1s.rows() 
+         int ks = rdm1s.rows();
+         std::cout << "\nfock::get_natorbs ks=" << ks
             << " tr(RDM1s)=" << rdm1s.trace() 
             << " diffHermi=" << rdm1s.diff_hermitian() 
             << std::endl;
          auto diag = rdm1s.diagonal();
-         tools::print_vector(diag, "diag", 3);
          // diagonalize rdm1s
-         std::vector<double> nocc(rdm1s.rows());
+         std::vector<double> nocc(ks);
          linalg::matrix<Tm> urot;
          linalg::eig_solver(rdm1s, nocc, urot, 1);
-         tools::print_vector(nocc, "nocc", 3);
+         std::cout << "  idx       diag         nocc   " << std::endl;
+         std::cout << " -----   ----------   ----------" << std::endl;
+         for(int i=0; i<ks; i++){
+            std::cout << std::setw(5) << i << "    " 
+               << std::scientific << std::setprecision(4)
+               << diag[i] << "   " << nocc[i]
+               << std::endl;
+         }
          return urot;
       }
 

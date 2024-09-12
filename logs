@@ -449,7 +449,7 @@
       - quantum information measure:
          - single orbital entropy [or just from 1,2-RDMs]
 
- * RDMs for nonsu2 case:
+ * RDMs for nonsu2 case [DONE@2024/09/12]
    - generation of patterns
    - propagation of wavefunction: loop structure using onedot [DONE@2024/09/04]
    - is_same=true: RDM [DONE@2024/09/06]
@@ -474,7 +474,7 @@
          - support {D,M} dot operators 
          - support {D,M} in renorm
          - rethinking about whether patterns is "-+" needed? no if all opB are kept
-   - Optimized parallel CPU version:
+   - optimized parallel CPU version for alg_rdm:
       - MPI (reduction of rdm)
          - driver [DONE@2024/09/08]
          - partition of workload to avoid redundant calculations [DONE@2024/09/09]
@@ -482,7 +482,7 @@
       - add timing for each pattern and all
       - Note: rdm1 for femoco does not match rdm from SCI (because converting two states are not perfectly done)
          - problem can be resolved by using very small thresh_proj=1.e-18
-   - rdm_renorm support other options for alg_renorm 
+   - rdm_renorm support other options for alg_renorm (including GPU support) 
       - add identity for formulae in nonsu2 case, which becomes consistent with su2 case.
         However, identity operator does not allowed to have coefficient. This will simplify coding,
         because we can simpy skip it.
@@ -495,7 +495,7 @@
          - alg_renorm = 4       DONE          DONE [memory usage can be optimized]
          - alg_renorm = 5       ----          ----
          - alg_renorm = 6-9     DONE          DONE
-         - alg_renorm = 16-19   DONE          ????
+         - alg_renorm = 16-19   DONE          DONE
       - sweep_hvec
          - alg_hvec = 0         DONE
          - alg_hvec = 1         DONE
