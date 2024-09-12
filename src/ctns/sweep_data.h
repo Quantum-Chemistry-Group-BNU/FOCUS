@@ -58,19 +58,19 @@ namespace ctns{
             << std::endl;
          dtacc = 0.0;
          this->print_part(msg+": before oper_renorm           ", dtfa, trenrm, dtacc);
-         this->print_part(msg+": qops init                    ", dtf0, trenrm, dtacc);
-         this->print_part(msg+": site memcpy cpu2gpu          ", dtf1, trenrm, dtacc);
-         this->print_part(msg+": symbolic_formulae_renorm     ", dtf2, trenrm, dtacc);
-         this->print_part(msg+": rintermediate init           ", dtf3, trenrm, dtacc);
-         this->print_part(msg+": rintermediates memcpy cpu2gpu", dtf4, trenrm, dtacc);
-         this->print_part(msg+": preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);
-         this->print_part(msg+": rmmtasks init                ", dtf6, trenrm, dtacc);
-         this->print_part(msg+": qops memset                  ", dtf7, trenrm, dtacc);
-         this->print_part(msg+": preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);
-         this->print_part(msg+": reduction of opS & opH [nccl]", dtf9, trenrm, dtacc);
-         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc);
-         this->print_part(msg+": deallocate gpu memory        ", dtf11, trenrm, dtacc);
-         this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc);
+         this->print_part(msg+": qops init                    ", dtf0, trenrm, dtacc);  // t1-t0
+         this->print_part(msg+": symbolic_formulae_renorm     ", dtf1, trenrm, dtacc);  // t2-t1
+         this->print_part(msg+": allocate qops on gpu         ", dtf2, trenrm, dtacc);  // t3-t2 
+         this->print_part(msg+": site memcpy cpu2gpu          ", dtf3, trenrm, dtacc);  // t4-t3
+         this->print_part(msg+": rintermediate init           ", dtf4, trenrm, dtacc);  // t5-t4
+         this->print_part(msg+": preprocess_formulae_Rlist2   ", dtf5, trenrm, dtacc);  // t6-t5
+         this->print_part(msg+": rmmtasks init                ", dtf6, trenrm, dtacc);  // t7-t6
+         this->print_part(msg+": qops memset on cpu           ", dtf7, trenrm, dtacc);  // t8-t7
+         this->print_part(msg+": preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);  // t9-t8
+         this->print_part(msg+": reduction of opS & opH [nccl]", dtf9, trenrm, dtacc);  // t10-t9
+         this->print_part(msg+": qops memcpy g2c & free gpu   ", dtf10, trenrm, dtacc); // t11-t10
+         this->print_part(msg+": reduction of opS & opH [comm]", dtf11, trenrm, dtacc); // t12-t11
+         this->print_part(msg+": check consistency            ", dtf12, trenrm, dtacc); // t13-t12
          this->print_part(msg+": after oper_renorm            ", dtfb, trenrm, dtacc);
       }
       void analysis(const std::string msg,

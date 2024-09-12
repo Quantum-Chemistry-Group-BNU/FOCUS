@@ -33,16 +33,14 @@ namespace ctns{
          const bool ifab = Qm::ifabelian;
          const int isym = Qm::isym;
          const bool ifkr = Qm::ifkr;
-         const bool sort_formulae = schd.ctns.sort_formulae;
          const bool debug = (rank == 0); 
          if(debug and schd.ctns.verbose>0){ 
             std::cout << "ctns::rdm_renorm coord=" << p 
                << " superblock=" << superblock 
                << " is_same=" << is_same
-               << " ifab=" << Qm::ifabelian
+               << " ifab=" << ifab
                << " isym=" << isym 
                << " ifkr=" << ifkr
-               << " sorb=" << sorb
                << " alg_renorm=" << alg_renorm	
                << " mpisize=" << size
                << " maxthreads=" << maxthreads
@@ -144,22 +142,21 @@ namespace ctns{
          // 1. kernel for renormalization
          oper_timer.dot_start();
          // declare a fake int2e
-         const bool skipId = false;
          integral::two_body<Tm> int2e;
          Renorm_wrapper<Qm,Tm,qtensor3<ifab,Tm>> Renorm;
+         const bool skipId = false;
          Renorm.kernel(superblock, is_same, skipId, icomb.topo.ifmps, site, site2,
                qops1, qops2, qops, int2e, schd, size, rank, maxthreads, timing, fname, fmmtask);
-         Renorm.finalize();
+         timing.tf10 = tools::get_time();
 
+         Renorm.finalize();
+         timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
          timing.tf13 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
             double t_tot = tools::get_duration(timing.tf13-timing.tf0); 
-            double t_init = tools::get_duration(timing.tf1-timing.tf0);
-            double t_kernel = tools::get_duration(timing.tf12-timing.tf1);
-            double t_comm = tools::get_duration(timing.tf13-timing.tf12);
             std::cout << "----- TIMING FOR rdm_renorm : " << t_tot << " S" 
-               << " T(init/kernel/comm)=" << t_init << "," << t_kernel << "," << t_comm
                << " rank=" << rank << " -----"
                << std::endl;
          }

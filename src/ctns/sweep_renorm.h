@@ -414,9 +414,12 @@ namespace ctns{
          }
 #ifdef GPU
          if(alg_renorm>10){
+            // send back to CPU
+            qops.to_cpu();
+            // free GPU space 
             GPUmem.deallocate(dev_site, gpumem_site);
             if(blksize > 0) GPUmem.deallocate(dev_workspace, gpumem_batch);
-         }            
+         }
 #endif
       }
 
