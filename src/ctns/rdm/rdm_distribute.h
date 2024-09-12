@@ -1,5 +1,5 @@
-#ifndef RDM_PARALLEL_H
-#define RDM_PARALLEL_H
+#ifndef RDM_DISTRIBUTE_H
+#define RDM_DISTRIBUTE_H
 
 namespace ctns{
 

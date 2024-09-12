@@ -26,7 +26,15 @@ namespace ctns{
          return icomb_i;
       }
 
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> rdm1_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2){
+         std::cout << "error: rdm1_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       linalg::matrix<Tm> rdm1_simple(const comb<Qm,Tm>& icomb1,
             const comb<Qm,Tm>& icomb2,
             const int iroot1,
@@ -65,7 +73,16 @@ namespace ctns{
          return rdm1;
       }
 
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> rdm2_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         std::cout << "error: rdm2_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       linalg::matrix<Tm> rdm2_simple(const comb<Qm,Tm>& icomb1,
             const comb<Qm,Tm>& icomb2,
             const int iroot1,
@@ -131,7 +148,14 @@ namespace ctns{
       }
 
    // single-site entropy
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      std::vector<double> entropy1_simple(const comb<Qm,Tm>& icomb1,
+            const int iroot1,
+            const bool debug=true){
+         std::cout << "error: entropy1_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       std::vector<double> entropy1_simple(const comb<Qm,Tm>& icomb1,
             const int iroot1,
             const bool debug=true){

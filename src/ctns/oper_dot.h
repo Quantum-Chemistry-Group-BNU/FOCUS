@@ -21,8 +21,8 @@ namespace ctns{
    extern const bool debug_oper_dot;
 
    // init local operators on dot
-   template <typename Tm>
-      void oper_init_dot(oper_dict<Tm>& qops,
+   template <bool ifab, typename Tm>
+      void oper_init_dot(qoper_dict<ifab,Tm>& qops,
             const int isym,
             const bool ifkr,
             const int kp,
@@ -67,18 +67,6 @@ namespace ctns{
 #endif
       }
 
-   // Identity
-   template <typename Tm>
-      void oper_dot_opI(oper_dict<Tm>& qops){
-         if(debug_oper_dot) std::cout << "ctns::oper_dot_opI" << std::endl; 
-         // [[1. 0. 0. 0.]
-         //  [0. 1. 0. 0.]
-         //  [0. 0. 1. 0.]
-         //  [0. 0. 0. 1.]]
-         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(4);
-         qops('I')[0].from_matrix(mat);
-      }
-
    // kA^+
    template <typename Tm>
       void oper_dot_opC(oper_dict<Tm>& qops,
@@ -110,37 +98,6 @@ namespace ctns{
          }
       }
 
-   // for RDM: kA
-   template <typename Tm>
-      void oper_dot_opD(oper_dict<Tm>& qops,
-            const int k0){
-         if(debug_oper_dot) std::cout << "ctns::oper_dot_opD" << std::endl; 
-         int ka = 2*k0, kb = ka+1;
-         // dagger of c[0] = kA^+
-         // [[0. 0. 0. 0.]
-         //  [0. 0. 0. 1.]
-         //  [1. 0. 0. 0.]
-         //  [0. 0. 0. 0.]]
-         linalg::matrix<Tm> mat(4,4);
-         mat(3,1) = 1;
-         mat(0,2) = 1;
-         qops('D')[ka].from_matrix(mat);
-         if(debug_oper_dot) qops('D')[ka].to_matrix().print("c0");
-         // dagger of c[1] = kB^+ 
-         if(not qops.ifkr){
-            // also store dagger of c[1] = kB^+
-            // [[ 0.  0.  0.  0.]
-            //  [ 0.  0. -1.  0.]
-            //  [ 0.  0.  0.  0.]
-            //  [ 1.  0.  0.  0.]]
-            linalg::matrix<Tm> mat(4,4);
-            mat(2,1) = -1;
-            mat(0,3) = 1;
-            qops('D')[kb].from_matrix(mat);
-            if(debug_oper_dot) qops('D')[kb].to_matrix().print("c1");
-         }
-      }
-
    // A[kA,kB] = kA^+kB^+
    template <typename Tm>
       void oper_dot_opA(oper_dict<Tm>& qops,
@@ -156,23 +113,6 @@ namespace ctns{
          mat(1,0) = 1;
          qops('A')[oper_pack(ka,kb)].from_matrix(mat);
          if(debug_oper_dot) qops('A')[oper_pack(ka,kb)].to_matrix().print("c0^+c1^+");
-      }
-
-   // M[kA,kB] = kA kB
-   template <typename Tm>
-      void oper_dot_opM(oper_dict<Tm>& qops,
-            const int k0){
-         if(debug_oper_dot) std::cout << "ctns::oper_dot_opM" << std::endl; 
-         int ka = 2*k0, kb = ka+1;
-         // dagger of -c[0].dot(c[1])
-         // [[0. 0. 0. 0.]
-         //  [1. 0. 0. 0.]
-         //  [0. 0. 0. 0.]
-         //  [0. 0. 0. 0.]]
-         linalg::matrix<Tm> mat(4,4);
-         mat(0,1) = -1;
-         qops('M')[oper_pack(ka,kb)].from_matrix(mat);
-         if(debug_oper_dot) qops('M')[oper_pack(ka,kb)].to_matrix().print("c0 c1");
       }
 
    // B[kA,kA] = kA^+kA, B[kA,kB] = kA^+kB
@@ -616,6 +556,19 @@ namespace ctns{
          } // ifkr
       }
 
+   // --- for RDMs ---
+   // Identity
+   template <typename Tm>
+      void oper_dot_opI(oper_dict<Tm>& qops){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opI" << std::endl; 
+         // [[1. 0. 0. 0.]
+         //  [0. 1. 0. 0.]
+         //  [0. 0. 1. 0.]
+         //  [0. 0. 0. 1.]]
+         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(4);
+         qops('I')[0].from_matrix(mat);
+      }
+
    // F = a^+b^+ba 
    template <typename Tm>
       void oper_dot_opF(oper_dict<Tm>& qops,
@@ -634,7 +587,7 @@ namespace ctns{
          if(debug_oper_dot) qops('F')[ka].to_matrix().print("c0+c1+c1c0");  
       }
 
-   // T = {a^+ba,b^+ba} 
+   // T = {a^+ba,b^+ab} 
    template <typename Tm>
       void oper_dot_opT(oper_dict<Tm>& qops,
             const int k0){
@@ -647,7 +600,7 @@ namespace ctns{
          //  [0. 0. 0. 0.]]
          linalg::matrix<Tm> mat(4,4);
          mat(2,1) = 1;
-         qops('T')[kb].from_matrix(mat); // aba
+         qops('T')[ka].from_matrix(mat); // a^+ba
          if(not qops.ifkr){
             // c[1].dot(a[1].dot(a[0]))
             // [[0. 0. 0. 0.]
@@ -656,8 +609,56 @@ namespace ctns{
             //  [0. 1. 0. 0.]]
             linalg::matrix<Tm> mat(4,4);
             mat(3,1) = 1;
-            qops('T')[ka].from_matrix(-mat); // b^+ab = -b^+ba (just for convenience 
+            qops('T')[kb].from_matrix(mat); // b^+ba
          }
+      }
+
+   // for RDM: kA
+   template <typename Tm>
+      void oper_dot_opD(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opD" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // dagger of c[0] = kA^+
+         // [[0. 0. 0. 0.]
+         //  [0. 0. 0. 1.]
+         //  [1. 0. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(3,1) = 1;
+         mat(0,2) = 1;
+         qops('D')[ka].from_matrix(mat);
+         if(debug_oper_dot) qops('D')[ka].to_matrix().print("c0");
+         // dagger of c[1] = kB^+ 
+         if(not qops.ifkr){
+            // also store dagger of c[1] = kB^+
+            // [[ 0.  0.  0.  0.]
+            //  [ 0.  0. -1.  0.]
+            //  [ 0.  0.  0.  0.]
+            //  [ 1.  0.  0.  0.]]
+            linalg::matrix<Tm> mat(4,4);
+            mat(2,1) = -1;
+            mat(0,3) = 1;
+            qops('D')[kb].from_matrix(mat);
+            if(debug_oper_dot) qops('D')[kb].to_matrix().print("c1");
+         }
+      }
+
+   // M[kA,kB] = kA kB
+   template <typename Tm>
+      void oper_dot_opM(oper_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot) std::cout << "ctns::oper_dot_opM" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // dagger of -c[0].dot(c[1])
+         // [[0. 0. 0. 0.]
+         //  [1. 0. 0. 0.]
+         //  [0. 0. 0. 0.]
+         //  [0. 0. 0. 0.]]
+         linalg::matrix<Tm> mat(4,4);
+         mat(0,1) = -1;
+         qops('M')[oper_pack(ka,kb)].from_matrix(mat);
+         if(debug_oper_dot) qops('M')[oper_pack(ka,kb)].to_matrix().print("c0c1");
       }
 
 } // ctns

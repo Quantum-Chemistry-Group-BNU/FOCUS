@@ -508,8 +508,9 @@
    - single site entropy via rdm [DONE@2024/09/12] 
 
  * RDMs for su2 case:
-   - su2 dot operators {I,D,M}
-   - rdm_renorm: support su2 operators
+   - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
+      - oper_dot_su2.h
+   - rdm_renorm: support su2 operators{I,D,M }
    - is_same=true:
       - rdm1
          - assemble?

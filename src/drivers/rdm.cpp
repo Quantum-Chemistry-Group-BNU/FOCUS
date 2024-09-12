@@ -116,23 +116,14 @@ void RDM(const input::schedule& schd){
       
       linalg::matrix<Tm> tdm1;
       if(schd.ctns.debug_rdm and rank == 0){
-         tdm1 = ctns::rdm1_simple(icomb, icomb2, iroot, jroot);
-         tdm1.save_txt("tdm1", schd.ctns.outprec);
-         std::cout << "trace=" << tdm1.trace() << std::endl;
-
          // compared against CI
-         linalg::matrix<Tm> tdm1fci(k,k);
-         tdm1fci.load_txt("rdm1ci."+std::to_string(iroot)+"."+std::to_string(jroot));
-         std::cout << "trace=" << tdm1fci.trace() << std::endl;
-         auto diff2 = tdm1fci + tdm1;
-         if(diff2.normF() < thresh) tdm1 *= -1; // may differ by sign
-         auto diff1 = tdm1fci - tdm1;
-         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
-         assert(diff1.normF() < thresh);
-      }
+         tdm1.resize(k,k);
+         tdm1.load_txt("rdm1ci."+std::to_string(iroot)+"."+std::to_string(jroot));
+         std::cout << "trace=" << tdm1.trace() << std::endl;
 #ifndef SERIAL
-      if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
+         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
 #endif
+      }
 
       // compute rdm1 
       rdm1.resize(k,k); 
@@ -141,16 +132,18 @@ void RDM(const input::schedule& schd){
       if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
          std::cout << "nrm2(rdm1)=" << rdm1.normF() << std::endl;
-         auto ddm1 = tdm1 - rdm1;
-         std::cout << "diff=" << ddm1.normF() << std::endl;
-         if(ddm1.normF() > thresh){
-            for(int i=0; i<ddm1.rows(); i++){
-               for(int j=0; j<ddm1.cols(); j++){
-                  if(std::abs(ddm1(i,j)) > thresh){
+         auto diff2 = tdm1 + rdm1;
+         if(diff2.normF() < thresh) tdm1 *= -1; // may differ by sign
+         auto diff1 = tdm1 - rdm1;
+         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
+         if(diff1.normF() > thresh){
+            for(int i=0; i<diff1.rows(); i++){
+               for(int j=0; j<diff1.cols(); j++){
+                  if(std::abs(diff1(i,j)) > thresh){
                      std::cout << "i,j=" << i << "," << j
                         << " tdm1=" << tdm1(i,j)
                         << " rdm1=" << rdm1(i,j)
-                        << " diff=" << ddm1(i,j)
+                        << " diff=" << diff1(i,j)
                         << " spatial="
                         << i/2 << (i%2==0? "A+" : "B+")
                         << j/2 << (j%2==0? "A-" : "B-")
@@ -159,7 +152,13 @@ void RDM(const input::schedule& schd){
                }
             }
          }
-      }
+         if(Qm::ifabelian){
+            auto rdm1b = ctns::rdm1_simple(icomb, icomb2, iroot, jroot);
+            auto diff = rdm1 - rdm1b;
+            std::cout << "diff|rdm1-rdm1b|=" << diff.normF() << std::endl; 
+            assert(diff.normF() < thresh);
+         }
+      } // debug
    } // rdm1
 
    // 2: rdm2
@@ -171,24 +170,15 @@ void RDM(const input::schedule& schd){
 
       linalg::matrix<Tm> tdm2;
       if(schd.ctns.debug_rdm and rank == 0){
-         tdm2 = ctns::rdm2_simple(icomb, icomb2, iroot, jroot);
-         tdm2.save_txt("tdm2", schd.ctns.outprec);
-         std::cout << "trace=" << tdm2.trace() << std::endl;
-
          // compared against CI
-         linalg::matrix<Tm> tdm2fci(k2,k2);
-         tdm2fci.load_txt("rdm2ci."+std::to_string(iroot)+"."+std::to_string(jroot));
-         std::cout << "trace=" << tdm2fci.trace() << std::endl;
-         auto diff2 = tdm2fci + tdm2;
-         if(diff2.normF() < thresh) tdm2 *= -1; // may differ by sign
-         auto diff1 = tdm2fci - tdm2;
-         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
-         assert(diff1.normF() < thresh);
-      }
+         tdm2.resize(k2,k2);
+         tdm2.load_txt("rdm2ci."+std::to_string(iroot)+"."+std::to_string(jroot));
+         std::cout << "trace=" << tdm2.trace() << std::endl;
 #ifndef SERIAL
-      if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
+         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
 #endif
-
+      }      
+         
       // compute rdm2
       rdm2.resize(k2,k2);
       ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
@@ -196,12 +186,14 @@ void RDM(const input::schedule& schd){
       if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;
          std::cout << "nrm2(rdm2)=" << rdm2.normF() << std::endl;
-         auto ddm2 = tdm2 - rdm2;
-         std::cout << "diff=" << ddm2.normF() << std::endl;
-         if(ddm2.normF() > thresh){
-            for(int i=0; i<ddm2.rows(); i++){
-               for(int j=0; j<ddm2.cols(); j++){
-                  if(std::abs(ddm2(i,j)) > thresh){
+         auto diff2 = tdm2 + rdm2;
+         if(diff2.normF() < thresh) tdm2 *= -1; // may differ by sign
+         auto diff1 = tdm2 - rdm2;
+         std::cout << "diff[+]=" << diff2.normF() << " diff[-]=" << diff1.normF() << std::endl;
+         if(diff1.normF() > thresh){
+            for(int i=0; i<diff1.rows(); i++){
+               for(int j=0; j<diff1.cols(); j++){
+                  if(std::abs(diff1(i,j)) > thresh){
                      auto p0p1 = tools::inverse_pair0(i);
                      auto q0q1 = tools::inverse_pair0(j);
                      auto p0 = p0p1.first;
@@ -211,7 +203,7 @@ void RDM(const input::schedule& schd){
                      std::cout << "i,j=" << i << "," << j
                         << " tdm2=" << tdm2(i,j)
                         << " rdm2=" << rdm2(i,j)
-                        << " diff=" << ddm2(i,j)
+                        << " diff=" << diff1(i,j)
                         << " p0+p1+q1+q0=" << p0 << "," << p1 << ","
                         << q1 << "," << q0 
                         << " spatial="
@@ -224,7 +216,13 @@ void RDM(const input::schedule& schd){
                }
             }
          }
-      } 
+         if(Qm::ifabelian){
+            auto rdm2b = ctns::rdm2_simple(icomb, icomb2, iroot, jroot);
+            auto diff = rdm2 - rdm2b;
+            std::cout << "diff|rdm2-rdm2b|=" << diff.normF() << std::endl; 
+            assert(diff.normF() < thresh);
+         }
+      } // debug
 
       // hamiltonian matrix elements if needed 
       if(rank == 0){
@@ -332,10 +330,10 @@ int main(int argc, char *argv[]){
       RDM<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
       RDM<ctns::qkind::qNK,std::complex<double>>(schd);
-//   }else if(schd.ctns.qkind == "rNS"){
-//      RDM<ctns::qkind::qNS,double>(schd);
-//   }else if(schd.ctns.qkind == "cNS"){
-//      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
+   }else if(schd.ctns.qkind == "rNS"){
+      RDM<ctns::qkind::qNS,double>(schd);
+   }else if(schd.ctns.qkind == "cNS"){
+      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind

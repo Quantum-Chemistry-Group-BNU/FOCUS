@@ -22,13 +22,13 @@ namespace ctns{
    // return the spin and parity of operator (key,index)
    inline std::pair<int,int> get_spin_parity(const char key, const int index){
        int tk, pk;
-       if(key == 'H' || key == 'I'){
+       if(key == 'H' || key == 'I' || key == 'F'){
           tk = 0;
           pk = 0;
-       }else if(key == 'C' || key == 'D' || key == 'S'){
+       }else if(key == 'C' || key == 'D' || key == 'S' || key == 'T'){
           tk = 1;
           pk = 1;
-       }else if(key == 'A' || key == 'P'){
+       }else if(key == 'A' || key == 'P' || key == 'M'){
           auto pq = oper_unpack(index);
           int p = pq.first, kp = p/2, sp = p%2;
           int q = pq.second, kq = q/2, sq = q%2;
@@ -116,65 +116,6 @@ namespace ctns{
          }
       }
 
-   // init local operators on dot
-   template <typename Tm>
-      void oper_init_dot(opersu2_dict<Tm>& qops,
-            const int isym,
-            const bool ifkr,
-            const int kp,
-            const integral::two_body<Tm>& int2e,
-            const integral::one_body<Tm>& int1e,
-            const int size,
-            const int rank){
-         assert(isym == 3 and ifkr == true);
-         // setup basic information
-         qops.sorb = int2e.sorb;
-         qops.isym = isym;
-         qops.ifkr = ifkr;
-         qops.cindex.push_back(2*kp);
-         if(!ifkr) qops.cindex.push_back(2*kp+1);
-         // rest of spatial orbital indices
-         for(int k=0; k<int1e.sorb/2; k++){
-            if(k == kp) continue;
-            qops.krest.push_back(k);
-         }
-         auto qphys = get_qbond_phys(isym);
-         qops.qbra = qphys;
-         qops.qket = qphys;
-         qops.oplist = "CABPQSH";
-         // initialize memory
-         qops.init(true);
-         // compute local operators on dot
-         oper_dot_opC(qops, kp);
-         oper_dot_opA(qops, kp);
-         oper_dot_opB(qops, kp);
-         oper_dot_opP(qops, kp, int2e);
-         oper_dot_opQ(qops, kp, int2e);
-         oper_dot_opS(qops, kp, int2e, int1e);
-         oper_dot_opH(qops, kp, int2e, int1e);
-         // scale full {Sp,H} on dot to avoid repetition in parallelization
-#ifndef SERIAL
-         if(size > 1){
-            for(auto& pr : qops('S')){
-               int iproc = distribute1(ifkr,size,pr.first);
-               if(iproc != rank) pr.second.set_zero();
-            }
-            if(rank != 0) qops('H')[0].set_zero();
-         }
-#endif
-      }
-
-   // Identity
-   template <typename Tm>
-      void oper_dot_opI(opersu2_dict<Tm>& qops){
-         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opI" << std::endl; 
-         // [[1. 0. 0.]
-         //  [0. 1. 0.]
-         //  [0. 0. 1.]]
-         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(3);
-         qops('I')[0].from_matrix(mat);
-      }
-
    // kA^+
    template <typename Tm>
       void oper_dot_opC(opersu2_dict<Tm>& qops,
@@ -189,7 +130,7 @@ namespace ctns{
          mat(1,2) = -std::sqrt(2.0);
          mat(2,0) = 1;
          qops('C')[ka].from_matrix(mat);
-         if(debug_oper_dot_su2) qops('C')[ka].to_matrix().print("c0+");
+         if(debug_oper_dot_su2) qops('C')[ka].to_matrix().print("cp+");
       }
 
    // A[kA,kB] = kA^+kB^+
@@ -340,6 +281,81 @@ namespace ctns{
                linalg::xaxpy(N, erifac, qt2Bpp1.data(), opQ.data());
             }
          }
+      }
+
+   // --- for RDMs ---
+   // Identity
+   template <typename Tm>
+      void oper_dot_opI(opersu2_dict<Tm>& qops){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opI" << std::endl; 
+         // [[1. 0. 0.]
+         //  [0. 1. 0.]
+         //  [0. 0. 1.]]
+         linalg::matrix<Tm> mat = linalg::identity_matrix<Tm>(3);
+         qops('I')[0].from_matrix(mat);
+      }
+
+   // F = a^+b^+ba 
+   template <typename Tm>
+      void oper_dot_opF(opersu2_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opF" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // 0110 (*<01||01>)
+         // c[0].dot(c[1].dot(a[1].dot(a[0])))
+         // [[0. 0. 0.]
+         //  [0. 1. 0.]
+         //  [0. 0. 0.]]
+         linalg::matrix<Tm> mat(3,3);
+         mat(1,1) = 1;
+         qops('F')[ka].from_matrix(mat);
+         if(debug_oper_dot_su2) qops('F')[ka].to_matrix().print("F");
+      }
+
+   // T = {a^+ba,b^+ba} in my note
+   template <typename Tm>
+      void oper_dot_opT(opersu2_dict<Tm>& qops, 
+            const int k0){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opT" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // [Ts]^1/2
+         // [[0. 0. 0. ]
+         //  [0. 0. 0. ]
+         //  [0. 1. 0. ]]
+         linalg::matrix<Tm> mat(3,3);
+         mat(2,1) = 1;
+         qops('T')[ka].from_matrix(mat);
+      }
+
+   // kA
+   template <typename Tm>
+      void oper_dot_opD(opersu2_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opD" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // [[0. 0. sqrt(2)]
+         //  [0. 0. 0.]
+         //  [0. 1. 0.]]
+         linalg::matrix<Tm> mat(3,3);
+         mat(0,2) = std::sqrt(2.0);
+         mat(2,1) = 1;
+         qops('D')[ka].from_matrix(mat);
+         if(debug_oper_dot_su2) qops('D')[ka].to_matrix().print("cp");
+      }
+
+   // M[kA,kB] = kA*kB
+   template <typename Tm>
+      void oper_dot_opM(opersu2_dict<Tm>& qops,
+            const int k0){
+         if(debug_oper_dot_su2) std::cout << "ctns::oper_dot_opM" << std::endl; 
+         int ka = 2*k0, kb = ka+1;
+         // [[0. -sqrt(2) 0.]
+         //  [0. 0. 0.]
+         //  [0. 0. 0.]]
+         linalg::matrix<Tm> mat(3,3);
+         mat(0,1) = -std::sqrt(2.0);
+         qops('M')[oper_pack(ka,kb)].from_matrix(mat);
+         if(debug_oper_dot_su2) qops('M')[oper_pack(ka,kb)].to_matrix().print("Mpp0");
       }
 
 } // ctns

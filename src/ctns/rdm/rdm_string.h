@@ -41,16 +41,16 @@ namespace ctns{
       // just for dot operators 
       }else if(key == 'T'){
          calst.resize(3);
-         if(idx%2 == 1){
+         if(idx%2 == 0){
             // a+ba and (a+ba)^+=a+b+a
-            calst[0] = std::make_pair(idx-1, 1);
-            calst[1] = std::make_pair(idx  , (!ifdagger? 0 : 1));
-            calst[2] = std::make_pair(idx-1, 0);
+            calst[0] = std::make_pair(idx, 1);
+            calst[1] = std::make_pair(idx+1, (!ifdagger? 0 : 1));
+            calst[2] = std::make_pair(idx, 0);
          }else{
-            // b+ab and (b+ab)^+=b+a+b
-            calst[0] = std::make_pair(idx+1, 1);
-            calst[1] = std::make_pair(idx  , (!ifdagger? 0 : 1));
-            calst[2] = std::make_pair(idx+1, 0);
+            // b+ba and (b+ba)^+=a+b+b=b+ba+
+            calst[0] = std::make_pair(idx, 1);
+            calst[1] = std::make_pair(idx, 0);
+            calst[2] = std::make_pair(idx-1, (!ifdagger? 0 : 1));
          }
       }else if(key == 'F'){
          calst.resize(4);

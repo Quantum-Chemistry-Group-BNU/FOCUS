@@ -271,7 +271,7 @@ namespace ctns{
       }else if(key == 'F'){
          sym_op = qsym(isym,0,0);
       }else if(key == 'T'){
-         sym_op = get_qsym_opD(isym, idx);
+         sym_op = get_qsym_opD(isym, 1-idx%2);
       }
       return sym_op;
    } 
