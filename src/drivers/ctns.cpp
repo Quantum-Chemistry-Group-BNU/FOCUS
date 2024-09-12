@@ -170,7 +170,7 @@ void CTNS(const input::schedule& schd){
    }
 
    // compute hamiltonian or optimize ctns by dmrg algorithm
-   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_oodmrg || schd.ctns.task_vmc){
+   if(schd.ctns.task_ham || schd.ctns.task_opt || schd.ctns.task_oodmrg || schd.ctns.task_vmc || schd.ctns.task_prop.size()>0){
       // read integral
       integral::two_body<Tm> int2e;
       integral::one_body<Tm> int1e;
@@ -219,6 +219,26 @@ void CTNS(const input::schedule& schd){
       // vmc for estimation uncertainty
       if(schd.ctns.task_vmc){
          ctns::vmc_estimate(icomb, int2e, int1e, ecore, schd, scratch);
+      }
+      // rdm
+      if(schd.ctns.task_prop.size() > 0){
+         const bool is_same = true;
+         int k = 2*icomb.get_nphysical();
+         if(tools::is_in_vector(schd.ctns.task_prop,1)){
+            linalg::matrix<Tm> rdm1(k,k), tdm1;
+            ctns::rdm_sweep(1, is_same, icomb, icomb, schd, scratch, rdm1, tdm1);
+         }
+         if(tools::is_in_vector(schd.ctns.task_prop,2)){
+            int k2 = k*(k-1)/2;
+            linalg::matrix<Tm> rdm2(k2,k2), tdm2;
+            ctns::rdm_sweep(2, is_same, icomb, icomb, schd, scratch, rdm2, tdm2);
+            if(rank == 0){
+               auto rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
+               auto Sij = rdm1.trace()/Tm(schd.nelec);
+               auto Hij = get_etot(rdm2, rdm1, int2e, int1e) + Sij*ecore;
+               std::cout << "Hij=" << std::fixed << std::setprecision(schd.ctns.outprec) << Hij << std::endl;
+            }
+         }
       }
    } // ham || opt || oodmrg || vmc
 }
