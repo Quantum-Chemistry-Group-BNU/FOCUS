@@ -192,7 +192,7 @@ namespace ctns{
             fmmtask = "hmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
          HVec_wrapper<Qm,Tm,qinfo3type<ifab,Tm>,qtensor3<ifab,Tm>> HVec;
-         HVec.init(dots, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
+         HVec.init(dots, icomb.topo.ifmps, qops_dict, int2e, ecore, schd, size, rank, maxthreads, 
                ndim, wf, timing, fname, fmmtask);
 
          //-------------

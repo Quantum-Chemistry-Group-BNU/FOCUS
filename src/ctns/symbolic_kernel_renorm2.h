@@ -23,8 +23,8 @@ namespace ctns{
             const size_t& opsize,
             const size_t& wfsize,
             const std::map<qsym,qinfo3<Tm>>& info_dict,
-            Tm* workspace){
-         const bool skipId = true; // this function only work for oper_renorm, does not support rdm
+            Tm* workspace,
+            const bool skipId){
          const bool debug = false;
          if(debug) formulae.display("formulae");
          if(formulae.size()==0){
@@ -90,6 +90,7 @@ namespace ctns{
             const opersu2_dict<Tm>& qops1,
             const opersu2_dict<Tm>& qops2,
             opersu2_dict<Tm>& qops,
+            const bool skipId,
             const bool ifdist1,
             const int verbose){
          std::cout << "error: no implementation of symbolic_kernel_renorm2 for su2!" << std::endl;
@@ -102,6 +103,7 @@ namespace ctns{
             const oper_dict<Tm>& qops1,
             const oper_dict<Tm>& qops2,
             oper_dict<Tm>& qops,
+            const bool skipId,
             const bool ifdist1,
             const int verbose){
          if(qops.mpirank==0 and verbose>1){
@@ -178,7 +180,7 @@ namespace ctns{
             symbolic_renorm_single2(block1,block2,qops_dict,
                   key,formula,site,*opxwf_info,opxwf_data,
                   opsize,wfsize,info_dict,
-                  &workspace[omprank*tmpsize+wfsize]);
+                  &workspace[omprank*tmpsize+wfsize],skipId);
             // <bra|op|ket>
             auto& op = qops(key)[index];
             memset(op._data, 0, op.size()*sizeof(Tm));

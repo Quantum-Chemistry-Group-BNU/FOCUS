@@ -24,6 +24,7 @@ namespace ctns{
       struct HVec_wrapper{
          public:
             void init(const int dots, 
+                  const bool ifmps,
                   const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
                   const integral::two_body<Tm>& int2e,
                   const double& ecore,
@@ -124,7 +125,8 @@ namespace ctns{
       }
 
    template <typename Qm, typename Tm, typename QInfo, typename QTm>
-      void HVec_wrapper<Qm,Tm,QInfo,QTm>::init(const int dots, 
+      void HVec_wrapper<Qm,Tm,QInfo,QTm>::init(const int dots,
+            const bool ifmps, 
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const double& ecore,
@@ -143,6 +145,10 @@ namespace ctns{
          alg_hinter = schd.ctns.alg_hinter;
          alg_hcoper = schd.ctns.alg_hcoper;
          // consistency check
+         if(schd.ctns.ifdistc && !ifmps){
+            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
+            exit(1);
+         }
          if(!ifab && alg_hvec < 4){
             std::cout << "error: use alg_hvec >= 4 for non-Abelian case! alg_hvec=" << alg_hvec << std::endl;
             exit(1);
@@ -340,8 +346,8 @@ namespace ctns{
                const int batchblas = alg_hinter; // use the same keyword for GEMM_batch
                auto batchhvec = std::make_tuple(batchblas,batchblas,batchblas);
                this->init_Hmmtask(ifSingle, batchblas, batchhvec, fmmtask, rank, schd.ctns.verbose);
-               timing.tb5 = tools::get_time();
             } // blksize>0
+            timing.tb5 = tools::get_time();
 
             if(!ifSingle){
                if(!ifDirect){
@@ -396,7 +402,6 @@ namespace ctns{
             const bool ifDirect = alg_hvec % 2 == 1;
             const int batchgemv = std::get<0>(schd.ctns.batchhvec); 
             hinter.init(ifDirect, alg_hinter, batchgemv, qops_dict, oploc, dev_opaddr, H_formulae, rank==0);
-            timing.tb3 = tools::get_time();
             size_t gpumem_hinter = sizeof(Tm)*hinter.size();
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
@@ -405,6 +410,7 @@ namespace ctns{
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << std::endl;
             }
+            timing.tb3 = tools::get_time();
 
             // GEMM and GEMV list
             this->init_Hxlist(ifSingle, ifDirect, qops_dict, wf, rank==0 && schd.ctns.verbose>0);

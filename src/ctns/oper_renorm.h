@@ -5,26 +5,13 @@
 #include "ctns_sys.h"
 #include "sweep_data.h"
 #include "oper_timer.h"
-#include "oper_functors.h"
-#include "oper_normxwf.h"
-#include "oper_compxwf.h"
 #include "oper_rbasis.h"
-#include "oper_renorm_kernel.h"
-#include "symbolic_formulae_renorm.h"
-#include "sadmrg/symbolic_formulae_renorm_su2.h"
-#include "symbolic_kernel_renorm.h"
-#include "symbolic_kernel_renorm2.h"
-#include "preprocess_rformulae.h"
-#include "preprocess_renorm.h"
-#include "preprocess_renorm_batch.h"
+#include "sweep_renorm.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
-#endif
-#ifdef GPU
-#include "preprocess_renorm_batchGPU.h"
 #endif
 
 namespace ctns{
@@ -201,7 +188,7 @@ namespace ctns{
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
             // initialization of qops inside 
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, schd.ctns.ifdist1, schd.ctns.verbose);
+            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, skipId, schd.ctns.ifdist1, schd.ctns.verbose);
 
          }else if(alg_renorm == 4){
 
@@ -614,7 +601,7 @@ namespace ctns{
             memset(qops._data, 0, qops._size*sizeof(Tm));
             auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, sort_formulae, ifdist1, ifdistc, debug_formulae);
-            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, ifdist1, schd.ctns.verbose);
+            symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, skipId, ifdist1, schd.ctns.verbose);
             std::cout << "\nqops[ref]: rank=" << rank << std::endl;
             for(auto& key : qops.oplist){
                auto& opdict = qops(key);
