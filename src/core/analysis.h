@@ -139,9 +139,9 @@ namespace fock{
          psum += pi;
          ssum -= pi*log(pi);
       }
-      std::cout << "fock::entropy : " 
-         << std::defaultfloat << std::setprecision(12)
-         << "psum=" << psum << " SvN=" << ssum << std::endl; 
+      std::cout << "fock::entropy" << std::fixed << std::setprecision(12)
+         << " psum=" << psum << " SvN=" << ssum 
+         << std::endl;
       return ssum;
    }
 

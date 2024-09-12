@@ -176,8 +176,8 @@ namespace ctns{
          if(debug){
             double sum = 0.0;
             for(int i=0; i<norb; i++){
-               std::cout << "p=" << i
-                  << " Sp=" << std::setprecision(12) << sp[i] 
+               std::cout << " i=" << i
+                  << " Sp=" << std::fixed << std::setprecision(12) << sp[i] 
                   << std::endl;
                sum += sp[i];
             }

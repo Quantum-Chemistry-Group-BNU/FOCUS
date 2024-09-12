@@ -6,6 +6,7 @@
 #include "onspace.h"
 #include "matrix.h"
 #include "integral.h"
+#include "analysis.h"
 
 namespace fock{
 
@@ -285,6 +286,38 @@ namespace fock{
                << std::endl;
          }
          return urot;
+      }
+
+   template <typename Tm>
+      std::vector<double> entropy1site(const linalg::matrix<Tm>& rdm2,
+            const linalg::matrix<Tm>& rdm1,
+            const bool debug=true){
+         int ks = rdm1.rows()/2;
+         std::cout << "\nfock::entropy1site ks=" << ks << std::endl;
+         std::vector<double> sp(ks);
+         std::vector<double> lambda(4);
+         double sum = 0.0;
+         for(int i=0; i<ks; i++){
+            double na = std::real(rdm1(2*i,2*i));
+            double nb = std::real(rdm1(2*i+1,2*i+1));
+            auto pair = tools::canonical_pair0(2*i,2*i+1);
+            double nanb = std::real(rdm2(pair,pair));
+            lambda[3] = nanb;
+            lambda[2] = nb - nanb; // <dw+dw>=<nb*(1-na)>=<nb>-<nanb>
+            lambda[1] = na - nanb;
+            lambda[0] = 1.0 - na - nb + nanb;
+            sp[i] = entropy(lambda);
+            sum += sp[i];
+         }
+         if(debug){
+            for(int i=0; i<ks; i++){
+               std::cout << " i=" << i 
+                  << " Sp=" << std::fixed << std::setprecision(12) << sp[i]
+                  << std::endl;
+            }
+            std::cout << "sum=" << std::setprecision(12) << sum << std::endl;
+         }
+         return sp;
       }
 
 } // fock

@@ -64,6 +64,8 @@ void RDM(const input::schedule& schd){
       icomb2 = std::move(jcomb);
       is_same = (schd.ctns.iroot == schd.ctns.jroot);
    }
+   const int iroot = schd.ctns.iroot;
+   const int jroot = schd.ctns.jroot;
 
    // display task_prop
    if(rank == 0){
@@ -76,17 +78,17 @@ void RDM(const input::schedule& schd){
       std::cout << "   is_same=" << is_same << std::endl;
       std::cout << " MPS1:"
          << " nroot=" << icomb.get_nroots() 
-         << " iroot=" << schd.ctns.iroot 
+         << " iroot=" << iroot 
          << " file=" << schd.ctns.rcanon_file 
          << std::endl;
       std::cout << " MPS2:" 
          << " nroot=" << icomb2.get_nroots() 
-         << " jroot=" << schd.ctns.jroot 
+         << " jroot=" << jroot 
          << " file=" << schd.ctns.rcanon2_file
          << std::endl;
       std::cout << tools::line_separator2 << std::endl;
-      assert(schd.ctns.iroot <= icomb.get_nroots());
-      assert(schd.ctns.jroot <= icomb2.get_nroots());
+      assert(iroot <= icomb.get_nroots());
+      assert(jroot <= icomb2.get_nroots());
    }
    const double thresh = 1.e-6;
 
@@ -99,25 +101,28 @@ void RDM(const input::schedule& schd){
       }
    } 
 
+   // --- rdms ---
+   int k = 2*icomb.get_nphysical();
+   int k2 = k*(k-1)/2;
+   linalg::matrix<Tm> rdm1;
+   linalg::matrix<Tm> rdm2;
+
    // 1: rdm1 
    if(tools::is_in_vector(schd.ctns.task_prop,1)){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0));
       io::create_scratch(scratch, (rank == 0));
-      // compute rdm1 
-      int k = 2*icomb.get_nphysical();
-      linalg::matrix<Tm> rdm1(k,k);
-   
+      
       linalg::matrix<Tm> tdm1;
       if(schd.ctns.debug_rdm and rank == 0){
-         tdm1  = ctns::rdm1_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         tdm1 = ctns::rdm1_simple(icomb, icomb2, iroot, jroot);
          tdm1.save_txt("tdm1", schd.ctns.outprec);
          std::cout << "trace=" << tdm1.trace() << std::endl;
 
          // compared against CI
-         auto tdm1fci = rdm1;
-         tdm1fci.load_txt("rdm1."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
+         linalg::matrix<Tm> tdm1fci(k,k);
+         tdm1fci.load_txt("rdm1ci."+std::to_string(iroot)+"."+std::to_string(jroot));
          std::cout << "trace=" << tdm1fci.trace() << std::endl;
          auto diff2 = tdm1fci + tdm1;
          if(diff2.normF() < thresh) tdm1 *= -1; // may differ by sign
@@ -129,6 +134,8 @@ void RDM(const input::schedule& schd){
       if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm1, 0);
 #endif
 
+      // compute rdm1 
+      rdm1.resize(k,k); 
       ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
 
       if(schd.ctns.debug_rdm and rank == 0){
@@ -153,8 +160,7 @@ void RDM(const input::schedule& schd){
             }
          }
       }
-      // natural occupation and natural orbitals
-   }
+   } // rdm1
 
    // 2: rdm2
    if(tools::is_in_vector(schd.ctns.task_prop,2)){
@@ -162,20 +168,16 @@ void RDM(const input::schedule& schd){
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0));
       io::create_scratch(scratch, (rank == 0));
-      // compute rdm1 
-      int k = 2*icomb.get_nphysical();
-      int k2 = k*(k-1)/2;
-      linalg::matrix<Tm> rdm2(k2,k2);
 
       linalg::matrix<Tm> tdm2;
       if(schd.ctns.debug_rdm and rank == 0){
-         tdm2 = ctns::rdm2_simple(icomb, icomb2, schd.ctns.iroot, schd.ctns.jroot);
+         tdm2 = ctns::rdm2_simple(icomb, icomb2, iroot, jroot);
          tdm2.save_txt("tdm2", schd.ctns.outprec);
          std::cout << "trace=" << tdm2.trace() << std::endl;
 
          // compared against CI
-         auto tdm2fci = rdm2;
-         tdm2fci.load_txt("rdm2."+std::to_string(schd.ctns.iroot)+"."+std::to_string(schd.ctns.jroot));
+         linalg::matrix<Tm> tdm2fci(k2,k2);
+         tdm2fci.load_txt("rdm2ci."+std::to_string(iroot)+"."+std::to_string(jroot));
          std::cout << "trace=" << tdm2fci.trace() << std::endl;
          auto diff2 = tdm2fci + tdm2;
          if(diff2.normF() < thresh) tdm2 *= -1; // may differ by sign
@@ -187,6 +189,8 @@ void RDM(const input::schedule& schd){
       if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, tdm2, 0);
 #endif
 
+      // compute rdm2
+      rdm2.resize(k2,k2);
       ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
 
       if(schd.ctns.debug_rdm and rank == 0){
@@ -228,20 +232,36 @@ void RDM(const input::schedule& schd){
          integral::one_body<Tm> int1e;
          double ecore;
          integral::load(int2e, int1e, ecore, schd.integral_file);
-         auto rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
+         rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
          auto Sij = rdm1.trace()/Tm(schd.nelec);
          auto Hij = get_etot(rdm2, rdm1, int2e, int1e) + Sij*ecore; 
-         std::cout << "Hij=" << std::setprecision(schd.ctns.outprec) << Hij << std::endl;
+         std::cout << "iroot=" << iroot << " jroot=" << jroot
+            << " H(i,j)=" << std::fixed << std::setprecision(schd.ctns.outprec) << Hij 
+            << std::endl;
+      }
+   } // rdm2
+
+   // single-site entropy analysis: obtainable from 2-RDM
+   if(rdm2.size()>0){
+      auto s1 = fock::entropy1site(rdm2, rdm1);
+      if(schd.ctns.debug_rdm and rank == 0){
+         auto s1tmp = ctns::entropy1_simple(icomb, iroot);
+         linalg::xaxpy(s1.size(), -1.0, s1.data(), s1tmp.data());
+         double diff = linalg::xnrm2(s1tmp.size(), s1tmp.data());
+         assert(diff < thresh);
       }
    }
 
-   /*
-   // single-site entropy analysis: obtainable from 2-RDM
-   if(rank == 0){
-   auto s1 = ctns::entropy1_simple(icomb, schd.ctns.iroot);
+   // save results
+   if(rank == 0 and is_same){
+      std::cout << "\nsave results for rdms:" << std::endl;
+      if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm1.size()>0){
+         auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
+         natorbs.save_txt("natorbs", schd.ctns.outprec);
+      }
    }
-   } // task_prop
-   */
 }
 
 int main(int argc, char *argv[]){

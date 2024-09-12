@@ -482,7 +482,7 @@
       - add timing for each pattern and all
       - Note: rdm1 for femoco does not match rdm from SCI (because converting two states are not perfectly done)
          - problem can be resolved by using very small thresh_proj=1.e-18
-   - rdm_renorm support other options for alg_renorm (including GPU support) 
+   - rdm_renorm support other options for alg_renorm (including GPU support)
       - add identity for formulae in nonsu2 case, which becomes consistent with su2 case.
         However, identity operator does not allowed to have coefficient. This will simplify coding,
         because we can simpy skip it.
@@ -505,6 +505,7 @@
          - alg_hvec = 5         DONE
          - alg_hvec = 6-9       DONE
          - alg_hvec = 16-19     DONE
+   - single site entropy via rdm [DONE@2024/09/12] 
 
  * RDMs for su2 case:
    - su2 dot operators {I,D,M}
