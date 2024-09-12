@@ -38,7 +38,7 @@ void CTNS(const input::schedule& schd){
       icomb.topo.read(schd.ctns.topology_file);
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
-         
+
          // initialize RCF 
          if(schd.ctns.fromnosym){
 
@@ -52,8 +52,8 @@ void CTNS(const input::schedule& schd){
             fock::onstate det(schd.ctns.inputconf);
             // consistency check
             if(det.norb() != icomb.topo.nphysical or
-               det.nelec() != schd.nelec or
-               det.twom() != schd.twom){
+                  det.nelec() != schd.nelec or
+                  det.twom() != schd.twom){
                std::cout << "error: (k,ne,tm)=" << det.norb() << "," << det.nelec() << "," << det.twom()
                   << " of det=" << det << " is inconsistent with input (k,ne,tm)="
                   << icomb.topo.nphysical << "," << schd.nelec << "," << schd.twom
@@ -128,8 +128,8 @@ void CTNS(const input::schedule& schd){
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
-                      << " maxsweep=" << schd.ctns.maxsweep
-                      << std::endl;
+               << " maxsweep=" << schd.ctns.maxsweep
+               << std::endl;
             exit(1);
          }
          ctns::rcanon_load(icomb, rcanon_file);
@@ -180,8 +180,8 @@ void CTNS(const input::schedule& schd){
          // consistency check
          if(int1e.sorb != icomb.get_nphysical()*2){
             std::cout << "error: int1e.sorb is inconsistent with 2*nphysical in topo:"
-             << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
-             << std::endl;
+               << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
+               << std::endl;
             exit(1);  
          }
       }
@@ -223,23 +223,36 @@ void CTNS(const input::schedule& schd){
       // rdm
       if(schd.ctns.task_prop.size() > 0){
          const bool is_same = true;
+         const int iroot = schd.ctns.iroot; 
          int k = 2*icomb.get_nphysical();
+         int k2 = k*(k-1)/2;
+         linalg::matrix<Tm> rdm1, tdm1, rdm2, tdm2;
          if(tools::is_in_vector(schd.ctns.task_prop,1)){
-            linalg::matrix<Tm> rdm1(k,k), tdm1;
+            rdm1.resize(k, k);
             ctns::rdm_sweep(1, is_same, icomb, icomb, schd, scratch, rdm1, tdm1);
+
          }
          if(tools::is_in_vector(schd.ctns.task_prop,2)){
-            int k2 = k*(k-1)/2;
-            linalg::matrix<Tm> rdm2(k2,k2), tdm2;
+            rdm2.resize(k2, k2);
             ctns::rdm_sweep(2, is_same, icomb, icomb, schd, scratch, rdm2, tdm2);
             if(rank == 0){
-               auto rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
+               rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
                auto Sij = rdm1.trace()/Tm(schd.nelec);
                auto Hij = get_etot(rdm2, rdm1, int2e, int1e) + Sij*ecore;
-               std::cout << "Hij=" << std::fixed << std::setprecision(schd.ctns.outprec) << Hij << std::endl;
+               std::cout << "iroot=" << iroot << " etot=" << std::fixed << std::setprecision(schd.ctns.outprec) << Hij << std::endl;
             }
          }
-      }
+         // save results
+         if(rank == 0){
+            std::cout << "\nsave results for rdms:" << std::endl;
+            if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm1.size()>0){
+               auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
+               natorbs.save_txt("natorbs", schd.ctns.outprec);
+            }
+         }
+      } // prop
    } // ham || opt || oodmrg || vmc
 }
 

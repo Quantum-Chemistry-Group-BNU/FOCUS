@@ -65,6 +65,13 @@ void print_vector(const std::vector<Tm>& vec, const std::string name){
    for(const auto& k : vec) std::cout << " " << k;
    std::cout << std::endl;
 }	
+template <typename Tm>
+void print_vector(const std::vector<Tm>& vec, const std::string name, const int outprec){
+   std::cout << " " << name << "=";
+   std::cout << std::scientific << std::setprecision(outprec);
+   for(const auto& k : vec) std::cout << " " << k;
+   std::cout << std::endl;
+}	
 
 template <typename Tm>
 std::vector<Tm> combine_vector(const std::vector<Tm>& v1, 

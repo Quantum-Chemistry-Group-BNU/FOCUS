@@ -248,6 +248,38 @@ namespace fock{
          return Hij;
       }
 
+   // spin-averaged rdm1
+   template <typename Tm>
+      linalg::matrix<Tm> get_rdm1s(const linalg::matrix<Tm>& rdm1){
+         assert(rdm1.rows() == rdm1.cols());
+         assert(rdm1.rows()%2 == 0);
+         int k = rdm1.rows();
+         int ks = k/2;
+         linalg::matrix<Tm> rdm1s(ks,ks);
+         for(int i=0; i<ks; i++){
+            for(int j=0; j<ks; j++){
+               rdm1s(i,j) = rdm1(2*i,2*j) + rdm1(2*i+1,2*j+1);
+            }
+         }
+         return rdm1s;
+      }
+
+   template <typename Tm>
+      linalg::matrix<Tm> get_natorbs(const linalg::matrix<Tm>& rdm1s){
+         std::cout << "\nfock::get_natorbs ks=" << rdm1s.rows() 
+            << " tr(RDM1s)=" << rdm1s.trace() 
+            << " diffHermi=" << rdm1s.diff_hermitian() 
+            << std::endl;
+         auto diag = rdm1s.diagonal();
+         tools::print_vector(diag, "diag", 3);
+         // diagonalize rdm1s
+         std::vector<double> nocc(rdm1s.rows());
+         linalg::matrix<Tm> urot;
+         linalg::eig_solver(rdm1s, nocc, urot, 1);
+         tools::print_vector(nocc, "nocc", 3);
+         return urot;
+      }
+
 } // fock
 
 #endif
