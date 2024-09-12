@@ -176,7 +176,7 @@ namespace ctns{
             lambda_i[2] = lambda[4*i+2];
             lambda_i[3] = lambda[4*i+3];
             int pi = image1[i];
-            sp[pi] = fock::entropy(lambda_i);
+            sp[pi] = fock::pop_entropy(lambda_i);
          }
          if(debug){
             double sum = 0.0;

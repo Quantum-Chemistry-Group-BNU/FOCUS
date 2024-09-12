@@ -131,7 +131,7 @@ namespace fock{
          coeff_population(space, civec, thresh, iop);
       }
 
-   inline double entropy(const std::vector<double>& p, 
+   inline double pop_entropy(const std::vector<double>& p, 
          const double cutoff=1.e-100){
       double psum = 0.0, ssum = 0.0;
       for(const auto& pi : p){
@@ -139,9 +139,7 @@ namespace fock{
          psum += pi;
          ssum -= pi*log(pi);
       }
-      std::cout << "fock::entropy" << std::fixed << std::setprecision(12)
-         << " psum=" << psum << " SvN=" << ssum 
-         << std::endl;
+      assert(std::abs(psum-1.0)<1.e-10);
       return ssum;
    }
 

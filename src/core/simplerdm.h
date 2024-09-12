@@ -311,7 +311,7 @@ namespace fock{
             lambda_i[1] = lambda[4*i+1];
             lambda_i[2] = lambda[4*i+2];
             lambda_i[3] = lambda[4*i+3];
-            sp[i] = entropy(lambda_i);
+            sp[i] = pop_entropy(lambda_i);
             sum += sp[i];
          }
          if(debug){

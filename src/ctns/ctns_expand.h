@@ -209,10 +209,6 @@ namespace ctns{
                pop2[idxmap[det]] += std::norm(csf_coeff[i]*det_coeff[j]);
             }
          }
-         /*
-         fock::entropy(pop2); 
-         std::cout << "warning: it is not the exact pop (interference is neglected)!" << std::endl;
-         */
          // print
          std::vector<double> pop(dim,0.0);
          double ovlp = 0.0;
