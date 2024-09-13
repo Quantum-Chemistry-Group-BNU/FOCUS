@@ -252,7 +252,7 @@ void RDM(const input::schedule& schd){
 
    // save results
    if(rank == 0 and is_same){
-      std::cout << "\nsave results for rdms:" << std::endl;
+      if(rdm1.size()>0 or rdm2.size()>0) std::cout << "\nsave results for rdms:" << std::endl;
       if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
       if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
       if(rdm1.size()>0){

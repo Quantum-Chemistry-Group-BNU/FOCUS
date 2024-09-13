@@ -26,6 +26,15 @@ namespace ctns{
             << " thresh_tosu2=" << thresh_tosu2
             << std::endl;
          auto t0 = tools::get_time();
+         
+         // consistency check
+         auto sym_state = icomb_NSz.get_qsym_state();
+         int ne = sym_state.ne();
+         int tm = sym_state.tm();
+         if(twos%2 != ne%2 || twos%2 != tm%2){
+            std::cout << "error: inconsistent (ne,tm,ts)=" << ne << "," << tm << "," << twos << std::endl;
+            exit(1);
+         }
 
          // build environment
          auto dmenv = buildDMLeftEnv(icomb_NSz, debug);

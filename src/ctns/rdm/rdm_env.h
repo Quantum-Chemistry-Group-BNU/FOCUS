@@ -150,7 +150,7 @@ namespace ctns{
                << " order=" << order << std::endl;
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
-         
+        
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
          rdm_init_dotCR(order, is_same, icomb, scratch, iomode);

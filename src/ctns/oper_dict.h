@@ -87,7 +87,7 @@ namespace ctns{
             }
             // initialization
             void init(const bool ifmemset=false){
-               this->setup_opdict();
+               this->setup_opdict(true);
                this->allocate_cpu(ifmemset);
                this->setup_data(); // assign pointer for each operator
             }
@@ -181,8 +181,8 @@ namespace ctns{
                   std::cout << " list of op" << key << ": ";
                   auto op_index = this->oper_index_op(key);
                   for(int idx : op_index){
-                     if(key == 'H' || key == 'I' || key == 'C' || key == 'D' || key == 'S'){
-                        std::cout << "(" << idx << ") ";
+                     if(key == 'H' || key == 'I' || key == 'C' || key == 'D' || key == 'S' || key == 'T'){
+                        std::cout << idx << " ";
                      }else{
                         auto pq = oper_unpack(idx);
                         std::cout << idx << ":(" << pq.first << "," << pq.second << ") ";
@@ -234,7 +234,7 @@ namespace ctns{
          }else if(key == 'F'){
             index = {cindex[0]};
          }else if(key == 'T'){
-            index = {cindex[0]+1,cindex[0]}; 
+            index = cindex;
          }
          return index;
       }
@@ -271,7 +271,7 @@ namespace ctns{
       }else if(key == 'F'){
          sym_op = qsym(isym,0,0);
       }else if(key == 'T'){
-         sym_op = get_qsym_opD(isym, 1-idx%2);
+         sym_op = get_qsym_opT(isym, idx);
       }
       return sym_op;
    } 

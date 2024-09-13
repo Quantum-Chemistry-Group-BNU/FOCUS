@@ -90,6 +90,7 @@ namespace ctns{
             setup_evalmap(pattern.num_string(), ifkr, sorb, lops, rops, leval, reval, size, rank);
 
             auto ti = tools::get_time();
+            /*
             if(alg_rdm == 0){
 
                rdm_assemble_simple(is_same, pattern, lkey, ckey, rkey, ldagger, cdagger, rdagger, lops, cops, rops, 
@@ -103,12 +104,12 @@ namespace ctns{
             }else{
                tools::exit("error: no such option for alg_rdm");
             } // alg_rdm
-            auto tf = tools::get_time();
+            */
             if(debug){
+               auto tf = tools::get_time();
                double dt = tools::get_duration(tf-ti);
                std::cout << " TIMING=" << dt << " S" << std::endl;
             }
-
          } // pattern
 
          if(debug){

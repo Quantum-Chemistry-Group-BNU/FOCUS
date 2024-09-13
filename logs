@@ -510,16 +510,19 @@
  * RDMs for su2 case:
    - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
       - oper_dot_su2.h
-   - rdm_renorm: support su2 operators{I,D,M }
+   - rdm_renorm: support su2 operators {I,D,M} and {B} [DONE@2024/09/13]
+      - sadmrg/symbolic_normxwf_su2.h
+      - sadmrg/symbolic_formulae_renorm_su2.h
    - is_same=true:
       - rdm1
-         - assemble?
-         - spin recoupling?
+         - assemble spin-free 1-RDM?
+         - using spin recoupling to get spin-orbital 1-RDM?
 ======================================================================
 Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
 ======================================================================
       - rdm2
-   - is_same=false:
+         - assemble spin-free 2-RDM?
+         - using spin recoupling to get spin-orbital 2-RDM?
+   - is_same=false: more patterns to be considered
       - rdm1
       - rdm2
-

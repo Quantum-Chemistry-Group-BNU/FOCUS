@@ -122,6 +122,7 @@ namespace ctns{
          formulae.append(op12);
          return formulae;
       }
+
    // kernel for computing Dp|ket>
    template <typename Tm>
       symbolic_task<Tm> symbolic_normxwf_opD(const std::string block1,
@@ -140,6 +141,7 @@ namespace ctns{
          } // iformula
          return formulae;
       }
+
    // kernel for computing Mpq|ket> 
    template <typename Tm>
       symbolic_task<Tm> symbolic_normxwf_opM(const std::string block1,

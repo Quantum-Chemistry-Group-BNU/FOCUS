@@ -170,12 +170,28 @@ namespace ctns{
       if(isym == 0 or isym == 1){
          sym_op = qsym(isym,-1,0);
       }else if(isym == 2){ 
-         sym_op = (spin==0)? qsym(isym,-1,-1) : qsym(isym,-1,+1);
+         sym_op = (spin==0)? qsym(isym,-1,-1) : qsym(isym,-1,+1); // remove alpha & beta
       }else if(isym == 3){
          assert(spin == 0); // must be of alpha spin
          sym_op = qsym(isym,-1,1); // C[1/2]
       }else{
          std::cout << "error: no such option for get_qsym_opD! isym=" << isym << std::endl;
+         exit(1);
+      }
+      return sym_op;
+   }
+   inline qsym get_qsym_opT(const short isym, const int p){
+      int spin = p%2;
+      qsym sym_op;
+      if(isym == 0 or isym == 1){
+         sym_op = qsym(isym,-1,0);
+      }else if(isym == 2){ 
+         sym_op = (spin==0)? qsym(isym,-1,+1) : qsym(isym,-1,-1); // a+ba,b+ba
+      }else if(isym == 3){
+         assert(spin == 0); // must be of alpha spin
+         sym_op = qsym(isym,-1,1); // T[1/2]
+      }else{
+         std::cout << "error: no such option for get_qsym_opT! isym=" << isym << std::endl;
          exit(1);
       }
       return sym_op;

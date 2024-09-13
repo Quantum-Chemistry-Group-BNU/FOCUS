@@ -587,7 +587,7 @@ namespace ctns{
          if(debug_oper_dot) qops('F')[ka].to_matrix().print("c0+c1+c1c0");  
       }
 
-   // T = {a^+ba,b^+ab} 
+   // T = {a^+ba,b^+ba} 
    template <typename Tm>
       void oper_dot_opT(oper_dict<Tm>& qops,
             const int k0){

@@ -151,7 +151,8 @@ namespace ctns{
                }
             }
          }
-         // ZL@20240909: for RDM calculations
+         
+         // --- for RDM calculations ---
          // opI
          if(oplist.find('I') != std::string::npos){
             counter["I"] = 0;
