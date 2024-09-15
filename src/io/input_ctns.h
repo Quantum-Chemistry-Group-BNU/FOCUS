@@ -41,7 +41,7 @@ namespace input{
          int dfac = 2;
          int macroiter = 5;
          int microiter = 50;
-         double alpha = 0.5;
+         double alpha = 1;
          double thrdopt = 1.e-4;
          double thrdloc = 1.e-6;
          double nptloc = 20;

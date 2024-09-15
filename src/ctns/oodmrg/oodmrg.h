@@ -251,23 +251,6 @@ namespace ctns{
                      << std::setw(8) << u_history[jter]
                      << std::endl;
                }
-               /*
-               for(int jter=0; jter<=iter; jter++){
-                  if(jter == 1) std::cout << "oodmrg steps:" << std::endl;
-                  if(jter == maxiter-1) std::cout << "final check:" << std::endl;
-                  std::cout << " iter=" << jter << ":" << acceptance[jter]
-                     << std::fixed << std::setprecision(schd.ctns.outprec) 
-                     << " E_i=" << enew_history[jter]
-                     << " E_min=" << emin_history[jter+1]
-                     << std::scientific << std::setprecision(2)
-                     << " DE=" << std::setw(9) << (enew_history[jter]-emin_history[jter]) // deltaE
-                     << " LE=" << std::setw(9) << (emin_history[jter+1]-emin_history[0]) // loweringE
-                     << " Sd=" << std::setw(8) << sdiag_history[jter+1]
-                     << " Sr=" << std::setw(8) << srenyi_history[jter+1]
-                     << " |U_i-I|=" << std::setw(8) << u_history[jter]
-                     << std::endl;
-               }
-               */
                std::cout << tools::line_separator2 << std::endl;
 
                // save the current best results
