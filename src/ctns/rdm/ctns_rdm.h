@@ -8,6 +8,7 @@
 #include "rdm_env.h"
 #include "rdm_patterns.h"
 #include "rdm_assemble.h"
+#include "rdm_assemble_su2.h"
 
 namespace ctns{
 
