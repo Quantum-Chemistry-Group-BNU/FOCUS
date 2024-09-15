@@ -136,7 +136,7 @@ void SADMRG(const input::schedule& schd){
 
       }else{
          // restart a broken calculation from disk
-         rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1);
+         rcanon_file = schd.scratch+"/rcanon_isweep"+std::to_string(schd.ctns.restart_sweep-1)+"_su2";
          if(schd.ctns.restart_sweep > schd.ctns.maxsweep){
             std::cout << "error: restart_sweep exceed maxsweep!" << std::endl;
             std::cout << " restart_sweep=" << schd.ctns.restart_sweep
