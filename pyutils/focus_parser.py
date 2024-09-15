@@ -82,6 +82,52 @@ def parse_ham(fname="ham.out"):
             Sij = np.zeros((dim,dim))
     return Hij,Sij
 
+def parse_oodmrg(fname="ctns.out",iprt=0):
+    f = open(fname,"r")
+    lines = f.readlines()
+    # get nsweep
+    pattern = "OO-DMRG results:"
+    nsweep = 0
+    for line in lines:
+      if pattern in line:
+         nsweep += 1
+    if iprt > 0: print("nsweep=",nsweep)
+    # process
+    isweep = 0
+    iread = 0
+    nline = 0
+    elines = []
+    for line in lines:
+      if pattern in line:
+         isweep += 1
+         if isweep == nsweep:
+            iread = 1
+      elif iread == 1 and nline < nsweep+4:
+         nline += 1
+         elines.append(line)
+         if iprt > 0: print(line)
+    f.close()
+    # parse
+    result = []
+    elst = elines[1].split()
+    eSCI = eval(elst[2].split('=')[-1])
+    Sd = eval(elst[3].split('=')[-1])
+    Sr = eval(elst[4].split('=')[-1])
+    result.append([1,eSCI,Sd,Sr])
+    for i in range(nsweep+2):
+       if i == 1 or i == nsweep: continue
+       elst = elines[i+2].split('=')
+       accept = eval(elst[1].split(':')[1].split()[0])
+       em = eval(elst[3].split()[0])
+       sd = eval(elst[6].split()[0])
+       sr = eval(elst[7].split()[0])
+       result.append([accept,em,sd,sr])
+    result = np.array(result).T
+    result = {'acceptance':result[0],
+              'emin':result[1],
+              'Sdiag':result[2],
+              'Srenyi':result[3]}
+    return result
 
 if __name__ == '__main__':
 

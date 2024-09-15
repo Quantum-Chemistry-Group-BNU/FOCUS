@@ -10,12 +10,13 @@
 
  * Arbitrary types of transition density matrices (relevant for PT & SOC?),
    which only require the storage of two-index renormalized operators:
+   - reference: tdm between separate sci calculations with different no. of electrons
    - nonspin-adapted case: checked by forming 2-RDM using 1-TDM [!!!]
       - <MPS[N]|ap*aq+|MPS'[N]> <=> delta[p,q]<MPS[N]|MPS'[N> - <MPS[N]|aq+*ap|MPS[N']>
       - (0,1) <MPS[N-1]|p|MPS[N]> <=> (1,0)
       - (0,2) <MPS[N-2]|pq|MPS[N]> <=> <MPS[N]|aq+*ap+|MPS[N-2]> (2,0)
       - (1,2) <MPS[N-1]|p+qr|MPS[N]>
-      - (2,3) <MPS[N-1]|p+q+tuv|MPS[N]> 
+      - (2,3) <MPS[N-1]|p+q+tuv|MPS[N]> pattern 212 [communication is required!] 
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]

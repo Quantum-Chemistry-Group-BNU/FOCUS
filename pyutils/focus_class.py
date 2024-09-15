@@ -77,17 +77,17 @@ class SCI:
 class CTNS:
     def __init__(self,common):
         self.common = common
-        self.qkind = None
-        self.nroots = None
-        self.maxdets = None
-        self.thresh_proj = None
-        self.topology_file = None
+        self.qkind = "rNSz"
+        self.nroots = 1
+        self.maxdets = 10000
+        self.thresh_proj = 1.e-10
+        self.topology_file = "topo"
         self.topo = None
         self.schedule = None
-        self.maxsweep = None
-        self.tasks = None
-        self.alg_hvec = None
-        self.alg_renorm = None
+        self.maxsweep = 4
+        self.tasks = ["task_oodmrg"]
+        self.alg_hvec = 4
+        self.alg_renorm = 4
 
     def gen_input(self,fname,iprt):
         # TOPO

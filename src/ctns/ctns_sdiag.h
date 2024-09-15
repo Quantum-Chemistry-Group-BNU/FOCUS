@@ -135,8 +135,8 @@ namespace ctns{
                double std2 = std::sqrt(std::abs(IPR2-IPR*IPR)/(i+1.e-10)); // use abs in case of small negative value
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << i 
-                  << std::setprecision(6)
+               std::cout << " i=" << std::setw(8) << i 
+                  << std::fixed << std::setprecision(6)
                   << " Sdiag=" << Sd << " std=" << std1
                   << " IPR=" << IPR << " std=" << std2
                   << " TIMING=" << dt << " S" 
@@ -176,10 +176,10 @@ namespace ctns{
             if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
             std::cout << " i=" << i << " " << state
-               << " counts=" << counts[idx] 
-               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << " c_i(exact)=" << std::setw(9) << ci/std::sqrt(ovlp)
                << " p_i(exact)=" << pop
-               << " c_i(exact)=" << ci/std::sqrt(ovlp)
+               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << " counts=" << counts[idx] 
                << std::endl;
          }
          std::cout << "accumulated counts for listed confs=" << sum 

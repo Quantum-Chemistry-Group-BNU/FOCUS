@@ -38,12 +38,13 @@ namespace ctns{
          // initialization
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
+         std::vector<double> sdnew_history(maxiter,0);
+         std::vector<double> srnew_history(maxiter,0);
          std::vector<double> emin_history(maxiter+1);
          std::vector<double> sdiag_history(maxiter+1,0);
          std::vector<double> srenyi_history(maxiter+1,0);
-         double e_min;
          std::vector<double> u_history(maxiter);
-         std::vector<bool> acceptance(maxiter,0);
+         std::vector<bool> acceptance(maxiter);
          auto urot_min = linalg::identity_matrix<Tm>(norb);
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
@@ -140,24 +141,19 @@ namespace ctns{
                Hij.print("Hij0_iter"+std::to_string(iter), schd.ctns.outprec);
                // save the initial ground-state energy
                if(iter == 0){
-                  e_min = std::real(Hij(0,0));
-                  emin_history[0] = e_min;
+                  emin_history[0] = std::real(Hij(0,0));
                   // compute initial entropy
-                  auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
-                  sdiag_history[0] = Sd;
-                  auto Sr = rcanon_entropysum(icomb_new, alpha);
-                  srenyi_history[0] = Sr;
+                  sdiag_history[0] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
+                  srenyi_history[0] = rcanon_entropysum(icomb_new, alpha);
                }
             }
 
             // optimization of MPS with new integrals
             std::string rcfprefix = "oo_";
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
-            if(rank == 0){   
-               auto Sd = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
-               sdiag_history[iter+1] = Sd;
-               auto Sr = rcanon_entropysum(icomb_new, alpha);
-               srenyi_history[iter+1] = Sr; 
+            if(rank == 0){
+               sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
+               srnew_history[iter] = rcanon_entropysum(icomb_new, alpha); 
             }
 
             //----------------------------------------------
@@ -200,21 +196,25 @@ namespace ctns{
             if(rank == 0){
                // check acceptance
                std::string status;
-               double e_new = result.get_eminlast(0);
-               double deltaE = e_new - e_min;
-               if(deltaE < 0 or iter == maxiter-1 or acceptall){
+               enew_history[iter] = result.get_eminlast(0);
+               double deltaE = enew_history[iter] - emin_history[iter];
+               if(deltaE < 0 or iter == maxiter-1 or iter == 0 or acceptall){
                   status = "accept move!";
                   acceptance[iter] = true;
-                  e_min = e_new;
+                  emin_history[iter+1] = enew_history[iter]; 
+                  sdiag_history[iter+1] = sdnew_history[iter];
+                  srenyi_history[iter+1] = srnew_history[iter];
                   urot_min = urot;
                   icomb = std::move(icomb_new); // move is defined, but copy is deleted
                }else{
                   // urot_min and icomb in the next iter will 
                   // still be the old one without change.
                   status = "reject move!";
+                  acceptance[iter] = false;
+                  emin_history[iter+1] = emin_history[iter];
+                  sdiag_history[iter+1] = sdiag_history[iter];
+                  srenyi_history[iter+1] = srenyi_history[iter];
                }
-               enew_history[iter] = e_new;
-               emin_history[iter+1] = e_min;
 
                // display results
                std::cout << std::endl;
@@ -227,17 +227,36 @@ namespace ctns{
                   << " DE=" << deltaE << " " << status
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
-               std::cout << "initial ground-state energy=" 
-                  << std::defaultfloat << std::setprecision(10) << emin_history[0]
+               std::cout << "initial energy of MPS Hii= " 
+                  << std::defaultfloat << std::setprecision(schd.ctns.outprec) << emin_history[0]
                   << std::scientific << std::setprecision(2) 
-                  << " Sd=" << sdiag_history[0]
-                  << " Sr=" << srenyi_history[0] 
+                  << " Sd= " << sdiag_history[0]
+                  << " Sr= " << srenyi_history[0] 
                   << std::endl;
+               std::cout << "  iter accept      enew            emin        deltaE    lowerE"
+                  << "   sdnew    sdiag    srnew    srenyi   |Ui-I|" 
+                  << std::endl; 
+               for(int jter=0; jter<=iter; jter++){
+                  std::cout << std::setw(5) << jter << "    " << acceptance[jter] << "   "
+                     << std::fixed << std::setprecision(schd.ctns.outprec) 
+                     << enew_history[jter] << " "
+                     << emin_history[jter+1] << " "
+                     << std::scientific << std::setprecision(2)
+                     << std::setw(9) << (enew_history[jter]-emin_history[jter]) << " " // deltaE
+                     << std::setw(9) << (emin_history[jter+1]-emin_history[1]) << " " // loweringE
+                     << std::setw(8) << sdnew_history[jter] << " "
+                     << std::setw(8) << sdiag_history[jter+1] << " "
+                     << std::setw(8) << srnew_history[jter] << " "
+                     << std::setw(8) << srenyi_history[jter+1] << " "
+                     << std::setw(8) << u_history[jter]
+                     << std::endl;
+               }
+               /*
                for(int jter=0; jter<=iter; jter++){
                   if(jter == 1) std::cout << "oodmrg steps:" << std::endl;
                   if(jter == maxiter-1) std::cout << "final check:" << std::endl;
                   std::cout << " iter=" << jter << ":" << acceptance[jter]
-                     << std::fixed << std::setprecision(10)  
+                     << std::fixed << std::setprecision(schd.ctns.outprec) 
                      << " E_i=" << enew_history[jter]
                      << " E_min=" << emin_history[jter+1]
                      << std::scientific << std::setprecision(2)
@@ -248,14 +267,17 @@ namespace ctns{
                      << " |U_i-I|=" << std::setw(8) << u_history[jter]
                      << std::endl;
                }
+               */
                std::cout << tools::line_separator2 << std::endl;
 
                // save the current best results
                if(acceptance[iter]){
-                  std::string rcanon_file = schd.scratch+"/oo_rcanon_d"+std::to_string(dcut); 
+                  std::string rcanon_file = schd.scratch+"/oo_rcanon_iter"+std::to_string(iter); 
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
                   urot_min.save_txt("urot", schd.ctns.outprec);
+                  auto schmidt_file = schd.scratch+"/schmidt_values_iter"+std::to_string(iter);
+                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
                }
             } // rank-0
          } // iter

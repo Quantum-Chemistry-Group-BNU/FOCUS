@@ -87,7 +87,7 @@ namespace ctns{
             }
             // initialization
             void init(const bool ifmemset=false){
-               this->setup_opdict(true);
+               this->setup_opdict();
                this->allocate_cpu(ifmemset);
                this->setup_data(); // assign pointer for each operator
             }
