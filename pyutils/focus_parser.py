@@ -118,9 +118,9 @@ def parse_oodmrg(fname="ctns.out",iprt=0):
         if i < 3 or i > len(elines)-1: continue
         elst = elines[i].split()
         accept = eval(elst[1])
-        em = eval(elst[3].split()[0])
-        sd = eval(elst[7].split()[0])
-        sr = eval(elst[8].split()[0])
+        em = eval(elst[3])
+        sd = eval(elst[7])
+        sr = eval(elst[9])
         result.append([accept,em,sd,sr])
     result = np.array(result).T
     result = {'acceptance':result[0],
