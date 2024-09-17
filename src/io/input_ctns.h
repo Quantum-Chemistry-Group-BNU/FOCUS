@@ -93,7 +93,7 @@ namespace input{
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_file & rcanon2_file
                   & iomode & async_fetch & async_save & async_remove & ifnccl
-                  & iroot & jroot & nsample & nprt & pthrd
+                  & iroot & jroot & nsample & nprt & pthrd & thresh_cabs
                   & tosu2 & thresh_tosu2 & singlet 
                   & diagcheck
                   & savebin 
@@ -179,6 +179,7 @@ namespace input{
          int nsample = 5000;
          int nprt = 10;
          double pthrd = -1.e-2;
+         double thresh_cabs = 1.1;
          // su2 symmetry
          bool tosu2 = false;
          double thresh_tosu2 = 1.e-8;

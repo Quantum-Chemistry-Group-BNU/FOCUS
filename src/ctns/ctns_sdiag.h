@@ -98,6 +98,7 @@ namespace ctns{
             const int nprt=10, // no. of largest states to be printed
             const std::string saveconfs=""){
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
+         auto ti = tools::get_time();
          auto t0 = tools::get_time();
          const double cutoff = 0.0;
          std::cout << "\nctns::rcanon_Sdiag_sample:" 
@@ -199,6 +200,8 @@ namespace ctns{
             }
             file.close(); 
          }
+         auto tf = tools::get_time();
+         tools::timing("ctns::rcanon_Sdiag_sample", ti, tf);
          return Sd;
       }
 

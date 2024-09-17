@@ -159,6 +159,9 @@ void CTNS(const input::schedule& schd){
       if(rank == 0){
          ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+         if(schd.ctns.thresh_cabs<1.01){
+            ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs);
+         }
       }
    }
 

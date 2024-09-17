@@ -1,6 +1,6 @@
 
-Reduced density matrix
-######################
+Reduced density matrices
+########################
 
 Reduced density matrices (RDMs) and transition density matrices (TDMs) in DMRG are formed by assembling normal operators in onedot algorithm. The necessary type patterns for up to two-particle density matrices are as follows:
 
@@ -8,6 +8,33 @@ Reduced density matrices (RDMs) and transition density matrices (TDMs) in DMRG a
    :local:
    :backlinks: entry
    :depth: 2
+
+Definitions
+===========
+
+The 1,2-RDM are defined as follows:
+
+.. math::
+
+   \gamma_{pq}^{IJ} = \langle\Psi_I|p^\dagger q|\Psi_J\rangle
+   
+   \Gamma_{pq,rs}^{IJ} = \langle\Psi_I|p^\dagger q^\dagger s r |\Psi_J\rangle
+
+The 2-RDM is also storaged as a matrix by restricting :math:`p>q` and :math:`r>s`.
+Together, they can be used to compute measures of correlation such as the
+trace or the norm of the cumulants
+
+.. math::
+
+   \Delta_{pq,rs} = \Gamma_{pq,rs} - \gamma_{pr}\gamma_{qs} + \gamma_{ps}\gamma_{qr}
+   
+For determinants, :math:`\Delta_{pq,rs}=0` such that :math:`\mathrm{tr}(\Delta)=0` and :math:`\|\Delta\|_F=0`.
+Note that :math:`\mathrm{tr}(\Delta)=0` is determined by 1-RDM:
+
+.. math::
+
+   \mathrm{tr}(\Delta)=\sum_{pq}\Delta_{pq,pq}=(N-1)N-N^2+\mathrm{tr}(\gamma^2) = \mathrm{tr}(\gamma^2) - N
+   = - \mathrm{tr}[\gamma(1-\gamma)] \le 0
 
 Patterns
 ========

@@ -9,6 +9,7 @@
 #include "ctns_cicoeff.h"
 #include "ctns_random.h"
 #include "ctns_sdiag.h"
+#include "ctns_listcoeff.h"
 
 #include "ctns_oper.h" 
 
