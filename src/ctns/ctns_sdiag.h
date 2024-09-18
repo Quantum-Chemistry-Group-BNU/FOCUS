@@ -136,7 +136,7 @@ namespace ctns{
                double std2 = std::sqrt(std::abs(IPR2-IPR*IPR)/(i+1.e-10)); // use abs in case of small negative value
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << std::setw(8) << i 
+               std::cout << " i=" << std::setw(9) << i 
                   << std::fixed << std::setprecision(6)
                   << " Sdiag=" << Sd << " std=" << std1
                   << " IPR=" << IPR << " std=" << std2
@@ -194,8 +194,8 @@ namespace ctns{
             file << "size= " << size << " psum= " << psum << std::endl;
             for(int i=0; i<size; i++){
                int idx = indx[i];
-               auto state = states[idx];
-               auto ci = coeff[state];
+               const auto& state = states[idx];
+               const auto& ci = coeff[state];
                file << state << " " << ci << std::endl;
             }
             file.close(); 

@@ -13,8 +13,8 @@ namespace fock{
       public:
          // constructor
          csfstate(){}
-         csfstate(const int k){ 
-            onstate _repr(2*k);
+         csfstate(const int ks){ // must be spatial orbitals 
+            onstate _repr(2*ks);
             repr = _repr;  
          }
          csfstate(const std::string& s){
@@ -54,6 +54,25 @@ namespace fock{
             orbs_os.resize(n);
             return orbs_os;
          }
+         // set occupation
+         void setocc(const int i, const int dne, const int dts){
+            if(dne == 0 and dts == 0){
+               repr[2*i] = 0;
+               repr[2*i+1] = 0;
+            }else if(dne == 2 and dts == 0){
+               repr[2*i] = 1;
+               repr[2*i+1] = 1;
+            }else if(dne == 1 and dts == 1){
+               repr[2*i] = 1; // S+1/2
+               repr[2*i+1] = 0;
+            }else if(dne == 1 and dts == -1){
+               repr[2*i] = 0; 
+               repr[2*i+1] = 1; // S-1/2
+            }else{
+               std::cout << "error: no such case for (dne,dts)=" << dne << "," << dts << std::endl;
+               exit(1);
+            }
+         } 
          // to determinants
          double det_coeff(const onstate& state) const;
          // by default the M=S is used.

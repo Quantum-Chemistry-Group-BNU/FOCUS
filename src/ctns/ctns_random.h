@@ -164,23 +164,7 @@ namespace ctns{
                auto sym = qcol.get_sym(bc);
                int dne = ne - sym.ne();
                int dts = ts - sym.ts();
-               if(dne == 0 and dts == 0){
-                  state.repr[2*i] = 0;
-                  state.repr[2*i+1] = 0;
-               }else if(dne == 2 and dts == 0){
-                  state.repr[2*i] = 1;
-                  state.repr[2*i+1] = 1;
-               }else if(dne == 1 and dts == 1){
-                  state.repr[2*i] = 1;
-                  state.repr[2*i+1] = 0;
-               }else if(dne == 1 and dts == -1){
-                  state.repr[2*i] = 0;
-                  state.repr[2*i+1] = 1;
-               }else{
-                  std::cout << "error: no such case for (dne,dts)=" 
-                     << dne << "," << dts << std::endl;
-                  exit(1);
-               }
+               state.setocc(i, dne, dts);
                ne = sym.ne();
                ts = sym.ts();
 

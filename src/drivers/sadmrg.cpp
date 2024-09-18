@@ -173,7 +173,8 @@ void SADMRG(const input::schedule& schd){
       if(rank == 0){
          ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
-         ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs);
+         ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
+               schd.ctns.saveconfs);
          /*
          ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt);
