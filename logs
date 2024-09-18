@@ -507,8 +507,9 @@
          - alg_hvec = 16-19     DONE
    - single site entropy via rdm [DONE@2024/09/12] 
 
- * Futher analysis of MPS: 
-   - rcanon_listcoeff [DONE@2024/09/17] 
+ * Futher analysis of MPS: [DONE@2024/09/18] 
+   - rcanon_listcoeff 
       - support thresh_cabs to list all state with |coeff|>thresh_cabs
       - support su2 case
+   - cumulant measure
 

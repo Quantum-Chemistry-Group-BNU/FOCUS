@@ -328,6 +328,32 @@ namespace fock{
          return sp;
       }
 
+   template <typename Tm>
+      linalg::matrix<Tm> get_cumulant(const linalg::matrix<Tm>& rdm2,
+            const linalg::matrix<Tm>& rdm1){
+         std::cout << "\nfock::get_cumulant" << std::endl;
+         int k = rdm1.rows();
+         int k2 = rdm2.rows();
+         linalg::matrix<Tm> cumulant(k2,k2);
+         // C2[p,q,r,s] = <p+q+sr>_c (p>q,r>s)
+         for(int p=0; p<k; p++){
+            for(int q=0; q<p; q++){
+               size_t pq = p*(p-1)/2+q;
+               for(int r=0; r<k; r++){
+                  for(int s=0; s<r; s++){
+                     size_t rs = r*(r-1)/2+s;
+                     // <p+q+sr>_c = <p+q+sr> - <p+r><q+s> + <p+s><q+r>
+                     cumulant(pq,rs) = rdm2(pq,rs) - rdm1(p,r)*rdm1(q,s) + rdm1(p,s)*rdm1(q,r);
+                  }
+               }
+            }
+         }
+         std::cout << "tr(C2)=" << cumulant.trace() 
+            << " |C2|_F=" << cumulant.normF()
+            << std::endl;
+         return cumulant;
+      }
+ 
 } // fock
 
 #endif

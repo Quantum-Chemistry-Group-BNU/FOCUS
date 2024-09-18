@@ -236,6 +236,7 @@ void RDM(const input::schedule& schd){
          std::cout << "iroot=" << iroot << " jroot=" << jroot
             << " H(i,j)=" << std::fixed << std::setprecision(schd.ctns.outprec) << Hij 
             << std::endl;
+         fock::get_cumulant(rdm2, rdm1);
       }
    } // rdm2
 
