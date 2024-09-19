@@ -171,7 +171,7 @@ namespace ctns{
             const double pi = 4.0*std::atan(1.0);
             int npt;
             std::vector<double> anglst, funlst;
-            std::vector<double> x(1);
+            std::vector<double> xvec(1);
             double fmin;
             if(scheme == "opt"){
             
@@ -197,8 +197,8 @@ namespace ctns{
                opt.set_min_objective(nlopt_vfun_entropy, &fun);
                try{
                   // initial guess
-                  x[0] = {index[0]*pi/(npt-1)};
-                  nlopt::result result = opt.optimize(x, fmin);
+                  xvec[0] = {index[0]*pi/(npt-1)};
+                  nlopt::result result = opt.optimize(xvec, fmin);
                }
                catch(std::exception &e) {
                   std::cout << "nlopt failed: " << e.what() << std::endl;
@@ -215,9 +215,9 @@ namespace ctns{
                funlst[0] = fun(theta);
                if(dbond.forward){
                   std::uniform_int_distribution<> dist(0,1);
-                  x[0] = pi/2.0*dist(tools::generator);
+                  xvec[0] = pi/2.0*dist(tools::generator);
                }else{
-                  x[0] = 0.0;
+                  xvec[0] = 0.0;
                }
            
             // randomly apply rotation gates
@@ -232,14 +232,14 @@ namespace ctns{
                if(dbond.forward){
                   std::uniform_real_distribution<double> dist(0,1);
                   if(gates.size() == 0){
-                     x[0] = 2*pi*dist(tools::generator);
+                     xvec[0] = 2*pi*dist(tools::generator);
                   }else{
                      auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
                      bool ifexist = !(result == gates.end());
-                     if(ifexist) x[0] = 2*pi*dist(tools::generator);                     
+                     if(ifexist) xvec[0] = 2*pi*dist(tools::generator);                     
                   }
                }else{
-                  x[0] = 0.0;
+                  xvec[0] = 0.0;
                }
  
             }else{
@@ -248,8 +248,14 @@ namespace ctns{
             }
 
             // re-evaluate the function to output {vr, rot} correctly. 
-            fmin = twodot_wavefun_entropy(x, icomb, v0, vr, wf, rot, wfs2,
+            fmin = twodot_wavefun_entropy(xvec, icomb, v0, vr, wf, rot, wfs2,
                   dbond.forward, dmax, alpha, dwt, deff, ncall, debug_check);
+            // reject this move if dwt is too large
+            if(dwt > ooparams.thrddwt){
+               xvec[0] = 0.0;
+               fmin = twodot_wavefun_entropy(xvec, icomb, v0, vr, wf, rot, wfs2,
+                     dbond.forward, dmax, alpha, dwt, deff, ncall, debug_check);
+            }
             maxdwt = std::max(maxdwt,dwt);
             if(iprt > 1){
                std::cout << " i=" << ibond
@@ -260,7 +266,7 @@ namespace ctns{
                   << " f0=" << funlst[0]
                   << " fx=" << fmin 
                   << " diff=" << fmin-funlst[0]
-                  << " x=" << x[0]
+                  << " x=" << xvec[0]
                   << " deff=" << deff 
                   << " dwt=" << dwt
                   << " ncall=" << ncall 
@@ -268,7 +274,7 @@ namespace ctns{
             }
             
             // update urot
-            double theta = x[0];
+            double theta = xvec[0];
             // need to locate the physical orbital
             int orb0 = icomb.topo.get_node(dbond.p0).porb; 
             int orb1 = icomb.topo.get_node(dbond.p1).porb;

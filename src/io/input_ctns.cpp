@@ -211,6 +211,8 @@ void params_ctns::read(ifstream& istrm){
          ooparams.thrdopt = stod(line.substr(10));
       }else if(line.substr(0,10)=="oo_thrdloc"){
          ooparams.thrdloc = stod(line.substr(10));
+      }else if(line.substr(0,10)=="oo_thrddwt"){
+         ooparams.thrddwt = stod(line.substr(10));
       }else if(line.substr(0,9)=="oo_nptloc"){
          ooparams.nptloc = stoi(line.substr(9));
       }else if(line.substr(0,12)=="oo_acceptall"){
