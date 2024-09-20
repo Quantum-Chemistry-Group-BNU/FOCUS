@@ -113,7 +113,7 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
               Vt.data(),&ldvt,work.get(),&lwork,iwork.get(),&info);
    }
    if(info){
-      cout << "svd[d] failed with info=" << info << endl;
+      cout << "svd[d] failed with info=" << info << " for iop=" << iop << endl;
       exit(1);
    }
 }
@@ -169,7 +169,7 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
               Vt.data(),&ldvt,work.get(),&lwork,rwork.get(),iwork.get(),&info);
    }
    if(info){
-      cout << "svd[z] failed with info=" << info << endl;
+      cout << "svd[z] failed with info=" << info << " for iop=" << iop << endl;
       exit(1);
    }
 }
