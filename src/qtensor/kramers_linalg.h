@@ -304,7 +304,7 @@ namespace kramers{
    //---------------------------------------------------------------
    // Compute right renormalized states from a set of wavefunctions
    //---------------------------------------------------------------
-   const int svd_iop = 13;
+   const int svd_iop = 3;
    extern const int svd_iop;
 
    // Input: a vector of matrices {c[l,r]}
