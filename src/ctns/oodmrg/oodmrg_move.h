@@ -8,7 +8,7 @@ namespace ctns{
 
    // reduce entropy by carrying out multiple disentangling sweep until convergence
    template <typename Qm, typename Tm>
-      void reduce_entropy_multi(comb<Qm,Tm>& icomb,
+      double reduce_entropy_multi(comb<Qm,Tm>& icomb,
             linalg::matrix<Tm>& urot,
             const int dmax,
             const input::params_oodmrg& ooparams){
@@ -28,8 +28,8 @@ namespace ctns{
 
          // initialization
          double s_init = rcanon_entropysum(icomb, alpha); // record the input entropy
-         double s_old = s_init;
-
+         double s_old = s_init, s_new = s_init, s_diff;
+         
          // optimization
          double maxdwt = -1.0;
          bool ifconv = false;
@@ -39,9 +39,9 @@ namespace ctns{
             }
             // optimize
             double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, ooparams);
-            maxdwt = std::max(maxdwt,imaxdwt);
-            double s_new = rcanon_entropysum(icomb, alpha);
-            double s_diff = s_new - s_old;
+            maxdwt = std::max(maxdwt, imaxdwt);
+            s_new = rcanon_entropysum(icomb, alpha);
+            s_diff = s_new - s_old;
             if(iprt > 0){
                std::cout << "result:" << std::scientific
                   << " s[old]=" << s_old << " s[new]=" << s_new 
@@ -71,6 +71,7 @@ namespace ctns{
             auto t1 = tools::get_time();
             tools::timing("ctns::reduce_entropy_multi", t0, t1);
          }
+         return s_new;
       }
 
    template <typename Qm, typename Tm>
@@ -101,7 +102,7 @@ namespace ctns{
 
          // first optimization step
          if(iprt >= 0) std::cout << "\n### initial entanglement compression ###" << std::endl;
-         reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
+         double s_old = reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
 
          // start subsequent optimization
          for(int imacro=0; imacro<macroiter; imacro++){
@@ -113,7 +114,14 @@ namespace ctns{
             // apply_randomlayer
             double maxdwt = reduce_entropy_single(icomb, urot, "randomswap", dmax, schd.ctns.ooparams);
             // reduce_entropy
-            reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
+            double s_new = reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
+            if(iprt >= 0){
+               std::cout << "imacro=" << imacro 
+                  << std::scientific << std::setprecision(4)
+                  << " s[old]=" << s_old
+                  << " s[new]=" << s_new
+                  << std::endl;
+            }
          } // imacro 
 
          // change the last site of MPS to identity for later optimization

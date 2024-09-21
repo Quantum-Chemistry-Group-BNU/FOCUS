@@ -1,16 +1,4 @@
 
- * Further optimized kernel for assembling RDM:
-   - alg_rdm=2: 
-      - classify l,r operators by symmetry
-      - batched dgemv operation for assembling?
-   - compare different options for alg_renorm and alg_rdm
-   - profiling for FeMoCo with D>=8000
-      - /public/home/bnulizdtest/tests/femoco/mpi8n2
-      - memory issue for openmp?
-   - optimize IO (prefetch?)
-   - batch algorithm (BatchedGEMV) for patterns 211
-   - GPU assembling algorithm via batch?
-
  * RDMs for su2 case:
    - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
       - oper_dot_su2.h
@@ -23,25 +11,12 @@
          - assemble spin-free 1-RDM?
          - direct construction of env matrix
          - using spin recoupling to get spin-orbital 1-RDM?
-======================================================================
-Before ISTCP: Correct spin-averaged RDM1 for su2 case for NatOrbs ?
-======================================================================
       - rdm2
          - assemble spin-free 2-RDM?
          - using spin recoupling to get spin-orbital 2-RDM?
    - is_same=false: more patterns to be considered
       - rdm1
       - rdm2
-
- * Arbitrary types of transition density matrices (relevant for PT & SOC?),
-   which only require the storage of two-index renormalized operators:
-   - reference: tdm between separate sci calculations with different no. of electrons
-   - nonspin-adapted case: checked by forming 2-RDM using 1-TDM [!!!]
-      - <MPS[N]|ap*aq+|MPS'[N]> <=> delta[p,q]<MPS[N]|MPS'[N> - <MPS[N]|aq+*ap|MPS[N']>
-      - (0,1) <MPS[N-1]|p|MPS[N]> <=> (1,0)
-      - (0,2) <MPS[N-2]|pq|MPS[N]> <=> <MPS[N]|aq+*ap+|MPS[N-2]> (2,0)
-      - (1,2) <MPS[N-1]|p+qr|MPS[N]>
-      - (2,3) <MPS[N-1]|p+q+tuv|MPS[N]> pattern 212 [communication is required!] 
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]

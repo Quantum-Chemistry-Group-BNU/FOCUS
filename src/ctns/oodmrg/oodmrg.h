@@ -24,13 +24,15 @@ namespace ctns{
          const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : -1;
          const bool acceptall = schd.ctns.ooparams.acceptall;
          const double alpha = schd.ctns.ooparams.alpha;
+         const double thrdeps = schd.ctns.ooparams.thrdeps;
          if(debug){ 
             std::cout << "\nctns::oodmrg"
                << " maxiter=" << maxiter 
                << " maxsweep=" << schd.ctns.maxsweep
                << " dcut=" << dcut
                << " acceptall=" << acceptall
-               << " alpha=" << alpha 
+               << " alpha=" << alpha
+               << " thrdeps=" << thrdeps 
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -198,7 +200,10 @@ namespace ctns{
                std::string status;
                enew_history[iter] = result.get_eminlast(0);
                double deltaE = enew_history[iter] - emin_history[iter];
-               if(deltaE < 0 or iter == maxiter-1 or iter == 0 or acceptall){
+               bool accept = (iter == maxiter-1) or (iter == 0) or 
+                  acceptall or (deltaE <= -thrdeps) or 
+                  (std::abs(deltaE)<thrdeps and srnew_history[iter]<srenyi_history[iter]);
+               if(accept){
                   status = "accept move!";
                   acceptance[iter] = true;
                   emin_history[iter+1] = enew_history[iter]; 
