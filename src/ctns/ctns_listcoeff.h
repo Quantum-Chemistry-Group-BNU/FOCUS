@@ -69,6 +69,7 @@ namespace ctns{
             const int iroot,
             const double thresh_cabs,
             const std::string saveconfs=""){
+         if(thresh_cabs > 1.0) return;
          using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type;
          const bool ifab = Qm::ifabelian;
          std::cout << "\nctns::rcanon_listcoeff:"
