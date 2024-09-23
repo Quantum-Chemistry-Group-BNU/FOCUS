@@ -94,6 +94,7 @@ namespace ctns{
          for(int i=0; i<ks; i++){
             if(space.size() == 0) break; // no acceptable state
             std::vector<std::pair<statetype, qtensor2<ifab,Tm>>> space_new;
+            auto ti = tools::get_time();
 #ifdef SERIAL
             for(int j=0; j<space.size(); j++){
                const auto& state = space[j].first;
@@ -107,7 +108,7 @@ namespace ctns{
             #pragma omp parallel
             {
                std::vector<std::pair<statetype, qtensor2<ifab,Tm>>> space_local;
-               #pragma omp for schedule(dynamic) nowait
+               #pragma omp for schedule(static) nowait
                for(int j=0; j<space.size(); j++){
                   const auto& state = space[j].first;
                   const auto& wf = space[j].second;
@@ -122,7 +123,10 @@ namespace ctns{
             }
 #endif
             space = std::move(space_new);
-            std::cout << " isite=" << i << " space.size()=" << space.size() << std::endl;
+            auto tf = tools::get_time();
+            std::cout << " isite=" << i << " space.size()=" << space.size() 
+               << " TIMING=" << tools::get_duration(tf-ti) << " S" 
+               << std::endl;
          }
 
          // sort by |coeff|
