@@ -109,7 +109,7 @@ namespace ctns{
             << " nprt=" << nprt
             << " saveconfs=" << saveconfs
             << std::endl;
-         const int noff = nsample/10;
+         const int noff = (nsample+9)/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
          std::cout << "<CTNS[i]|CTNS[i]> = " << ovlp << std::endl; 
@@ -138,9 +138,9 @@ namespace ctns{
                double dt = tools::get_duration(t1-t0);
                std::cout << " i=" << std::setw(9) << i 
                   << std::fixed << std::setprecision(6)
-                  << " Sdiag=" << Sd << " std=" << std1
-                  << " IPR=" << IPR << " std=" << std2
-                  << " TIMING=" << dt << " S" 
+                  << "  Sdiag=" << Sd << " std=" << std1
+                  << "  IPR=" << IPR << " std=" << std2
+                  << "  TIMING=" << dt << " S" 
                   << std::endl;	      
                t0 = tools::get_time();
             }
@@ -176,10 +176,10 @@ namespace ctns{
             double pop = coeff2[idx]/ovlp;
             if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
-            std::cout << " i=" << i << " " << state
-               << " c_i(exact)=" << std::setw(9) << ci/std::sqrt(ovlp)
+            std::cout << " i=" << i << "  " << state
+               << "  c_i(exact)=" << std::setw(9) << ci/std::sqrt(ovlp)
                << " p_i(exact)=" << pop
-               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << "  p_i(sample)=" << counts[idx]/(1.0*nsample)
                << " counts=" << counts[idx] 
                << std::endl;
          }
@@ -270,8 +270,8 @@ namespace ctns{
             double pop = counts[idx]/(1.0*nsample);
             if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
-            std::cout << " i=" << i << " " << state
-               << " counts=" << counts[idx] 
+            std::cout << " i=" << i << "  " << state
+               << "  counts=" << counts[idx] 
                << " p_i(sample)=" << pop
                << std::endl;
          }
