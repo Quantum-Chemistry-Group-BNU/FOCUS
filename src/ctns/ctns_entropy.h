@@ -159,16 +159,20 @@ namespace ctns{
          auto svalues = get_schmidt_values(icomb, iroot, singlet, debug);
 
          // compute the entropy
-         std::cout << "von Neumann entropies across all bonds:" << std::endl;
-         double s_sum = 0.0;
+         std::cout << "von Neumann / Renyi[0.5] entropies across all bonds:" << std::endl;
+         double s_sum = 0.0, sh_sum = 0.0;
          for(int i=0; i<svalues.size(); i++){
             auto s_val = renyi_entropy(svalues[i], 1.0); // von Neumann entropy
-            s_sum += s_val; 
+            auto sh_val = renyi_entropy(svalues[i], 0.5); // renyi entropy [0.5]
+            s_sum += s_val;
+            sh_sum += sh_val; 
             std::cout << " ibond=" << i 
-               << " SvN=" << std::setprecision(6) << s_val 
+               << " SvN=" << std::setprecision(6) << s_val
+               << " Sr=" << sh_val 
                << std::endl;
          }
-         std::cout << "sum of all = " << s_sum << std::endl;
+         std::cout << "sum of all SvN = " << s_sum 
+            << "  Sr = " << sh_sum << std::endl;
 
          // save into file
          std::cout << "save schdmidt values into file" << std::endl;

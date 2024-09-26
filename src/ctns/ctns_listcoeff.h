@@ -94,13 +94,13 @@ namespace ctns{
          auto sym_state = icomb.get_qsym_state();
          for(int i=0; i<ks; i++){
             if(space.size() == 0) break; // no acceptable state
+            const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
             std::vector<std::pair<statetype, qtensor2<ifab,Tm>>> space_new;
             auto ti = tools::get_time();
 #ifdef SERIAL
             for(int j=0; j<space.size(); j++){
                const auto& state = space[j].first;
                const auto& wf = space[j].second;
-               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                auto qt3 = contract_qt3_qt2("l",site,wf);
                update_space_new(i, sym_state, state, qt3, thresh_cabs, space_new);
             } // j
@@ -113,14 +113,11 @@ namespace ctns{
                for(int j=0; j<space.size(); j++){
                   const auto& state = space[j].first;
                   const auto& wf = space[j].second;
-                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                   auto qt3 = contract_qt3_qt2("l",site,wf);
                   update_space_new(i, sym_state, state, qt3, thresh_cabs, space_local);
                } // j
                #pragma omp critical
-               {
-                  std::copy(space_local.begin(), space_local.end(), std::back_inserter(space_new)); 
-               }
+               std::copy(space_local.begin(), space_local.end(), std::back_inserter(space_new)); 
             }
 #endif
             space = std::move(space_new);
