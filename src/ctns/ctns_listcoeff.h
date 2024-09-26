@@ -89,7 +89,9 @@ namespace ctns{
          space[0] = std::make_pair(state,wf);
 
          // start iteration
-         std::cout << "breadth first search for the configuration tree" << std::endl;
+         std::cout << "breadth first search for the configuration tree:"
+           << " depth=" << ks 
+           << std::endl;
          const auto& rindex = icomb.topo.rindex;
          auto sym_state = icomb.get_qsym_state();
          for(int i=0; i<ks; i++){
@@ -146,7 +148,6 @@ namespace ctns{
                << " psum[accum]=" << psum 
                << std::endl; 
          }
-         std::cout << "psum=" << psum << std::endl;
 
          // save configurations to text file
          if(!saveconfs.empty()){
