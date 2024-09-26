@@ -38,7 +38,7 @@ namespace ctns{
          std::transform(coeffs.begin(), coeffs.end(), coeffs.begin(),
               [](const Tm& x){ return std::norm(x); });
          double IPR = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
-         std::cout << "dim=" << dim << std::setprecision(6) 
+         std::cout << "dim=" << dim << std::scientific << std::setprecision(3) 
             << " ovlp=" << ovlp 
             << " Sdiag(exact)=" << Sdiag
             << " IPR=" << IPR 
@@ -77,7 +77,7 @@ namespace ctns{
          std::transform(coeffs.begin(), coeffs.end(), coeffs.begin(),
               [](const Tm& x){ return std::norm(x); });
          double IPR = std::pow(linalg::xnrm2(dim,&coeffs[0]),2); 
-         std::cout << "dim=" << dim << std::setprecision(6) 
+         std::cout << "dim=" << dim << std::scientific << std::setprecision(3) 
             << " ovlp=" << ovlp 
             << " Sdiag(exact)=" << Sdiag 
             << " IPR=" << IPR 
@@ -136,11 +136,11 @@ namespace ctns{
                double std2 = std::sqrt(std::abs(IPR2-IPR*IPR)/(i+1.e-10)); // use abs in case of small negative value
                auto t1 = tools::get_time();
                double dt = tools::get_duration(t1-t0);
-               std::cout << " i=" << std::setw(9) << i 
-                  << std::fixed << std::setprecision(6)
-                  << "  Sdiag=" << Sd << " std=" << std1
-                  << "  IPR=" << IPR << " std=" << std2
-                  << "  TIMING=" << dt << " S" 
+               std::cout << " i=" << std::setw(8) << i 
+                  << " Sdiag=" << std::scientific << std::setw(10) 
+                  << std::setprecision(3) << Sd << " std=" << std1
+                  << " IPR=" << IPR << " std=" << std2
+                  << " TIMING=" << dt << " S" 
                   << std::endl;	      
                t0 = tools::get_time();
             }
@@ -176,10 +176,11 @@ namespace ctns{
             double pop = coeff2[idx]/ovlp;
             if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
-            std::cout << " i=" << i << "  " << state
-               << "  c_i(exact)=" << std::setw(9) << ci/std::sqrt(ovlp)
+            std::cout << " i=" << i << " state=" << state
+               << " c_i(exact)=" << std::scientific << std::setw(10) 
+               << std::setprecision(3) << ci/std::sqrt(ovlp)
                << " p_i(exact)=" << pop
-               << "  p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
                << " counts=" << counts[idx] 
                << std::endl;
          }
@@ -190,7 +191,7 @@ namespace ctns{
          if(!saveconfs.empty()){
             std::cout << "save to file " << saveconfs << ".txt" << std::endl;
             std::ofstream file(saveconfs+".txt");
-            file << std::fixed << std::setprecision(12);
+            file << std::scientific << std::setprecision(12);
             file << "size= " << size << " psum= " << psum << std::endl;
             for(int i=0; i<size; i++){
                int idx = indx[i];
@@ -270,8 +271,8 @@ namespace ctns{
             double pop = counts[idx]/(1.0*nsample);
             if(pop < pthrd or i >= nprt) break;
             sum += counts[idx];
-            std::cout << " i=" << i << "  " << state
-               << "  counts=" << counts[idx] 
+            std::cout << " i=" << i << " state=" << state
+               << " counts=" << counts[idx] 
                << " p_i(sample)=" << pop
                << std::endl;
          }

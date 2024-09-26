@@ -142,7 +142,7 @@ namespace ctns{
             const auto& coeff = wf(0,0)(0,0);
             psum += std::norm(coeff);
             std::cout << " i=" << i << " state=" << state 
-               << " coeff=" << std::setw(9) << std::fixed << std::setprecision(6) << coeff 
+               << " coeff=" << std::scientific << std::setw(10) << std::setprecision(3) << coeff 
                << " psum[accum]=" << psum 
                << std::endl; 
          }
@@ -152,7 +152,7 @@ namespace ctns{
          if(!saveconfs.empty()){
             std::cout << "save to file " << saveconfs << "_" << "list.txt" << std::endl;
             std::ofstream file(saveconfs+"_list.txt");
-            file << std::fixed << std::setprecision(12);
+            file << std::scientific << std::setprecision(12);
             file << "size= " << space.size() << " psum= " << psum << std::endl;
             for(int i=0; i<space.size(); i++){
                const auto& state = space[i].first;

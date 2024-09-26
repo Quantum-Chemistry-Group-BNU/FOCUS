@@ -167,12 +167,12 @@ namespace ctns{
             s_sum += s_val;
             sh_sum += sh_val; 
             std::cout << " ibond=" << i 
-               << " SvN=" << std::setprecision(6) << s_val
+               << " SvN=" << std::scientific << std::setprecision(3) << s_val
                << " Sr=" << sh_val 
                << std::endl;
          }
-         std::cout << "sum of all SvN = " << s_sum 
-            << "  Sr = " << sh_sum << std::endl;
+         std::cout << "SvN[sum]=" << s_sum 
+            << " Sr[sum]=" << sh_sum << std::endl;
 
          // save into file
          std::cout << "save schdmidt values into file" << std::endl;

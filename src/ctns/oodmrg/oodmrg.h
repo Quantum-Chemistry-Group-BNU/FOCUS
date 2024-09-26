@@ -30,9 +30,9 @@ namespace ctns{
                << " maxiter=" << maxiter 
                << " maxsweep=" << schd.ctns.maxsweep
                << " dcut=" << dcut
-               << " acceptall=" << acceptall
                << " alpha=" << alpha
                << " thrdeps=" << thrdeps 
+               << " acceptall=" << acceptall
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -226,10 +226,10 @@ namespace ctns{
                std::cout << tools::line_separator2 << std::endl;
                std::cout << "OO-DMRG results:"
                   << " iter=" << iter
-                  << " alpha=" << alpha
                   << " dcut=" << dcut
-                  << std::scientific << std::setprecision(2)
-                  << " DE=" << deltaE << " " << status
+                  << " alpha=" << alpha
+                  << " thrdeps=" << thrdeps
+                  << " " << status
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "initial energy of MPS Hii= " 
@@ -238,10 +238,12 @@ namespace ctns{
                   << " Sd= " << sdiag_history[0]
                   << " Sr= " << srenyi_history[0] 
                   << std::endl;
-               std::cout << "  iter accept      enew            emin        deltaE    lowerE"
-                  << "   sdnew    sdiag    srnew    srenyi   |Ui-I|" 
+               std::cout << "  iter accept        enew            emin        deltaE    lowerE"
+                  << "   srnew    srenyi    sdnew    sdiag   |Ui-I|" 
                   << std::endl; 
+               int amoves = 0;
                for(int jter=0; jter<=iter; jter++){
+                  amoves += acceptance[jter];
                   std::cout << std::setw(5) << jter << "    " << acceptance[jter] << "   "
                      << std::fixed << std::setprecision(schd.ctns.outprec) 
                      << enew_history[jter] << " "
@@ -249,13 +251,17 @@ namespace ctns{
                      << std::scientific << std::setprecision(2)
                      << std::setw(9) << (enew_history[jter]-emin_history[jter]) << " " // deltaE
                      << std::setw(9) << (emin_history[jter+1]-emin_history[1]) << " " // loweringE
-                     << std::setw(8) << sdnew_history[jter] << " "
-                     << std::setw(8) << sdiag_history[jter+1] << " "
                      << std::setw(8) << srnew_history[jter] << " "
                      << std::setw(8) << srenyi_history[jter+1] << " "
+                     << std::setw(8) << sdnew_history[jter] << " "
+                     << std::setw(8) << sdiag_history[jter+1] << " "
                      << std::setw(8) << u_history[jter]
                      << std::endl;
                }
+               std::cout << "moves[accepted]=" << amoves 
+                  << " moves[total]=" << iter+1 
+                  << " per=" << amoves/(iter+1.0) 
+                  << std::endl;
                std::cout << tools::line_separator2 << std::endl;
 
                // save the current best results
@@ -263,7 +269,7 @@ namespace ctns{
                   std::string rcanon_file = schd.scratch+"/oo_rcanon_iter"+std::to_string(iter); 
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
-                  urot_min.save_txt("urot", schd.ctns.outprec);
+                  urot_min.save_txt("urot_iter"+std::to_string(iter), schd.ctns.outprec);
                   auto schmidt_file = schd.scratch+"/schmidt_values_iter"+std::to_string(iter);
                   ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
                }
