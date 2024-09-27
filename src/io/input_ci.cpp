@@ -98,6 +98,9 @@ void params_ci::read(ifstream& istrm){
          rdm = true;
          istringstream is(line.substr(3));
          is >> iroot >> jroot;
+      }else if(line.substr(0,4)=="init"){
+         istringstream is(line.substr(4));
+         is >> init;
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -163,4 +166,6 @@ void params_ci::print() const{
    cout << "ifanalysis = " << ifanalysis << endl;
    // rdm
    cout << "rdm = " << rdm << endl;
+   // init
+   cout << "init = " << init << endl;
 }

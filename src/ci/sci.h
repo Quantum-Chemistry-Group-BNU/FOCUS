@@ -3,46 +3,117 @@
 
 #include "fci_util.h"
 #include "sci_util.h"
+#include "../core/binom.h"
 
 namespace sci{
 
-   // prepare intial solution
+   // prepare intial subspace vai aufbau principle
    template <typename Tm>
-      void get_initial(std::vector<double>& es,
-            linalg::matrix<Tm>& vs,
-            fock::onspace& space,
+      void init_aufbau(fock::onspace& space,
             std::unordered_set<fock::onstate>& varSpace,
-            const heatbath_table<Tm>& hbtab, 
             const input::schedule& schd, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore){
-         std::cout << "\nsci::get_initial" << std::endl;
-         // space = {|Di>}
+         const int nroots = schd.ci.nroots;
+         const int ne = schd.nelec;
+         const int tm = schd.twom;
          const int k = int1e.sorb;
-         int ndet = 0;
-         for(const auto& det : schd.ci.det_seeds){
-            // consistency check
-            std::cout << ndet << "-th det: ";
-            for(auto k : det) std::cout << k << " ";
-            std::cout << std::endl;
-            ndet += 1;
-            if(det.size() != schd.nelec){
-               std::cout << "det.size=" << det.size() << " schd.nelec=" << schd.nelec << std::endl;
-               tools::exit("error: det.size is inconsistent with schd.nelec!");
-            }
-            // convert det to onstate
-            fock::onstate state(k); 
-            for(int i : det) state[i] = 1;
-            // check Ms value if necessary
-            if(schd.ci.checkms and state.twom() != schd.twom){
-               std::cout << "error: inconsistent twom:"
-                         << " twom[input]=" << schd.twom
-                         << " twom[det]=" << state.twom() 
-                         << " det=" << state 
-                         << std::endl;
+         const int ks = k/2;
+         std::cout << "\nsci::init_aufbau (k,ne,tm)=" << k << "," << ne << "," << tm 
+            << " checkms=" << schd.ci.checkms << " nroots=" << nroots << std::endl;
+
+         // generate subspace via aufbau principle 
+         int ksmin = 0, kmin = 0;
+         size_t dim = 0;
+         fock::onspace subspace;
+         // determine (ksmin,kmin) first
+         if(!schd.ci.checkms){
+            for(int km=ne; km<k; km++){
+               dim = fock::binom(km,ne);
+               if(dim >= nroots){
+                  kmin = km;
+                  break;
+               }
+            } 
+            if(kmin == 0){
+               std::cout << "error: nroots required exceed the dimension of Hilbert space dim=" << dim << std::endl;
                exit(1);
             }
+            if(kmin%2 == 1) kmin += 1;
+            ksmin = kmin/2;
+            subspace = fock::get_fci_space(kmin, ne);
+         }else{
+            // consider ms constraint
+            int na = (ne+tm)/2;
+            int nb = (ne-tm)/2;
+            int ksta = std::max(std::min(ks-na,na),std::min(ks-nb,nb));
+            for(int km=ksta; km<ks; km++){
+               dim = fock::binom(km,na)*fock::binom(km,nb);
+               if(dim >= nroots){
+                  ksmin = km;
+                  break;
+               }
+            }
+            if(ksmin == 0){
+               std::cout << "error: nroots required exceed the dimension of Hilbert space dim=" << dim << std::endl;
+               exit(1);
+            }
+            kmin = ksmin*2;
+            subspace = fock::get_fci_space(ksmin, na, nb);
+         }
+         dim = subspace.size();
+
+         // construct initial subspace
+         fock::onspace fspace(dim), mspace(nroots);
+         std::vector<double> econf(dim);
+         std::vector<double> enorb(ks);
+         for(int iter=0; iter<2; iter++){
+
+            // ''spatial orbital energy''
+            for(int i=0; i<ks; i++){
+               enorb[i] = std::real(int1e.get(2*i,2*i)+int1e.get(2*i+1,2*i+1))/2.0;
+            }
+            if(iter > 0){
+               // take into account the electron-electron interaction approximately
+               for(int j=0; j<nroots; j++){
+                  std::vector<int> olst;
+                  mspace[j].get_olst(olst);
+                  for(int p=0; p<olst.size(); p++){
+                     for(int i=0; i<ks; i++){
+                        enorb[i] += std::real(int2e.getQ(2*i,olst[p])+int2e.getQ(2*i+1,olst[p]))/(2.0*nroots);
+                     }
+                  }
+               }
+            }
+            auto index = tools::sort_index(enorb);
+            for(int i=0; i<ks; i++){
+               int idx = index[i];
+               std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
+            }
+
+            // map subspace configuration to full space
+            for(size_t i=0; i<dim; i++){
+               fock::onstate state(k);
+               for(int j=0; j<kmin; j++){
+                  int js = j/2, spin_j = j%2;
+                  if(subspace[i][j] == 1) state[2*index[js]+spin_j] = 1;
+               }
+               fspace[i] = state;
+               econf[i] = fock::get_Hii(state, int2e, int1e) + ecore;
+               std::cout << "iter=" << iter << " i=" << i << " state=" << state << " Hii=" << econf[i] << std::endl;
+            }
+
+            auto index2 = tools::sort_index(econf);
+            for(int i=0; i<nroots; i++){
+               mspace[i] = fspace[index2[i]];
+               std::cout << "selected: i=" << i << " state=" << mspace[i] << " econf=" << econf[index2[i]] << std::endl; 
+            }
+         } // iter
+     
+         // save into space
+         for(int i=0; i<nroots; i++){
+            const auto& state = mspace[i];
             // search first
             auto search = varSpace.find(state);
             if(search == varSpace.end()){
@@ -59,6 +130,97 @@ namespace sci{
                }
             }
          }
+      }
+
+   // prepare intial subspace via probalistic methods
+   template <typename Tm>
+      void init_sampling(fock::onspace& space,
+            std::unordered_set<fock::onstate>& varSpace,
+            const input::schedule& schd, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore){
+         const int nroots = schd.ci.nroots;
+         const int ne = schd.nelec;
+         const int tm = schd.twom;
+         const int k = int1e.sorb;
+         const int ks = k/2;
+         std::cout << "\nsci::init_sampling (k,ne,tm)=" << k << "," << ne << "," << tm 
+            << " checkms=" << schd.ci.checkms << " nroots=" << nroots << std::endl;
+
+         exit(1);
+      }
+
+   // prepare intial solution
+   template <typename Tm>
+      void init_ciwf(std::vector<double>& es,
+            linalg::matrix<Tm>& vs,
+            fock::onspace& space,
+            std::unordered_set<fock::onstate>& varSpace,
+            const heatbath_table<Tm>& hbtab, 
+            const input::schedule& schd, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore){
+         std::cout << "\nsci::init_ciwf" << std::endl;
+         // space = {|Di>}
+         const int k = int1e.sorb;
+         int ndet = 0;
+         if(schd.ci.det_seeds.size() > 0){
+
+            // generate initial subspace from input dets
+            for(const auto& det : schd.ci.det_seeds){
+               // consistency check
+               std::cout << ndet << "-th det: ";
+               for(auto iorb : det) std::cout << iorb << " ";
+               std::cout << std::endl;
+               ndet += 1;
+               if(det.size() != schd.nelec){
+                  std::cout << "det.size=" << det.size() << " schd.nelec=" << schd.nelec << std::endl;
+                  tools::exit("error: det.size is inconsistent with schd.nelec!");
+               }
+               // convert det to onstate
+               fock::onstate state(k); 
+               for(int iorb : det) state[iorb] = 1;
+               // check Ms value if necessary
+               if(schd.ci.checkms and state.twom() != schd.twom){
+                  std::cout << "error: inconsistent twom:"
+                            << " twom[input]=" << schd.twom
+                            << " twom[det]=" << state.twom() 
+                            << " det=" << state 
+                            << std::endl;
+                  exit(1);
+               }
+               // search first
+               auto search = varSpace.find(state);
+               if(search == varSpace.end()){
+                  varSpace.insert(state);
+                  space.push_back(state);
+               }
+               // flip determinant 
+               if(schd.ci.flip){
+                  auto state1 = state.flip();
+                  auto search1 = varSpace.find(state1);
+                  if(search1 == varSpace.end()){
+                     space.push_back(state1);
+                     varSpace.insert(state1);
+                  }
+               }
+            }
+
+         }else{
+
+            // generate initial determinants according to integrals
+            if(schd.ci.init == "aufbau"){
+               init_aufbau(space, varSpace, schd, int2e, int1e, ecore);
+            }else if(schd.ci.init == "sampling"){
+               init_sampling(space, varSpace, schd, int2e, int1e, ecore);
+            }else{
+               std::cout << "error: no such option in schd.ci.init=" << schd.ci.init << std::endl;
+               exit(1);
+            }
+
+         }
          // print
          std::cout << "energies for reference states:" << std::endl;
          std::cout << std::defaultfloat << std::setprecision(12);
@@ -74,7 +236,8 @@ namespace sci{
          expand_varSpace(space, varSpace, hbtab, cmax, eps1, schd.ci.flip);
          nsub = space.size();
          // set up initial states
-         if(schd.ci.nroots > nsub) tools::exit("error: subspace is too small in sci::get_initial!");
+         if(schd.ci.nroots > nsub) tools::exit("error: subspace is too small in sci::init_ciwf!");
+         // diagonalize
          linalg::matrix<Tm> H = fock::get_Hmat(space, int2e, int1e, ecore);
          std::vector<double> esol(nsub);
          linalg::matrix<Tm> vsol;
@@ -113,8 +276,7 @@ namespace sci{
          std::vector<double> esol;
          linalg::matrix<Tm> vsol;
          std::unordered_set<fock::onstate> varSpace;
-         get_initial(esol, vsol, space, varSpace, 
-               hbtab, schd, int2e, int1e, ecore);
+         init_ciwf(esol, vsol, space, varSpace, hbtab, schd, int2e, int1e, ecore);
         
          // set up auxilliary data structure   
          sparseH.get_hamiltonian(space, int2e, int1e, ecore, Htype);
@@ -189,12 +351,15 @@ namespace sci{
                break;
             }
          } // iter
+
+         // check final convergence
          if(!ifconv){
             std::cout << "\nsci convergence failure: out of maxiter=" << schd.ci.maxiter 
                << " for threshsold deltaE=" << std::scientific << schd.ci.deltaE
                << std::endl;
          }
          std::cout << std::endl;
+
          // finally save results
          es.resize(neig);
          vs.resize(nsub,neig);

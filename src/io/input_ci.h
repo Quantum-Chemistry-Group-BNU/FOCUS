@@ -21,7 +21,7 @@ namespace input{
                ar & run & nroots & det_seeds & nseeds & flip
                   & eps0 & eps1 & miniter & maxiter & deltaE & checkms
                   & cisolver & maxcycle & crit_v & ifpt2 & eps2 & iroot & jroot
-                  & load & ci_file & cthrd & ifanalysis & rdm;
+                  & load & ci_file & cthrd & ifanalysis & rdm & init;
             }
       public:
          void read(std::ifstream& istrm);
@@ -59,6 +59,8 @@ namespace input{
          bool ifanalysis = false;
          // rdm
          bool rdm = false;
+         // initial
+         std::string init = "";
    };
 
 } // input
