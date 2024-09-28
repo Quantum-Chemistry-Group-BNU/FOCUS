@@ -1,4 +1,5 @@
 dtype 1
+sorb 12
 nelec 5
 integral_file moleinfo/cmole.info 
 scratch ./scratch

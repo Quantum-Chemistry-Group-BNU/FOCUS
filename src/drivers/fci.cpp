@@ -9,11 +9,14 @@ using namespace fock;
 
 template <typename Tm>  
 void FCI(const input::schedule& schd){
+   
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
+   assert(schd.sorb == int1e.sorb);
+   
    // FCI 
    onspace fci_space;
    if(tools::is_complex<Tm>()){
@@ -32,6 +35,7 @@ void FCI(const input::schedule& schd){
    fci::ci_solver(sparseH, es, vs, fci_space, int2e, int1e, ecore);
    fci::ci_save(fci_space, es, vs, ci_file);
    sparseH.dump(schd.scratch+"/sparseH.bin");
+   
    // print the ci vectors
    if(schd.ci.ifanalysis){ 
       for(int i=0; i<nroots; i++){
@@ -42,6 +46,7 @@ void FCI(const input::schedule& schd){
          coeff_population(fci_space, vi, schd.ci.cthrd);
       }
    }
+   
    // rdm
    if(schd.ci.rdm){
       int k = int1e.sorb;

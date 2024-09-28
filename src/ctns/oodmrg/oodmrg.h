@@ -151,7 +151,7 @@ namespace ctns{
             }
 
             // optimization of MPS with new integrals
-            std::string rcfprefix = "oo_";
+            std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
             auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
             if(rank == 0){
                sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
@@ -266,13 +266,13 @@ namespace ctns{
 
                // save the current best results
                if(acceptance[iter]){
-                  auto rcanon_file = schd.scratch+"/oo_"+"rcanon_iter"+std::to_string(iter); 
+                  auto rcanon_file = schd.scratch+"/oo_"+schd.ctns.rcfprefix+"rcanon_iter"+std::to_string(iter); 
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
                   // save to where?
-                  auto urot_file = schd.scratch+"/urot_iter"+std::to_string(iter);
+                  auto urot_file = schd.scratch+"/"+schd.ctns.rcfprefix+"urot_iter"+std::to_string(iter);
                   urot_min.save_txt(urot_file, schd.ctns.outprec);
-                  auto schmidt_file = schd.scratch+"/schmidt_values_iter"+std::to_string(iter);
+                  auto schmidt_file = schd.scratch+"/"+schd.ctns.rcfprefix+"svalues_iter"+std::to_string(iter);
                   ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
                }
             } // rank-0

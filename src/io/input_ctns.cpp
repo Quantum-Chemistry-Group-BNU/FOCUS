@@ -219,6 +219,9 @@ void params_ctns::read(ifstream& istrm){
          ooparams.nptloc = stoi(line.substr(9));
       }else if(line.substr(0,12)=="oo_acceptall"){
          ooparams.acceptall = true;
+      }else if(line.substr(0,9)=="rcfprefix"){
+         istringstream is(line.substr(9));
+         is >> rcfprefix;
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
@@ -329,6 +332,7 @@ void params_ctns::print() const{
             << tmp.noise << endl;
       } // i
    }
+   cout << "rcfprefix = " << rcfprefix << endl;
    // algorithm
    cout << "alg_hvec = " << alg_hvec << endl;
    cout << "alg_hinter = " << alg_hinter << endl;

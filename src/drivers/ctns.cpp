@@ -36,6 +36,7 @@ void CTNS(const input::schedule& schd){
    if(rank == 0){
       // dealing with topology 
       icomb.topo.read(schd.ctns.topology_file);
+      
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
 
@@ -51,12 +52,10 @@ void CTNS(const input::schedule& schd){
             // from a single configurations
             fock::onstate det(schd.ctns.inputconf);
             // consistency check
-            if(det.norb() != icomb.topo.nphysical or
-                  det.nelec() != schd.nelec or
-                  det.twom() != schd.twom){
+            if(det.norb() != schd.sorb/2 or det.nelec() != schd.nelec or det.twom() != schd.twom){
                std::cout << "error: (k,ne,tm)=" << det.norb() << "," << det.nelec() << "," << det.twom()
                   << " of det=" << det << " is inconsistent with input (k,ne,tm)="
-                  << icomb.topo.nphysical << "," << schd.nelec << "," << schd.twom
+                  << schd.sorb/2 << "," << schd.nelec << "," << schd.twom
                   << std::endl;
                exit(1);
             }
@@ -82,12 +81,12 @@ void CTNS(const input::schedule& schd){
                auto ci_file = schd.scratch+"/"+schd.ci.ci_file;	   
                fci::ci_load(sci_space, es, vs, ci_file);
                // consistency check
-               if(sci_space[0].size() != 2*icomb.get_nphysical()){
-                  std::cout << "error: state.size is inconsistent with 2*nphysical in topo:"
-                     << " state.size=" << sci_space[0].size() << " nphysical=" << icomb.get_nphysical()
+               if(sci_space[0].size() != schd.sorb){
+                  std::cout << "error: state.size is inconsistent with sorb:"
+                     << " state.size=" << sci_space[0].size() << " schd.sorb=" << schd.sorb
                      << std::endl;
                   exit(1);  
-               } 
+               }
                // truncate CI coefficients
                ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.maxdets, schd.ctns.rdm_svd,
                      schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
@@ -104,6 +103,7 @@ void CTNS(const input::schedule& schd){
                   integral::one_body<Tm> int1e;
                   double ecore;
                   integral::load(int2e, int1e, ecore, schd.integral_file);
+                  assert(schd.sorb == int1e.sorb);
                   io::create_scratch(schd.scratch);
                   auto Hij_ci = fci::get_Hmat(sci_space, vs, int2e, int1e, ecore);
                   Hij_ci.print("Hij_ci",8);
@@ -134,6 +134,8 @@ void CTNS(const input::schedule& schd){
          }
          ctns::rcanon_load(icomb, rcanon_file);
       }
+
+      assert(schd.sorb == 2*icomb.get_nphysical());
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    } // rank 0
 
@@ -179,13 +181,7 @@ void CTNS(const input::schedule& schd){
       double ecore;
       if(rank == 0){
          integral::load(int2e, int1e, ecore, schd.integral_file);
-         // consistency check
-         if(int1e.sorb != icomb.get_nphysical()*2){
-            std::cout << "error: int1e.sorb is inconsistent with 2*nphysical in topo:"
-               << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
-               << std::endl;
-            exit(1);  
-         }
+         assert(schd.sorb == int1e.sorb);
       }
 #ifndef SERIAL
       if(size > 1){
@@ -212,7 +208,7 @@ void CTNS(const input::schedule& schd){
       }
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
+         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch, schd.ctns.rcfprefix);
       }
       // orbital optimization
       if(schd.ctns.task_oodmrg){
@@ -226,7 +222,7 @@ void CTNS(const input::schedule& schd){
       if(schd.ctns.task_prop.size() > 0){
          const bool is_same = true;
          const int iroot = schd.ctns.iroot; 
-         int k = 2*icomb.get_nphysical();
+         int k = schd.sorb;
          int k2 = k*(k-1)/2;
          linalg::matrix<Tm> rdm1, tdm1, rdm2, tdm2;
          if(tools::is_in_vector(schd.ctns.task_prop,1)){

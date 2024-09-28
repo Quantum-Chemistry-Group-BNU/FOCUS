@@ -24,7 +24,8 @@ void ED(const input::schedule& schd){
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
-   
+   assert(schd.sorb == int1e.sorb);
+
    // ED: define FCI space 
    onspace fci_space;
    if(schd.nelec == -1 and schd.twom == -1){

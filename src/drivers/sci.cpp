@@ -9,11 +9,14 @@ using namespace fock;
 
 template <typename Tm>  
 void SCI(const input::schedule& schd){
+   
    // read integral
    integral::two_body<Tm> int2e;
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
+   assert(schd.sorb == int1e.sorb);
+   
    // SCI
    int nroots = schd.ci.nroots;
    onspace sci_space;
@@ -28,6 +31,7 @@ void SCI(const input::schedule& schd){
       fci::ci_load(sci_space, es, vs, ci_file);
    }
    int dim = sci_space.size();
+   
    // print the ci vectors
    if(schd.ci.ifanalysis){ 
       for(int i=0; i<nroots; i++){
@@ -38,13 +42,7 @@ void SCI(const input::schedule& schd){
          coeff_population(sci_space, vi, schd.ci.cthrd);
       }
    }
-   // pt2 for single root
-   if(schd.ci.ifpt2){
-      int iroot = schd.ci.iroot;
-      assert(iroot < nroots);
-      std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
-      sci::pt2_solver(schd, es[iroot], vi, sci_space, int2e, int1e, ecore);
-   }
+ 
    // rdm
    if(schd.ci.rdm){
       int k = int1e.sorb;
@@ -52,6 +50,14 @@ void SCI(const input::schedule& schd){
       linalg::matrix<Tm> rdm1(k,k), rdm2(k2,k2);
       assert(schd.ci.iroot < nroots and schd.ci.jroot < nroots);
       fci::get_rdm12(sci_space, vs, schd.ci.iroot, schd.ci.jroot, int2e, int1e, ecore, rdm1, rdm2);
+   }
+  
+   // pt2 for single root
+   if(schd.ci.ifpt2){
+      int iroot = schd.ci.iroot;
+      assert(iroot < nroots);
+      std::vector<Tm> vi(vs.col(iroot), vs.col(iroot)+dim);
+      sci::pt2_solver(schd, es[iroot], vi, sci_space, int2e, int1e, ecore);
    }
 }
 

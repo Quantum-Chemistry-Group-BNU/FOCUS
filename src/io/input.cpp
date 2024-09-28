@@ -16,6 +16,7 @@ void schedule::print() const{
    cout << "\n===== schedule::print =====" << endl;
    cout << "scratch = " << scratch << endl;
    cout << "dtype = " << dtype << endl;
+   cout << "sorb  = " << sorb << endl;
    cout << "nelec = " << nelec << endl;
    cout << "twom  = " << twom  << endl;
    cout << "twos  = " << twos  << endl;
@@ -47,6 +48,8 @@ void schedule::read(string fname){
          is >> scratch;
       }else if(line.substr(0,5)=="dtype"){
          dtype = stoi(line.substr(5));
+      }else if(line.substr(0,4)=="sorb"){
+         sorb = stoi(line.substr(4));
       }else if(line.substr(0,5)=="nelec"){
          nelec = stoi(line.substr(5)); // [5,end)
       }else if(line.substr(0,4)=="twom"){

@@ -102,7 +102,8 @@ void RDM(const input::schedule& schd){
    } 
 
    // --- rdms ---
-   int k = 2*icomb.get_nphysical();
+   assert(schd.sorb == 2*icomb.get_nphysical());
+   int k = schd.sorb;
    int k2 = k*(k-1)/2;
    linalg::matrix<Tm> rdm1;
    linalg::matrix<Tm> rdm2;
@@ -230,6 +231,7 @@ void RDM(const input::schedule& schd){
          integral::one_body<Tm> int1e;
          double ecore;
          integral::load(int2e, int1e, ecore, schd.integral_file);
+         assert(schd.sorb == int1e.sorb);
          rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
          auto Sij = rdm1.trace()/Tm(schd.nelec);
          auto Hij = get_etot(rdm2, rdm1, int2e, int1e) + Sij*ecore; 

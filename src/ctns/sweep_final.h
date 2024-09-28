@@ -97,7 +97,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             const int isweep,
-            const std::string rcfprefix=""){
+            const std::string rcfprefix){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();

@@ -89,7 +89,7 @@ namespace input{
                   & task_schmidt & schmidt_file 
                   & restart_sweep & restart_bond & timestamp
                   & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
-                  & nroots & guess & dbranch & maxsweep & maxbond & ctrls
+                  & nroots & guess & dbranch & maxsweep & maxbond & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & notrunc 
                   & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
@@ -126,7 +126,7 @@ namespace input{
          bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS
          std::vector<int> task_prop; // mps properties
          bool task_schmidt = false; // compute schmidt values
-         std::string schmidt_file = "schmidt_values"; 
+         std::string schmidt_file = "svalues"; 
          // restart
          int restart_sweep = 0;
          int restart_bond = 0;
@@ -144,6 +144,7 @@ namespace input{
          int maxsweep = 0;
          int maxbond = -1;
          std::vector<params_sweep> ctrls;
+         std::string rcfprefix = ""; 
          // algorithm
          int alg_hvec = 3;
          int alg_hinter = 0;

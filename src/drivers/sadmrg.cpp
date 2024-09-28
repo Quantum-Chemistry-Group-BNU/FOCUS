@@ -47,12 +47,10 @@ void SADMRG(const input::schedule& schd){
             // from a single configuration
             fock::csfstate csf(schd.ctns.inputconf);
             // consistency check
-            if(csf.norb() != icomb.topo.nphysical or 
-               csf.nelec() != schd.nelec or 
-               csf.twos() != schd.twos){
+            if(csf.norb() != schd.sorb/2 or csf.nelec() != schd.nelec or csf.twos() != schd.twos){
                std::cout << "error: (k,ne,ts)=" << csf.norb() << "," << csf.nelec() << "," << csf.twos()
                  << " of csf=" << csf << " is inconsistent with input (k,ne,ts)=" 
-                 << icomb.topo.nphysical << "," << schd.nelec << "," << schd.twos
+                 << schd.sorb/2 << "," << schd.nelec << "," << schd.twos
                  << std::endl;
                exit(1);
             }
@@ -82,9 +80,9 @@ void SADMRG(const input::schedule& schd){
                   auto ci_file = schd.scratch+"/"+schd.ci.ci_file;	   
                   fci::ci_load(sci_space, es, vs, ci_file);
                   // consistency check
-                  if(sci_space[0].size() != 2*icomb.get_nphysical()){
-                     std::cout << "error: state.size is inconsistent with 2*nphysical in topo:"
-                        << " state.size=" << sci_space[0].size() << " nphysical=" << icomb.get_nphysical()
+                  if(sci_space[0].size() != schd.sorb){
+                     std::cout << "error: state.size is inconsistent with sorb:"
+                        << " state.size=" << sci_space[0].size() << " schd.sorb=" << schd.sorb
                         << std::endl;
                      exit(1);  
                   }
@@ -147,6 +145,7 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_load(icomb, rcanon_file);
       }
 
+      assert(schd.sorb == 2*icomb.get_nphysical());
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
    } // rank 0
 
@@ -211,13 +210,7 @@ void SADMRG(const input::schedule& schd){
       double ecore;
       if(rank == 0){
          integral::load(int2e, int1e, ecore, schd.integral_file);
-         // consistency check
-         if(int1e.sorb != icomb.get_nphysical()*2){
-            std::cout << "error: int1e.sorb is inconsistent with 2*nphysical in topo:"
-               << " sorb=" << int1e.sorb << " nphysical=" << icomb.get_nphysical()
-               << std::endl;
-            exit(1);  
-         }
+         assert(schd.sorb == int1e.sorb);
       }
 #ifndef SERIAL
       if(size > 1){
@@ -244,7 +237,7 @@ void SADMRG(const input::schedule& schd){
       }
       // optimization from current RCF
       if(schd.ctns.task_opt){
-         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch);
+         ctns::sweep_opt(icomb, int2e, int1e, ecore, schd, scratch, schd.ctns.rcfprefix);
       }
       // orbital optimization
       if(schd.ctns.task_oodmrg){
