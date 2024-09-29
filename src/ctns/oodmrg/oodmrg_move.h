@@ -129,7 +129,7 @@ namespace ctns{
 
          // urot = u0*U => U = u0.H()*urot
          auto umove = linalg::xgemm("C","N",u0,urot);
-         double u_dev = deviationFromIdentity(umove);
+         double u_dev = check_identityMatrix(umove);
          if(iprt >= 0){
             std::cout << "\noodmrg_move: |U[move]-I|_F=" 
                << std::scientific << std::setprecision(2) << u_dev 

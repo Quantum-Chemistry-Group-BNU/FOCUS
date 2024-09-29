@@ -99,26 +99,28 @@ namespace ctns{
                }
                // stop just for debug [done it for rank-0]
                if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
-           } // ibond
-           if(debug){
-              auto tf = tools::get_time();
-              sweeps.t_total[isweep] = tools::get_duration(tf-ti);
-              sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
-              sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
-              sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
-              sweeps.summary(isweep, size);
-           }
-           // generate right rcanonical form and save checkpoint file
-           sweep_final(icomb, schd, scratch, isweep, rcfprefix);
-       } // isweep
-       qops_pool.finalize();
+            } // ibond
+            if(debug){
+               auto tf = tools::get_time();
+               sweeps.t_total[isweep] = tools::get_duration(tf-ti);
+               sweeps.t_inter[isweep] = oper_timer.sigma.t_inter_tot + oper_timer.renorm.t_inter_tot;
+               sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
+               sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
+               sweeps.summary(isweep, size);
+            }
+            // generate right rcanonical form and save checkpoint file
+            sweep_final(icomb, schd, scratch, isweep, rcfprefix);
+            // compute Hmat 
+            oper_final(icomb, int2e, int1e, ecore, schd, scratch, qops_pool, isweep);
+         } // isweep
+         qops_pool.finalize();
 
-       if(debug){
-          auto t1 = tools::get_time();
-          tools::timing("ctns::sweep_opt", t0, t1);
-       }
-       return sweeps;
-    }
+         if(debug){
+            auto t1 = tools::get_time();
+            tools::timing("ctns::sweep_opt", t0, t1);
+         }
+         return sweeps;
+      }
 
 } // ctns
 

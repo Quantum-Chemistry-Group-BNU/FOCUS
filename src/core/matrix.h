@@ -588,7 +588,7 @@ namespace linalg{
 
    // deviation from identity
    template <typename Tm>
-      double deviationFromIdentity(const linalg::matrix<Tm>& U){
+      double check_identityMatrix(const linalg::matrix<Tm>& U){
          assert(U.rows() == U.cols());
          size_t n = U.rows();
          auto dev = U - identity_matrix<Tm>(n);

@@ -9,9 +9,9 @@
 
 namespace ctns{
 
-   // Hij = <CTNS[i]|H|CTNS[j]>
+   // Hij = <CTNS[i]|H|CTNS[j]> at the left boundary
    template <typename Qm, typename Tm>
-      linalg::matrix<Tm> get_Hmat(const comb<Qm,Tm>& icomb, 
+      linalg::matrix<Tm> get_Hmat_boundary(const comb<Qm,Tm>& icomb, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore,
@@ -22,18 +22,13 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif   
-
-         // build operators for environement
-         oper_env_right(icomb, int2e, int1e, schd, scratch);
-
-         // load operators from file
+         // load operators at (0,0) from file
          qoper_dict<Qm::ifabelian,Tm> qops;
          auto p = std::make_pair(0,0); 
          auto fname = oper_fname(scratch, p, "r");
          oper_load(schd.ctns.iomode, fname, qops, (rank==0));
          auto Hmat = qops('H')[0].to_matrix();
-         if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition
-         
+         if(rank == 0) Hmat += ecore*linalg::identity_matrix<Tm>(Hmat.rows()); // avoid repetition    
          // deal with rwfuns(istate,ibas): Hij = w*[i,a] H[a,b] w[j,b] = (w^* H w^T)
          auto wfmat = icomb.get_wf2().to_matrix();
          auto tmp = linalg::xgemm("N","T",Hmat,wfmat);
@@ -44,6 +39,81 @@ namespace ctns{
             mpi_wrapper::allreduce(icomb.world, Hmat.data(), Hmat.size());
          }
 #endif 
+         return Hmat;
+      }
+
+   // Hij = <CTNS[i]|H|CTNS[j]> [full construction]
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> get_Hmat(const comb<Qm,Tm>& icomb, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore,
+            const input::schedule& schd,
+            const std::string scratch){
+         // build operators for environement
+         oper_env_right(icomb, int2e, int1e, schd, scratch);
+         // Hij at the boundary
+         auto Hmat = get_Hmat_boundary(icomb, int2e, int1e, ecore, schd, scratch);
+         return Hmat;
+      }
+
+   template <typename Qm, typename Tm>
+      linalg::matrix<Tm> oper_final(const comb<Qm,Tm>& icomb, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore,
+            const input::schedule& schd,
+            const std::string scratch,
+            qoper_pool<Qm::ifabelian,Tm>& qops_pool,
+            const int isweep){
+         int size = 1, rank = 0;
+#ifndef SERIAL
+         size = icomb.world.size();
+         rank = icomb.world.rank();
+#endif   
+         const bool debug = (rank==0);
+         if(debug){
+            std::cout << "\nctns::oper_final - build Hmat for RCF at isweep=" << isweep << std::endl;
+         }
+
+         // c-R0-[R1]-... & c-[R0]-R1-...
+         std::vector<comb_coord> plst = {std::make_pair(1,0),std::make_pair(0,0)};
+         for(const auto& p : plst){ 
+            if(debug) std::cout << "\ncoord=" << p << std::endl;
+
+            // a. get operators from memory / disk    
+            std::vector<std::string> fneed(2);
+            fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
+            fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
+            qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
+            const auto& cqops = qops_pool.at(fneed[0]);
+            const auto& rqops = qops_pool.at(fneed[1]);
+            if(debug && schd.ctns.verbose>0){
+               cqops.print("cqops");
+               rqops.print("rqops");
+            }
+
+            // b. perform renormalization for superblock {|cr>}
+            std::string frop = oper_fname(scratch, p, "r");
+            std::string superblock = "cr";
+            std::string fname;
+            dot_timing timing_local;
+            oper_renorm(superblock, icomb, p, int2e, int1e, schd,
+                  cqops, rqops, qops_pool[frop], fname, timing_local);
+
+            // c. save operators to disk
+            qops_pool.join_and_erase(fneed);
+            qops_pool.save_to_disk(frop, schd.ctns.async_save);
+         }
+         
+         // Hij at the boundary
+         auto Hmat = get_Hmat_boundary(icomb, int2e, int1e, ecore, schd, scratch);
+         if(debug){
+            std::cout << std::endl;
+            Hmat.print("Hmat_isweep"+std::to_string(isweep), schd.ctns.outprec);
+            std::cout << std::endl;
+         }
+
          return Hmat;
       }
 

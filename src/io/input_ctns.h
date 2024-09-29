@@ -19,7 +19,7 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt 
-                  & thrdloc & thrddwt & thrdeps & nptloc & acceptall;
+                  & thrdloc & thrddwt & thrdeps & nptloc & acceptall & urot;
             }
        public:
          inline void print() const{
@@ -36,6 +36,7 @@ namespace input{
             std::cout << " thrdeps=" << thrdeps << std::endl;
             std::cout << " nptloc=" << nptloc << std::endl;
             std::cout << " acceptall=" << acceptall << std::endl;
+            std::cout << " urot=" << urot << std::endl;
          }
       public:
          int iprt = 1;
@@ -49,7 +50,8 @@ namespace input{
          double thrddwt = 1.0;
          double thrdeps = 1.e-8;
          double nptloc = 20;
-         bool acceptall = false; 
+         bool acceptall = false;
+         std::string urot = ""; 
    };
 
    // sweep

@@ -47,9 +47,16 @@ namespace ctns{
          std::vector<double> srenyi_history(maxiter+1,0);
          std::vector<double> u_history(maxiter);
          std::vector<bool> acceptance(maxiter);
-         auto urot_min = linalg::identity_matrix<Tm>(norb);
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
+         // urot_min 
+         linalg::matrix<Tm> urot_min(norb,norb);
+         if(schd.ctns.ooparams.urot.empty()){
+            urot_min = linalg::identity_matrix<Tm>(norb);
+         }else{
+            urot_min.load_txt(schd.scratch+"/"+schd.ctns.ooparams.urot);
+         }
+         assert(linalg::check_orthogonality(urot_min) < 1.e-8);
 
          //----------------------------------------------
          // Debug rotation

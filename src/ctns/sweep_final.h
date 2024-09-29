@@ -143,8 +143,6 @@ namespace ctns{
             boost::mpi::broadcast(icomb.world, icomb.rwfuns, 0);
          } 
 #endif
-
-         if(rank == 0) std::cout << "..... end of isweep = " << isweep << " .....\n" << std::endl;
       }
 
 } // ctns

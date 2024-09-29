@@ -515,7 +515,12 @@
       - support su2 case
    - cumulant measure
 
- * Good guess for SCI?
+ * More on SCI guess and sweep initialization:
+   - current program support loading icomb with more roots than current required,
+     which is enabled by the resize operation in sweep_init. This is useful in 
+     challenging cases such as n2/R=5ang/oao, where we can use more roots in SCI 
+     and a small Dcut DMRG.
+   
    - 包括H50怎么初始化呢？AFM？
    - FeMoCo不同初始化策略，产生不同guess，然后筛选？
 
