@@ -114,7 +114,7 @@ namespace input{
       public:
          bool run = false;
          std::string qkind;
-         std::string topology_file = "TOPOLOGY";
+         std::string topology_file = "";
          // debug level
          int verbose = 0;
          // task

@@ -39,6 +39,7 @@ namespace fock{
          }
       }
 
+   // iop=1: (N,Sz) 
    template <typename Tm>	
       void coeff_population(const onspace& space, 
             const std::vector<Tm>& civec,
@@ -51,7 +52,7 @@ namespace fock{
             << std::endl;
          if(iop == 0){
 
-            std::cout << "  i-th  /  idx  /  coeff  /  pop  /  rank  /  onstate  /  nelec" << std::endl;
+            std::cout << "  i-th  /  idx  /  coeff  /  pop(%)  /  rank  /  onstate  /  nelec" << std::endl;
             double ne = 0.0, ne2 = 0.0;
             double pi, psum0 = 0.0, psum = 0.0, Sd = 0.0;
             std::vector<int> idx;
@@ -67,7 +68,7 @@ namespace fock{
                   std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
                   std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
-                  std::cout << std::fixed << std::setw(6) << std::setprecision(3) << pi*100;
+                  std::cout << std::fixed << std::setw(8) << std::setprecision(3) << pi*100;
                   std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
                      << "  " << space[i].to_string() << " (" << space[i].nelec() << ")"
                      << std::endl;
@@ -81,7 +82,7 @@ namespace fock{
 
          }else if(iop == 1){
 
-            std::cout << "  i-th  /  idx  /  coeff  /  pop  /  rank  /  seniority  /  onstate  /  nelec" << std::endl;
+            std::cout << "  i-th  /  idx  /  coeff  /  pop(%)  /  rank  /  seniority  /  onstate  /  nelec" << std::endl;
             double ne = 0.0, na = 0.0, nb = 0.0;
             double ne2 = 0.0, na2 = 0.0, nb2 = 0.0;
             double pi, psum0 = 0.0, psum = 0.0, Sd = 0.0;
@@ -100,7 +101,7 @@ namespace fock{
                   std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
                   std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
-                  std::cout << std::fixed << std::setw(6) << std::setprecision(3) << pi*100;
+                  std::cout << std::fixed << std::setw(8) << std::setprecision(3) << pi*100;
                   std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
                      << std::fixed << std::setw(3) << space[i].norb_single() << "  "
                      << space[i] << " ("

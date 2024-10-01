@@ -14,7 +14,8 @@ namespace sci{
             const input::schedule& schd, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
-            const double ecore){
+            const double ecore,
+            const bool debug=true){
          const int nroots = schd.ci.nroots;
          const int ne = schd.nelec;
          const int tm = schd.twom;
@@ -89,7 +90,7 @@ namespace sci{
             auto index = tools::sort_index(enorb);
             for(int i=0; i<ks; i++){
                int idx = index[i];
-               std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
+               if(debug) std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
             }
 
             // map subspace configuration to full space
@@ -101,35 +102,35 @@ namespace sci{
                }
                fspace[i] = state;
                econf[i] = fock::get_Hii(state, int2e, int1e) + ecore;
-               std::cout << "iter=" << iter << " i=" << i << " state=" << state << " Hii=" << econf[i] << std::endl;
+               if(debug) std::cout << "iter=" << iter << " i=" << i << " state=" << state << " econf=" << econf[i] << std::endl;
             }
 
             auto index2 = tools::sort_index(econf);
             for(int i=0; i<nroots; i++){
                mspace[i] = fspace[index2[i]];
-               std::cout << "selected: i=" << i << " state=" << mspace[i] << " econf=" << econf[index2[i]] << std::endl; 
+               if(debug) std::cout << "selected: i=" << i << " state=" << mspace[i] << " econf=" << econf[index2[i]] << std::endl; 
             }
-         } // iter
      
-         // save into space
-         for(int i=0; i<nroots; i++){
-            const auto& state = mspace[i];
-            // search first
-            auto search = varSpace.find(state);
-            if(search == varSpace.end()){
-               varSpace.insert(state);
-               space.push_back(state);
-            }
-            // flip determinant 
-            if(schd.ci.flip){
-               auto state1 = state.flip();
-               auto search1 = varSpace.find(state1);
-               if(search1 == varSpace.end()){
-                  space.push_back(state1);
-                  varSpace.insert(state1);
+            // take the union of the lowest energy states
+            for(int i=0; i<nroots; i++){
+               const auto& state = mspace[i];
+               // search first
+               auto search = varSpace.find(state);
+               if(search == varSpace.end()){
+                  varSpace.insert(state);
+                  space.push_back(state);
+               }
+               // flip determinant 
+               if(schd.ci.flip){
+                  auto state1 = state.flip();
+                  auto search1 = varSpace.find(state1);
+                  if(search1 == varSpace.end()){
+                     space.push_back(state1);
+                     varSpace.insert(state1);
+                  }
                }
             }
-         }
+         } // iter
       }
 
    // prepare intial subspace via probalistic methods
@@ -139,7 +140,8 @@ namespace sci{
             const input::schedule& schd, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
-            const double ecore){
+            const double ecore,
+            const bool debug=true){
          const int nroots = schd.ci.nroots;
          const int ne = schd.nelec;
          const int tm = schd.twom;
@@ -147,6 +149,18 @@ namespace sci{
          const int ks = k/2;
          std::cout << "\nsci::init_sampling (k,ne,tm)=" << k << "," << ne << "," << tm 
             << " checkms=" << schd.ci.checkms << " nroots=" << nroots << std::endl;
+
+         // generate subspace via aufbau principle 
+         std::vector<double> enorb(ks);
+         // ''spatial orbital energy''
+         for(int i=0; i<ks; i++){
+            enorb[i] = std::real(int1e.get(2*i,2*i)+int1e.get(2*i+1,2*i+1))/2.0;
+         }
+         auto index = tools::sort_index(enorb);
+         for(int i=0; i<ks; i++){
+            int idx = index[i];
+            if(debug) std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
+         }
 
          exit(1);
       }
@@ -162,7 +176,9 @@ namespace sci{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore){
-         std::cout << "\nsci::init_ciwf" << std::endl;
+         std::cout << "\nsci::init_ciwf schd.ci.init=" << schd.ci.init << std::endl;
+         auto t0 = tools::get_time();
+         
          // space = {|Di>}
          const int k = int1e.sorb;
          int ndet = 0;
@@ -222,14 +238,15 @@ namespace sci{
 
          }
          // print
-         std::cout << "energies for reference states:" << std::endl;
-         std::cout << std::defaultfloat << std::setprecision(12);
+         std::cout << "energies for reference confs:" << std::endl;
+         std::cout << std::fixed << std::setprecision(12);
          int nsub = space.size();
          for(int i=0; i<nsub; i++){
             std::cout << "i = " << i << " state = " << space[i]
                << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
                << std::endl;
          }
+         
          // selected CISD space
          double eps1 = schd.ci.eps0;
          std::vector<double> cmax(nsub,1.0);
@@ -249,10 +266,12 @@ namespace sci{
          linalg::xcopy(neig, esol.data(), es.data());
          linalg::xcopy(nsub*neig, vsol.data(), vs.data());
          // print
-         std::cout << std::setprecision(12);
+         std::cout << std::fixed << std::setprecision(12);
          for(int i=0; i<neig; i++){
             std::cout << "i = " << i << " e = " << es[i] << std::endl; 
          }
+         auto t1 = tools::get_time();
+         tools::timing("sci::init_ciwf", t0, t1);
       }
 
    // selected CI procedure
@@ -333,7 +352,7 @@ namespace sci{
                   << " eps1=" << std::scientific << std::setprecision(3) << schd.ci.eps1[iter]
                   << " nsub=" << nsub 
                   << " i=" << i 
-                  << " e=" << std::defaultfloat << std::setprecision(12) << esol1[i] 
+                  << " e=" << std::fixed << std::setprecision(12) << esol1[i] 
                   << " de=" << std::scientific << std::setprecision(3) << esol1[i]-esol[i] 
                   << " conv=" << conv[i] 
                   << " SvN=" << SvN

@@ -44,40 +44,7 @@ std::vector<int> topology::get_image1() const{
    return image1;
 }
 
-// topology
-void topology::read(const string& fname, const bool debug){
-   if(debug){
-      cout << "\nctns::topology::read fname=" << fname << endl;
-   }
-
-   ifstream istrm(fname);
-   if(!istrm){
-      cout << "failed to open " << fname << '\n';
-      exit(1);
-   }
-   // load topo from file
-   vector<vector<int>> orbsgrid;
-   vector<string> v;
-   string line;
-   while(!istrm.eof()){
-      line.clear();	    
-      getline(istrm,line);
-      if(line.empty() || line[0]=='#') continue;
-      if(debug) cout << line << endl;
-      boost::trim_left(line); // in case there is a space 
-      boost::split(v,line,boost::is_any_of(","),boost::token_compress_on);
-      vector<int> branch;
-      for(auto s : v){
-         branch.push_back(stoi(s));
-      }
-      orbsgrid.push_back(branch);
-   }
-   istrm.close();
-   // consistency check
-   if(orbsgrid[0].size() != 1 || orbsgrid[orbsgrid.size()-1].size() != 1){
-      tools::exit("error: we assume the start and end nodes are leaves!");
-   }
-
+void topology::parse_orbsgrid(const vector<vector<int>>& orbsgrid){
    // initialize topo structure: type & neighbor of each site
    nbackbone = orbsgrid.size();
    nphysical = 0;
@@ -219,6 +186,53 @@ void topology::read(const string& fname, const bool debug){
       image2[2*i] = 2*order[i];
       image2[2*i+1] = 2*order[i]+1;
    }
+}
+
+// topology
+void topology::read(const string& fname, const bool debug){
+   if(debug) cout << "\nctns::topology::read fname=" << fname << endl;
+
+   ifstream istrm(fname);
+   if(!istrm){
+      cout << "failed to open " << fname << '\n';
+      exit(1);
+   }
+   // load topo from file
+   vector<vector<int>> orbsgrid;
+   vector<string> v;
+   string line;
+   while(!istrm.eof()){
+      line.clear();	    
+      getline(istrm,line);
+      if(line.empty() || line[0]=='#') continue;
+      if(debug) cout << line << endl;
+      boost::trim_left(line); // in case there is a space 
+      boost::split(v,line,boost::is_any_of(","),boost::token_compress_on);
+      vector<int> branch;
+      for(auto s : v){
+         branch.push_back(stoi(s));
+      }
+      orbsgrid.push_back(branch);
+   }
+   istrm.close();
+   // consistency check
+   if(orbsgrid[0].size() != 1 || orbsgrid[orbsgrid.size()-1].size() != 1){
+      tools::exit("error: we assume the start and end nodes are leaves!");
+   }
+
+   parse_orbsgrid(orbsgrid);
+}
+
+void topology::gen1d(const int norb, const bool debug){
+   if(debug) cout << "\nctns::topology::gen1d norb=" << norb << endl;
+
+   vector<vector<int>> orbsgrid(norb);
+   for(int i=0; i<norb; i++){
+      orbsgrid[i].resize(1);
+      orbsgrid[i][0] = i;
+   }
+
+   parse_orbsgrid(orbsgrid);
 }
 
 void topology::print() const{

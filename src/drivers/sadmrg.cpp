@@ -37,7 +37,11 @@ void SADMRG(const input::schedule& schd){
    // convert from SCI or load from files
    if(rank == 0){
       // dealing with topology 
-      icomb.topo.read(schd.ctns.topology_file);
+      if(!schd.ctns.topology_file.empty()){
+         icomb.topo.read(schd.ctns.topology_file);
+      }else{
+         icomb.topo.gen1d(schd.sorb/2);
+      }
       icomb.topo.print();
       if(schd.ctns.restart_sweep == 0){
 

@@ -218,5 +218,58 @@ With the same input as that for ``fci.x``, performing SCI calculation leads to t
    Check: I,J=0,0 H(I,J)=-3.236066267492
    save matrix into fname = rdm1.0.0.txt
    save matrix into fname = rdm2.0.0.txt
-   ----- TIMING FOR fci:get_rdm12 : 1.769e-02 S -----
-   
+   ----- TIMING FOR fci:get_rdm12 : 1.769e-02 S -----  
+
+Initialization
+--------------
+
+Initialize from input dets
+
+.. code-block::
+   :emphasize-lines: 2,3,4 
+
+   $ci
+   dets
+   0 1 2 3 24 25 26 27 28 29 32 33 34 35
+   end
+   checkms
+   nroots 10
+   schedule
+   0 1.e-3
+   end
+   eps0 1.e-1
+   maxiter 3
+   $end
+
+Initialize from aufbau principle
+
+.. code-block::
+   :emphasize-lines: 2
+
+   $ci
+   init aufbau
+   checkms
+   nroots 10
+   schedule
+   0 1.e-3
+   end
+   eps0 1.e-1
+   maxiter 3
+   $end
+
+Initialize from random sampling
+
+.. code-block::
+   :emphasize-lines: 2
+
+   $ci
+   init sampling
+   checkms
+   nroots 10
+   schedule
+   0 1.e-3
+   end
+   eps0 1.e-1
+   maxiter 3
+   $end
+

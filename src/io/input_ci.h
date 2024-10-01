@@ -55,7 +55,7 @@ namespace input{
          bool load = false;
          std::string ci_file = "ci.info"; 
          // print
-         double cthrd = 1.e-2;
+         double cthrd = 1.e-1;
          bool ifanalysis = false;
          // rdm
          bool rdm = false;

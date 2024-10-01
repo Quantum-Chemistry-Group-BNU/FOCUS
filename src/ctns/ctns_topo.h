@@ -97,7 +97,9 @@ namespace ctns{
             }
       public:
          topology(){};
-         void read(const std::string& topology_file, const bool debug=true); 
+         void parse_orbsgrid(const std::vector<std::vector<int>>& orbsgrid); 
+         void read(const std::string& topology_file, const bool debug=true);
+         void gen1d(const int norb, const bool debug=true);
          void print() const;
          std::vector<int> get_image1() const;
          // helpers
