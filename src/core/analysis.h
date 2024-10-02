@@ -69,7 +69,7 @@ namespace fock{
                   std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
                   std::cout << std::fixed << std::setw(8) << std::setprecision(3) << pi*100;
-                  std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
+                  std::cout << std::fixed << std::setw(5) << space[i].diff_num(space[idx[0]])/2
                      << "  " << space[i].to_string() << " (" << space[i].nelec() << ")"
                      << std::endl;
                   psum += pi;
@@ -102,8 +102,8 @@ namespace fock{
                   std::cout << std::fixed << std::scientific << std::setprecision(3) 
                      << std::showpos << civec[i] << std::noshowpos;
                   std::cout << std::fixed << std::setw(8) << std::setprecision(3) << pi*100;
-                  std::cout << std::fixed << std::setw(3) << space[i].diff_num(space[idx[0]])/2
-                     << std::fixed << std::setw(3) << space[i].norb_single() << "  "
+                  std::cout << std::fixed << std::setw(5) << space[i].diff_num(space[idx[0]])/2
+                     << std::fixed << std::setw(5) << space[i].norb_single() << "  "
                      << space[i] << " ("
                      << space[i].nelec() << ","
                      << space[i].nelec_a() << ","

@@ -98,9 +98,10 @@ void params_ci::read(ifstream& istrm){
          rdm = true;
          istringstream is(line.substr(3));
          is >> iroot >> jroot;
-      }else if(line.substr(0,4)=="init"){
-         istringstream is(line.substr(4));
-         is >> init;
+      }else if(line.substr(0,11)=="init_aufbau"){
+         init_aufbau = true;
+      }else if(line.substr(0,14)=="init_seniority"){
+         init_seniority = true;
       }else{
          tools::exit("error: no matching key! line = "+line);
       }
@@ -167,5 +168,6 @@ void params_ci::print() const{
    // rdm
    cout << "rdm = " << rdm << endl;
    // init
-   cout << "init = " << init << endl;
+   cout << "init_aufbau = " << init_aufbau << endl;
+   cout << "init_seniority = " << init_seniority << endl;
 }

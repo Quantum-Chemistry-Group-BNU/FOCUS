@@ -48,7 +48,7 @@
    - fe2s2
    - fe4s4
    - fe8s7
-   - femoco
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
 ### 2025 DMRG + QC ###
 

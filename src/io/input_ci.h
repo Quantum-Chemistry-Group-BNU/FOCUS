@@ -19,9 +19,11 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & run & nroots & det_seeds & nseeds & flip
+                  & init_aufbau & init_seniority
                   & eps0 & eps1 & miniter & maxiter & deltaE & checkms
                   & cisolver & maxcycle & crit_v & ifpt2 & eps2 & iroot & jroot
-                  & load & ci_file & cthrd & ifanalysis & rdm & init;
+                  & load & ci_file & cthrd & ifanalysis 
+                  & rdm; 
             }
       public:
          void read(std::ifstream& istrm);
@@ -33,6 +35,8 @@ namespace input{
          std::set<std::set<int>> det_seeds;
          int nseeds = 0;
          bool flip = false;
+         bool init_aufbau = false;
+         bool init_seniority = false;
          // selection threshold |HAI*CI|>eps for initial guess
          double eps0 = 1.e-2;
          // selection threshold |HAI*CI|>eps for iteration in SCI
@@ -59,8 +63,6 @@ namespace input{
          bool ifanalysis = false;
          // rdm
          bool rdm = false;
-         // initial
-         std::string init = "";
    };
 
 } // input

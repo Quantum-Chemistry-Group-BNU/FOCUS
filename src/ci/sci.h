@@ -1,11 +1,96 @@
 #ifndef SCI_H
 #define SCI_H
 
+#include <algorithm>
 #include "fci_util.h"
 #include "sci_util.h"
 #include "../core/binom.h"
 
 namespace sci{
+
+   template <typename Tm>
+      void gen_subspace(const fock::onspace subspace,
+            fock::onspace& space,
+            std::unordered_set<fock::onstate>& varSpace,
+            const input::schedule& schd, 
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore,
+            const bool debug){
+         const int nroots = schd.ci.nroots;
+         const int ne = schd.nelec;
+         const int tm = schd.twom;
+         const int k = int1e.sorb;
+         const int ks = k/2;
+         // construct initial subspace
+         size_t dim = subspace.size();
+         fock::onspace fspace(dim), mspace(nroots);
+         std::vector<double> econf(dim);
+         std::vector<double> enorb(ks);
+         for(int iter=0; iter<2; iter++){
+
+            // ''spatial orbital energy''
+            for(int i=0; i<ks; i++){
+               enorb[i] = std::real(int1e.get(2*i,2*i)+int1e.get(2*i+1,2*i+1))/2.0;
+            }
+            if(iter > 0){
+               // take into account the electron-electron interaction approximately
+               for(int j=0; j<nroots; j++){
+                  std::vector<int> olst;
+                  mspace[j].get_olst(olst);
+                  for(int p=0; p<olst.size(); p++){
+                     for(int i=0; i<ks; i++){
+                        enorb[i] += std::real(int2e.getQ(2*i,olst[p])+int2e.getQ(2*i+1,olst[p]))/(2.0*nroots);
+                     }
+                  }
+               }
+            }
+            auto index = tools::sort_index(enorb);
+            for(int i=0; i<ks; i++){
+               int idx = index[i];
+               if(debug) std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
+            }
+
+            // map subspace configuration to full space
+            for(size_t i=0; i<dim; i++){
+               const auto& state0 = subspace[i]; 
+               fock::onstate state(k);
+               for(int j=0; j<state0.size(); j++){
+                  int js = j/2, spin_j = j%2;
+                  if(state0[j] == 1) state[2*index[js]+spin_j] = 1;
+               }
+               fspace[i] = state;
+               econf[i] = fock::get_Hii(state, int2e, int1e) + ecore;
+               if(debug) std::cout << "iter=" << iter << " i=" << i << " state=" << state << " econf=" << econf[i] << std::endl;
+            }
+
+            auto index2 = tools::sort_index(econf);
+            for(int i=0; i<nroots; i++){
+               mspace[i] = fspace[index2[i]];
+               if(debug) std::cout << "selected: i=" << i << " state=" << mspace[i] << " econf=" << econf[index2[i]] << std::endl; 
+            }
+         } // iter
+     
+         // take the lowest energy states
+         for(int i=0; i<nroots; i++){
+            const auto& state = mspace[i];
+            // search first
+            auto search = varSpace.find(state);
+            if(search == varSpace.end()){
+               varSpace.insert(state);
+               space.push_back(state);
+            }
+            // flip determinant 
+            if(schd.ci.flip){
+               auto state1 = state.flip();
+               auto search1 = varSpace.find(state1);
+               if(search1 == varSpace.end()){
+                  space.push_back(state1);
+                  varSpace.insert(state1);
+               }
+            }
+         }
+      }
 
    // prepare intial subspace vai aufbau principle
    template <typename Tm>
@@ -15,7 +100,7 @@ namespace sci{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore,
-            const bool debug=true){
+            const bool debug=false){
          const int nroots = schd.ci.nroots;
          const int ne = schd.nelec;
          const int tm = schd.twom;
@@ -25,10 +110,10 @@ namespace sci{
             << " checkms=" << schd.ci.checkms << " nroots=" << nroots << std::endl;
 
          // generate subspace via aufbau principle 
-         int ksmin = 0, kmin = 0;
-         size_t dim = 0;
          fock::onspace subspace;
          // determine (ksmin,kmin) first
+         int ksmin = 0, kmin = 0;
+         size_t dim = 0;
          if(!schd.ci.checkms){
             for(int km=ne; km<k; km++){
                dim = fock::binom(km,ne);
@@ -63,106 +148,90 @@ namespace sci{
             kmin = ksmin*2;
             subspace = fock::get_fci_space(ksmin, na, nb);
          }
-         dim = subspace.size();
 
-         // construct initial subspace
-         fock::onspace fspace(dim), mspace(nroots);
-         std::vector<double> econf(dim);
-         std::vector<double> enorb(ks);
-         for(int iter=0; iter<2; iter++){
-
-            // ''spatial orbital energy''
-            for(int i=0; i<ks; i++){
-               enorb[i] = std::real(int1e.get(2*i,2*i)+int1e.get(2*i+1,2*i+1))/2.0;
-            }
-            if(iter > 0){
-               // take into account the electron-electron interaction approximately
-               for(int j=0; j<nroots; j++){
-                  std::vector<int> olst;
-                  mspace[j].get_olst(olst);
-                  for(int p=0; p<olst.size(); p++){
-                     for(int i=0; i<ks; i++){
-                        enorb[i] += std::real(int2e.getQ(2*i,olst[p])+int2e.getQ(2*i+1,olst[p]))/(2.0*nroots);
-                     }
-                  }
-               }
-            }
-            auto index = tools::sort_index(enorb);
-            for(int i=0; i<ks; i++){
-               int idx = index[i];
-               if(debug) std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
-            }
-
-            // map subspace configuration to full space
-            for(size_t i=0; i<dim; i++){
-               fock::onstate state(k);
-               for(int j=0; j<kmin; j++){
-                  int js = j/2, spin_j = j%2;
-                  if(subspace[i][j] == 1) state[2*index[js]+spin_j] = 1;
-               }
-               fspace[i] = state;
-               econf[i] = fock::get_Hii(state, int2e, int1e) + ecore;
-               if(debug) std::cout << "iter=" << iter << " i=" << i << " state=" << state << " econf=" << econf[i] << std::endl;
-            }
-
-            auto index2 = tools::sort_index(econf);
-            for(int i=0; i<nroots; i++){
-               mspace[i] = fspace[index2[i]];
-               if(debug) std::cout << "selected: i=" << i << " state=" << mspace[i] << " econf=" << econf[index2[i]] << std::endl; 
-            }
-     
-            // take the union of the lowest energy states
-            for(int i=0; i<nroots; i++){
-               const auto& state = mspace[i];
-               // search first
-               auto search = varSpace.find(state);
-               if(search == varSpace.end()){
-                  varSpace.insert(state);
-                  space.push_back(state);
-               }
-               // flip determinant 
-               if(schd.ci.flip){
-                  auto state1 = state.flip();
-                  auto search1 = varSpace.find(state1);
-                  if(search1 == varSpace.end()){
-                     space.push_back(state1);
-                     varSpace.insert(state1);
-                  }
-               }
-            }
-         } // iter
+         gen_subspace(subspace, space, varSpace, schd, int2e, int1e, ecore, debug);
       }
 
-   // prepare intial subspace via probalistic methods
+   // seniority-based initialization
    template <typename Tm>
-      void init_sampling(fock::onspace& space,
+      void init_seniority(fock::onspace& space,
             std::unordered_set<fock::onstate>& varSpace,
             const input::schedule& schd, 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore,
-            const bool debug=true){
+            const bool debug=false){
          const int nroots = schd.ci.nroots;
          const int ne = schd.nelec;
          const int tm = schd.twom;
          const int k = int1e.sorb;
          const int ks = k/2;
-         std::cout << "\nsci::init_sampling (k,ne,tm)=" << k << "," << ne << "," << tm 
+         std::cout << "\nsci::init_seniority (k,ne,tm)=" << k << "," << ne << "," << tm 
             << " checkms=" << schd.ci.checkms << " nroots=" << nroots << std::endl;
 
-         // generate subspace via aufbau principle 
-         std::vector<double> enorb(ks);
-         // ''spatial orbital energy''
-         for(int i=0; i<ks; i++){
-            enorb[i] = std::real(int1e.get(2*i,2*i)+int1e.get(2*i+1,2*i+1))/2.0;
-         }
-         auto index = tools::sort_index(enorb);
-         for(int i=0; i<ks; i++){
-            int idx = index[i];
-            if(debug) std::cout << "i=" << i << " idx=" << idx << " enorb=" << std::setprecision(8) << enorb[idx] << std::endl;
+         // setup initial dets by seniority
+         fock::onspace subspace;
+         int na = (ne+tm)/2;
+         int nb = (ne-tm)/2;
+         int nc_max = std::min(na,nb);
+         for(int nc=0; nc<=nc_max; nc++){
+            int ns_a = na - nc;
+            int ns_b = nb - nc;
+            int ns = ns_a + ns_b; // no. of singly occupied orbitals;
+            if(nc + ns > ks) continue;
+            if(debug) std::cout << "nc=" << nc << " ns=" << ns << " nsa,nsb=" << ns_a << "," << ns_b << std::endl;
+            // generate singly occupied parts following onspace.cpp
+            int idx = 0;
+            fock::onspace space_single;
+            // construct initial s
+            std::string s(ns,'0');
+            int jab = std::min(ns_a,ns_b);
+            for(int j=0; j<jab; j++){
+               s[2*j] = 'a';
+               s[2*j+1] = 'b'; 
+            }
+            if(ns_a >= ns_b){
+               for(int j=jab; j<ns_a; j++){
+                  s[jab+j] = 'a';
+               }
+            }else{
+               for(int j=jab; j<ns_a; j++){
+                  s[jab+j] = 'b';
+               }
+            }
+            if(ns > 0){
+               do{
+                  space_single.push_back( fock::onstate(s).flip() ); 
+                  idx += 1;
+                  if(idx > nroots) break;
+               }while(std::next_permutation(s.begin(), s.end()));
+            }else{
+               space_single.push_back(s);
+            }
+            // setup onstate
+            for(int i=0; i<space_single.size(); i++){
+               const auto& state_single = space_single[i];
+               fock::onstate state(k);
+               // closed-shell part
+               for(int j=0; j<nc; j++){
+                  state[2*j] = 1;
+                  state[2*j+1] = 1;
+               }
+               // open-shell part
+               for(int j=0; j<ns; j++){
+                  if(state_single[2*j]) state[2*(nc+j)] = 1;
+                  if(state_single[2*j+1]) state[2*(nc+j)+1] = 1;
+               }
+               subspace.push_back(state);
+               if(debug){
+                  std::cout << " i=" << i << " state_single=" << state_single
+                     << " state=" << state 
+                     << std::endl;
+               }
+            }
          }
 
-         exit(1);
+         gen_subspace(subspace, space, varSpace, schd, int2e, int1e, ecore, debug);
       }
 
    // prepare intial solution
@@ -176,67 +245,58 @@ namespace sci{
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore){
-         std::cout << "\nsci::init_ciwf schd.ci.init=" << schd.ci.init << std::endl;
+         std::cout << "\nsci::init_ciwf"
+            << " det_seeds=" << schd.ci.det_seeds.size()
+            << " aufbau=" << schd.ci.init_aufbau
+            << " seniority=" << schd.ci.init_seniority
+            << std::endl;
          auto t0 = tools::get_time();
          
          // space = {|Di>}
          const int k = int1e.sorb;
+         // generate initial subspace from input dets
          int ndet = 0;
-         if(schd.ci.det_seeds.size() > 0){
-
-            // generate initial subspace from input dets
-            for(const auto& det : schd.ci.det_seeds){
-               // consistency check
-               std::cout << ndet << "-th det: ";
-               for(auto iorb : det) std::cout << iorb << " ";
-               std::cout << std::endl;
-               ndet += 1;
-               if(det.size() != schd.nelec){
-                  std::cout << "det.size=" << det.size() << " schd.nelec=" << schd.nelec << std::endl;
-                  tools::exit("error: det.size is inconsistent with schd.nelec!");
-               }
-               // convert det to onstate
-               fock::onstate state(k); 
-               for(int iorb : det) state[iorb] = 1;
-               // check Ms value if necessary
-               if(schd.ci.checkms and state.twom() != schd.twom){
-                  std::cout << "error: inconsistent twom:"
-                            << " twom[input]=" << schd.twom
-                            << " twom[det]=" << state.twom() 
-                            << " det=" << state 
-                            << std::endl;
-                  exit(1);
-               }
-               // search first
-               auto search = varSpace.find(state);
-               if(search == varSpace.end()){
-                  varSpace.insert(state);
-                  space.push_back(state);
-               }
-               // flip determinant 
-               if(schd.ci.flip){
-                  auto state1 = state.flip();
-                  auto search1 = varSpace.find(state1);
-                  if(search1 == varSpace.end()){
-                     space.push_back(state1);
-                     varSpace.insert(state1);
-                  }
-               }
+         for(const auto& det : schd.ci.det_seeds){
+            // consistency check
+            std::cout << ndet << "-th det: ";
+            for(auto iorb : det) std::cout << iorb << " ";
+            std::cout << std::endl;
+            ndet += 1;
+            if(det.size() != schd.nelec){
+               std::cout << "det.size=" << det.size() << " schd.nelec=" << schd.nelec << std::endl;
+               tools::exit("error: det.size is inconsistent with schd.nelec!");
             }
-
-         }else{
-
-            // generate initial determinants according to integrals
-            if(schd.ci.init == "aufbau"){
-               init_aufbau(space, varSpace, schd, int2e, int1e, ecore);
-            }else if(schd.ci.init == "sampling"){
-               init_sampling(space, varSpace, schd, int2e, int1e, ecore);
-            }else{
-               std::cout << "error: no such option in schd.ci.init=" << schd.ci.init << std::endl;
+            // convert det to onstate
+            fock::onstate state(k); 
+            for(int iorb : det) state[iorb] = 1;
+            // check Ms value if necessary
+            if(schd.ci.checkms and state.twom() != schd.twom){
+               std::cout << "error: inconsistent twom:"
+                         << " twom[input]=" << schd.twom
+                         << " twom[det]=" << state.twom() 
+                         << " det=" << state 
+                         << std::endl;
                exit(1);
             }
-
+            // search first
+            auto search = varSpace.find(state);
+            if(search == varSpace.end()){
+               varSpace.insert(state);
+               space.push_back(state);
+            }
+            // flip determinant 
+            if(schd.ci.flip){
+               auto state1 = state.flip();
+               auto search1 = varSpace.find(state1);
+               if(search1 == varSpace.end()){
+                  space.push_back(state1);
+                  varSpace.insert(state1);
+               }
+            }
          }
+         // generate initial determinants according to integrals
+         if(schd.ci.init_aufbau) init_aufbau(space, varSpace, schd, int2e, int1e, ecore);
+         if(schd.ci.init_seniority) init_seniority(space, varSpace, schd, int2e, int1e, ecore);
          // print
          std::cout << "energies for reference confs:" << std::endl;
          std::cout << std::fixed << std::setprecision(12);
@@ -357,6 +417,7 @@ namespace sci{
                   << " conv=" << conv[i] 
                   << " SvN=" << SvN
                   << std::endl;
+               fock::coeff_population(space, vtmp, schd.ci.cthrd);
                fock::coeff_analysis(vtmp);
                if(i != neig-1) std::cout << std::endl;
             }
