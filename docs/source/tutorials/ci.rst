@@ -247,7 +247,7 @@ Initialize from aufbau principle
    :emphasize-lines: 2
 
    $ci
-   init aufbau
+   init_aufbau
    checkms
    nroots 10
    schedule
@@ -257,13 +257,33 @@ Initialize from aufbau principle
    maxiter 3
    $end
 
-Initialize from random sampling
+Initialize from a few dets from all possible seniorities (or no. of closed-shell dets)
 
 .. code-block::
    :emphasize-lines: 2
 
    $ci
-   init sampling
+   init_seniority
+   checkms
+   nroots 10
+   schedule
+   0 1.e-3
+   end
+   eps0 1.e-1
+   maxiter 3
+   $end
+
+Note that these strategies can be combined together, which will generate the union of different dets.
+
+.. code-block::
+   :emphasize-lines: 2,3,4 
+
+   $ci
+   dets
+   0 1 2 3 24 25 26 27 28 29 32 33 34 35
+   end
+   init_aufbau
+   init_seniority
    checkms
    nroots 10
    schedule
