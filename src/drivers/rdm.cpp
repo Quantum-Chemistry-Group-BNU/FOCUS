@@ -69,11 +69,10 @@ void RDM(const input::schedule& schd){
 
    // display task_prop
    if(rank == 0){
-      std::map<int,std::string> tasks = {{0,"overlap"},{1,"rdm1"},{2,"rdm2"}};
       std::cout << "\n" << tools::line_separator2 << std::endl;
       std::cout << "task_prop:";
       for(const auto& key : schd.ctns.task_prop){
-         std::cout << " " << tasks.at(key);
+         std::cout << " " << key;
       }
       std::cout << "   is_same=" << is_same << std::endl;
       std::cout << " MPS1:"
@@ -93,7 +92,7 @@ void RDM(const input::schedule& schd){
    const double thresh = 1.e-6;
 
    // 0: overlap
-   if(tools::is_in_vector(schd.ctns.task_prop,0)){
+   if(tools::is_in_vector(schd.ctns.task_prop,"ova")){
       if(rank == 0){
          auto Sij = get_Smat(icomb, icomb2);
          std::cout << std::endl;
@@ -109,7 +108,7 @@ void RDM(const input::schedule& schd){
    linalg::matrix<Tm> rdm2;
 
    // 1: rdm1 
-   if(tools::is_in_vector(schd.ctns.task_prop,1)){
+   if(tools::is_in_vector(schd.ctns.task_prop,"1p1h")){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0));
@@ -128,7 +127,7 @@ void RDM(const input::schedule& schd){
 
       // compute rdm1 
       rdm1.resize(k,k); 
-      ctns::rdm_sweep(1, is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
+      ctns::rdm_sweep("1p1h", is_same, icomb, icomb2, schd, scratch, rdm1, tdm1);
 
       if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm1)=" << tdm1.normF() << std::endl;
@@ -163,7 +162,7 @@ void RDM(const input::schedule& schd){
    } // rdm1
 
    // 2: rdm2
-   if(tools::is_in_vector(schd.ctns.task_prop,2)){
+   if(tools::is_in_vector(schd.ctns.task_prop,"2p2h")){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0));
@@ -182,7 +181,7 @@ void RDM(const input::schedule& schd){
          
       // compute rdm2
       rdm2.resize(k2,k2);
-      ctns::rdm_sweep(2, is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
+      ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm2, tdm2);
 
       if(schd.ctns.debug_rdm and rank == 0){
          std::cout << "nrm2(tdm2)=" << tdm2.normF() << std::endl;

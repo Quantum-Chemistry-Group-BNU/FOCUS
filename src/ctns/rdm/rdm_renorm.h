@@ -91,40 +91,12 @@ namespace ctns{
          }
          // RDMs:
          qops.ifhermi = is_same;
-         if(order == 1){ 
-            if(is_same){
-               // icomb = icomb2
-               if(superblock == "cr"){
-                  qops.oplist = "I";
-               }else if(superblock == "lc"){
-                  qops.oplist = "IC";
-               }
-            }else{
-               // icomb != icomb2
-               if(superblock == "cr"){
-                  qops.oplist = "I";
-               }else if(superblock == "lc"){
-                  qops.oplist = "ICD";
-               }
-            }
+         if(order == 0){
+            qops.oplist = "I";
+         }else if(order == 1){
+            qops.oplist = is_same? "IC" : "ICD";
          }else if(order == 2){
-            if(is_same){
-               // icomb = icomb2
-               if(superblock == "cr"){
-                  // Note that in the partition scheme, the right block contains only "C" operator.
-                  // see the generation of patterns.
-                  qops.oplist = "IC";
-               }else if(superblock == "lc"){
-                  qops.oplist = "ICAB";
-               }
-            }else{
-               // icomb != icomb2
-               if(superblock == "cr"){
-                  qops.oplist = "ICD";
-               }else if(superblock == "lc"){
-                  qops.oplist = "ICABDM";
-               }
-            }
+            qops.oplist = is_same? "ICAB" : "ICABDM";
          }else{
             std::cout << "error: rdm_renorm does not support order=" << order << std::endl;
             exit(1);

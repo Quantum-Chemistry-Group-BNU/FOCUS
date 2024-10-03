@@ -132,7 +132,8 @@ namespace ctns{
 
    // build right environment operators
    template <typename Qm, typename Tm>
-      void rdm_env_right(const int order,
+      void rdm_env_right(const int ns_max,
+            const int ne_max,
             const bool is_same,
             const comb<Qm,Tm>& icomb,
             const comb<Qm,Tm>& icomb2, 
@@ -147,13 +148,13 @@ namespace ctns{
          const bool debug = (rank==0);
          if(debug){ 
             std::cout << "\nctns::rdm_env_right qkind=" << qkind::get_name<Qm>() 
-               << " order=" << order << std::endl;
+               << " (ns_max,ne_max)=" << ns_max << "," << ne_max << std::endl;
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
         
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
-         rdm_init_dotCR(order, is_same, icomb, scratch, iomode);
+         rdm_init_dotCR(ns_max, is_same, icomb, scratch, iomode);
          auto ta = tools::get_time();
          t_init = tools::get_duration(ta-t0);
 
@@ -190,7 +191,6 @@ namespace ctns{
 
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, p, "r");
-               std::string superblock = "cr";
                std::string fname;
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
                   + std::to_string(idx) + ".txt";
@@ -198,7 +198,7 @@ namespace ctns{
                if(debug && schd.ctns.save_mmtask){
                   fmmtask =  "rmmtasks_idx"+std::to_string(idx);
                }
-               rdm_renorm(order, superblock, is_same, icomb, icomb2, p, schd,
+               rdm_renorm(ne_max, "cr", is_same, icomb, icomb2, p, schd,
                      cqops, rqops, qops_pool[frop], fname, timing, fmmtask);
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
@@ -206,7 +206,6 @@ namespace ctns{
 
                // c. save operators to disk
                qops_pool.join_and_erase(fneed);
-               icomb.world.barrier();
                qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);

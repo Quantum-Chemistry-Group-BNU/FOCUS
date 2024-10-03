@@ -13,7 +13,7 @@
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void rdm_sweep(const int order,
+      void rdm_sweep(const std::string rdmtype,
             const bool is_same,
             const comb<Qm,Tm>& combi,
             const comb<Qm,Tm>& combj,
@@ -33,13 +33,22 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         // "2p2h" [C++ string count from left]
+         // Using ASCII value subtraction
+         int ncre = rdmtype[0]-'0';
+         int nann = rdmtype[2]-'0';
+         int ntot = ncre+nann;
+         int ns_max = ntot/2;
+         int ne_max = (ntot-1)/2;
          const bool ifab = Qm::ifabelian;
          const int alg_rdm = schd.ctns.alg_rdm;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank==0); 
          if(debug){ 
             std::cout << "\nctns::rdm_sweep"
-               << " order=" << order
+               << " rdmtype=" << rdmtype
+               << " (ncre,nann)=" << ncre << "," << nann
+               << " (ns_max,ne_max)=" << ns_max << "," << ne_max
                << " ifab=" << ifab
                << " alg_rdm=" << alg_rdm
                << " alg_renorm=" << alg_renorm
@@ -50,20 +59,23 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          // assemble RDM by sweep
-         auto tpatterns = all_type_patterns(order, is_same);
-         auto fpatterns = all_first_type_patterns(order, is_same);
-         auto lpatterns = all_last_type_patterns(order, is_same);
+         auto tpatterns = all_type_patterns(ncre, nann, is_same);
+         auto fpatterns = all_first_type_patterns(ncre, nann, is_same);
+         auto lpatterns = all_last_type_patterns(ncre, nann, is_same);
          if(rank == 0){
             display_patterns(tpatterns, "tpatterns");
             display_patterns(fpatterns, "fpatterns");
             display_patterns(lpatterns, "lpatterns");
          }
+         exit(1); 
+         
+         const int order = 1;
 
          // prepare environments {C,D} [both are required for icomb != icomb2]
-         rdm_env_right(order, is_same, icomb, icomb2, schd, scratch);
+         rdm_env_right(ns_max, ne_max, is_same, icomb, icomb2, schd, scratch);
 
          // build operators on the left dot
-         rdm_init_dotL(order, is_same, icomb, schd, scratch);
+         rdm_init_dotL(ns_max, is_same, icomb, schd, scratch);
 
          // initialization of single MPS
          sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
@@ -84,13 +96,8 @@ namespace ctns{
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
             int isite = dbond.p0.first;
-            assert(dbond.forward);
-            std::string superblock;
-            if(dbond.forward){
-               superblock = dbond.is_cturn()? "lr" : "lc";
-            }else{
-               superblock = "cr";
-            }
+            assert(dbond.forward); // always forward in construction of RDMs
+            std::string superblock = dbond.is_cturn()? "lr" : "lc";
             if(debug){
                std::cout << "\nibond=" << ibond << "/seqsize=" << sweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
@@ -175,7 +182,7 @@ namespace ctns{
             }else if(isite == icomb.get_nphysical()-2){
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(allpatterns));
             }
-            rdm_assemble(order, is_same, icomb, qops_dict, wf3bra, wf3ket,
+            rdm_assemble(is_same, icomb, qops_dict, wf3bra, wf3ket,
                     allpatterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();
 
@@ -223,17 +230,21 @@ namespace ctns{
                icomb2.sites[pdx] = rotket.split_lc(wf3ket.info.qrow, wf3ket.info.qmid);
                // renorm operators
                qops_pool.clear_from_memory({fneed[1]}, fneed_next);
-               rdm_renorm(order, "lc", is_same, icomb, icomb2, p, schd,
+               rdm_renorm(ns_max, "lc", is_same, icomb, icomb2, p, schd,
                      lqops, cqops, qops, fname, timing, fmmtask);
+            /*
             }else if(superblock == "cr"){
                icomb.sites[pdx] = rotbra.split_cr(wf3bra.info.qmid, wf3bra.info.qcol);
                icomb2.sites[pdx] = rotket.split_cr(wf3ket.info.qmid, wf3ket.info.qcol);
                // renorm operators
                qops_pool.clear_from_memory({fneed[0]}, fneed_next);
-               rdm_renorm(order, "cr", is_same, icomb, icomb2, p, schd,
+               rdm_renorm(ne_max, "cr", is_same, icomb, icomb2, p, schd,
                      cqops, rqops, qops, fname, timing, fmmtask);
             }else{
                tools::exit("error: superblock=lr is not supported yet!");
+            */
+            }else{
+               tools::exit("error: superblock must be 'lc' in RDM sweep!");
             }
             timing.tf = tools::get_time();
 

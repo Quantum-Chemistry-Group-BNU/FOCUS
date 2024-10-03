@@ -126,7 +126,7 @@ namespace input{
          bool task_vmc = false; 
          bool task_expand = false; // expand into FCI vectors
          bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS
-         std::vector<int> task_prop; // mps properties
+         std::vector<std::string> task_prop; // mps properties
          bool task_schmidt = false; // compute schmidt values
          std::string schmidt_file = "svalues"; 
          // restart

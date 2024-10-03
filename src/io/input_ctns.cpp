@@ -60,9 +60,9 @@ void params_ctns::read(ifstream& istrm){
          is >> schmidt_file;
       }else if(line.substr(0,9)=="task_prop"){
          istringstream is(line.substr(9));
-         int number;
-         while (is >> number) {
-            task_prop.push_back(number);
+         std::string property;
+         while (is >> property){
+            task_prop.push_back(property);
          }
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));

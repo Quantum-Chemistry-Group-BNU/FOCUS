@@ -228,14 +228,14 @@ void CTNS(const input::schedule& schd){
          int k = schd.sorb;
          int k2 = k*(k-1)/2;
          linalg::matrix<Tm> rdm1, tdm1, rdm2, tdm2;
-         if(tools::is_in_vector(schd.ctns.task_prop,1)){
+         if(tools::is_in_vector(schd.ctns.task_prop,"1p1h")){
             rdm1.resize(k, k);
-            ctns::rdm_sweep(1, is_same, icomb, icomb, schd, scratch, rdm1, tdm1);
+            ctns::rdm_sweep("1p1h", is_same, icomb, icomb, schd, scratch, rdm1, tdm1);
 
          }
-         if(tools::is_in_vector(schd.ctns.task_prop,2)){
+         if(tools::is_in_vector(schd.ctns.task_prop,"2p2h")){
             rdm2.resize(k2, k2);
-            ctns::rdm_sweep(2, is_same, icomb, icomb, schd, scratch, rdm2, tdm2);
+            ctns::rdm_sweep("2p2h", is_same, icomb, icomb, schd, scratch, rdm2, tdm2);
             if(rank == 0){
                rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
                auto Sij = rdm1.trace()/Tm(schd.nelec);

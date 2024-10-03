@@ -3,39 +3,54 @@
 
 namespace ctns{
 
-   // N-RDM: order=N
-   
-   // Number Patterns: follows J. Chem. Theory Comput. 2016, 12, 1583−1591
-   inline std::vector<std::tuple<int,int,int>> number_patterns(const int order){
+   // Number Patterns: generalization of J. Chem. Theory Comput. 2016, 12, 1583−1591 for npmh
+   // example: (nsystem,ndot,nenvironment)
+   // 1 - 0,1,0 
+   // 2 - 1,1,0
+   // 3 - 1,1,1
+   // 4 - 2,1,1
+   // 5 - 2,1,2
+   // In this construction, we always have ns_max >= ne_max
+   std::pair<int,int> get_nsnemax(const int ntot){
+      int ns_max = ntot/2;
+      int ne_max = (ntot-1)/2;
+      return std::make_pair(ns_max,ne_max);
+   }
+
+   inline std::vector<std::tuple<int,int,int>> number_patterns(const int ntot){
+      auto pr = get_nsnemax(ntot);
+      int ns_max = pr.first, ne_max = pr.second;
       std::vector<std::tuple<int,int,int>> patterns;
-      for(int ns=0; ns<=order; ns++){
-         for(int ne=0; ne<=order-1; ne++){
+      for(int ns=0; ns<=ns_max; ns++){
+         for(int ne=0; ne<=ne_max; ne++){
             for(int nd=1; nd<=4; nd++){
-               if(ns + nd + ne == 2*order){
-                  patterns.push_back(std::make_tuple(ns,nd,ne));
-               }
-            }
-         }
-      }
+               if(ns + nd + ne == ntot) patterns.push_back(std::make_tuple(ns,nd,ne));
+            } // nd
+         } // ne
+      } // ns 
       return patterns;
    }
 
-   inline std::vector<std::tuple<int,int,int>> first_number_patterns(const int order){
+   inline std::vector<std::tuple<int,int,int>> first_number_patterns(const int ntot){
+      auto pr = get_nsnemax(ntot);
+      int ns_max = pr.first, ne_max = pr.second;
       std::vector<std::tuple<int,int,int>> patterns;
-      for(int ns=order+1; ns<=std::min(4,2*order); ns++){
+      for(int ns=ns_max+1; ns<=std::min(4,ntot); ns++){
          for(int nd=0; nd<=4; nd++){
-            int ne = 2*order - ns - nd;
+            int ne = ntot - ns - nd;
             if(ne >= 0) patterns.push_back(std::make_tuple(ns,nd,ne));
          }
       }
       return patterns;
    }
 
-   inline std::vector<std::tuple<int,int,int>> last_number_patterns(const int order){
+   inline std::vector<std::tuple<int,int,int>> last_number_patterns(const int ntot){
+      auto pr = get_nsnemax(ntot);
+      int ns_max = pr.first, ne_max = pr.second;
       std::vector<std::tuple<int,int,int>> patterns;
-      for(int ne=order; ne<=std::min(4,2*order); ne++){
+      for(int ne=ne_max+1; ne<=std::min(4,ntot); ne++){
          for(int nd=0; nd<=4; nd++){
-            int ns = 2*order - ne - nd;
+            int ns = ntot - ne - nd;
             if(ns >= 0) patterns.push_back(std::make_tuple(ns,nd,ne));
          }
       }
@@ -217,6 +232,8 @@ namespace ctns{
    }
 
    // is_same = false: B is fully constructed, which is sufficient for all 2-TDMs
+   // In the TDM case, 211:-+|+|- <l|p1p2+|l'> is the same as -<l|p2+p1|l'> (p1!=p2), thus
+   // it will be produce the same TDM as 211:+-|+|-. Hence, this pattern can be skipped.
    inline std::vector<type_pattern> remove_minusplus(const std::vector<type_pattern>& tpatterns){
       std::vector<type_pattern> tpatterns_new;
       for(int i=0; i<tpatterns.size(); i++){
@@ -227,41 +244,42 @@ namespace ctns{
       return tpatterns_new;
    }
 
-   inline std::vector<type_pattern> all_type_patterns(const int order,
+   inline std::vector<type_pattern> all_type_patterns(const int ncre, const int nann,
          const bool is_same){
       std::vector<type_pattern> tpatterns;
-      auto patterns = number_patterns(order);
+      auto patterns = number_patterns(ncre+nann);
       for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, "c");
+         std::cout << std::get<0>(pt) << "|" << std::get<1>(pt) << "|" << std::get<2>(pt) << std::endl;
+         auto tps = gen_type_patterns(pt, ncre, nann, "c");
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
-      if(is_same) tpatterns = remove_hermitian(tpatterns);
+      if(is_same and ncre==nann) tpatterns = remove_hermitian(tpatterns);
       if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }
 
-   inline std::vector<type_pattern> all_first_type_patterns(const int order,
+   inline std::vector<type_pattern> all_first_type_patterns(const int ncre, const int nann,
          const bool is_same){
       std::vector<type_pattern> tpatterns;
-      auto patterns = first_number_patterns(order);
+      auto patterns = first_number_patterns(ncre+nann);
       for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, "lc");
+         auto tps = gen_type_patterns(pt, ncre, nann, "lc");
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
-      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      if(is_same and ncre==nann) tpatterns = remove_hermitian(tpatterns); 
       if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }
 
-   inline std::vector<type_pattern> all_last_type_patterns(const int order,
+   inline std::vector<type_pattern> all_last_type_patterns(const int ncre, const int nann,
          const bool is_same){
       std::vector<type_pattern> tpatterns;
-      auto patterns = last_number_patterns(order);
+      auto patterns = last_number_patterns(ncre+nann);
       for(const auto& pt : patterns){
-         auto tps = gen_type_patterns(pt, order, order, "cr");
+         auto tps = gen_type_patterns(pt, ncre, nann, "cr");
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }
-      if(is_same) tpatterns = remove_hermitian(tpatterns); 
+      if(is_same and ncre==nann) tpatterns = remove_hermitian(tpatterns); 
       if(!is_same) tpatterns = remove_minusplus(tpatterns); 
       return tpatterns;
    }

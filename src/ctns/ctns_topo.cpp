@@ -352,6 +352,7 @@ vector<directed_bond> topology::get_sweeps(const bool ifboundary, const bool deb
    return sweeps;
 }
 
+// forward
 vector<directed_bond> topology::get_mps_rdmsweeps(const bool debug) const{
    if(debug) cout << "\nctns::topology::get_mps_rdmsweeps" << endl;
    assert(nbackbone == nphysical);

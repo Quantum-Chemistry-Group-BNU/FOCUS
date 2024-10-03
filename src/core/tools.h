@@ -81,8 +81,8 @@ std::vector<Tm> combine_vector(const std::vector<Tm>& v1,
    return v12;
 }
 
-template <typename Tm>
-bool is_in_vector(const std::vector<Tm>& v, const Tm key){
+template <typename Tm, typename Km>
+bool is_in_vector(const std::vector<Tm>& v, const Km key){
    auto it = std::find(v.begin(), v.end(), key);
    return (it != v.end());
 }
