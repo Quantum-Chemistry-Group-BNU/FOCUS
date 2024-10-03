@@ -67,9 +67,6 @@ namespace ctns{
             display_patterns(fpatterns, "fpatterns");
             display_patterns(lpatterns, "lpatterns");
          }
-         exit(1); 
-         
-         const int order = 1;
 
          // prepare environments {C,D} [both are required for icomb != icomb2]
          rdm_env_right(ns_max, ne_max, is_same, icomb, icomb2, schd, scratch);

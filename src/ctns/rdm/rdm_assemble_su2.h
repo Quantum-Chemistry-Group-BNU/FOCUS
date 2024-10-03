@@ -4,8 +4,7 @@
 namespace ctns{
 
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      void rdm_assemble(const int order,
-            const bool is_same,
+      void rdm_assemble(const bool is_same,
             const comb<Qm,Tm>& icomb,
             const qoper_dictmap<Qm::ifabelian,Tm>& qops_dict, 
             const qtensor3<Qm::ifabelian,Tm>& wf3bra,
@@ -25,7 +24,6 @@ namespace ctns{
          const bool debug = (rank==0); 
          if(debug){ 
             std::cout << "ctns::rdm_assemble(su2)"
-               << " order=" << order
                << " ifab=" << ifab
                << " alg_rdm=" << alg_rdm
                << std::endl;
