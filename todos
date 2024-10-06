@@ -43,8 +43,9 @@
 ### 2025 DMRG + QC ###
 
  * Disentangle transformation:
-   - Python implementation
-   - Generate circuit for quantum computer
+   - Combined with LEOs 
+   - Python implementation for preparation of MPS [linear combination of CSF]
+   - Generate practical circuits for quantum computers
 
 ### TODOs: more functionalities ###
 
@@ -58,7 +59,7 @@
 
 ### TODOs: better performance ###
 
- * Decimation for su2 is not parallelized yet
+ * Decimation for su2 is not parallelized (using MPI) yet
 
  * Decimation on GPU?
    - cuSolver: svd
@@ -70,7 +71,7 @@
    - GPU memory is a problem
 
  * Real space parallelization (=> More GPU/DCU) [!!!]
-   - No really useful for pratical applications except for large-scale benchmark
+   - No really useful for pratical applications except for large-scale benchmark?
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]

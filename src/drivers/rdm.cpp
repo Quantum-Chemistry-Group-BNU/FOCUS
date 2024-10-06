@@ -260,34 +260,40 @@ void RDM(const input::schedule& schd){
       linalg::matrix<Tm> rdm(k,1);
       linalg::matrix<Tm> tdm;
       ctns::rdm_sweep("1p0h", false, icomb, icomb2, schd, scratch, rdm, tdm);
-
+      // debug this case
       if(schd.ctns.debug_rdm){
          linalg::matrix<Tm> rdm1tmp(k,k), rdm1tmp2(k,k), rdmtmp(k,1);
          // <psi|i+j|psi2> = <psi|i+(j|psi2>)
          ctns::rdm_sweep("1p1h", is_same, icomb, icomb2, schd, scratch, rdm1tmp, tdm);
+         auto image1 = icomb2.topo.get_image1();
          for(int j=0; j<k; j++){
             int kj = j/2, spin_j = j%2;
             auto icomb2_j = apply_opC(icomb2, kj, spin_j, 0); // j|psi2>
-       
+            /* 
             std::cout << std::endl; 
             std::cout << tools::line_separator2 << std::endl;
             std::cout << "LZD: j=" << j << " " << icomb.get_qsym_state() << " : "
                << icomb2_j.get_qsym_state()
                << std::endl;
             std::cout << tools::line_separator2 << std::endl;
+            */
             ctns::rdm_sweep("1p0h", false, icomb, icomb2_j, schd, scratch, rdmtmp, tdm);
+            /*
             rdmtmp.print("rdmtmp_"+std::to_string(j));
             rdm1tmp.print("rdm1tmp");
             std::cout << tools::line_separator2 << std::endl;
-
-            linalg::xcopy(k, rdmtmp.data(), rdm1tmp2.col(j));
+            */
+            int pj = 2*image1[kj] + spin_j; // map to the orbital index
+            linalg::xcopy(k, rdmtmp.data(), rdm1tmp2.col(pj));
          }
+         /*
          rdm1tmp.print("rdm1tmp");
          rdm1tmp2.print("rdm1tmp2");
+         */
          auto rdm1diff = rdm1tmp2 - rdm1tmp;
-         std::cout << "|rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
+         std::cout << "debug 1p0h via rdm1: |rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
             << " |rdm1-rdm1b|=" << rdm1diff.normF() << std::endl;
-         exit(1);
+         assert(rdm1diff.normF() < thresh);
       }
    }
 
@@ -299,35 +305,41 @@ void RDM(const input::schedule& schd){
       linalg::matrix<Tm> rdm(1,k);
       linalg::matrix<Tm> tdm;
       ctns::rdm_sweep("0p1h", false, icomb, icomb2, schd, scratch, rdm, tdm);
-
+      // debug this case
       if(schd.ctns.debug_rdm){
          linalg::matrix<Tm> rdm1tmp(k,k), rdm1tmp2(k,k), rdmtmp(1,k);
          // <psi|i+j|psi2> = (<psi|i+)j|psi2>
          ctns::rdm_sweep("1p1h", is_same, icomb, icomb2, schd, scratch, rdm1tmp, tdm);
+         auto image1 = icomb.topo.get_image1();
          for(int i=0; i<k; i++){
             int ki = i/2, spin_i = i%2;
             auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi>
-       
+            /* 
             std::cout << std::endl; 
             std::cout << tools::line_separator2 << std::endl;
             std::cout << "LZD: i=" << i << " " << icomb.get_qsym_state() << " : "
                << icomb_i.get_qsym_state()
                << std::endl;
             std::cout << tools::line_separator2 << std::endl;
+            */
             ctns::rdm_sweep("0p1h", false, icomb_i, icomb2, schd, scratch, rdmtmp, tdm);
+            /*
             rdmtmp.print("rdmtmp_"+std::to_string(i));
             rdm1tmp.print("rdm1tmp");
             std::cout << tools::line_separator2 << std::endl;
-
-            linalg::xcopy(k, rdmtmp.data(), 1, rdm1tmp2.row(i), k);
+            */
+            int pi = 2*image1[ki] + spin_i; // map to the orbital index 
+            linalg::xcopy(k, rdmtmp.data(), 1, rdm1tmp2.row(pi), k);
          }
+         /*
          rdm1tmp.print("rdm1tmp");
          rdm1tmp2.print("rdm1tmp2");
+         */
          auto rdm1diff = rdm1tmp2 - rdm1tmp;
-         rdm1diff.print("rdm1diff");
-         std::cout << "|rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
+         //rdm1diff.print("rdm1diff");
+         std::cout << "debug 0p1h via rdm1: |rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
             << " |rdm1-rdm1b|=" << rdm1diff.normF() << std::endl;
-         exit(1);
+         assert(rdm1diff.normF() < thresh);
       }
    }
 

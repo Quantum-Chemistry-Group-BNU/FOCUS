@@ -214,39 +214,39 @@ namespace ctns{
          int rparity = op2parity.at(rkey);
          for(const auto& rdx : reval){
             const auto& rop = rops.at(rdx);
-            std::cout << std::endl;
-            std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
-            rop.to_matrix().print("rop");
+            //std::cout << std::endl;
+            //std::cout << "rop: key=" << rkey << " rdx=" << rdx << " normF()=" << rop.normF() << std::endl;
+            //rop.to_matrix().print("rop");
             auto rstr = get_calst(rkey, rdx, rdagger);
             auto opxwf1 = oper_kernel_IOwf("cr", wf3ket, rop, rparity, rdagger);
-            wf3ket.print("wf3ket");
+            //wf3ket.print("wf3ket");
             for(const auto& cpr : cops){
                const auto& cdx = cpr.first;
                const auto& cop = cpr.second;
-               std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
-               cop.to_matrix().print("cop");
+               //std::cout << "cop: key=" << ckey << " cdx=" << cdx << " normF()=" << cop.normF() << std::endl;
+               //cop.to_matrix().print("cop");
                auto cstr = get_calst(ckey, cdx, cdagger);
                auto opxwf2 = oper_kernel_OIwf("cr", opxwf1, cop, cdagger);
                if((cparity+rparity)%2 == 1) opxwf2.row_signed();
                auto op2 = contract_qt3_qt3("cr", wf3bra, opxwf2);
-               wf3bra.print("wf3bra");
+               //wf3bra.print("wf3bra");
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
                for(int l=0; l<leval.size(); l++){
                   const auto& ldx = leval[l];
                   auto lop = ldagger? lops.at(ldx).H() : lops.at(ldx);
-                  std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
-                  lop.to_matrix().print("lop");
+                  //std::cout << "lop: key=" << lkey << " ldx=" << ldx << " normF()=" << lop.normF() << std::endl;
+                  //lop.to_matrix().print("lop");
                   auto lstr = get_calst(lkey, ldx, ldagger);
                   if(tools::is_complex<Tm>()) lop = lop.conj();
-                  op2.to_matrix().print("op2");
+                  //op2.to_matrix().print("op2");
                   Tm val = contract_qt2_qt2_full(lop, op2);
 
-                  auto lop_mat = lop.to_matrix();
-                  auto op2_mat = op2.to_matrix();
-                  auto tmpval = linalg::xdot(lop_mat.size(),lop_mat.data(),op2_mat.data());
-                  std::cout << "tmpval=" << tmpval << std::endl;
+                  //auto lop_mat = lop.to_matrix();
+                  //auto op2_mat = op2.to_matrix();
+                  //auto tmpval = linalg::xdot(lop_mat.size(),lop_mat.data(),op2_mat.data());
+                  //std::cout << "tmpval=" << tmpval << std::endl;
 
                   // assign val to rdm
                   rdmstring rdmstr(lstr, cstr, rstr);
@@ -261,12 +261,12 @@ namespace ctns{
                      rdm(idx,jdx) = sgn*val;
                      if(is_same) rdm(jdx,idx) = tools::conjugate(rdm(idx,jdx));
 
-                     std::cout << std::endl;
-                     std::cout << "rdm: ijdx=" << idx << "," << jdx
-                        << " " << rdmstr.to_string1() 
-                        << " " << rdmstr.to_string() 
-                        << " rdm(i,j)=" << rdm(idx,jdx)
-                        << std::endl;
+                     //std::cout << std::endl;
+                     //std::cout << "rdm: ijdx=" << idx << "," << jdx
+                     //   << " " << rdmstr.to_string1() 
+                     //   << " " << rdmstr.to_string() 
+                     //   << " rdm(i,j)=" << rdm(idx,jdx)
+                     //   << std::endl;
                   }
                }
             }
