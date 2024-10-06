@@ -26,7 +26,7 @@ namespace ctns{
             << std::scientific << std::setprecision(3) << thresh_ortho 
             << std::endl;
          
-         // loop over all sites
+         // check sites by loop over all sites
          bool deviation = false;
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
             auto p = icomb.topo.rcoord[idx];
@@ -34,28 +34,28 @@ namespace ctns{
             auto qt2 = contract_qt3_qt3("cr", icomb.sites[idx], icomb.sites[idx]);
             double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
             int Dtot = qt2.info.qrow.get_dimAll();
-            bool dev = ifortho && (maxdiff>thresh_ortho);
+            bool dev = (maxdiff>thresh_ortho);
             std::cout << " idx=" << idx << " node=" << p << " Drow=" << Dtot 
                << " maxdiff=" << std::scientific << maxdiff 
                << " deviate=" << dev << std::endl;
             deviation = deviation or dev; 
          } // idx
          
-         // rwfuns
+         // check rwfuns
          auto wf2 = icomb.get_wf2();
          auto qt2 = contract_qt2_qt2(wf2, wf2.H());
          wf2.print("wf2",2);
          std::cout << "check wf2*wf2.H():" << std::endl;
          double maxdiff = qt2.check_identityMatrix(thresh_ortho, false);
          int Dtot = qt2.info.qrow.get_dimAll();
-         bool dev = (ifortho && (maxdiff>thresh_ortho));
+         bool dev = (maxdiff>thresh_ortho);
          std::cout << " rwfuns: nroots=" << Dtot 
             << " maxdiff=" << std::scientific << maxdiff 
             << " deviate=" << dev << std::endl;
          deviation = deviation or dev;
          
-         // Final check
-         if(deviation) tools::exit("error: deviate from identity matrix!");
+         // Final check for ifortho=true
+         if(deviation and ifortho) tools::exit("error: deviate from identity matrix!");
          
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_check", t0, t1);

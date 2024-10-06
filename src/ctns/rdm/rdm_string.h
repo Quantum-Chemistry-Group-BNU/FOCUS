@@ -105,23 +105,108 @@ namespace ctns{
             }
             return sgn;        
          }
+         int get_ncre() const{
+            int ncre = 0;
+            for(int i=0; i<calst.size(); i++){
+               ncre += calst[i].second; 
+            }
+            return ncre;
+         }
          // rdmN(i,j)
-         std::pair<int,int> get_ijdx() const{
-            int idx, jdx;
-            int order = calst.size();
-            assert(order%2 == 0 and order<=4); // only for 1,2-RDMs
-            order = order/2;
-            if(order == 1){
+         std::pair<size_t,size_t> get_ijdx() const{
+            int ncre = this->get_ncre();
+            int nann = calst.size() - ncre;
+            size_t idx, jdx;
+            assert(ncre < 4 and nann < 4);
+            // (1,0)
+            if(ncre == 1 and nann == 0){
                idx = calst[0].first;
-               jdx = calst[1].first; 
-            }else if(order == 2){
+               jdx = 0;
+            // (0,1)
+            }else if(ncre == 0 and nann == 1){
+               idx = 0;
+               jdx = calst[0].first;
+            // (1,1)
+            }else if(ncre == 1 and nann == 1){
+               idx = calst[0].first;
+               jdx = calst[1].first;
+            // (2,0)
+            }else if(ncre == 2 and nann == 0){
+               assert(calst[0] > calst[1]);
+               idx = calst[0].first*(calst[0].first-1)/2 + calst[1].first;
+               jdx = 0;
+            // (0,2)
+            }else if(ncre == 0 and nann == 2){
+               idx = 0;
+               assert(calst[0] < calst[1]);
+               jdx = calst[1].first*(calst[1].first-1)/2 + calst[0].first;
+            // (2,1)
+            }else if(ncre == 2 and nann == 1){
+               assert(calst[0] > calst[1]);
+               idx = calst[0].first*(calst[0].first-1)/2 + calst[1].first;
+               jdx = calst[2].first;
+            // (1,2)
+            }else if(ncre == 1 and nann == 2){
+               idx = calst[0].first;
+               assert(calst[1] < calst[2]);
+               jdx = calst[2].first*(calst[2].first-1)/2 + calst[1].first;
+            // (3,0)
+            }else if(ncre == 3 and nann == 0){
+               assert(calst[0] > calst[1] and calst[1] > calst[2]);
+               idx = calst[0].first*(calst[0].first-1)*(calst[0].first-2)/6
+                   + calst[1].first*(calst[1].first-1)/2
+                   + calst[2].first;
+               jdx = 0;
+            // (0,3)
+            }else if(ncre == 0 and nann == 3){
+               idx = 0;
+               assert(calst[0] < calst[1] and calst[1] < calst[2]);
+               jdx = calst[2].first*(calst[2].first-1)*(calst[2].first-2)/6
+                   + calst[1].first*(calst[1].first-1)/2
+                   + calst[0].first;
+            // (2,2)
+            }else if(ncre == 2 and nann == 2){
                // RDM2(p0p1,q0q1)=<p0+p1+q1q0> (p0>p1,q1<q0)
                assert(calst[0] > calst[1]);
-               assert(calst[2] < calst[3]);
                idx = calst[0].first*(calst[0].first-1)/2 + calst[1].first;
+               assert(calst[2] < calst[3]);
                jdx = calst[3].first*(calst[3].first-1)/2 + calst[2].first;
+            // (3,1)
+            }else if(ncre == 3 and nann == 1){
+               assert(calst[0] > calst[1] and calst[1] > calst[2]);
+               idx = calst[0].first*(calst[0].first-1)*(calst[0].first-2)/6
+                   + calst[1].first*(calst[1].first-1)/2
+                   + calst[2].first;
+               jdx = calst[3].first;
+            // (1,3)
+            }else if(ncre == 1 and nann == 3){
+               idx = calst[0].first;
+               assert(calst[1] < calst[2] and calst[2] < calst[3]);
+               jdx = calst[3].first*(calst[3].first-1)*(calst[3].first-2)/6
+                   + calst[2].first*(calst[2].first-1)/2
+                   + calst[1].first;
+            // (3,2)
+            }else if(ncre == 3 and nann == 2){
+               assert(calst[0] > calst[1] and calst[1] > calst[2]);
+               idx = calst[0].first*(calst[0].first-1)*(calst[0].first-2)/6
+                   + calst[1].first*(calst[1].first-1)/2
+                   + calst[2].first;
+               assert(calst[3] < calst[4]);
+               jdx = calst[4].first*(calst[4].first-1)/2 + calst[3].first;
+            // (2,3)
+            }else if(ncre == 2 and nann == 3){
+               assert(calst[0] > calst[1]);
+               idx = calst[0].first*(calst[0].first-1)/2 + calst[1].first;
+               assert(calst[2] < calst[3] and calst[3] < calst[4]);
+               jdx = calst[4].first*(calst[4].first-1)*(calst[4].first-2)/6
+                   + calst[3].first*(calst[3].first-1)/2
+                   + calst[2].first;
+            // other cases
             }else{
-               tools::exit("error: order>2 is not supported yet in get_ijdx"); 
+               std::cout << "error: (ncre,nann)=" << ncre << "," << nann 
+                  << " is not supported in get_ijdx!"
+                  << std::endl;
+               exit(1); 
             }
             return std::make_pair(idx,jdx);
          }

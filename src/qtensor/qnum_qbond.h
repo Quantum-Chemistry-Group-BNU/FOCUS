@@ -132,6 +132,12 @@ namespace ctns{
             }
             return qs12;
          }
+         // used in apply_opC in rdm_simple.h
+         void add(const qsym& sym_op){
+            for(int i=0; i<dims.size(); i++){
+               dims[i].first = dims[i].first + sym_op;
+            }
+         }
       public:
          std::vector<std::pair<qsym,int>> dims;
    };

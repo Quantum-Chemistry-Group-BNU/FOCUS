@@ -284,7 +284,7 @@ namespace linalg{
                      [](const Tm& x){ return x; });
                return mat;
             }
-            // col operations
+            // col operations: position of (0,i)
             const Tm* col(const int i) const{
                assert(i>=0 && i<_cols);
                return &_data[i*_rows];
@@ -292,6 +292,15 @@ namespace linalg{
             Tm* col(const int i){
                assert(i>=0 && i<_cols);
                return &_data[i*_rows];
+            }
+            // row operations: position of (i,0)
+            const Tm* row(const int i) const{
+               assert(i>=0 && i<_rows);
+               return &_data[i];
+            }
+            Tm* row(const int i){
+               assert(i>=0 && i<_rows);
+               return &_data[i];
             }
             // scale (used in blockMatrix)
             void rowscale(const std::vector<double>& phases){

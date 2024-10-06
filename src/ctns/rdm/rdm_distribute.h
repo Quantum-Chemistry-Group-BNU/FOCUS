@@ -19,7 +19,8 @@ namespace ctns{
                num_string == "031" || num_string == "121" || num_string == "301" ||
                num_string == "310" || num_string == "400" || 
                num_string == "011" || num_string == "040" || num_string == "013" ||
-               num_string == "004"){
+               num_string == "004" ||
+               num_string == "010" || num_string == "100" || num_string == "001"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                if(rdx % size == rank) reval.push_back(rdx);

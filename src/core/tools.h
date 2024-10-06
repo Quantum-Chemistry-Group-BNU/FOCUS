@@ -132,6 +132,11 @@ inline size_t canonical_pair0(const size_t i, const size_t j){
    return std::max(i,j)*(std::max(i,j)-1)/2 + std::min(i,j);
 }
 
+inline double sgn_pair0(const size_t i, const size_t j){
+   assert(i != j);
+   return i>j? 1 : -1;
+}
+
 inline std::pair<size_t,size_t> inverse_pair0(const size_t ij){
    size_t i = floor(sqrt(2.0*(ij+1))+0.5);
    size_t j = ij-i*(i-1)/2;
@@ -152,6 +157,71 @@ inline std::pair<size_t,size_t> inverse_pair(const size_t ij){
    size_t j = ij-i*(i+1)/2;
    assert(canonical_pair(i,j)==ij);
    return std::make_pair(i,j);
+}
+
+// canonical triple
+inline size_t canonical_triple0(const size_t i, const size_t j, const size_t k){
+   assert(i != j and i != k and j != k);
+   size_t a, b, c;
+   if(i > j and j>k){
+      a=i; b=j; c=k;
+   }else if(i > k and k>j){
+      a=i; b=k; c=j;
+   }else if(j > i and i>k){
+      a=j; b=i; c=k;
+   }else if(j > k and k>i){
+      a=j; b=k; c=i;
+   }else if(k > i and i>j){
+      a=k; b=i; c=j;
+   }else if(k > j and j>i){
+      a=k; b=j; c=i;
+   }else{
+      std::cout << "error: no such case in canonical_triple0! i,j,k=" << i << "," << j << "," << k << std::endl;
+      std::exit(1);
+   }
+   return a*(a-1)*(a-2)/6 + b*(b-1)/2 + c;
+}
+
+// canonical triple
+inline double sgn_triple0(const size_t i, const size_t j, const size_t k){
+   assert(i != j and i != k and j != k);
+   double sgn = 1.0;
+   if(i > j and j>k){ // 123->123
+      sgn = 1.0;
+   }else if(i > k and k>j){ // 132->123
+      sgn = -1.0;
+   }else if(j > i and i>k){ // 213->123
+      sgn = -1.0;
+   }else if(j > k and k>i){ // 231->123
+      sgn = 1.0;
+   }else if(k > i and i>j){ // 312->123
+      sgn = 1.0;
+   }else if(k > j and j>i){ // 321->123
+      sgn = -1.0;
+   }else{
+      std::cout << "error: no such case in sgn_triple0! i,j,k=" << i << "," << j << "," << k << std::endl;
+      std::exit(1);
+   }
+   return sgn;
+}
+
+inline std::tuple<size_t,size_t,size_t> inverse_triple0(const size_t ijk){
+   size_t imin = std::floor(std::pow(6*ijk,1.0/3.0));
+   size_t i;
+   for(size_t i0=imin; i0<=imin+2; i0++){
+      if(ijk >= i0*(i0-1)*(i0-2)/6){
+         i = i0; 
+      }else{
+         break;  
+      }
+   }
+   size_t i3 = i*(i-1)*(i-2)/6;
+   size_t jk = ijk - i3;
+   auto pr = inverse_pair0(jk);
+   size_t j = pr.first;
+   size_t k = pr.second;
+   assert(canonical_triple0(i,j,k)==ijk);
+   return std::make_tuple(i,j,k);
 }
 
 // sort_index 

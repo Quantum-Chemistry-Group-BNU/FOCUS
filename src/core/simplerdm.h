@@ -77,13 +77,13 @@ namespace fock{
                      auto sgn = sgn0;
                      auto p01 = tools::canonical_pair0(p0,p1);
                      if(p0 < p1) sgn *= -1; // sign coming from ordering of operators
-                                            // p1 must be not identical to q0, otherwise it cannot be in olst 
+                     // p1 must be not identical to q0, otherwise it cannot be in olst 
                      auto q01 = tools::canonical_pair0(q0,p1);
                      if(q0 < p1) sgn *= -1; 
                      rdm2(p01,q01) += sgn*tools::conjugate(civec1[i])*civec2[j];
                      rdm2(q01,p01) += sgn*tools::conjugate(civec1[j])*civec2[i];
                   }
-                  // <Di|p0^+p1^+q1q0|Dj>
+               // <Di|p0^+p1^+q1q0|Dj>
                }else if(ndiff == 4){
                   std::vector<int> cre,ann;
                   space[i].diff_orb(space[j],cre,ann);
@@ -121,8 +121,8 @@ namespace fock{
                   if(r == p || r == q) continue;		 
                   auto pr = tools::canonical_pair0(p,r);
                   auto qr = tools::canonical_pair0(q,r);
-                  double sgn_pr = p>r? 1 : -1;
-                  double sgn_qr = q>r? 1 : -1;
+                  Tm sgn_pr = tools::sgn_pair0(p,r);
+                  Tm sgn_qr = tools::sgn_pair0(q,r);
                   rdm1(p,q) += sgn_pr*sgn_qr*rdm2(pr,qr);
                }
             }
@@ -138,8 +138,8 @@ namespace fock{
          }
          int ne;
          if(nelec == -1){
-            // normalization
-            double dn2 = std::real(rdm1.trace()); // tr(rdm2) is normalized to n(n-1)
+            // normalization: <p+r+rp> = n(n-1)
+            double dn2 = std::real(rdm1.trace()); 
             int n2 = round(dn2);
             assert(n2 > 0);
             if(std::abs(dn2 - n2) > thresh){
@@ -156,8 +156,76 @@ namespace fock{
             ne = nelec;
          }
          rdm1 *= 1.0/(ne-1.0);
-         std::cout << " tr(RDM1)=" << rdm1.trace() << std::endl;
+         std::cout << " tr(RDM1)=" << rdm1.trace() << " normalized to N=" << ne << std::endl;
          return rdm1;
+      }
+
+   // from rdm3 for particle number conserving wf
+   template <typename Tm>
+      linalg::matrix<Tm> get_rdm2_from_rdm3(const linalg::matrix<Tm>& rdm3,
+            const bool checkHermicity=true, 
+            const int nelec=-1){
+         const double thresh = 1.e-10;
+         std::cout << "\nfock:get_rdm2_from_rdm3: nelec=" << nelec;
+         int k3 = rdm3.rows();
+         auto tr = tools::inverse_triple0(k3-1);
+         assert(std::get<0>(tr) == std::get<1>(tr)+1 and
+              std::get<1>(tr) == std::get<2>(tr)+1); 
+         int k = std::get<0>(tr)+1;
+         int k2 = k*(k-1)/2;
+         linalg::matrix<Tm> rdm2(k2,k2);
+         // <p^+q^+ r^+r st> (p>q,s<t)
+         for(int p=0; p<k; p++){
+            for(int q=0; q<p; q++){
+               size_t pq = p*(p-1)/2 + q;
+               for(int t=0; t<k; t++){
+                  for(int s=0; s<t; s++){
+                     size_t ts = t*(t-1)/2 + s;
+                     for(int r=0; r<k; r++){
+                        if(r == p || r == q || r == s || r == t) continue;		 
+                        auto pqr = tools::canonical_triple0(p,q,r);
+                        auto tsr = tools::canonical_triple0(t,s,r);
+                        Tm sgn_pqr = tools::sgn_triple0(p,q,r);
+                        Tm sgn_tsr = tools::sgn_triple0(t,s,r);
+                        rdm2(pq,ts) += sgn_pqr*sgn_tsr*rdm3(pqr,tsr);
+                     }
+                  }
+               }
+            }
+         }
+         if(checkHermicity){
+            double diff = rdm2.diff_hermitian();
+            if(diff > thresh){
+               std::cout << "error: rdm2.diff_hermitian=" << diff 
+                  << " is greater than thresh= " << thresh 
+                  << std::endl;
+               exit(1);
+            }
+         }
+         int ne;
+         if(nelec == -1){
+            // normalization: <p+q+r+rqp> (p>q) = (n-2)<p+q+qp> (p>q) = (n-2)/2<p+q+qp> = (n-2)(n-1)n/2 
+            double dn3 = std::real(rdm2.trace());
+            int n3 = round(dn3);
+            assert(n3 > 0);
+            if(std::abs(dn3 - n3) > thresh){
+               std::cout << std::scientific << std::setprecision(12);
+               std::cout << "n3=n(n-1)(n-2)/2" << n3 << " while dn3=" << dn3 << " diff=" << dn3-n3 << std::endl;
+               tools::exit("error: get_rdm2_from_rdm3 does not work for non-integer electron number!");
+            }
+            if(n3 == 0) tools::exit("error: get_rdm2_from_rdm3 does not work for ne = 1 or ne = 2");
+            // find nelec
+            auto tp = tools::inverse_triple0(n3/3-1);
+            assert(std::get<0>(tp) == std::get<1>(tp)+1 and
+                  std::get<1>(tp) == std::get<2>(tp)+1);
+            ne = std::get<0>(tp)+1;
+         }else{
+            ne = nelec;
+         }
+         //  <p+q+r+rst> = (N-2)<p+q+st>
+         rdm2 *= 1.0/(ne-2.0);
+         std::cout << " tr(RDM2)=" << rdm2.trace() << " normalized to N*(N-1)/2=" << ne*(ne-1)/2 << std::endl;
+         return rdm2;
       }
 
    // E1 = h[p,q]*<p^+q>

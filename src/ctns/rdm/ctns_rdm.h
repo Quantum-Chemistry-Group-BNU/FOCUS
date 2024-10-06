@@ -69,15 +69,15 @@ namespace ctns{
          }
 
          // prepare environments {C,D} [both are required for icomb != icomb2]
-         rdm_env_right(ns_max, ne_max, is_same, icomb, icomb2, schd, scratch);
+         rdm_env_right(ne_max, is_same, icomb, icomb2, schd, scratch);
 
          // build operators on the left dot
-         rdm_init_dotL(ns_max, is_same, icomb, schd, scratch);
+         rdm_init_dotL(is_same, icomb, schd, scratch);
 
          // initialization of single MPS
          sweep_init_single(icomb, schd.ctns.iroot, schd.ctns.singlet);
          sweep_init_single(icomb2, schd.ctns.jroot, schd.ctns.singlet);
-         
+
          // pool for handling operators
          qoper_pool<Qm::ifabelian,Tm> qops_pool(schd.ctns.iomode, debug && schd.ctns.verbose>1);
          // generate sweep sequence
@@ -179,6 +179,8 @@ namespace ctns{
             }else if(isite == icomb.get_nphysical()-2){
                std::copy(lpatterns.begin(), lpatterns.end(), std::back_inserter(allpatterns));
             }
+            
+            // assemble rdm
             rdm_assemble(is_same, icomb, qops_dict, wf3bra, wf3ket,
                     allpatterns, schd, scratch, rdm, tdm);
             timing.tc = tools::get_time();

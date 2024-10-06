@@ -252,6 +252,108 @@ void RDM(const input::schedule& schd){
       }
    }
 
+   if(tools::is_in_vector(schd.ctns.task_prop,"1p0h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(k,1);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("1p0h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm1tmp(k,k), rdm1tmp2(k,k), rdmtmp(k,1);
+         // <psi|i+j|psi2> = <psi|i+(j|psi2>)
+         ctns::rdm_sweep("1p1h", is_same, icomb, icomb2, schd, scratch, rdm1tmp, tdm);
+         for(int j=0; j<k; j++){
+            int kj = j/2, spin_j = j%2;
+            auto icomb2_j = apply_opC(icomb2, kj, spin_j, 0); // j|psi2>
+       
+            std::cout << std::endl; 
+            std::cout << tools::line_separator2 << std::endl;
+            std::cout << "LZD: j=" << j << " " << icomb.get_qsym_state() << " : "
+               << icomb2_j.get_qsym_state()
+               << std::endl;
+            std::cout << tools::line_separator2 << std::endl;
+            ctns::rdm_sweep("1p0h", false, icomb, icomb2_j, schd, scratch, rdmtmp, tdm);
+            rdmtmp.print("rdmtmp_"+std::to_string(j));
+            rdm1tmp.print("rdm1tmp");
+            std::cout << tools::line_separator2 << std::endl;
+
+            linalg::xcopy(k, rdmtmp.data(), rdm1tmp2.col(j));
+         }
+         rdm1tmp.print("rdm1tmp");
+         rdm1tmp2.print("rdm1tmp2");
+         auto rdm1diff = rdm1tmp2 - rdm1tmp;
+         std::cout << "|rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
+            << " |rdm1-rdm1b|=" << rdm1diff.normF() << std::endl;
+         exit(1);
+      }
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,"0p1h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(1,k);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("0p1h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm1tmp(k,k), rdm1tmp2(k,k), rdmtmp(1,k);
+         // <psi|i+j|psi2> = (<psi|i+)j|psi2>
+         ctns::rdm_sweep("1p1h", is_same, icomb, icomb2, schd, scratch, rdm1tmp, tdm);
+         for(int i=0; i<k; i++){
+            int ki = i/2, spin_i = i%2;
+            auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi>
+       
+            std::cout << std::endl; 
+            std::cout << tools::line_separator2 << std::endl;
+            std::cout << "LZD: i=" << i << " " << icomb.get_qsym_state() << " : "
+               << icomb_i.get_qsym_state()
+               << std::endl;
+            std::cout << tools::line_separator2 << std::endl;
+            ctns::rdm_sweep("0p1h", false, icomb_i, icomb2, schd, scratch, rdmtmp, tdm);
+            rdmtmp.print("rdmtmp_"+std::to_string(i));
+            rdm1tmp.print("rdm1tmp");
+            std::cout << tools::line_separator2 << std::endl;
+
+            linalg::xcopy(k, rdmtmp.data(), 1, rdm1tmp2.row(i), k);
+         }
+         rdm1tmp.print("rdm1tmp");
+         rdm1tmp2.print("rdm1tmp2");
+         auto rdm1diff = rdm1tmp2 - rdm1tmp;
+         rdm1diff.print("rdm1diff");
+         std::cout << "|rdm1|=" << rdm1tmp.normF() << " |rdm1b|=" << rdm1tmp2.normF()
+            << " |rdm1-rdm1b|=" << rdm1diff.normF() << std::endl;
+         exit(1);
+      }
+   }
+
+   // 3: rdm3
+   if(tools::is_in_vector(schd.ctns.task_prop,"3p3h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+/*
+      // compute rdm3
+      size_t k3 = k*(k-1)*(k-2)/6;
+      linalg::matrix<Tm> rdm3.resize(k3,k3), tdm3;
+      ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm3, tdm3);
+*/
+      if(schd.ctns.debug_rdm and rank == 0 and Qm::ifabelian){
+         auto rdm3b = ctns::rdm3_simple(icomb, icomb2, iroot, jroot);
+         /*
+         auto diff = rdm2 - rdm2b;
+         std::cout << "diff|rdm2-rdm2b|=" << diff.normF() << std::endl; 
+         assert(diff.normF() < thresh);
+         */
+      } // debug
+      exit(1);
+   } // rdm3
+
    // save results
    if(rank == 0 and is_same){
       if(rdm1.size()>0 or rdm2.size()>0) std::cout << "\nsave results for rdms:" << std::endl;

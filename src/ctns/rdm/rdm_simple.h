@@ -3,26 +3,57 @@
 
 #include "../oper_dot_local.h"
 #include "../../core/simplerdm.h"
+#include "../ctns_ova.h"
 
 namespace ctns{
 
-   // Abelian case
-   template <typename Qm, typename Tm>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       comb<Qm,Tm> apply_opC(const comb<Qm,Tm>& icomb,
             const int ki, 
             const int ispin, 
             const int type){
+         std::cout << "error: apply_opC does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   //
+   // Abelian case
+   //
+   //      Sgn Sgn Sgn OpC  Id  Id
+   //       |   |   |   |   |   |
+   //  --*--*---*---*---*---*---*
+   //
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      comb<Qm,Tm> apply_opC(const comb<Qm,Tm>& icomb,
+            const int ki, 
+            const int ispin, 
+            const int type){
+         // copy
          auto icomb_i = icomb;
          // change sign
+         auto sym_op = type==1? get_qsym_opC(Qm::isym, ispin) : get_qsym_opD(Qm::isym, ispin); 
          int norb = icomb.get_nphysical();
          for(int i=0; i<ki; i++){
-            icomb_i.sites[norb-1-i].mid_signed();
+            auto& site = icomb_i.sites[norb-1-i];
+            site.mid_signed();
+            site.info.qrow.add(sym_op);
+            site.info.qcol.add(sym_op);
+         }
+         // change qsym
+         for(int i=0; i<icomb_i.get_nroots(); i++){
+            auto& rwf = icomb_i.rwfuns[i];
+            rwf.info.qrow.add(sym_op);
+            rwf.info.qcol.add(sym_op);   
          }
          // apply the central operator to the site
          auto& csite = icomb_i.sites[norb-1-ki];
          auto op = get_dot_opC<Tm>(Qm::isym, ispin); // opC
          if(type == 0) op = op.H(); // opA
          csite = contract_qt3_qt2("c", csite, op);
+         csite.info.sym = qsym(Qm::isym,0,0);
+         csite.info.qrow.add(sym_op);
+         // canonicalize last dot to identity, otherwise 
+         // operator construction in rdm_env will fail.
+         rcanon_lastdots(icomb_i);
          return icomb_i;
       }
 
@@ -96,7 +127,7 @@ namespace ctns{
          assert(iroot2 < icomb2.get_nroots());
          auto image1 = icomb1.topo.get_image1();
          int sorb = 2*icomb2.get_nphysical();
-         // rdm2[i,j,k,l] = <i^+j^+kl> (i>j,k<l)
+         // rdm2[ij,lk] = <i^+j^+kl> (i>j,k<l)
          int sorb2 = sorb*(sorb-1)/2;
          linalg::matrix<Tm> rdm2(sorb2,sorb2);
          for(size_t ij=0; ij<sorb2; ij++){
@@ -126,13 +157,13 @@ namespace ctns{
                int pk = 2*image1[kk] + spin_k;
                int pl = 2*image1[kl] + spin_l;
                auto pij = tools::canonical_pair0(pi,pj);
-               auto pkl = tools::canonical_pair0(pk,pl);
-               Tm sgn1 = (pi>pj)? 1 : -1;
-               Tm sgn2 = (pk<pl)? 1 : -1;
+               auto plk = tools::canonical_pair0(pl,pk);
+               Tm sgn1 = tools::sgn_pair0(pi,pj);
+               Tm sgn2 = tools::sgn_pair0(pl,pk);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-               rdm2(pij,pkl) = sgn1*sgn2*smat(iroot1,iroot2);
+               rdm2(pij,plk) = sgn1*sgn2*smat(iroot1,iroot2);
             } // lk
          } // ij
          if(debug){
@@ -145,6 +176,92 @@ namespace ctns{
          auto t1 = tools::get_time();
          tools::timing("ctns::rdm2_simple", t0, t1);
          return rdm2;
+      }
+
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> rdm3_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         std::cout << "error: rdm3_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> rdm3_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=true){
+         auto t0 = tools::get_time();
+         std::cout << "\nctns::rdm3_simple: iroot1=" << iroot1
+            << " iroot2=" << iroot2 
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
+         int sorb = 2*icomb2.get_nphysical();
+         // rdm3[ijk,nml] = <i^+j^+k^+lmn> (i>j>k,l<m<n)
+         size_t sorb3 = sorb*(sorb-1)*(sorb-2)/6;
+         linalg::matrix<Tm> rdm3(sorb3,sorb3);
+         for(size_t ijk=0; ijk<sorb3; ijk++){
+            auto ijktr = tools::inverse_triple0(ijk);
+            int i = std::get<0>(ijktr);
+            int j = std::get<1>(ijktr);
+            int k = std::get<2>(ijktr);
+            std::cout << "ijk/triple=" << ijk << "," << sorb3 << " i,j,k=" << i << "," << j << "," << k << std::endl;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+            for(size_t nml=0; nml<sorb3; nml++){
+               auto nmltr = tools::inverse_triple0(nml);
+               int n = std::get<0>(nmltr);
+               int m = std::get<1>(nmltr); 
+               int l = std::get<2>(nmltr); 
+               int ki = i/2, spin_i = i%2;
+               int kj = j/2, spin_j = j%2;
+               int kk = k/2, spin_k = k%2;
+               int kl = l/2, spin_l = l%2;
+               int km = m/2, spin_m = m%2;
+               int kn = n/2, spin_n = n%2;
+               auto icomb2n = apply_opC(icomb2, kn, spin_n, 0); // an|psi2>
+               auto icomb2mn = apply_opC(icomb2n, km, spin_m, 0); // aman|psi2>
+               auto icomb2lmn = apply_opC(icomb2mn, kl, spin_l, 0); // alaman|psi2>
+               auto icomb2klmn = apply_opC(icomb2lmn, kk, spin_k, 1); // ak+alaman|psi2>
+               auto icomb2jklmn = apply_opC(icomb2klmn, kj, spin_j, 1); // aj+ak+alaman|psi2>
+               auto icomb2ijklmn = apply_opC(icomb2jklmn, ki, spin_i, 1); // ai+aj+ak+alaman|psi2>
+               auto smat = get_Smat(icomb1,icomb2ijklmn); // <psi1|ai+aj+ak+alaman|psi2>
+               // map back to the actual orbital      
+               int pi = 2*image1[ki] + spin_i;
+               int pj = 2*image1[kj] + spin_j;
+               int pk = 2*image1[kk] + spin_k;
+               int pl = 2*image1[kl] + spin_l;
+               int pm = 2*image1[km] + spin_m;
+               int pn = 2*image1[kn] + spin_n;
+               auto pijk = tools::canonical_triple0(pi,pj,pk);
+               auto pnml = tools::canonical_triple0(pn,pm,pl);
+               Tm sgn1 = tools::sgn_triple0(pi,pj,pk);
+               Tm sgn2 = tools::sgn_triple0(pn,pm,pl);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+               rdm3(pijk,pnml) = sgn1*sgn2*smat(iroot1,iroot2);
+            } // lmn
+         } // ijk
+         if(debug){
+            auto rdm2 = rdm2_simple(icomb1,icomb2,iroot1,iroot2);
+            auto rdm2b = fock::get_rdm2_from_rdm3(rdm3);
+            auto diff2 = (rdm2b-rdm2).normF();
+            std::cout << "\nCheck |rdm2b-rdm2|=" << diff2 << std::endl;
+            auto rdm1 = fock::get_rdm1_from_rdm2(rdm2);
+            auto rdm1b = fock::get_rdm1_from_rdm2(rdm2b);
+            auto diff1 = (rdm1b-rdm1).normF();
+            std::cout << "\nCheck |rdm1b-rdm1|=" << diff1 << std::endl;
+            assert(diff2 < 1.e-6 and diff1 < 1.e-6);
+         }
+         auto t1 = tools::get_time();
+         tools::timing("ctns::rdm3_simple", t0, t1);
+         return rdm3;
       }
 
    // single-site entropy

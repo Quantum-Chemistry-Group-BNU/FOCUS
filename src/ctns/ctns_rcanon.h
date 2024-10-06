@@ -151,7 +151,7 @@ namespace ctns{
          } 
       }
 
-   // rcanonicalize MPS
+   // rcanonicalize MPS: this function use twodot [!!!] algorithm to perform canonicalization of MPS
    template <typename Qm, typename Tm>
       void rcanon_canonicalize(comb<Qm,Tm>& icomb,
             const bool ifortho=true,

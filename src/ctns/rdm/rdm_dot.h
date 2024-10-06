@@ -8,8 +8,7 @@ namespace ctns{
 
    // Abelian case
    template <bool ifab, typename Tm>
-      void rdm_init_dot(const int order,
-            const bool is_same,
+      void rdm_init_dot(const bool is_same,
             const int sorb,
             qoper_dict<ifab,Tm>& qops,
             const int isym,
@@ -31,18 +30,10 @@ namespace ctns{
          auto qphys = get_qbond_phys(isym);
          qops.qbra = qphys;
          qops.qket = qphys;
-         if(order == 1){
-            if(is_same){
-               qops.oplist = "ICB";
-            }else{
-               qops.oplist = "ICBD";
-            }
-         }else if(order >= 2){
-            if(is_same){
-               qops.oplist = "ICABTF";
-            }else{
-               qops.oplist = "ICABTFDM";
-            }
+         if(is_same){
+            qops.oplist = "ICABTF";
+         }else{
+            qops.oplist = "ICABTFDM";
          }
          // initialize memory
          qops.ifhermi = false; 
@@ -51,17 +42,13 @@ namespace ctns{
          oper_dot_opI(qops);
          oper_dot_opC(qops, kp);
          oper_dot_opB(qops, kp);
-         if(order >= 2){
-            oper_dot_opA(qops, kp);
-            oper_dot_opT(qops, kp);
-            oper_dot_opF(qops, kp);
-         }
+         oper_dot_opA(qops, kp);
+         oper_dot_opT(qops, kp);
+         oper_dot_opF(qops, kp);
          // for icomb != icomb2
          if(!is_same){
             oper_dot_opD(qops, kp);
-            if(order >= 2){
-               oper_dot_opM(qops, kp);
-            }
+            oper_dot_opM(qops, kp);
          }
       }
 

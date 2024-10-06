@@ -13,8 +13,7 @@
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      void rdm_init_dotL(const int order,
-            const bool is_same,
+      void rdm_init_dotL(const bool is_same,
             const comb<Qm,Tm>& icomb,
             const input::schedule& schd,
             const std::string scratch){
@@ -41,7 +40,7 @@ namespace ctns{
          //---------------------------------------------
          int kp = icomb.topo.get_node(p).porb;
          qoper_dict<Qm::ifabelian,Tm> qops;
-         rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
+         rdm_init_dot(is_same, sorb, qops, isym, ifkr, kp, size, rank);
          //---------------------------------------------
          std::string fop = oper_fname(scratch, p, "l");
          if(isym == 3 and schd.ctns.singlet){
@@ -61,8 +60,7 @@ namespace ctns{
    // (1) dot operators [c]
    // (2) boundary operators [l/r]
    template <typename Qm, typename Tm>
-      void rdm_init_dotCR(const int order,
-            const bool is_same,
+      void rdm_init_dotCR(const bool is_same,
             const comb<Qm,Tm>& icomb,
             const std::string scratch,
             const int iomode){
@@ -88,7 +86,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
+               rdm_init_dot(is_same, sorb, qops, isym, ifkr, kp, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -106,7 +104,7 @@ namespace ctns{
                //---------------------------------------------
                int kp = node.porb;
                qoper_dict<Qm::ifabelian,Tm> qops;
-               rdm_init_dot(order, is_same, sorb, qops, isym, ifkr, kp, size, rank);
+               rdm_init_dot(is_same, sorb, qops, isym, ifkr, kp, size, rank);
                //---------------------------------------------
                auto tb = tools::get_time();
                //---------------------------------------------
@@ -132,8 +130,7 @@ namespace ctns{
 
    // build right environment operators
    template <typename Qm, typename Tm>
-      void rdm_env_right(const int ns_max,
-            const int ne_max,
+      void rdm_env_right(const int ne_max,
             const bool is_same,
             const comb<Qm,Tm>& icomb,
             const comb<Qm,Tm>& icomb2, 
@@ -148,13 +145,13 @@ namespace ctns{
          const bool debug = (rank==0);
          if(debug){ 
             std::cout << "\nctns::rdm_env_right qkind=" << qkind::get_name<Qm>() 
-               << " (ns_max,ne_max)=" << ns_max << "," << ne_max << std::endl;
+               << " ne_max=" << ne_max << std::endl;
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
         
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
-         rdm_init_dotCR(ns_max, is_same, icomb, scratch, iomode);
+         rdm_init_dotCR(is_same, icomb, scratch, iomode);
          auto ta = tools::get_time();
          t_init = tools::get_duration(ta-t0);
 
