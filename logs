@@ -1,6 +1,6 @@
 
 === FOCUS: FermiOniC qUantum Simulation ===
-
+      
    Started by Zhendong Li @ Sep 14, 2019
 
 ### 2021 Initial (TR)DMRG implementation ###
@@ -413,6 +413,11 @@
  * Documentation [DONE@2024/08/26]
     - initial commit
 
+ * OO-DMRG support unrestricted orbitals: [DONE@2024/XX/XX]
+    - ipyscf_real: support for UHF integrals
+    - check whether UHF integrals are supported
+    - oodmrg_rotate.h
+
 ### 2024 DMRG[RDM] ###
 
  * Properties for post-CI/DMRG calculations:
@@ -533,9 +538,12 @@
    - TDM for nonspin-adapted case: 
       - 1p0h & 0p1h: <MPS[N]|p+|MPS[N-1]>, <MPS[N-1]|p|MPS[N]> [DONE@2024/10/06]
          - checked by forming 1-RDM using TDM [!!!]
-      - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]>
-      - 2p1h & 1p2h: <MPS[N]|p+q+r|MPS[N-1]>, <MPS[N-1]|p+qr|MPS[N]>
-      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]>
+      - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]> [DONE@2024/10/06]
+      - 2p1h & 1p2h: <MPS[N]|p+q+r|MPS[N-1]>, <MPS[N-1]|p+qr|MPS[N]> [DONE@2024/10/06]
+      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/XX/XX]
    - MPI version:
+      - 1p0h & 0p1h:
+      - 2p0h & 0p2h:
+      - 2p1h & 1p2h:
       - 3p2h & 2p3h: communication is required for pattern 212 
 

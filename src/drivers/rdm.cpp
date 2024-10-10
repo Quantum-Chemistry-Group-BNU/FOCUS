@@ -343,27 +343,166 @@ void RDM(const input::schedule& schd){
       }
    }
 
+   if(tools::is_in_vector(schd.ctns.task_prop,"2p0h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(k2,1);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("2p0h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+      // debug this case
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm2tmp(k2,k2), rdm2tmp2(k2,k2), rdmtmp(k2,1);
+         // <psi|i+j+rs|psi2> (r<s) = <psi|i+j+(rs|psi2>)
+         ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm2tmp, tdm);
+         auto image1 = icomb2.topo.get_image1();
+         for(int s=0; s<k; s++){
+            for(int r=0; r<s; r++){
+               int ks = s/2, spin_s = s%2;
+               int kr = r/2, spin_r = r%2;
+               auto icomb2_s = apply_opC(icomb2, ks, spin_s, 0); // s|psi2>
+               auto icomb2_rs = apply_opC(icomb2_s, kr, spin_r, 0); // rs|psi2>
+               ctns::rdm_sweep("2p0h", false, icomb, icomb2_rs, schd, scratch, rdmtmp, tdm);
+               int ps = 2*image1[ks] + spin_s; // map to the orbital index
+               int pr = 2*image1[kr] + spin_r;
+               auto psr = tools::canonical_pair0(ps,pr);
+               Tm sgn = tools::sgn_pair0(ps,pr);  
+               rdmtmp *= sgn;
+               linalg::xcopy(k2, rdmtmp.data(), rdm2tmp2.col(psr));
+            }
+         }
+         auto rdm2diff = rdm2tmp2 - rdm2tmp;
+         std::cout << "debug 2p0h via rdm2: |rdm2|=" << rdm2tmp.normF() << " |rdm2b|=" << rdm2tmp2.normF()
+            << " |rdm2-rdm2b|=" << rdm2diff.normF() << std::endl;
+         assert(rdm2diff.normF() < thresh);
+      }
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,"0p2h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(1,k2);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("0p2h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+      // debug this case
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm2tmp(k2,k2), rdm2tmp2(k2,k2), rdmtmp(1,k2);
+         // <psi|i+j+rs|psi2> (i>j,r<s) = (<psi|i+j+)rs|psi2>, |tmp>=ji|psi> (i>j)
+         ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm2tmp, tdm);
+         auto image1 = icomb.topo.get_image1();
+         for(int i=0; i<k; i++){
+            for(int j=0; j<i; j++){
+               int ki = i/2, spin_i = i%2;
+               int kj = j/2, spin_j = j%2;
+               auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi2>
+               auto icomb_ji = apply_opC(icomb_i, kj, spin_j, 0); // ji|psi2>
+               ctns::rdm_sweep("0p2h", false, icomb_ji, icomb2, schd, scratch, rdmtmp, tdm);
+               int pi = 2*image1[ki] + spin_i; // map to the orbital index
+               int pj = 2*image1[kj] + spin_j;
+               auto pij = tools::canonical_pair0(pi,pj);
+               Tm sgn = tools::sgn_pair0(pi,pj);
+               rdmtmp *= sgn;
+               linalg::xcopy(k2, rdmtmp.data(), 1, rdm2tmp2.row(pij), k2);
+            }
+         }
+         auto rdm2diff = rdm2tmp2 - rdm2tmp;
+         std::cout << "debug 0p2h via rdm2: |rdm2|=" << rdm2tmp.normF() << " |rdm2b|=" << rdm2tmp2.normF()
+            << " |rdm2-rdm2b|=" << rdm2diff.normF() << std::endl;
+         assert(rdm2diff.normF() < thresh);
+      }
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,"2p1h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(k2,k);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("2p1h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+      // debug this case
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm2tmp(k2,k2), rdm2tmp2(k2,k2), rdmtmp(k2,k);
+         // <psi|i+j+rs|psi2> (r<s) = <psi|i+j+r(s|psi2>)
+         ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm2tmp, tdm);
+         auto image1 = icomb2.topo.get_image1();
+         for(int s=0; s<k; s++){
+            int ks = s/2, spin_s = s%2;
+            auto icomb2_s = apply_opC(icomb2, ks, spin_s, 0); // s|psi2>
+            ctns::rdm_sweep("2p1h", false, icomb, icomb2_s, schd, scratch, rdmtmp, tdm);
+            int ps = 2*image1[ks] + spin_s; // map to the orbital index
+            for(int pr=0; pr<ps; pr++){
+               auto psr = tools::canonical_pair0(ps,pr);
+               linalg::xcopy(k2, rdmtmp.col(pr), rdm2tmp2.col(psr));
+            }
+         }
+         auto rdm2diff = rdm2tmp2 - rdm2tmp;
+         std::cout << "debug 2p1h via rdm2: |rdm2|=" << rdm2tmp.normF() << " |rdm2b|=" << rdm2tmp2.normF()
+            << " |rdm2-rdm2b|=" << rdm2diff.normF() << std::endl;
+         assert(rdm2diff.normF() < thresh);
+      }
+   }
+
+   if(tools::is_in_vector(schd.ctns.task_prop,"1p2h")){
+      // create scratch
+      auto scratch = schd.scratch+"/sweep";
+      io::remove_scratch(scratch, (rank == 0));
+      io::create_scratch(scratch, (rank == 0));
+      linalg::matrix<Tm> rdm(k,k2);
+      linalg::matrix<Tm> tdm;
+      ctns::rdm_sweep("1p2h", false, icomb, icomb2, schd, scratch, rdm, tdm);
+      // debug this case
+      if(schd.ctns.debug_rdm){
+         linalg::matrix<Tm> rdm2tmp(k2,k2), rdm2tmp2(k2,k2), rdmtmp(k,k2);
+         // <psi|i+j+rs|psi2> (i>j,r<s) = (<psi|i+)j+rs|psi2>, |tmp>=i|psi> 
+         ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm2tmp, tdm);
+         auto image1 = icomb.topo.get_image1();
+         for(int i=0; i<k; i++){
+            int ki = i/2, spin_i = i%2;
+            auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi2>
+            ctns::rdm_sweep("1p2h", false, icomb_i, icomb2, schd, scratch, rdmtmp, tdm);
+            int pi = 2*image1[ki] + spin_i; // map to the orbital index
+            for(int pj=0; pj<pi; pj++){
+               auto pij = tools::canonical_pair0(pi,pj);
+               linalg::xcopy(k2, rdmtmp.row(pj), k, rdm2tmp2.row(pij), k2);
+            }
+         }
+         auto rdm2diff = rdm2tmp2 - rdm2tmp;
+         std::cout << "debug 1p2h via rdm2: |rdm2|=" << rdm2tmp.normF() << " |rdm2b|=" << rdm2tmp2.normF()
+            << " |rdm2-rdm2b|=" << rdm2diff.normF() << std::endl;
+         assert(rdm2diff.normF() < thresh);
+      }
+   }
+
    // 3: rdm3
    if(tools::is_in_vector(schd.ctns.task_prop,"3p3h")){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       io::remove_scratch(scratch, (rank == 0));
       io::create_scratch(scratch, (rank == 0));
-/*
-      // compute rdm3
+      // compute rdm3 = <p+q+r+stu> (p>q>r,s<t<u)
       size_t k3 = k*(k-1)*(k-2)/6;
-      linalg::matrix<Tm> rdm3.resize(k3,k3), tdm3;
-      ctns::rdm_sweep("2p2h", is_same, icomb, icomb2, schd, scratch, rdm3, tdm3);
-*/
+      linalg::matrix<Tm> rdm3(k3,k3);
+      auto image1 = icomb.topo.get_image1();
+      for(int i=0; i<k; i++){
+         int ki = i/2, spin_i = i%2;
+         auto icomb2_i = apply_opC(icomb2, ki, spin_i, 0); // i|psi> (u=i)
+         linalg::matrix<Tm> rdm32(k3,k2), tdm32;
+         ctns::rdm_sweep("3p2h", false, icomb, icomb2_i, schd, scratch, rdm32, tdm32);
+         // copy data
+      } 
       if(schd.ctns.debug_rdm and rank == 0 and Qm::ifabelian){
          auto rdm3b = ctns::rdm3_simple(icomb, icomb2, iroot, jroot);
-         /*
-         auto diff = rdm2 - rdm2b;
-         std::cout << "diff|rdm2-rdm2b|=" << diff.normF() << std::endl; 
+         auto diff = rdm3 - rdm3b;
+         std::cout << "debug 3p3h against rdm3_simple: |rdm3|=" << rdm3.normF() 
+            << " |rdm3b|=" << rdm3b.normF()
+            << " |rdm3-rdm3b|=" << diff.normF() << std::endl; 
          assert(diff.normF() < thresh);
-         */
-      } // debug
-      exit(1);
+         exit(1);
+      } 
    } // rdm3
 
    // save results

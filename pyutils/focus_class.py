@@ -7,6 +7,7 @@ class Common:
         self.parentdir = None
         self.workdir = None
         self.dtype = 0
+        self.sorb = None
         self.nelec = None
         self.twom = None
         self.integral_file = None
@@ -14,6 +15,7 @@ class Common:
 
     def gen_input(self,f):
         f.write('dtype '+str(self.dtype)+'\n')
+        f.write('sorb '+str(self.sorb)+'\n')
         f.write('nelec '+str(self.nelec)+'\n')
         f.write('twom '+str(self.twom)+'\n')
         f.write('integral_file '+str(self.integral_file)+'\n')
@@ -49,10 +51,11 @@ class SCI:
             f.write(line)
         f.write('end\n')
         # schedule
-        f.write('schedule\n')
-        for item in self.schedule:
-            f.write(str(item[0])+' '+str(item[1])+'\n')
-        f.write('end\n')
+        if self.schedule != None:
+            f.write('schedule\n')
+            for item in self.schedule:
+                f.write(str(item[0])+' '+str(item[1])+'\n')
+            f.write('end\n')
         f.write('nroots '+str(self.nroots)+'\n')
         f.write('eps0 '+str(self.eps0)+'\n')
         f.write('maxiter '+str(self.maxiter)+'\n')
@@ -95,6 +98,7 @@ class CTNS:
         self.oo_alpha = None
         self.alg_hvec = 4
         self.alg_renorm = 4
+        self.rcanon_file = None
 
     def gen_input(self,fname,iprt):
         # TOPO
@@ -112,10 +116,11 @@ class CTNS:
         f.write('thresh_proj '+str(self.thresh_proj)+'\n')
         f.write('topology_file '+self.topology_file+'\n')
         # schedule
-        f.write('schedule\n')
-        for item in self.schedule:
-            f.write(str(item[0])+' '+str(item[1])+' '+str(item[2])+' '+str(item[3])+' '+str(item[4])+'\n')
-        f.write('end\n')
+        if self.schedule != None:
+            f.write('schedule\n')
+            for item in self.schedule:
+                f.write(str(item[0])+' '+str(item[1])+' '+str(item[2])+' '+str(item[3])+' '+str(item[4])+'\n')
+            f.write('end\n')
         f.write('maxsweep '+str(self.maxsweep)+'\n')
         for task in self.tasks:
             f.write(task+'\n')
@@ -123,6 +128,7 @@ class CTNS:
         f.write('alg_renorm '+str(self.alg_renorm)+'\n')
         if self.oo_maxiter != None: f.write('oo_maxiter '+str(self.oo_maxiter)+'\n')
         if self.oo_alpha != None: f.write('oo_alpha '+str(self.oo_alpha)+'\n')
+        if self.rcanon_file != None: f.write('rcanon_file '+str(self.rcanon_file)+'\n')
         f.write('$end\n')
         f.close()
         if iprt > 0:

@@ -120,9 +120,11 @@ namespace ctns{
          if(abs(alpha-1.0) < 1.e-8){
             ssum -= pi*log(pi);
          }else{
-            ssum += 1.0/(1.0-alpha)*std::pow(pi,alpha);
+            ssum += std::pow(pi,alpha);
          }
       }
+      // Correct formula for Renyi entropy
+      if(abs(alpha-1.0) > 1.e-8) ssum = 1.0/(1.0-alpha)*std::log(ssum);
       assert(abs(psum-1.0) < 1.e-8);
       return ssum;
    }
@@ -162,6 +164,7 @@ namespace ctns{
          std::cout << "von Neumann / Renyi[0.5] entropies across all bonds:" << std::endl;
          double s_sum = 0.0, sh_sum = 0.0;
          for(int i=0; i<svalues.size(); i++){
+            tools::print_vector(svalues[i], "sval"+std::to_string(i), 10);
             auto s_val = renyi_entropy(svalues[i], 1.0); // von Neumann entropy
             auto sh_val = renyi_entropy(svalues[i], 0.5); // renyi entropy [0.5]
             s_sum += s_val;

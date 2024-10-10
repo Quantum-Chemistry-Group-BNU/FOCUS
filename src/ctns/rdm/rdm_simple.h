@@ -335,6 +335,236 @@ namespace ctns{
          return sp;
       }
 
+   //
+   // Transition density matrices
+   //
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm1p0h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2){
+         std::cout << "error: tdm1p0h_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm1p0h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2){
+         auto t0 = tools::get_time();
+         std::cout << "\nctns::tdm1p0h_simple: iroot1=" << iroot1
+            << " iroot2=" << iroot2 
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
+         int sorb = 2*icomb2.get_nphysical();
+         // tdm1[i,j] = <psi|i^+|psi2>
+         linalg::matrix<Tm> tdm1(sorb,1);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+         for(int i=0; i<sorb; i++){
+            int ki = i/2, spin_i = i%2;
+            auto icomb2i = apply_opC(icomb2, ki, spin_i, 1); // ai^+|psi2>
+            auto smat = get_Smat(icomb1,icomb2i); // <psi1|ai^+|psi2>
+            // map back to the actual orbital      
+            int pi = 2*image1[ki] + spin_i;
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+            tdm1(pi,1) = smat(iroot1,iroot2);
+         } // i
+         auto t1 = tools::get_time();
+         tools::timing("ctns::tdm1p0h_simple", t0, t1);
+         return tdm1;
+      }
+
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm2p0h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         std::cout << "error: tdm2p0h_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm2p0h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         auto t0 = tools::get_time();
+         std::cout << "\nctns::tdm2p0h_simple: iroot1=" << iroot1
+            << " iroot2=" << iroot2 
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
+         int sorb = 2*icomb2.get_nphysical();
+         // tdm2[ij] = <i^+j^+> (i>j)
+         int sorb2 = sorb*(sorb-1)/2;
+         linalg::matrix<Tm> tdm2(sorb2,1);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+         for(size_t ij=0; ij<sorb2; ij++){
+            auto ijpr = tools::inverse_pair0(ij);
+            int i = ijpr.first;
+            int j = ijpr.second;
+            std::cout << "ij/pair=" << ij << "," << sorb2 << " i,j=" << i << "," << j << std::endl;
+            int ki = i/2, spin_i = i%2;
+            int kj = j/2, spin_j = j%2;
+            auto icomb2j = apply_opC(icomb2, kj, spin_j, 1); // aj^+|psi2>
+            auto icomb2ij = apply_opC(icomb2j, ki, spin_i, 1); // ai^+aj^+|psi2>
+            auto smat = get_Smat(icomb1,icomb2ij); // <psi1|ai^+aj^+|psi2>
+            // map back to the actual orbital      
+            int pi = 2*image1[ki] + spin_i;
+            int pj = 2*image1[kj] + spin_j;
+            auto pij = tools::canonical_pair0(pi,pj);
+            Tm sgn1 = tools::sgn_pair0(pi,pj);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+            tdm2(pij,1) = sgn1*smat(iroot1,iroot2);
+         } // ij
+         auto t1 = tools::get_time();
+         tools::timing("ctns::tdm2p0h_simple", t0, t1);
+         return tdm2;
+      }
+
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm2p1h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         std::cout << "error: tdm2p1h_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm2p1h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         auto t0 = tools::get_time();
+         std::cout << "\nctns::tdm2p1h_simple: iroot1=" << iroot1
+            << " iroot2=" << iroot2 
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
+         int sorb = 2*icomb2.get_nphysical();
+         // tdm2[ij,k] = <i^+j^+k> (i>j)
+         int sorb2 = sorb*(sorb-1)/2;
+         linalg::matrix<Tm> tdm2(sorb2,sorb);
+         for(size_t ij=0; ij<sorb2; ij++){
+            auto ijpr = tools::inverse_pair0(ij);
+            int i = ijpr.first;
+            int j = ijpr.second;
+            std::cout << "ij/pair=" << ij << "," << sorb2 << " i,j=" << i << "," << j << std::endl;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+            for(size_t k=0; k<sorb; k++){
+               int ki = i/2, spin_i = i%2;
+               int kj = j/2, spin_j = j%2;
+               int kk = k/2, spin_k = k%2;
+               auto icomb2k = apply_opC(icomb2, kk, spin_k, 0); // ak|psi2>
+               auto icomb2jk = apply_opC(icomb2k, kj, spin_j, 1); // aj^+ak|psi2>
+               auto icomb2ijk = apply_opC(icomb2jk, ki, spin_i, 1); // ai^+aj^+ak|psi2>
+               auto smat = get_Smat(icomb1,icomb2ijk); // <psi1|ai^+aj^+ak|psi2>
+               // map back to the actual orbital
+               int pi = 2*image1[ki] + spin_i;
+               int pj = 2*image1[kj] + spin_j;
+               int pk = 2*image1[kk] + spin_k;
+               auto pij = tools::canonical_pair0(pi,pj);
+               Tm sgn1 = tools::sgn_pair0(pi,pj);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+               tdm2(pij,pk) = sgn1*smat(iroot1,iroot2);
+            } // k
+         } // ij
+         auto t1 = tools::get_time();
+         tools::timing("ctns::tdm2p1h_simple", t0, t1);
+         return tdm2;
+      }
+
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm3p2h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=false){
+         std::cout << "error: tdm3p2h_simple does not support su2 case!" << std::endl;
+         exit(1);
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      linalg::matrix<Tm> tdm3p2h_simple(const comb<Qm,Tm>& icomb1,
+            const comb<Qm,Tm>& icomb2,
+            const int iroot1,
+            const int iroot2,
+            const bool debug=true){
+         auto t0 = tools::get_time();
+         std::cout << "\nctns::tdm3p2h_simple: iroot1=" << iroot1
+            << " iroot2=" << iroot2 
+            << std::endl;
+         assert(iroot1 < icomb1.get_nroots());
+         assert(iroot2 < icomb2.get_nroots());
+         auto image1 = icomb1.topo.get_image1();
+         int sorb = 2*icomb2.get_nphysical();
+         // tdm3[ijk,ml] = <i^+j^+k^+lm> (i>j>k,l<m)
+         size_t sorb3 = sorb*(sorb-1)*(sorb-2)/6;
+         size_t sorb2 = sorb*(sorb-1)/2;
+         linalg::matrix<Tm> tdm3(sorb3,sorb2);
+         for(size_t ijk=0; ijk<sorb3; ijk++){
+            auto ijktr = tools::inverse_triple0(ijk);
+            int i = std::get<0>(ijktr);
+            int j = std::get<1>(ijktr);
+            int k = std::get<2>(ijktr);
+            std::cout << "ijk/triple=" << ijk << "," << sorb3 << " i,j,k=" << i << "," << j << "," << k << std::endl;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+            for(size_t ml=0; ml<sorb2; ml++){
+               auto mlpr = tools::inverse_pair0(ml);
+               int m = mlpr.first;
+               int l = mlpr.second;
+               int ki = i/2, spin_i = i%2;
+               int kj = j/2, spin_j = j%2;
+               int kk = k/2, spin_k = k%2;
+               int kl = l/2, spin_l = l%2;
+               int km = m/2, spin_m = m%2;
+               auto icomb2m = apply_opC(icomb2, km, spin_m, 0); // am|psi2>
+               auto icomb2lm = apply_opC(icomb2m, kl, spin_l, 0); // alam|psi2>
+               auto icomb2klm = apply_opC(icomb2lm, kk, spin_k, 1); // ak+alam|psi2>
+               auto icomb2jklm = apply_opC(icomb2klm, kj, spin_j, 1); // aj+ak+alam|psi2>
+               auto icomb2ijklm = apply_opC(icomb2jklm, ki, spin_i, 1); // ai+aj+ak+alam|psi2>
+               auto smat = get_Smat(icomb1,icomb2ijklm); // <psi1|ai+aj+ak+alam|psi2>
+               // map back to the actual orbital      
+               int pi = 2*image1[ki] + spin_i;
+               int pj = 2*image1[kj] + spin_j;
+               int pk = 2*image1[kk] + spin_k;
+               int pl = 2*image1[kl] + spin_l;
+               int pm = 2*image1[km] + spin_m;
+               auto pijk = tools::canonical_triple0(pi,pj,pk);
+               auto pml = tools::canonical_pair0(pm,pl);
+               Tm sgn1 = tools::sgn_triple0(pi,pj,pk);
+               Tm sgn2 = tools::sgn_pair0(pm,pl);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+               tdm3(pijk,pml) = sgn1*sgn2*smat(iroot1,iroot2);
+            } // lm
+         } // ijk
+         auto t1 = tools::get_time();
+         tools::timing("ctns::tdm3p2h_simple", t0, t1);
+         return tdm3;
+      }
+
 } // ctns
 
 #endif

@@ -129,6 +129,32 @@ def parse_oodmrg(fname="ctns.out",iprt=0):
               'Srenyi':result[3]}
     return result
 
+def parse_Sdiag(output):
+    f = open(output,'r')
+    lines = f.readlines()
+    iread = 0
+    sdiag = -1
+    cmax = -1
+    conf = None
+    for line in lines:
+        if 'ctns::rcanon_Sdiag_sample: ifab=' in line:
+            iread = 1
+            nsample = eval(line.split()[3].split('=')[-1])
+        elif "TIMING FOR ctns::rcanon_Sdiag_sample" in line:
+            iread = 0
+            break
+        elif iread >= 1:
+            iread += 1
+            # we simply assume 10 lines
+            if iread == 12:
+                sdiag = eval(line.split()[3])
+            elif iread == 15:
+                res = line.split('=')
+                conf = res[2].split()[0]
+                cmax = eval(res[3].split()[0])
+    f.close()
+    return (sdiag,conf,cmax)
+
 if __name__ == '__main__':
 
     fname = './tmp/ctns.out'

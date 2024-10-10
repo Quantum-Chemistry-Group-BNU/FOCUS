@@ -5,18 +5,16 @@ import ipyscf_real
 from focus_class import *
 import focus_parser
 
-def vonNeumannEntropy(pop,thresh=1.e-100):
+def renyiEntropy(pop,alpha,thresh=1.e-100):
     s = 0.0
     for p in pop:
         if p < thresh: continue
-        s += -p*np.log(p)
+        if alpha == 1:
+            s += -p*np.log(p)
+        else:
+            s += p**alpha
+    if alpha != 1: s = s/(1-alpha)
     return s
-
-def renyiEntropy(pop,alpha):
-    if alpha == 1:
-        return vonNeumannEntropy(pop)
-    else:
-        return 1/(1-alpha)*np.sum(pop**alpha)
 
 def loadUrot(fname,norb):
     f = open(fname)
@@ -90,6 +88,7 @@ def OO_DMRG(mol,mf,mo,dcut,oo_maxiter,oo_alpha,parentdir,workdir='oodmrg_tmp',ip
     integral_file = 'rmole_lo.info'
     iface.dump(info,fname=integral_file)
 
+    common.sorb = mol.nao*2
     common.nelec = mol.nelectron
     common.twom = mol.spin
     common.integral_file = integral_file

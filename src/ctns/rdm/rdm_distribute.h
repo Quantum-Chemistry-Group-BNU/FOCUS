@@ -20,7 +20,13 @@ namespace ctns{
                num_string == "310" || num_string == "400" || 
                num_string == "011" || num_string == "040" || num_string == "013" ||
                num_string == "004" ||
-               num_string == "010" || num_string == "100" || num_string == "001"){
+               // 1p0h & 0p1h
+               num_string == "010" || num_string == "100" || num_string == "001" ||
+               // 2p1h & 1p2h
+               num_string == "030" || num_string == "021" || num_string == "300" ||
+               num_string == "012" || num_string == "003" || 
+               // 3p2h 
+               num_string == "041"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                if(rdx % size == rank) reval.push_back(rdx);
@@ -29,11 +35,14 @@ namespace ctns{
                const auto& ldx = lpr.first;
                leval.push_back(ldx);
             }
+         // parallelize over left one-indexed ops
          }else if(num_string == "110" || num_string == "101" || num_string == "112" ||
                num_string == "130" || num_string == "103" ||
                // by putting 002 and 022 here, they will only be evaluated on rank-0
                // which will avoid repeated calculations in different ranks for ifhermi=true 
-               num_string == "002" || num_string == "022"){
+               num_string == "002" || num_string == "022" ||
+               // 2p1h & 1p2h
+               num_string == "120" || num_string == "111" || num_string == "102"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                reval.push_back(rdx);
@@ -42,7 +51,10 @@ namespace ctns{
                const auto& ldx = lpr.first;
                if(ldx % size == rank) leval.push_back(ldx);
             }
-         }else if(num_string == "220" || num_string == "211" || num_string == "202"){
+         // parallelize over left two-indexed ops
+         }else if(num_string == "220" || num_string == "211" || num_string == "202" ||
+               // 2p1h & 1p2h
+               num_string == "201" || num_string == "210"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                reval.push_back(rdx); 
