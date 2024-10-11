@@ -13,7 +13,7 @@ def renyiEntropy(pop,alpha,thresh=1.e-100):
             s += -p*np.log(p)
         else:
             s += p**alpha
-    if alpha != 1: s = s/(1-alpha)
+    if alpha != 1: s = np.log(s)/(1-alpha)
     return s
 
 def loadUrot(fname,norb):

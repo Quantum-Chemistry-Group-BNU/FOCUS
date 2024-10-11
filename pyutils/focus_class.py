@@ -95,6 +95,7 @@ class CTNS:
         self.maxsweep = 4
         self.tasks = None
         self.oo_maxiter = None
+        self.oo_macroiter = None
         self.oo_alpha = None
         self.alg_hvec = 4
         self.alg_renorm = 4
@@ -127,6 +128,7 @@ class CTNS:
         f.write('alg_hvec '+str(self.alg_hvec)+'\n')
         f.write('alg_renorm '+str(self.alg_renorm)+'\n')
         if self.oo_maxiter != None: f.write('oo_maxiter '+str(self.oo_maxiter)+'\n')
+        if self.oo_macroiter != None: f.write('oo_macroiter '+str(self.oo_macroiter)+'\n')
         if self.oo_alpha != None: f.write('oo_alpha '+str(self.oo_alpha)+'\n')
         if self.rcanon_file != None: f.write('rcanon_file '+str(self.rcanon_file)+'\n')
         f.write('$end\n')
