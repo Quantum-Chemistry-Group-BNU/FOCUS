@@ -82,7 +82,7 @@ namespace ctns{
          const int& macroiter = schd.ctns.ooparams.macroiter;
          const int& microiter = schd.ctns.ooparams.microiter;
          const double& alpha = schd.ctns.ooparams.alpha;
-         const int dcut = schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut;
+         const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : icomb.get_dmax();
          const int dfac = schd.ctns.ooparams.dfac;
          const int dmax = dfac*dcut; 
          if(iprt >= 0){

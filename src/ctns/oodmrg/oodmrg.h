@@ -21,7 +21,7 @@ namespace ctns{
 #endif  
          const bool debug = (rank==0);
          const int maxiter = schd.ctns.ooparams.maxiter;
-         const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : -1;
+         const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : icomb.get_dmax();
          const bool acceptall = schd.ctns.ooparams.acceptall;
          const double alpha = schd.ctns.ooparams.alpha;
          const double thrdeps = schd.ctns.ooparams.thrdeps;
@@ -158,8 +158,12 @@ namespace ctns{
             }
 
             // optimization of MPS with new integrals
-            std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
-            auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
+            double eminlast = std::real(Hij(0,0));
+            if(schd.ctns.maxsweep > 0){
+               std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
+               auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
+               eminlast = result.get_eminlast(0);
+            }
             if(rank == 0){
                sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
                srnew_history[iter] = rcanon_entropysum(icomb_new, alpha); 
@@ -205,9 +209,9 @@ namespace ctns{
             if(rank == 0){
                // check acceptance
                std::string status;
-               enew_history[iter] = result.get_eminlast(0);
+               enew_history[iter] = eminlast;
                double deltaE = enew_history[iter] - emin_history[iter];
-               bool accept = (iter == maxiter-1) or (iter == 0) or 
+               bool accept = (iter == maxiter-1) or (iter == 0) or
                   acceptall or (deltaE <= -thrdeps) or 
                   (std::abs(deltaE)<thrdeps and srnew_history[iter]<srenyi_history[iter]);
                if(accept){
