@@ -62,7 +62,7 @@ namespace integral{
                std::istringstream is(line);
                is >> i >> j >> k >> l >> eri; // read quadruple and integral
                if(i*j == 0 && k*l == 0){
-                  std::cout << " ecore = " << eri << std::endl;
+                  std::cout << " ecore = " << std::fixed << std::setprecision(12) << eri << std::endl;
                   ecore = std::real(eri);
                }else if(i*j != 0 && k*l == 0){
                   int1e.set(i-1, j-1, eri);

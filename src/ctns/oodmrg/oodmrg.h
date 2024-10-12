@@ -143,7 +143,7 @@ namespace ctns{
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
-
+            
             // prepare environment
             auto Hij = get_Hmat(icomb_new, int2e_new, int1e_new, ecore, schd, scratch);
             if(rank == 0){
@@ -162,7 +162,7 @@ namespace ctns{
             if(schd.ctns.maxsweep > 0){
                std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
                auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
-               eminlast = result.get_eminlast(0);
+               if(rank == 0) eminlast = result.get_eminlast(0);
             }
             if(rank == 0){
                sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);

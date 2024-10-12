@@ -285,7 +285,7 @@ namespace ctns{
       int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 
       std::vector<input::params_sweep> ctrls; // control parameters
-                                              // energies
+      // energies
       std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
       std::vector<dot_result> min_result;
       // timing

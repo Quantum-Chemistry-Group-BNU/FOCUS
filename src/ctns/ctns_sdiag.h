@@ -109,6 +109,9 @@ namespace ctns{
             << " nprt=" << nprt
             << " saveconfs=" << saveconfs
             << std::endl;
+#ifndef SERIAL
+         assert(icomb.world.rank() == 0); // this function is only a serial version
+#endif
          const int noff = (nsample+9)/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
