@@ -77,5 +77,6 @@ void schedule::read(string fname){
    istrm.close();
    // consistency check
    if(scratch == ".") tools::exit("error: scratch directory must be defined!");
+   if(sorb == 0) tools::exit("error: sorb (no. of spin-orbitals) must be defined!");
    print();
 }
