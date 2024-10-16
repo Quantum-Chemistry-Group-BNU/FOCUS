@@ -14,6 +14,7 @@ import time
 class iface:
    def __init__(self):
       self.nfrozen = 0
+      self.unrestricted = False
       self.mol = None
       self.mf = None
       self.nfrozen = None
@@ -23,10 +24,59 @@ class iface:
 
    # This is the central part
    def get_integral(self,mo_coeff):
-      t0 = time.time()
-      print('\n[iface.get_integral] nmo=',mo_coeff.shape[1],\
+       shape = mo_coeff.shape
+       self.unrestricted = len(shape) == 3
+       print('\n[iface.get_integral] unrestricted=',self.unrestricted,
+              ' nmo=',mo_coeff.shape[1],\
               ' nfrozen=',self.nfrozen,\
               ' nact=',mo_coeff.shape[1]-self.nfrozen)
+       if not self.unrestricted:
+          result = self.get_integral_r(mo_coeff)
+       else:
+          result = self.get_integral_u(mo_coeff)
+       return result
+
+   def get_integral_u(self,mo_coeff):
+      t0 = time.time()
+      ecore = self.mol.energy_nuc()
+      mo_coeff_a = mo_coeff[0]
+      mo_coeff_b = mo_coeff[1]
+      # Intergrals
+      mcoeffC_a = mo_coeff_a[:,:self.nfrozen].copy()
+      mcoeffA_a = mo_coeff_a[:,self.nfrozen:].copy()
+      mcoeffC_b = mo_coeff_b[:,:self.nfrozen].copy()
+      mcoeffA_b = mo_coeff_b[:,self.nfrozen:].copy()
+      hcore = self.mf.get_hcore()
+      if self.nfrozen>0:
+         # Core part
+         pCore_a = mcoeffC_a.dot(mcoeffC_a.T)
+         pCore_b = mcoeffC_b.dot(mcoeffC_b.T)
+         vj,vk = hf.get_jk(self.mol,(pCore_a,pCore_b))
+         fock_a = hcore + vj[0] + vj[1] - vk[0]
+         fock_b = hcore + vj[0] + vj[1] - vk[1]
+         hmo_a = functools.reduce(numpy.dot,(mcoeffA_a.T,fock_a,mcoeffA_a))
+         hmo_b = functools.reduce(numpy.dot,(mcoeffA_b.T,fock_b,mcoeffA_b))
+         ecore += 0.5*numpy.trace(pCore_a.dot(hcore+fock_a)) \
+                + 0.5*numpy.trace(pCore_b.dot(hcore+fock_b))
+      else:
+         hmo_a = functools.reduce(numpy.dot,(mcoeffA_a.T,hcore,mcoeffA_a))
+         hmo_b = functools.reduce(numpy.dot,(mcoeffA_b.T,hcore,mcoeffA_b))
+      t1 = time.time()
+      print(' time for heff=',t1-t0,'S')
+      # Active part
+      nact = mcoeffA_a.shape[1]
+      eri_aaaa,eri_bbbb,eri_aabb = self.get_eri_u(mcoeffA_a,mcoeffA_b)
+      t2 = time.time()
+      print(' time for h2e=',t2-t0,'S')
+      # save
+      self.ecore = ecore
+      self.hmo = (hmo_a,hmo_b)
+      self.eri = (eri_aaaa,eri_bbbb,eri_aabb)
+      print('finished')
+      return ecore,hmo_a,hmo_b,eri_aaaa,eri_bbbb,eri_aabb
+
+   def get_integral_r(self,mo_coeff):
+      t0 = time.time()
       ecore = self.mol.energy_nuc()
       # Intergrals
       mcoeffC = mo_coeff[:,:self.nfrozen].copy()
@@ -45,7 +95,7 @@ class iface:
       print(' time for heff=',t1-t0,'S')
       # Active part
       nact = mcoeffA.shape[1]
-      eri = self.get_eri(mcoeffA)
+      eri = self.get_eri_r(mcoeffA)
       t2 = time.time()
       print(' time for h2e=',t2-t0,'S')
       # save
@@ -54,8 +104,22 @@ class iface:
       self.eri = eri
       print('finished')
       return ecore,hmo,eri
-  
-   def get_eri(self,mcoeffA):
+
+   def get_eri_u(self,mcoeffA_a,mcoeffA_b):
+        nact = mcoeffA_a.shape[1]
+        try:
+            eri_aaaa = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_a,mcoeffA_a),compact=0).reshape(nact,nact,nact,nact)
+            eri_bbbb = ao2mo.general(self.mol,(mcoeffA_b,mcoeffA_b,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
+            eri_aabb = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
+        except:
+            print('Hubbard case')
+            h2 =  ao2mo.restore(1, self.mf._eri, nact)
+            eri_aaaa =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_a,mocoeffA_a,optimize=True)
+            eri_bbbb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_b,mcoeffA_b,mcoeffA_b,mocoeffA_b,optimize=True)
+            eri_aabb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_b,mocoeffA_b,optimize=True)
+        return eri_aaaa,eri_bbbb,eri_aabb
+
+   def get_eri_r(self,mcoeffA):
         nact = mcoeffA.shape[1]
         try:
             eri = ao2mo.general(self.mol,(mcoeffA,mcoeffA,mcoeffA,mcoeffA),compact=0)
@@ -104,17 +168,31 @@ class iface:
 
    def dump(self,info,fname='mole.info'):
       print('\n[iface.dump] fname=',fname)
-      ecore,int1e,int2e = info
-      # Spin orbital integrals
-      sbas = 2*int1e.shape[0]
-      h1e = numpy.zeros((sbas,sbas)) 
-      h1e[0::2,0::2] = int1e # AA
-      h1e[1::2,1::2] = int1e # BB
-      h2e = numpy.zeros((sbas,sbas,sbas,sbas))
-      h2e[0::2,0::2,0::2,0::2] = int2e # AAAA
-      h2e[1::2,1::2,1::2,1::2] = int2e # BBBB
-      h2e[0::2,0::2,1::2,1::2] = int2e # AABB
-      h2e[1::2,1::2,0::2,0::2] = int2e # BBAA
+      if len(info) == 3:
+         ecore,int1e,int2e = info
+         # Spin orbital integrals
+         sbas = 2*int1e.shape[0]
+         h1e = numpy.zeros((sbas,sbas)) 
+         h1e[0::2,0::2] = int1e # AA
+         h1e[1::2,1::2] = int1e # BB
+         h2e = numpy.zeros((sbas,sbas,sbas,sbas))
+         h2e[0::2,0::2,0::2,0::2] = int2e # AAAA
+         h2e[1::2,1::2,1::2,1::2] = int2e # BBBB
+         h2e[0::2,0::2,1::2,1::2] = int2e # AABB
+         h2e[1::2,1::2,0::2,0::2] = int2e # BBAA
+      else:
+         ecore,int1e_aa,int1e_bb,int2e_aaaa,int2e_bbbb,int2e_aabb = info
+         # Spin orbital integrals
+         sbas = 2*int1e_aa.shape[0]
+         h1e = numpy.zeros((sbas,sbas)) 
+         h1e[0::2,0::2] = int1e_aa # AA
+         h1e[1::2,1::2] = int1e_bb # BB
+         h2e = numpy.zeros((sbas,sbas,sbas,sbas))
+         h2e[0::2,0::2,0::2,0::2] = int2e_aaaa # AAAA
+         h2e[1::2,1::2,1::2,1::2] = int2e_bbbb # BBBB
+         h2e[0::2,0::2,1::2,1::2] = int2e_aabb # AABB
+         h2e[1::2,1::2,0::2,0::2] = int2e_aabb.transpose(2,3,0,1) # BBAA
+      # antisymmetrize 
       h2e = h2e.transpose(0,2,1,3) # <ij|kl> = [ik|jl]
       h2e = h2e-h2e.transpose(0,1,3,2) # Antisymmetrize V[pqrs]=<pq||rs>
       self.dumpAERI(ecore,h1e,h2e,fname)

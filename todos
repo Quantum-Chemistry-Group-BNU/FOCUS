@@ -1,15 +1,5 @@
 
- * Further optimized kernel for assembling RDM:
-   - alg_rdm=2: 
-      - classify l,r operators by symmetry
-      - batched dgemv operation for assembling?
-   - compare different options for alg_renorm and alg_rdm
-   - profiling for FeMoCo with D>=8000
-      - /public/home/bnulizdtest/tests/femoco/mpi8n2
-      - memory issue for openmp?
-   - optimize IO (prefetch?)
-   - batch algorithm (BatchedGEMV) for patterns 211
-   - GPU assembling algorithm via batch?
+### 2025 DMRG[RDM(su2)] ###
 
  * RDMs for su2 case:
    - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
@@ -31,6 +21,11 @@
       - rdm2
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
 
+### 2025 FeMoco[+dynamical correlation/+SOC] ###
+
+ * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
+   - This may be operationally useful like BS-DFT.
+
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
@@ -45,7 +40,7 @@
  * Disentangle transformation:
    - Combined with LEOs 
    - Python implementation for preparation of MPS [linear combination of CSF]
-   - Generate practical circuits for quantum computers
+   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!!!]
 
 ### TODOs: more functionalities ###
 
