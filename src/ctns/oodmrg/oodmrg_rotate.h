@@ -13,9 +13,11 @@ namespace ctns{
       void twodot_rotate(const std::vector<Tm>& v0, 
             std::vector<Tm>& vr, 
             qtensor4<ifab,Tm>& wf, 
-            const double theta){
+            const std::vector<double>& thetalst){
          assert(!ifab);
          assert(v0.size() == vr.size());
+         assert(thetalst.size() == 1);
+         const double theta = thetalst[0];
          // direct copy without rotation
          if(std::abs(theta) < 1.e-16){
             linalg::xcopy(v0.size(), v0.data(), vr.data());
@@ -161,6 +163,7 @@ namespace ctns{
             }
 
          } // i
+         
          // debug by checking the norm of the rotated wavefunction,
          // which should be identitcal to the unrotated one.
          if(debug_twodot_rotate){
@@ -174,6 +177,7 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
+            std::cout << "end of twodot_rotate" << std::endl;
          }
       }
 
@@ -182,26 +186,37 @@ namespace ctns{
       void twodot_rotate(const std::vector<Tm>& v0, 
             std::vector<Tm>& vr, 
             stensor4<Tm>& wf, 
-            const double theta){
+            const std::vector<double>& thetalst){
+         double theta_a = thetalst[0];
+         double theta_b = thetalst[thetalst.size()-1];
          assert(v0.size() == vr.size());
          // direct copy without rotation
-         if(std::abs(theta) < 1.e-16){
+         if(std::abs(theta_a) < 1.e-16 and std::abs(theta_b) < 1.e-16){
             linalg::xcopy(v0.size(), v0.data(), vr.data());
             return;
          }
          if(debug_twodot_rotate){
-            std::cout << "\nctns::twodot_rotate: theta=" << theta << std::endl;
+            std::cout << "\nctns::twodot_rotate: (theta_a,theta_b)=" 
+               << theta_a << "," << theta_b
+               << std::endl;
             wf.print("wf",1);
          }
-         double c = std::cos(theta);
-         double s = std::sin(theta);
-         double c2 = c*c, s2 = s*s, cs = c*s;
+         double ca = std::cos(theta_a), cb = std::cos(theta_b);
+         double sa = std::sin(theta_a), sb = std::sin(theta_b);
          // encode the unitary matrix for the subspace by a dictionary
          std::map<std::tuple<int,int,int>,double> udict = {
-            {std::make_tuple(1,0,0), c2},{std::make_tuple(0,1,0), s2},{std::make_tuple(2,3,0),-cs},{std::make_tuple(3,2,0), cs},
-            {std::make_tuple(1,0,1), s2},{std::make_tuple(0,1,1), c2},{std::make_tuple(2,3,1), cs},{std::make_tuple(3,2,1),-cs},
-            {std::make_tuple(1,0,2), cs},{std::make_tuple(0,1,2),-cs},{std::make_tuple(2,3,2), c2},{std::make_tuple(3,2,2), s2},
-            {std::make_tuple(1,0,3),-cs},{std::make_tuple(0,1,3), cs},{std::make_tuple(2,3,3), s2},{std::make_tuple(3,2,3), c2}
+            // row-1
+            {std::make_tuple(1,0,0), ca*cb},{std::make_tuple(0,1,0), sa*sb},
+            {std::make_tuple(2,3,0),-ca*sb},{std::make_tuple(3,2,0), sa*cb},
+            // row-2
+            {std::make_tuple(1,0,1), sa*sb},{std::make_tuple(0,1,1), ca*cb},
+            {std::make_tuple(2,3,1), sa*cb},{std::make_tuple(3,2,1),-ca*sb},
+            // row-3
+            {std::make_tuple(1,0,2), ca*sb},{std::make_tuple(0,1,2),-sa*cb},
+            {std::make_tuple(2,3,2), ca*cb},{std::make_tuple(3,2,2), sa*sb},
+            // row-4
+            {std::make_tuple(1,0,3),-sa*cb},{std::make_tuple(0,1,3), ca*sb},
+            {std::make_tuple(2,3,3), sa*sb},{std::make_tuple(3,2,3), ca*cb}
          };
          // clear
          memset(vr.data(), 0, vr.size()*sizeof(Tm));
@@ -223,36 +238,57 @@ namespace ctns{
                (bm == 1 and bv == 1) or
                (bm == 2 and bv == 2) or
                (bm == 3 and bv == 3)){
+               if(debug_twodot_rotate) std::cout << "case-1" << std::endl;
                linalg::xcopy(size, &v0[offset], &vr[offset]); 
             }
 
-            // case-2: {(2,0),(0,2)},{(3,0),(0,3)},{(2,1),(1,2)},{(3,1),(1,3)}
+            // case-2a: {(2,0)=|a0>,(0,2)=|0a>},
+            //          {(2,1)=|a2>,(1,2)=|2a>},
             if((bm == 2 and bv == 0) or
-               (bm == 3 and bv == 0) or
-               (bm == 2 and bv == 1) or
-               (bm == 3 and bv == 1)){
+               (bm == 2 and bv == 1)){
+               if(debug_twodot_rotate) std::cout << "case-2a" << std::endl;
                size_t offset1 = wf.info.get_offset(br,bc,bv,bm);
                assert(offset1 > 0);
                offset1 -= 1;
-               linalg::xaxpy(size, c, &v0[offset] , &vr[offset]);
-               linalg::xaxpy(size, s, &v0[offset1], &vr[offset]); 
-            }
+               linalg::xaxpy(size, ca, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, sa, &v0[offset1], &vr[offset]); 
+            } 
             if((bm == 0 and bv == 2) or
-               (bm == 0 and bv == 3) or 
-               (bm == 1 and bv == 2) or
-               (bm == 1 and bv == 3)){
+               (bm == 1 and bv == 2)){
+               if(debug_twodot_rotate) std::cout << "case-2a2" << std::endl;
                size_t offset1 = wf.info.get_offset(br,bc,bv,bm);
                assert(offset1 > 0);
                offset1 -= 1;
-               linalg::xaxpy(size,  c, &v0[offset] , &vr[offset]);
-               linalg::xaxpy(size, -s, &v0[offset1], &vr[offset]); 
+               linalg::xaxpy(size,  ca, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, -sa, &v0[offset1], &vr[offset]); 
+            }
+            // case-2b: {(3,0)=|b0>,(0,3)=|0b>},
+            //          {(3,1)=|b2>,(1,3)=|2b>}
+            if((bm == 3 and bv == 0) or
+               (bm == 3 and bv == 1)){
+               if(debug_twodot_rotate) std::cout << "case-2b" << std::endl;
+               size_t offset1 = wf.info.get_offset(br,bc,bv,bm);
+               assert(offset1 > 0);
+               offset1 -= 1;
+               linalg::xaxpy(size, cb, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, sb, &v0[offset1], &vr[offset]); 
+            }
+            if((bm == 0 and bv == 3) or
+               (bm == 1 and bv == 3)){
+               if(debug_twodot_rotate) std::cout << "case-2b2" << std::endl;
+               size_t offset1 = wf.info.get_offset(br,bc,bv,bm);
+               assert(offset1 > 0);
+               offset1 -= 1;
+               linalg::xaxpy(size,  cb, &v0[offset] , &vr[offset]);
+               linalg::xaxpy(size, -sb, &v0[offset1], &vr[offset]); 
             }
 
-            // case-3: {(1,0),(0,1),(2,3),(3,2)}
+            // case-3: {(1,0)=|20>,(0,1)=|02>,(2,3)=|ab>,(3,2)=|ba>}
             if((bm == 1 and bv == 0) or
                (bm == 0 and bv == 1) or
                (bm == 2 and bv == 3) or
                (bm == 3 and bv == 2)){
+               if(debug_twodot_rotate) std::cout << "case-3" << std::endl;
                size_t offset0 = wf.info.get_offset(br,bc,1,0);
                size_t offset1 = wf.info.get_offset(br,bc,0,1);
                size_t offset2 = wf.info.get_offset(br,bc,2,3);
@@ -283,6 +319,7 @@ namespace ctns{
                   << std::endl;
                exit(1);
             }
+            std::cout << "end of twodot_rotate" << std::endl;
          }
       }
 

@@ -129,7 +129,10 @@ void SADMRG(const input::schedule& schd){
 
             }else{
                // load from a given file
-               assert(!schd.ctns.rcanon_file.empty());
+               if(schd.ctns.rcanon_file.empty()){
+                  std::cout << "error: tosu2=false and rcanon_file is empty!" << std::endl;
+                  exit(1);
+               }
                rcanon_file = schd.scratch+"/"+schd.ctns.rcanon_file;
                ctns::rcanon_load(icomb, rcanon_file); // user defined rcanon_file
             } // tosu2

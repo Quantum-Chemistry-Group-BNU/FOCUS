@@ -3,13 +3,14 @@
 
 #include "../../io/input_ctns.h"
 #include "../ctns_entropy.h"
+#include "oodmrg_urot.h"
 #include "oodmrg_rotate.h"
 #include <nlopt.hpp>
 
 namespace ctns{
 
    template <typename Qm, typename Tm>
-      double twodot_wavefun_entropy(const std::vector<double>& theta,
+      double twodot_wavefun_entropy(const std::vector<double>& thetalst,
             const comb<Qm,Tm>& icomb,
             const std::vector<Tm>& v0,
             std::vector<Tm>& vr,
@@ -24,9 +25,10 @@ namespace ctns{
             int& ncall,
             const bool& debug){
          ncall += 1;
+         
          // rotate wavefunction
-         assert(theta.size() == 1);
-         twodot_rotate<Qm::ifabelian,Tm>(v0, vr, wf, theta[0]);
+         twodot_rotate<Qm::ifabelian,Tm>(v0, vr, wf, thetalst);
+
          // decimation
          const bool iftrunc = true;
          const double rdm_svd = 1.5;
@@ -66,7 +68,7 @@ namespace ctns{
 
    template <typename Qm, typename Tm>
       double reduce_entropy_single(comb<Qm,Tm>& icomb,
-            linalg::matrix<Tm>& urot,
+            urot_class<Tm>& urot,
             const std::string scheme,
             const int dmax,
             const input::params_oodmrg& ooparams,
@@ -85,6 +87,7 @@ namespace ctns{
                << " alpha=" << alpha
                << " thrdloc=" << thrdloc
                << " nptloc=" << nptloc
+               << " unrestricted=" << urot.unrestricted
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -95,6 +98,7 @@ namespace ctns{
          init_cpsi_dot0(icomb, iroot, singlet);
 
          // generate sweep sequence
+         const int nspin = urot.unrestricted? 2 : 1;
          const int nroots = 1;
          const auto& rindex = icomb.topo.rindex;
          auto sweep_seq = icomb.topo.get_mps_sweeps();
@@ -171,7 +175,7 @@ namespace ctns{
             const double pi = 4.0*std::atan(1.0);
             int npt;
             std::vector<double> anglst, funlst;
-            std::vector<double> xvec(1);
+            std::vector<double> xvec(nspin);
             double fmin;
             if(scheme == "opt"){
             
@@ -180,16 +184,24 @@ namespace ctns{
                anglst.resize(npt);
                funlst.resize(npt);
                for(int i=0; i<npt; i++){
-                  std::vector<double> theta = {pi*i/(npt-1)};
+                  std::vector<double> theta(nspin);
+                  theta[0] = pi*i/(npt-1);
+                  if(nspin == 2) theta[1] = pi*i/(npt-1);
                   anglst[i] = theta[0];
                   funlst[i] = fun(theta); 
                }
                auto index = tools::sort_index(funlst); 
 
                // nlopt: optimize
-               nlopt::opt opt(nlopt::LN_BOBYQA, 1);
-               std::vector<double> lb = {0};
-               std::vector<double> ub = {pi};
+               nlopt::opt opt(nlopt::LN_BOBYQA, nspin);
+               std::vector<double> lb(nspin);
+               std::vector<double> ub(nspin);
+               lb[0] = 0;
+               ub[0] = pi;
+               if(nspin == 2){
+                  lb[1] = 0;
+                  ub[1] = pi;
+               }
                opt.set_lower_bounds(lb);
                opt.set_upper_bounds(ub);
                opt.set_xtol_rel(thrdloc);
@@ -197,7 +209,8 @@ namespace ctns{
                opt.set_min_objective(nlopt_vfun_entropy, &fun);
                try{
                   // initial guess
-                  xvec[0] = {index[0]*pi/(npt-1)};
+                  xvec[0] = index[0]*pi/(npt-1);
+                  if(nspin == 2) xvec[1] = index[0]*pi/(npt-1);
                   nlopt::result result = opt.optimize(xvec, fmin);
                }
                catch(std::exception &e) {
@@ -208,38 +221,45 @@ namespace ctns{
             }else if(scheme == "randomswap"){
            
                npt = 1;
-               anglst.resize(npt);
                funlst.resize(npt);
-               std::vector<double> theta = {0};
-               anglst[0] = theta[0];
+               std::vector<double> theta(nspin); // record the initial fun value
+               theta[0] = 0;
+               if(nspin == 2) theta[1] = 0; 
                funlst[0] = fun(theta);
                if(dbond.forward){
                   std::uniform_int_distribution<> dist(0,1);
                   xvec[0] = pi/2.0*dist(tools::generator);
+                  if(nspin == 2) xvec[1] = xvec[0];
                }else{
                   xvec[0] = 0.0;
+                  if(nspin == 2) xvec[1] = 0.0;
                }
            
             // randomly apply rotation gates
             }else if(scheme == "random"){
            
                npt = 1;
-               anglst.resize(npt);
                funlst.resize(npt);
-               std::vector<double> theta = {0};
-               anglst[0] = theta[0];
+               std::vector<double> theta(nspin); // record the initial fun value
+               theta[0] = 0;
+               if(nspin == 2) theta[1] = 0; 
                funlst[0] = fun(theta);
                if(dbond.forward){
                   std::uniform_real_distribution<double> dist(0,1);
                   if(gates.size() == 0){
                      xvec[0] = 2*pi*dist(tools::generator);
+                     if(nspin == 2) xvec[1] = xvec[0];
                   }else{
                      auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
                      bool ifexist = !(result == gates.end());
-                     if(ifexist) xvec[0] = 2*pi*dist(tools::generator);                     
+                     if(ifexist){
+                        xvec[0] = 2*pi*dist(tools::generator);
+                        if(nspin == 2) xvec[1] = xvec[0];
+                     }
                   }
                }else{
                   xvec[0] = 0.0;
+                  if(nspin == 2) xvec[1] = 0.0;
                }
  
             }else{
@@ -253,6 +273,7 @@ namespace ctns{
             // reject this move if dwt is too large
             if(dwt > ooparams.thrddwt){
                xvec[0] = 0.0;
+               if(nspin == 2) xvec[1] = 0.0;
                fmin = twodot_wavefun_entropy(xvec, icomb, v0, vr, wf, rot, wfs2,
                      dbond.forward, dmax, alpha, dwt, deff, ncall, debug_check);
             }
@@ -266,19 +287,19 @@ namespace ctns{
                   << " f0=" << funlst[0]
                   << " fx=" << fmin 
                   << " diff=" << fmin-funlst[0]
-                  << " x=" << xvec[0]
+                  << " x_a=" << xvec[0]
+                  << " x_b=" << xvec[nspin-1]
                   << " deff=" << deff 
                   << " dwt=" << dwt
                   << " ncall=" << ncall 
                   << std::endl;
             }
-            
-            // update urot
-            double theta = xvec[0];
-            // need to locate the physical orbital
+           
+            // update urot: need to locate the physical orbital
             int orb0 = icomb.topo.get_node(dbond.p0).porb; 
             int orb1 = icomb.topo.get_node(dbond.p1).porb;
-            givens_rotation(urot, orb0, orb1, theta); 
+            givens_rotation(urot.umat[0], orb0, orb1, xvec[0]);
+            givens_rotation(urot.umat[1], orb0, orb1, xvec[nspin-1]);
 
             // save the current site
             const auto p = dbond.get_current();

@@ -3,6 +3,7 @@
 
 #include "../../core/integral_io.h"
 #include "../../core/integral_rotate.h"
+#include "oodmrg_urot.h"
 #include "oodmrg_move.h"
 
 namespace ctns{
@@ -22,10 +23,11 @@ namespace ctns{
          const bool debug = (rank==0);
          const int maxiter = schd.ctns.ooparams.maxiter;
          const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : icomb.get_dmax();
-         const bool acceptall = schd.ctns.ooparams.acceptall;
          const double alpha = schd.ctns.ooparams.alpha;
          const double thrdeps = schd.ctns.ooparams.thrdeps;
-         if(debug){ 
+         const bool acceptall = schd.ctns.ooparams.acceptall;
+         const bool unrestricted = schd.ctns.ooparams.unrestricted;
+         if(debug){
             std::cout << "\nctns::oodmrg"
                << " maxiter=" << maxiter 
                << " maxsweep=" << schd.ctns.maxsweep
@@ -33,6 +35,7 @@ namespace ctns{
                << " alpha=" << alpha
                << " thrdeps=" << thrdeps 
                << " acceptall=" << acceptall
+               << " unrestricted=" << unrestricted
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -50,13 +53,8 @@ namespace ctns{
          integral::one_body<Tm> int1e_new;
          integral::two_body<Tm> int2e_new;
          // urot_min 
-         linalg::matrix<Tm> urot_min(norb,norb);
-         if(schd.ctns.ooparams.urot.empty()){
-            urot_min = linalg::identity_matrix<Tm>(norb);
-         }else{
-            urot_min.load_txt(schd.scratch+"/"+schd.ctns.ooparams.urot);
-         }
-         assert(linalg::check_orthogonality(urot_min) < 1.e-8);
+         urot_class<Tm> urot_min(unrestricted, norb);
+         urot_min.initialize(schd);
 
          //----------------------------------------------
          // Debug rotation
@@ -74,8 +72,8 @@ namespace ctns{
                double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                std::cout << "maxdwt=" << maxdwt << std::endl;
                rcanon_lastdots(icomb_new);
-               rotate_spatial(int1e, int1e_new, urot);
-               rotate_spatial(int2e, int2e_new, urot);
+               rotate_spatial(int1e, int1e_new, urot.umat);
+               rotate_spatial(int2e, int2e_new, urot.umat);
             }
 #ifndef SERIAL
             if(size > 1){
@@ -134,8 +132,8 @@ namespace ctns{
 
             // update integrals
             if(rank == 0){
-               rotate_spatial(int1e, int1e_new, urot);
-               rotate_spatial(int2e, int2e_new, urot);
+               rotate_spatial(int1e, int1e_new, urot.umat);
+               rotate_spatial(int2e, int2e_new, urot.umat);
             }
 #ifndef SERIAL
             if(size > 1){
@@ -183,8 +181,8 @@ namespace ctns{
                   double maxdwt = reduce_entropy_single(icomb_new, urot, "random", dmax, schd.ctns.ooparams, gates);
                   std::cout << "maxdwt=" << maxdwt << std::endl;
                   rcanon_lastdots(icomb_new);
-                  rotate_spatial(int1e, int1e_new, urot);
-                  rotate_spatial(int2e, int2e_new, urot);
+                  rotate_spatial(int1e, int1e_new, urot.umat);
+                  rotate_spatial(int2e, int2e_new, urot.umat);
                }
 #ifndef SERIAL
                if(size > 1){
@@ -291,8 +289,8 @@ namespace ctns{
 
          // save integrals for urot_min
          if(rank == 0){
-            rotate_spatial(int1e, int1e_new, urot_min);
-            rotate_spatial(int2e, int2e_new, urot_min);
+            rotate_spatial(int1e, int1e_new, urot_min.umat);
+            rotate_spatial(int2e, int2e_new, urot_min.umat);
             std::string fname = schd.integral_file+".new";
             integral::save(int2e_new, int1e_new, ecore, fname);
          }

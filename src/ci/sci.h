@@ -115,7 +115,7 @@ namespace sci{
          int ksmin = 0, kmin = 0;
          size_t dim = 0;
          if(!schd.ci.checkms){
-            for(int km=ne; km<k; km++){
+            for(int km=ne; km<=k; km++){
                dim = fock::binom(km,ne);
                if(dim >= nroots){
                   kmin = km;
@@ -134,8 +134,10 @@ namespace sci{
             int na = (ne+tm)/2;
             int nb = (ne-tm)/2;
             int ksta = std::max(std::min(ks-na,na),std::min(ks-nb,nb));
-            for(int km=ksta; km<ks; km++){
+            std::cout << "na,nb,ksta=" << na << "," << nb << "," << ksta << std::endl;
+            for(int km=ksta; km<=ks; km++){
                dim = fock::binom(km,na)*fock::binom(km,nb);
+               std::cout << "km=" << km << " ks=" << ks << " dim=" << dim << std::endl;
                if(dim >= nroots){
                   ksmin = km;
                   break;
