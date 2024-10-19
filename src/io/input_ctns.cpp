@@ -219,7 +219,7 @@ void params_ctns::read(ifstream& istrm){
          ooparams.nptloc = stoi(line.substr(9));
       }else if(line.substr(0,12)=="oo_acceptall"){
          ooparams.acceptall = true;
-      }else if(line.substr()=="oo_unrestricted"){
+      }else if(line.substr(0,15)=="oo_unrestricted"){
          ooparams.unrestricted = true;
       }else if(line.substr(0,7)=="oo_urot"){
          stringstream is(line.substr(7));
