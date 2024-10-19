@@ -25,8 +25,8 @@ namespace ctns{
                      linalg::check_orthogonality(umat[1]) < 1.e-8);
             }
             void save_txt(const std::string urot_file, const int outprec) const{
-               umat[0].save_txt(urot_file, outprec); 
-               umat[1].save_txt(urot_file, outprec); 
+               umat[0].save_txt(urot_file+"_0", outprec); 
+               umat[1].save_txt(urot_file+"_1", outprec); 
             }
          public:
             bool unrestricted = false;

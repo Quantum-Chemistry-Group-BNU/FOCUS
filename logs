@@ -413,10 +413,11 @@
  * Documentation [DONE@2024/08/26]
     - initial commit
 
- * OO-DMRG support unrestricted orbitals: [DONE@2024/10/XX]
+ * OO-DMRG support unrestricted orbitals: [DONE@2024/10/20]
     - ipyscf_real: support for UHF integrals [DONE@2024/10/16]
     - check whether UHF integrals are supported by rNSz [DONE@2024/10/16]
-    - oodmrg_rotate.h (two angles)
+    - integral_rotate.h support {Ua,Ub} [DONE@2024/10/18]
+    - oodmrg_rotate.h (two angles) [DONE@2024/10/20]
 
 ### 2024 DMRG[RDM] ###
 
