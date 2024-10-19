@@ -1,7 +1,7 @@
 
-machine = dell2 #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no #yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
@@ -47,12 +47,13 @@ else ifeq ($(strip $(machine)), dell2)
 
 else ifeq ($(strip $(machine)), jiageng)
    MATHLIB = ./mkl2022 #/public/software/intel/oneapi2021/mkl/latest #/public/software/anaconda/anaconda3-2022.5/lib
-   BOOST = /public/home/bnulizdtest/boost/install-gcc
+   BOOST = /public/home/bnulizdtest/boost/install
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
    #FLAGS += -no-multibyte-chars
+   GSLDIR = ./extlibs/gsl-install
    NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/lzdnlopt/lib64
    NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/lzdnlopt/include
 
