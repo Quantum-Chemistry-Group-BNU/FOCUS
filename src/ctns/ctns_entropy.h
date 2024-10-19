@@ -163,12 +163,15 @@ namespace ctns{
          // compute the entropy
          std::cout << "von Neumann / Renyi[0.5] entropies across all bonds:" << std::endl;
          double s_sum = 0.0, sh_sum = 0.0;
+         double s_max = -1.0, sh_max = -1.0;
          for(int i=0; i<svalues.size(); i++){
             //tools::print_vector(svalues[i], "sval"+std::to_string(i), 10);
             auto s_val = renyi_entropy(svalues[i], 1.0); // von Neumann entropy
             auto sh_val = renyi_entropy(svalues[i], 0.5); // renyi entropy [0.5]
             s_sum += s_val;
-            sh_sum += sh_val; 
+            sh_sum += sh_val;
+            s_max = std::max(s_max,s_val);
+            sh_max = std::max(sh_max,sh_val); 
             std::cout << " ibond=" << i 
                << " SvN=" << std::scientific << std::setprecision(3) << s_val
                << " Sr=" << sh_val 
@@ -176,6 +179,8 @@ namespace ctns{
          }
          std::cout << "SvN[sum]=" << s_sum 
             << " Sr[sum]=" << sh_sum << std::endl;
+         std::cout << "SvN[max]=" << s_max
+            << " Sr[max]=" << sh_max << std::endl; 
 
          // save into file
          std::cout << "save schdmidt values into file" << std::endl;
