@@ -76,7 +76,8 @@ namespace integral{
    template <typename Tm>
       void rotate_spatial_plain(const one_body<Tm>& int1e,
             one_body<Tm>& int1e_new,
-            const linalg::matrix<Tm>& urot){
+            const std::vector<linalg::matrix<Tm>>& urot){
+         assert(urot.size() == 2);
          std::cout << "rotate_spatial_plain for int1e" << std::endl;
          const int norb = urot.rows();
          assert(int1e.sorb == 2*norb);
@@ -88,7 +89,7 @@ namespace integral{
                Tm sum = 0.0;
                for(int p=i%2; p<sorb; p+=2){
                   for(int q=j%2; q<sorb; q+=2){
-                     sum += int1e.get(p,q)*tools::conjugate(urot(p/2,i/2))*urot(q/2,j/2);
+                     sum += int1e.get(p,q)*tools::conjugate(urot[i%2](p/2,i/2))*urot[j%2](q/2,j/2);
                   } // q 
                } // p
                int1e_new.set(i,j,sum);
@@ -99,9 +100,10 @@ namespace integral{
    template <typename Tm>
       void rotate_spatial_plain(const two_body<Tm>& int2e,
             two_body<Tm>& int2e_new,
-            const linalg::matrix<Tm>& urot){
+            const std::vector<linalg::matrix<Tm>>& urot){
+         assert(urot.size() == 2);
          std::cout << "rotate_spatial_plain for int2e" << std::endl;
-         const int norb = urot.rows();
+         const int norb = urot[0].rows();
          assert(int2e.sorb == 2*norb);
          int sorb = int2e.sorb;
          int2e_new.sorb = sorb;
@@ -114,17 +116,17 @@ namespace integral{
                      size_t kl = k*(k-1)/2+l;
                      if(kl < ij) continue;
                      // <i1j2||k1l2> = <i1j2|k1l2> - <i1j2|l1k2> 
-                     // einsum('pqrs,pi,qj,rk,sl->ijkl',int2e,uc,uc,u,u)
+                     // einsum('pqrs,pi,qj,rk,sl->ijkl',int2e,uconj,uconj,u,u)
                      Tm sum = 0.0;
                      for(int p=i%2; p<sorb; p+=2){
                         for(int q=j%2; q<sorb; q+=2){
                            for(int r=k%2; r<sorb; r+=2){
                               for(int s=l%2; s<sorb; s+=2){
                                  sum += int2e.get(p,q,r,s)
-                                    *tools::conjugate(urot(p/2,i/2))
-                                    *tools::conjugate(urot(q/2,j/2))
-                                    *urot(r/2,k/2)
-                                    *urot(s/2,l/2);
+                                    *tools::conjugate(urot[i%2](p/2,i/2))
+                                    *tools::conjugate(urot[j%2](q/2,j/2))
+                                    *urot[k%2](r/2,k/2)
+                                    *urot[l%2](s/2,l/2);
                               } // s
                            } // r
                         } // q 
@@ -141,8 +143,9 @@ namespace integral{
    template <typename Tm>
       void rotate_spatial(const one_body<Tm>& int1e,
             one_body<Tm>& int1e_new,
-            const linalg::matrix<Tm>& urot){
-         const int norb = urot.rows();
+            const std::vector<linalg::matrix<Tm>>& urot){
+         assert(urot.size() == 2);
+         const int norb = urot[0].rows();
          std::cout << "\nintegral::rotate_spatial for int1e: norb=" << norb << std::endl;
          auto t0 = tools::get_time();
          
@@ -151,12 +154,12 @@ namespace integral{
          int1e_new.init_mem();
          // U^+*M*U;
          auto int1e_alpha = int1e.mat_alpha();
-         auto tmpa = linalg::xgemm("N","N",int1e_alpha,urot);
-         int1e_alpha = linalg::xgemm("C","N",urot,tmpa);
+         auto tmpa = linalg::xgemm("N","N",int1e_alpha,urot[0]);
+         int1e_alpha = linalg::xgemm("C","N",urot[0],tmpa);
          // U^+*M*U;
          auto int1e_beta = int1e.mat_beta();
-         auto tmpb = linalg::xgemm("N","N",int1e_beta,urot);
-         int1e_beta = linalg::xgemm("C","N",urot,tmpb);
+         auto tmpb = linalg::xgemm("N","N",int1e_beta,urot[1]);
+         int1e_beta = linalg::xgemm("C","N",urot[1],tmpb);
          // construct
          int1e_new.from_spatial(int1e_alpha,int1e_beta);
          
@@ -167,8 +170,9 @@ namespace integral{
    template <typename Tm>
       void rotate_spatial(const two_body<Tm>& int2e,
             two_body<Tm>& int2e_new,
-            const linalg::matrix<Tm>& urot){
-         const int norb = urot.rows();
+            const std::vector<linalg::matrix<Tm>>& urot){
+         assert(urot.size() == 2);
+         const int norb = urot[0].rows();
          std::cout << "\nintegral::rotate_spatial for int2e: norb=" << norb << std::endl;
          auto t0 = tools::get_time();
 
@@ -184,8 +188,8 @@ namespace integral{
          for(int i=0; i<sorb; i++){
             for(int j=0; j<sorb; j++){
                if(i%2 != j%2) continue;
-               mocoeff(i,j) = urot(i/2,j/2); 
-               mocoeff_conj(i,j) = tools::conjugate(urot(i/2,j/2)); 
+               mocoeff(i,j) = urot[i%2](i/2,j/2); 
+               mocoeff_conj(i,j) = tools::conjugate(urot[i%2](i/2,j/2)); 
             }
          }
          
