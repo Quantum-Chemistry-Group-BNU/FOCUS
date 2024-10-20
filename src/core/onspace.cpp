@@ -54,6 +54,7 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    return space;
 }
 
+// k - no. of orbitals, n - no. of alpha electrons
 onspace fock::get_fci_space_single(const int k, const int n){
    assert(k >= n);
    onspace space;

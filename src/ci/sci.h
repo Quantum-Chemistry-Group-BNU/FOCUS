@@ -134,10 +134,10 @@ namespace sci{
             int na = (ne+tm)/2;
             int nb = (ne-tm)/2;
             int ksta = std::max(std::min(ks-na,na),std::min(ks-nb,nb));
-            std::cout << "na,nb,ksta=" << na << "," << nb << "," << ksta << std::endl;
+            //std::cout << "na,nb,ksta=" << na << "," << nb << "," << ksta << std::endl;
             for(int km=ksta; km<=ks; km++){
                dim = fock::binom(km,na)*fock::binom(km,nb);
-               std::cout << "km=" << km << " ks=" << ks << " dim=" << dim << std::endl;
+               //std::cout << "km=" << km << " ks=" << ks << " dim=" << dim << std::endl;
                if(dim >= nroots){
                   ksmin = km;
                   break;
@@ -176,6 +176,7 @@ namespace sci{
          int na = (ne+tm)/2;
          int nb = (ne-tm)/2;
          int nc_max = std::min(na,nb);
+         // loop over no. of closed-shell orbitals
          for(int nc=0; nc<=nc_max; nc++){
             int ns_a = na - nc;
             int ns_b = nb - nc;
@@ -194,11 +195,11 @@ namespace sci{
             }
             if(ns_a >= ns_b){
                for(int j=jab; j<ns_a; j++){
-                  s[jab+j] = 'a';
+                  s[jab+j] = 'b'; // will be fliped in next part of code
                }
             }else{
                for(int j=jab; j<ns_a; j++){
-                  s[jab+j] = 'b';
+                  s[jab+j] = 'a';
                }
             }
             if(ns > 0){
@@ -227,7 +228,8 @@ namespace sci{
                subspace.push_back(state);
                if(debug){
                   std::cout << " i=" << i << " state_single=" << state_single
-                     << " state=" << state 
+                     << " state=" << state << " nelec=" << state.nelec()
+                     << " twom=" << state.twom()  
                      << std::endl;
                }
             }
@@ -254,9 +256,8 @@ namespace sci{
             << std::endl;
          auto t0 = tools::get_time();
          
-         // space = {|Di>}
-         const int k = int1e.sorb;
          // generate initial subspace from input dets
+         const int k = int1e.sorb;
          int ndet = 0;
          for(const auto& det : schd.ci.det_seeds){
             // consistency check
@@ -299,13 +300,16 @@ namespace sci{
          // generate initial determinants according to integrals
          if(schd.ci.init_aufbau) init_aufbau(space, varSpace, schd, int2e, int1e, ecore);
          if(schd.ci.init_seniority) init_seniority(space, varSpace, schd, int2e, int1e, ecore);
-         // print
-         std::cout << "energies for reference confs:" << std::endl;
+         // debug
+         std::cout << "\ninitial dets:" << std::endl;
          std::cout << std::fixed << std::setprecision(12);
-         int nsub = space.size();
+         size_t nsub = space.size();
          for(int i=0; i<nsub; i++){
-            std::cout << "i = " << i << " state = " << space[i]
-               << " e = " << fock::get_Hii(space[i],int2e,int1e)+ecore 
+            const auto& state = space[i];
+            std::cout << " i=" << i << " state=" << state 
+               << " nelec=" << state.nelec()
+               << " twom=" << state.twom() 
+               << " Hii=" << fock::get_Hii(state,int2e,int1e)+ecore 
                << std::endl;
          }
          
@@ -330,7 +334,7 @@ namespace sci{
          // print
          std::cout << std::fixed << std::setprecision(12);
          for(int i=0; i<neig; i++){
-            std::cout << "i = " << i << " e = " << es[i] << std::endl; 
+            std::cout << "initial state i=" << i << " e=" << es[i] << std::endl; 
          }
          auto t1 = tools::get_time();
          tools::timing("sci::init_ciwf", t0, t1);
