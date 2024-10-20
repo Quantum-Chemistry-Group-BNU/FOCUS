@@ -35,6 +35,23 @@ namespace ctns{
          auto vs = vs0;
          fci::ci_truncate(space, vs, maxdets);
 
+         // ZL@20241020: check symmetry
+         std::set<qsym> sym_sectors;
+         for(int i=0; i<space.size(); i++){
+            const auto& state = space[i];
+            auto sym = get_qsym_onstate(Qm::isym, state);
+            sym_sectors.insert(sym);
+         }
+         if(sym_sectors.size()>1){
+            std::cout << "error: more than one symmetry sectors in CI space for Qm=" 
+               << qkind::get_name<Qm>() << " : ";
+            for(const auto& sym : sym_sectors){
+               std::cout << sym << " ";
+            }
+            std::cout << std::endl;
+            exit(1);
+         }
+
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
          init_rbases(icomb, space, vs, rdm_svd, thresh_proj);
 
