@@ -242,7 +242,7 @@ namespace ctns{
                   << std::endl;
                std::cout << tools::line_separator << std::endl;
                std::cout << "initial energy of MPS Hii= " 
-                  << std::defaultfloat << std::setprecision(schd.ctns.outprec) << emin_history[0]
+                  << std::fixed << std::setprecision(schd.ctns.outprec) << emin_history[0]
                   << std::scientific << std::setprecision(2) 
                   << " Sd= " << sdiag_history[0]
                   << " Sr= " << srenyi_history[0] 
