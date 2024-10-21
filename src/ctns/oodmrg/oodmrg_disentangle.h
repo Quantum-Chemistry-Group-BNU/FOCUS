@@ -270,13 +270,13 @@ namespace ctns{
                   std::uniform_real_distribution<double> dist(0,1);
                   if(gates.size() == 0){
                      xvec[0] = 2*pi*dist(tools::generator);
-                     if(nspin == 2) xvec[1] = xvec[0];
+                     if(nspin == 2) xvec[1] = 2*pi*dist(tools::generator);
                   }else{
                      auto result = std::find(gates.begin(), gates.end(), dbond.p0.first);
                      bool ifexist = !(result == gates.end());
                      if(ifexist){
                         xvec[0] = 2*pi*dist(tools::generator);
-                        if(nspin == 2) xvec[1] = xvec[0];
+                        if(nspin == 2) xvec[1] = 2*pi*dist(tools::generator);
                      }
                   }
                }else{

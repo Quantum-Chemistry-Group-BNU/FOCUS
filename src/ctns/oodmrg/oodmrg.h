@@ -66,6 +66,9 @@ namespace ctns{
             auto Hij0 = get_Hmat(icomb_new, int2e, int1e, ecore, schd, scratch);
             Hij0.print("Hij0_rank"+std::to_string(rank),10);
             if(rank == 0){
+               // sample MPS
+               rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
+               // rotate
                const int dfac = schd.ctns.ooparams.dfac;
                const int dmax = dfac*icomb_new.get_dmax();
                std::vector<int> gates;
@@ -74,6 +77,8 @@ namespace ctns{
                rcanon_lastdots(icomb_new);
                rotate_spatial(int1e, int1e_new, urot.umat);
                rotate_spatial(int2e, int2e_new, urot.umat);
+               // sample rotated MPS
+               rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
             }
 #ifndef SERIAL
             if(size > 1){
