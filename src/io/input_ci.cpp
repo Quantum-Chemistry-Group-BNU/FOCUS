@@ -77,7 +77,7 @@ void params_ci::read(ifstream& istrm){
          while(!file.eof()){
             line.clear();
             std::getline(file,line);
-            std::cout << line << std::endl;
+            //std::cout << line << std::endl;
             if(line.empty() || line[0]=='#') continue;
             ndet += 1;
             // read occ from string
