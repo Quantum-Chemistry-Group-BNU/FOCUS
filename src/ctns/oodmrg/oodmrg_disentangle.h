@@ -174,21 +174,43 @@ namespace ctns{
             // start optimization
             const double pi = 4.0*std::atan(1.0);
             int npt;
-            std::vector<double> anglst, funlst;
+            std::vector<double> funlst;
             std::vector<double> xvec(nspin);
+            std::vector<std::pair<double,double>> anglst;
             double fmin;
             if(scheme == "opt"){
             
                // repare a good initial guess by scanning 
-               npt = nptloc;
-               anglst.resize(npt);
-               funlst.resize(npt);
-               for(int i=0; i<npt; i++){
-                  std::vector<double> theta(nspin);
-                  theta[0] = pi*i/(npt-1);
-                  if(nspin == 2) theta[1] = pi*i/(npt-1);
-                  anglst[i] = theta[0];
-                  funlst[i] = fun(theta); 
+               if(nspin == 1){
+                  // restricted
+                  npt = nptloc;
+                  anglst.resize(npt);
+                  funlst.resize(npt);
+                  for(int i=0; i<npt; i++){
+                     std::vector<double> theta(nspin);
+                     theta[0] = pi*i/(npt-1);
+                     if(nspin == 2) theta[1] = pi*i/(npt-1);
+                     anglst[i].first  = theta[0];
+                     anglst[i].second = theta[0];
+                     funlst[i] = fun(theta); 
+                  }
+               }else{
+                  // unrestricted
+                  int npt1d = int(std::sqrt(nptloc))+1;
+                  npt = npt1d*npt1d;
+                  anglst.resize(npt);
+                  funlst.resize(npt);
+                  for(int i=0; i<npt1d; i++){
+                     for(int j=0; j<npt1d; j++){
+                        std::vector<double> theta(nspin);
+                        theta[0] = pi*i/(npt1d-1);
+                        theta[1] = pi*j/(npt1d-1);
+                        int ij = i*npt1d+j; 
+                        anglst[ij].first  = theta[0];
+                        anglst[ij].second = theta[1];
+                        funlst[ij] = fun(theta);
+                     }
+                  }
                }
                auto index = tools::sort_index(funlst); 
 
@@ -209,8 +231,8 @@ namespace ctns{
                opt.set_min_objective(nlopt_vfun_entropy, &fun);
                try{
                   // initial guess
-                  xvec[0] = index[0]*pi/(npt-1);
-                  if(nspin == 2) xvec[1] = index[0]*pi/(npt-1);
+                  xvec[0] = anglst[index[0]].first;
+                  if(nspin == 2) xvec[1] = anglst[index[0]].second;
                   nlopt::result result = opt.optimize(xvec, fmin);
                }
                catch(std::exception &e) {
