@@ -68,6 +68,29 @@ void params_ci::read(ifstream& istrm){
             if(ndet != det_seeds.size()) tools::exit("error: det is redundant!");
          }
          nseeds = det_seeds.size();
+      }else if(line.substr(0,8)=="det_file"){
+         std::string det_file;
+         istringstream is(line.substr(8));
+         is >> det_file;
+         std::ifstream file(det_file+".txt");
+         int ndet = 0;
+         while(!file.eof()){
+            line.clear();
+            std::getline(file,line);
+            std::cout << line << std::endl;
+            if(line.empty() || line[0]=='#') continue;
+            ndet += 1;
+            // read occ from string
+            istringstream is(line);
+            string s;
+            set<int> det;
+            while(is>>s){
+               det.insert( stoi(s) );	    
+            }
+            det_seeds.insert(det);
+            if(ndet != det_seeds.size()) tools::exit("error: det is redundant!");
+         }
+         nseeds = det_seeds.size();
       }else if(line.substr(0,8)=="cisolver"){
          cisolver = stoi(line.substr(8)); 
       }else if(line.substr(0,8)=="maxcycle"){
