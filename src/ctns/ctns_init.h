@@ -5,6 +5,7 @@
 #include <omp.h>
 #endif
 
+#include "../io/input.h"
 #include "../core/tools.h"
 #include "../core/onspace.h"
 #include "../ci/fci_util.h"
@@ -23,17 +24,31 @@ namespace ctns{
       void rcanon_init(comb<Qm,Tm>& icomb,
             const fock::onspace& space0,
             const linalg::matrix<Tm>& vs0,
-            const int maxdets,
-            const double rdm_svd,
-            const double thresh_proj,
-            const double thresh_ortho){
+            const input::schedule& schd){
          std::cout << "\nctns::rcanon_init qkind=" << qkind::get_name<Qm>() << std::endl;
          auto t0 = tools::get_time();
 
          // 0. truncate ci wavefunction if necessary
-         auto space = space0;
-         auto vs = vs0;
-         fci::ci_truncate(space, vs, maxdets);
+         fock::onspace space = space0;
+         linalg::matrix<Tm> vs;
+         int nroots_selected = schd.ctns.ciroots.size();
+         if(nroots_selected == 0){
+            vs = vs0;
+         }else{
+            int nroots = vs0.cols();
+            size_t dim = space.size();
+            vs.resize(dim, nroots_selected);
+            for(int i=0; i<nroots_selected; i++){
+               int idx = schd.ctns.ciroots[i];
+               if(idx > nroots-1){
+                  std::cout << "error: ciroots exceed nroots=" << nroots << std::endl;
+                  tools::print_vector(schd.ctns.ciroots, "ciroots");
+                  exit(1); 
+               }
+               linalg::xcopy(dim, vs0.col(idx), vs.col(i)); 
+            }
+         }
+         fci::ci_truncate(space, vs, schd.ctns.maxdets);
 
          // ZL@20241020: check symmetry
          std::set<qsym> sym_sectors;
@@ -53,16 +68,16 @@ namespace ctns{
          }
 
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
-         init_rbases(icomb, space, vs, rdm_svd, thresh_proj);
+         init_rbases(icomb, space, vs, schd.ctns.rdm_svd, schd.ctns.thresh_proj);
 
          // 2. build sites from rbases
-         init_rsites(icomb, thresh_ortho);
+         init_rsites(icomb, schd.ctns.thresh_ortho);
 
          // 3. compute wave functions at the start for right canonical form 
-         init_rwfuns(icomb, space, vs, thresh_ortho);
+         init_rwfuns(icomb, space, vs, schd.ctns.thresh_ortho);
 
          // 4. canonicalization
-         init_rcanon(icomb, space, vs, thresh_ortho);
+         init_rcanon(icomb, space, vs, schd.ctns.thresh_ortho);
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_init", t0, t1);

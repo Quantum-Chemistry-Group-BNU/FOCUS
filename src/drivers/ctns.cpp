@@ -91,8 +91,7 @@ void CTNS(const input::schedule& schd){
                   exit(1);  
                }
                // truncate CI coefficients
-               ctns::rcanon_init(icomb, sci_space, vs, schd.ctns.maxdets, schd.ctns.rdm_svd,
-                     schd.ctns.thresh_proj, schd.ctns.thresh_ortho);
+               ctns::rcanon_init(icomb, sci_space, vs, schd);
                ctns::rcanon_save(icomb, rcanon_file);
                // debug        
                const bool debug = false;

@@ -118,6 +118,12 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,12)=="rcanon2_file"){
          istringstream is(line.substr(12));
          is >> rcanon2_file;
+      }else if(line.substr(0,7)=="ciroots"){
+         istringstream is(line.substr(7));
+         string s;
+         while(is>>s){
+            ciroots.push_back( stoi(s) );
+         }
       }else if(line.substr(0,7)=="maxdets"){
          maxdets = stoi(line.substr(7)); 
       }else if(line.substr(0,11)=="thresh_proj"){
@@ -317,6 +323,9 @@ void params_ctns::print() const{
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;
    // conversion of sci
+   cout << "ciroots = ";
+   for(const auto& k : ciroots) std::cout << k << " ";
+   std::cout << std::endl;
    cout << "maxdets = " << maxdets << endl;
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;

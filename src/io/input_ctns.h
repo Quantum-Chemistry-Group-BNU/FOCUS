@@ -92,7 +92,7 @@ namespace input{
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file 
                   & restart_sweep & restart_bond & timestamp
-                  & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
+                  & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & notrunc 
@@ -136,6 +136,7 @@ namespace input{
          int restart_bond = 0;
          bool timestamp = false; 
          // conversion of sci 
+         std::vector<int> ciroots;
          int maxdets = 10000;
          double thresh_proj = 1.e-14;
          double thresh_ortho = 1.e-8;
