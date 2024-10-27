@@ -14,9 +14,14 @@ Storage
 
 CSF are stored in the following way:
 
-Example: ud0uud (**little endian**)
+Example: ud0uud 
 
-Ordering: 543210 corresponds to MPS=A[0]A[1]A[2]A[3] **A[4]A[5]**
+Correspondence to orbitals: 543210 (**little endian**)
+
+Layout of MPS = A[0]A[1]A[2]A[3] **A[4]A[5]**
+
+.. note::
+   In right canonical form (RCF), the spin coupling is from right (site-5) to left (site-0), therefore, the spin-coupling of csf (ud0uud) is to be understood as from left to right.
 
 To be consistent with sweep optimization in DMRG, A[5] is set as the identity. 
 Then, even with Dopt=1, after optimization the wavefunction can be multi-configurational, 
@@ -33,7 +38,7 @@ From CSF to MPS
 
 CSF can be represented by a D=1 SA-MPS. The physical dimension is 3 corresponding to 
 :math:`\{|N,S\rangle\}=\{|0,0\rangle,|2,0\rangle,|1,1/2\rangle\}`. 
-The CSF is fully specified by the quantum numbers of all the bonds :math:`\{(N[k],S[k])\}`, 
+**The CSF is fully specified by the quantum numbers of all the virtual bonds** :math:`\{(N[k],S[k])\}`, 
 where the difference between two adjacent bonds gives :math:`(\Delta N[k],\Delta S[k])
 =(N[k]-N[k-1],S[k]-S[k-1])`.
 

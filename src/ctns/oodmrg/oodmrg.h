@@ -54,7 +54,7 @@ namespace ctns{
          integral::two_body<Tm> int2e_new;
          // urot_min 
          urot_class<Tm> urot_min(unrestricted, norb);
-         urot_min.initialize(schd);
+         if(rank == 0) urot_min.initialize(schd);
 
          //----------------------------------------------
          // Debug rotation
