@@ -108,29 +108,27 @@ class iface:
    def get_eri_u(self,mcoeffA_a,mcoeffA_b):
         nact = mcoeffA_a.shape[1]
         try:
+            print(' try Molecular Hamiltonian')
             eri_aaaa = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_a,mcoeffA_a),compact=0).reshape(nact,nact,nact,nact)
             eri_bbbb = ao2mo.general(self.mol,(mcoeffA_b,mcoeffA_b,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
             eri_aabb = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
         except:
-            print('Hubbard case')
+            print(' found Model Hamiltonian')
             h2 =  ao2mo.restore(1, self.mf._eri, nact)
-            eri_aaaa =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_a,mocoeffA_a,optimize=True)
-            eri_bbbb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_b,mcoeffA_b,mcoeffA_b,mocoeffA_b,optimize=True)
-            eri_aabb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_b,mocoeffA_b,optimize=True)
+            eri_aaaa =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_a,mcoeffA_a,optimize=True)
+            eri_bbbb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_b,mcoeffA_b,mcoeffA_b,mcoeffA_b,optimize=True)
+            eri_aabb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_b,mcoeffA_b,optimize=True)
         return eri_aaaa,eri_bbbb,eri_aabb
 
    def get_eri_r(self,mcoeffA):
         nact = mcoeffA.shape[1]
         try:
-            eri = ao2mo.general(self.mol,(mcoeffA,mcoeffA,mcoeffA,mcoeffA),compact=0)
-            eri = eri.reshape(nact,nact,nact,nact)
+            print(' try Molecular Hamiltonian')
+            eri = ao2mo.general(self.mol,(mcoeffA,mcoeffA,mcoeffA,mcoeffA),compact=0).reshape(nact,nact,nact,nact)
         except:
-            print('Hubbard case')
+            print(' found Model Hamiltonian')
             h2 =  ao2mo.restore(1, self.mf._eri, nact)
-            h2 =  numpy.einsum("pqrs,pi->iqrs",h2,mcoeffA)
-            h2 =  numpy.einsum("iqrs,qj->ijrs",h2,mcoeffA)
-            h2 =  numpy.einsum("ijrs,rk->ijks",h2,mcoeffA)
-            eri = numpy.einsum("ijks,sl->ijkl",h2,mcoeffA)
+            eri =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA,mcoeffA,mcoeffA,mcoeffA,optimize=True)
         return eri
 
    def get_integral_FCIDUMP(self,fname='FCIDUMP'):
