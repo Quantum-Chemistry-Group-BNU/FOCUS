@@ -129,6 +129,7 @@ namespace ctns{
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
             const fock::onstate& state){
+         const bool debug = false;
          // only correct for MPS, because csf is linearly coupled.
          assert(icomb.topo.ifmps);
          // finally return coeff = <n|CTNS[i]> as a vector 
@@ -138,22 +139,21 @@ namespace ctns{
          // intermediate quantum number
          auto narray  = state.intermediate_narray();
          auto tmarray = state.intermediate_tmarray();
-
-         std::cout << "\ndet=" << state << std::endl;
-         tools::print_vector(narray,"narray");
-         tools::print_vector(tmarray,"tmarray");
-         /*
-         // det=222000 [from right to left] 
-         //
-         //    5   4   3   2   1   0 
-         //    |   |   |   |   |   | 
-         // -<-0---0---0---2---2---2-<-
-         //  6   6   6   6   4   2   0
-         //
-         //  narray= 6 6 6 6 4 2 0
-         //  tsarray= 0 0 0 0 0 0 0
-         */ 
-         
+         if(debug){
+            std::cout << "\ndet=" << state << std::endl;
+            tools::print_vector(narray,"narray");
+            tools::print_vector(tmarray,"tmarray");
+            //
+            // det=222000 [from right to left] 
+            //
+            //    5   4   3   2   1   0 
+            //    |   |   |   |   |   | 
+            // -<-0---0---0---2---2---2-<-
+            //  6   6   6   6   4   2   0
+            //
+            //  narray= 6 6 6 6 4 2 0
+            //  tsarray= 0 0 0 0 0 0 0
+         }
          // check consistency
          auto sym_state = icomb.get_qsym_state();
          if(narray[0] != sym_state.ne() or std::abs(tmarray[0]) > sym_state.ts()){
@@ -176,7 +176,7 @@ namespace ctns{
                const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
                int na_i = state[2*i], nb_i = state[2*i+1];
                qsym qc(3, na_i+nb_i, na_i+nb_i==1);
-               std::cout << "i=" << i << " qc=" << qc << std::endl;
+               if(debug) std::cout << "isite=" << i << " qc=" << qc << std::endl;
                // select allowed qleft
                const auto& qrow = site.info.qrow;
                qbond qleft;
@@ -197,38 +197,43 @@ namespace ctns{
                      auto tmp2 = linalg::xgemm("N","N",tmp,bmats[r]);
                      assert(tmp2.size() == bmat.size());
                      // <s[i]m[i]S[i-1]M[i-1]|S[i]M[i]> [consistent with csf.cpp] 
-                     Tm cg = fock::cgcoeff(qc.ts(),qr.ts(),ql.ts(),na_i-nb_i,tmarray[i],tmarray[i+1]); 
+                     Tm cg = fock::cgcoeff(qc.ts(),qr.ts(),ql.ts(),na_i-nb_i,tmarray[i+1],tmarray[i]); 
                      linalg::xaxpy(tmp2.size(), cg, tmp2.data(), bmat.data());
                   }
                   if(ifexist){
-                     std::cout << " ql=" << ql << std::endl;
+                     if(debug) std::cout << " ql=" << ql << std::endl;
                      qleft.dims.push_back(std::make_pair(ql,dl));
                      bmats2.push_back(bmat);
                   }
                } // l
-               std::cout << "qleft.size=" << qleft.size() << std::endl;
+               if(debug) std::cout << " qleft.size=" << qleft.size() << std::endl;
                // in case this CTNS does not encode this csf, no such block 
                if(qleft.size() == 0) return coeff;
                qright = std::move(qleft);
                bmats = std::move(bmats2);
             } // tp
          } // i
-         // final contraction with rwfun
          auto wf2 = icomb.get_wf2();
+         if(debug){
+            std::cout << "final contraction with rwfun" << std::endl;
+            qright.print("qright");
+            for(int i=0; i<bmats.size(); i++){
+               bmats[i].print("bmat"+std::to_string(i));
+            }
+            wf2.print("wf2");
+         }
          for(int r=0; r<qright.size(); r++){
             const auto& bmat = bmats[r];
             const auto& qr = qright.get_sym(r);
             int bc = wf2.info.qcol.existQ(qr);
             assert(bc != -1);
             auto wf2blk = wf2(0,bc);
+            if(wf2blk.empty()) continue; // it is possible: ql={(1,0)}, qr={(0,0),{1,0}}
             auto wfcoeff = linalg::xgemm("N","N",wf2blk,bmat);
             assert(wfcoeff.rows() == n && wfcoeff.cols() == 1);
             linalg::xaxpy(n, 1.0, wfcoeff.data(), coeff.data());
          }
-         tools::print_vector(coeff,"coeff");
-         
-         if(det.to_string() == "0ba2") exit(1);
-
+         if(debug) tools::print_vector(coeff,"coeff");
          return coeff;
       }
 

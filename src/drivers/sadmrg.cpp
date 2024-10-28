@@ -167,8 +167,11 @@ void SADMRG(const input::schedule& schd){
    // debug
    if(schd.ctns.task_expand){
       if(rank == 0){
-         ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "csf", schd.ctns.pthrd);  
-         ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "det", schd.ctns.pthrd); 
+         if(!schd.ctns.detbasis){
+            ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "csf", schd.ctns.pthrd);
+         }else{
+            ctns::rcanon_Sdiag_exact(icomb, schd.ctns.iroot, "det", schd.ctns.pthrd); 
+         }
       }
    }
 
@@ -176,14 +179,23 @@ void SADMRG(const input::schedule& schd){
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
-         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
-               schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+         if(!schd.ctns.detbasis){
+            ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+                  schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+            ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
+                  schd.ctns.saveconfs);
+         }else{
+            std::cout << "error: not implemented yet!" << std::endl;
+            exit(1);
+         /*
+            ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+                  schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
          ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
                schd.ctns.saveconfs);
-         /*
          ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt);
          */
+         }
       }
    }
 

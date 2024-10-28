@@ -10,8 +10,8 @@
 
 namespace ctns{
 
-   // --- Non-Abelian MPS
-
+   // --- Non-Abelian MPS ---
+   
    // expand CTNS into determinants / csf
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       fock::csfspace get_csfspace(const comb<Qm,Tm>& icomb,
@@ -171,11 +171,14 @@ namespace ctns{
             const int iroot,
             const double pthrd=1.e-2,
             const int iprt=1){
+         auto t0 = tools::get_time();
+         const bool debug = true;
          if(iprt>0){
             std::cout << "ctns::rcanon_expand_onspace:"
                << " ifab=" << Qm::ifabelian
                << " iroot=" << iroot 
                << " pthrd=" << pthrd
+               << " debug=" << debug
                << std::endl;
          }
          qsym sym_state = icomb.get_qsym_state();
@@ -213,13 +216,17 @@ namespace ctns{
                   << std::endl;
             }
          }
-         const bool debug = true;
          if(debug){
+            auto t1 = tools::get_time();
             auto result = rcanon_expand_onspace0(icomb, iroot, pthrd);
+            auto t2 = tools::get_time();
             assert(result.first.size() == fci_space.size());
             linalg::xaxpy(coeff.size(), -1.0, coeff.data(), result.second.data());
             auto diff = linalg::xnrm2(coeff.size(), result.second.data());
-            std::cout << "debug: |v-v0|=" << diff << std::endl;
+            std::cout << "debug: |v-v0|=" << diff 
+               << "  t=" << tools::get_duration(t1-t0) << " S"
+               << "  t0=" << tools::get_duration(t2-t1) << " S"
+               << std::endl;
             assert(diff < 1.e-10);
          }
          return std::make_pair(fci_space,coeff); 

@@ -569,7 +569,7 @@
  ### 2024 DMRG[DET] ###
 
  * Determinant expansion for SA-MPS:
-   - <det|SA-MPS>: keyword detbasis
+   - <det|SA-MPS>: keyword detbasis [DONE@2024/10/28]
    - sampling algorithm
    - search algorithm
 

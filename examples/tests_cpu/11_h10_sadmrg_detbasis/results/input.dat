@@ -1,0 +1,38 @@
+nelec 10
+sorb 20
+twom 0
+twos 2
+integral_file moleinfo/hchain10_oao.info
+scratch ./scratch
+
+$ci
+dets 
+0 1 2 3 4 5 6 7 8 9
+end
+checkms
+nroots 2
+schedule
+0 1.e-5
+end
+maxiter 3
+$end
+
+$ctns
+verbose 2
+qkind rNS
+tosu2
+nroots 1
+maxdets 10000
+thresh_proj 1.e-15
+thresh_ortho 1.e-8 
+schedule
+0 2 100 1.e-4 1.e-6
+end
+maxsweep 1
+alg_hvec 4
+alg_renorm 4
+task_dmrg
+task_expand
+detbasis
+pthrd 0.01
+$end
