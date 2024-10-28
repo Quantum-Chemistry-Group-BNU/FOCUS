@@ -3,6 +3,7 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
+#include "ctns_rcanon.h"
 
 namespace ctns{
 

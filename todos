@@ -29,6 +29,10 @@
  * Perturbative noises: is it important?
 
  * p-DMRG: how to use dets in sampling? is it possible to avoid compression???
+   - 设计概率p(Di), importance sampling
+   - 避免压缩
+   - 同时考虑能量分母
+   - 用小体系n2测试?
 
  * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 

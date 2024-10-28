@@ -566,3 +566,10 @@
       - Polyene?
       - MR-TADF systems: singlet and triplet gaps?
 
+ ### 2024 DMRG[DET] ###
+
+ * Determinant expansion for SA-MPS:
+   - <det|SA-MPS>
+   - sampling algorithm
+   - search algorithm
+

@@ -7,6 +7,7 @@
 
 #include "ctns_ova.h"
 #include "ctns_cicoeff.h"
+#include "ctns_expand.h"
 #include "ctns_random.h"
 #include "ctns_sdiag.h"
 #include "ctns_listcoeff.h"
@@ -19,6 +20,10 @@
 #include "ctns_vmc.h"
 
 #include "sadmrg/ctns_tosu2.h"
+#include "sadmrg/ctns_cicoeff_su2.h"
+#include "sadmrg/ctns_expand_su2.h"
+#include "sadmrg/ctns_random_su2.h"
+#include "sadmrg/ctns_sdiag_su2.h"
 
 #include "ctns_det2mps.h"
 #include "sadmrg/ctns_csf2samps.h"
