@@ -164,6 +164,8 @@ void params_ctns::read(ifstream& istrm){
          pthrd = stod(line.substr(5));
       }else if(line.substr(0,11)=="thresh_cabs"){
          thresh_cabs = stod(line.substr(11));
+      }else if(line.substr(0,8)=="detbasis"){
+         detbasis = true;
       }else if(line.substr(0,5)=="tosu2"){
          tosu2 = true;
       }else if(line.substr(0,12)=="thresh_tosu2"){
@@ -393,6 +395,7 @@ void params_ctns::print() const{
    cout << "nprt = " << nprt << endl;
    cout << "pthrd = " << pthrd << endl;
    cout << "thresh_cabs = " << thresh_cabs << endl;
+   cout << "detbasis = " << detbasis << endl;
    // su2 symmetry
    cout << "tosu2 = " << tosu2 << endl;
    cout << "thresh_tosu2 = " << scientific << thresh_tosu2 << endl;

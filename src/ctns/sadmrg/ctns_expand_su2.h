@@ -96,11 +96,11 @@ namespace ctns{
 
    // expand CTNS into det
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace(const comb<Qm,Tm>& icomb,
+      std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace0(const comb<Qm,Tm>& icomb,
             const int iroot,
             const double pthrd=1.e-2){
          const bool debug = false;
-         std::cout << "ctns::rcanon_expand_onspace:"
+         std::cout << "ctns::rcanon_expand_onspace0:"
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
             << " pthrd=" << pthrd
@@ -111,11 +111,10 @@ namespace ctns{
          const auto& csf_space = csf_expansion.first;
          const auto& csf_coeff = csf_expansion.second; 
          qsym sym_state = icomb.get_qsym_state();
-         int ne = sym_state.ne(); 
+         int ne = sym_state.ne(), ts = sym_state.ts(), tm = ts; 
+         int na = (ne+tm)/2, nb = ne-na;
          int ks = icomb.get_nphysical();
-         int ts = sym_state.ts(); 
-         int na = (ne+ts)/2, nb = ne-na;
-         fock::onspace fci_space = fock::get_fci_space(ks,na,nb); 
+         fock::onspace fci_space = fock::get_fci_space(ks,na,nb); // onspace 
          size_t dim = fci_space.size();
          std::vector<Tm> coeff(dim,0.0);
          std::vector<double> pop2(dim,0.0);
@@ -163,16 +162,66 @@ namespace ctns{
                << " coeff=" << coeff[idx] 
                << std::endl;
          }
-         /*
-         // debug
-         for(int i=0; i<csf_space.size(); i++){
-             const auto& csf = csf_space[i];
-             std::cout << "\n### i=" << i << " csf=" << csf << std::endl;
-             auto det_expansion = csf.to_det();
-             csf.Sdiag_exact();
-             csf.Sdiag_sample(10000,10);
+         return std::make_pair(fci_space,coeff); 
+      }
+
+   // expand CTNS into csf
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace(const comb<Qm,Tm>& icomb,
+            const int iroot,
+            const double pthrd=1.e-2,
+            const int iprt=1){
+         if(iprt>0){
+            std::cout << "ctns::rcanon_expand_onspace:"
+               << " ifab=" << Qm::ifabelian
+               << " iroot=" << iroot 
+               << " pthrd=" << pthrd
+               << std::endl;
          }
-         */
+         qsym sym_state = icomb.get_qsym_state();
+         int ne = sym_state.ne(), ts = sym_state.ts(), tm = ts;
+         int na = (ne+tm)/2, nb = ne-na;
+         assert(na >= 0 and nb >= 0);
+         int ks = icomb.get_nphysical();
+         auto fci_space = fock::get_fci_space(ks,na,nb);
+         size_t dim = fci_space.size();
+         std::vector<Tm> coeff(dim,0.0);
+         // compute exact coefficients <n|CTNS>
+         std::vector<double> pop(dim,0.0);
+         double ovlp = 0.0;
+         for(int i=0; i<dim; i++){
+            const auto& state = fci_space[i];
+            coeff[i] = rcanon_CIcoeff(icomb, state)[iroot];
+            pop[i] = std::norm(coeff[i]);
+            ovlp += pop[i];
+         }
+         if(iprt > 0){
+            std::cout << "ovlp=" << ovlp << std::endl;
+            if(std::abs(ovlp-1.0)>1.e-8){
+               std::cout << "error: ovlp deviates from 1! dev=" << ovlp-1.0 << std::endl;
+               exit(1);
+            }
+            auto indx = tools::sort_index(pop,1);
+            for(int i=0; i<dim; i++){
+               int idx = indx[i];
+               if(pop[idx] < pthrd) break;
+               const auto& state = fci_space[idx];
+               std::cout << " i=" << i << " idx=" << idx
+                  << " state=" << state
+                  << " pop=" << pop[idx]
+                  << " coeff=" << coeff[idx] 
+                  << std::endl;
+            }
+         }
+         const bool debug = true;
+         if(debug){
+            auto result = rcanon_expand_onspace0(icomb, iroot, pthrd);
+            assert(result.first.size() == fci_space.size());
+            linalg::xaxpy(coeff.size(), -1.0, coeff.data(), result.second.data());
+            auto diff = linalg::xnrm2(coeff.size(), result.second.data());
+            std::cout << "debug: |v-v0|=" << diff << std::endl;
+            assert(diff < 1.e-10);
+         }
          return std::make_pair(fci_space,coeff); 
       }
 

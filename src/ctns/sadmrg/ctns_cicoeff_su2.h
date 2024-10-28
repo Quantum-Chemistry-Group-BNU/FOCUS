@@ -12,72 +12,12 @@
 #include "../../core/onspace.h"
 #include "../../core/analysis.h"
 #include "../../core/csf.h"
+#include "../../core/spin.h"
 #include "../ctns_comb.h"
 
 namespace ctns{
 
    // Algorithm 2:
-   // <n|CTNS[i]> by contracting the CTNS
-   //
-   // |n>=|n1n2n3>, |q> can be |q1q3q2>, |psi>=|q>*psi(q)
-   // then <n|psi> = <n|q>*psi(q), <n|q> is the sign
-   //
-   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
-      std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
-            const fock::onstate& state){
-/*
-         // finally return coeff = <n|CTNS[i]> as a vector 
-         int nsite = icomb.get_nphysical();
-         int n = icomb.get_nroots(); 
-         std::vector<Tm> coeff(n,0.0);
-         // compute <n|CTNS> by contracting all sites
-         const auto& nodes = icomb.topo.nodes;
-         const auto& rindex = icomb.topo.rindex;
-         qtensor2<Qm::ifabelian,Tm> qt2_r, qt2_u;
-         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
-            const auto& node = nodes[i][0];
-            int tp = node.type;
-            if(tp == 0 || tp == 1){
-               // site on backbone with physical index
-               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
-               // given occ pattern, extract the corresponding qblock
-               auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, node.lindex) ); 
-               if(i == icomb.topo.nbackbone-1){
-                  qt2_r = std::move(qt2);
-               }else{
-                  qt2_r = qt2.dot(qt2_r); // (out,x)*(x,in)->(out,in)
-               }
-            }else if(tp == 3){
-               // propogate symmetry from leaves down to backbone
-               for(int j=nodes[i].size()-1; j>=1; j--){
-                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,j))];
-                  const auto& nodej = nodes[i][j];
-                  auto qt2 = site.fix_mid( occ2mdx(Qm::isym, state, nodej.lindex) );
-                  if(j == nodes[i].size()-1){
-                     qt2_u = std::move(qt2);
-                  }else{
-                     qt2_u = qt2.dot(qt2_u);
-                  }
-               } // j
-               // internal site without physical index
-               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
-               // contract upper matrix: permute row and col for contract_qt3_qt2_c
-               auto qt3 = contract_qt3_qt2("c",site,qt2_u.P());
-               auto qt2 = qt3.fix_mid( std::make_pair(0,0) );
-               qt2_r = qt2.dot(qt2_r); // contract right matrix
-            } // tp
-         } // i
-         const auto& wfcoeff = icomb.get_wf2().dot(qt2_r);
-         assert(wfcoeff.rows() == 1 && wfcoeff.cols() == 1);
-         // in case this CTNS does not encode this det, no such block 
-         const auto blk2 = wfcoeff(0,0);
-         if(blk2.empty()) return coeff; 
-         assert(blk2.size() == n);
-         linalg::xcopy(n, blk2.data(), coeff.data());
-         return coeff;
-*/
-      }
-
    // <CSF|CTNS[i]>
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
@@ -90,15 +30,23 @@ namespace ctns{
          // intermediate quantum number
          auto narray  = state.intermediate_narray();
          auto tsarray = state.intermediate_tsarray();
-         /*
-         std::cout << "csf=" << state << std::endl;
+         
+         /*         
+         std::cout << "\ncsf=" << state << std::endl;
          tools::print_vector(narray,"narray");
          tools::print_vector(tsarray,"tsarray");
          //
-         // csf=222000 [from right to left]
+         // csf=222000 [from right to left] 
+         //
+         //    5   4   3   2   1   0 
+         //    |   |   |   |   |   | 
+         // -<-0---0---0---2---2---2-<-
+         //  6   6   6   6   4   2   0
+         //
          //  narray= 6 6 6 6 4 2 0
          //  tsarray= 0 0 0 0 0 0 0
-         */
+         */ 
+         
          // compute <n|CTNS> by contracting all sites
          const auto& nodes = icomb.topo.nodes;
          const auto& rindex = icomb.topo.rindex;
@@ -171,6 +119,117 @@ namespace ctns{
          // ovlp[i,n] = vs*[k,i] cmat[n,k]
          auto ovlp = linalg::xgemm("C","T",vs,cmat);
          return ovlp;
+      }
+
+   // <n|CTNS[i]> by contracting the CTNS
+   //
+   // |n>=|n1n2n3>, |q> can be |q1q3q2>, |psi>=|q>*psi(q)
+   // then <n|psi> = <n|q>*psi(q), <n|q> is the sign
+   //
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      std::vector<Tm> rcanon_CIcoeff(const comb<Qm,Tm>& icomb,
+            const fock::onstate& state){
+         // only correct for MPS, because csf is linearly coupled.
+         assert(icomb.topo.ifmps);
+         // finally return coeff = <n|CTNS[i]> as a vector 
+         int nsite = icomb.get_nphysical();
+         int n = icomb.get_nroots(); 
+         std::vector<Tm> coeff(n,0.0);
+         // intermediate quantum number
+         auto narray  = state.intermediate_narray();
+         auto tmarray = state.intermediate_tmarray();
+
+         std::cout << "\ndet=" << state << std::endl;
+         tools::print_vector(narray,"narray");
+         tools::print_vector(tmarray,"tmarray");
+         /*
+         // det=222000 [from right to left] 
+         //
+         //    5   4   3   2   1   0 
+         //    |   |   |   |   |   | 
+         // -<-0---0---0---2---2---2-<-
+         //  6   6   6   6   4   2   0
+         //
+         //  narray= 6 6 6 6 4 2 0
+         //  tsarray= 0 0 0 0 0 0 0
+         */ 
+         
+         // check consistency
+         auto sym_state = icomb.get_qsym_state();
+         if(narray[0] != sym_state.ne() or std::abs(tmarray[0]) > sym_state.ts()){
+            return coeff;
+         }
+         // compute <n|CTNS> by contracting all sites
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         qbond qright;
+         qright.dims = {{qsym(3,0,0),1}};
+         std::vector<linalg::matrix<Tm>> bmats(1);
+         bmats[0] = linalg::identity_matrix<Tm>(1);
+         // loop from the rightmost site of MPS to the left
+         for(int i=icomb.topo.nbackbone-1; i>=0; i--){
+            const auto& node = nodes[i][0];
+            assert(i == node.lindex);
+            int tp = node.type;
+            if(tp == 0 || tp == 1){
+               // site on backbone with physical index
+               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+               int na_i = state[2*i], nb_i = state[2*i+1];
+               qsym qc(3, na_i+nb_i, na_i+nb_i==1);
+               std::cout << "i=" << i << " qc=" << qc << std::endl;
+               // select allowed qleft
+               const auto& qrow = site.info.qrow;
+               qbond qleft;
+               std::vector<linalg::matrix<Tm>> bmats2;
+               for(int l=0; l<qrow.size(); l++){
+                  auto ql = qrow.get_sym(l);
+                  int dl = qrow.get_dim(l);
+                  linalg::matrix<Tm> bmat(dl,1);
+                  bool ifexist = false;
+                  for(int r=0; r<qright.size(); r++){
+                     auto qr = qright.get_sym(r);
+                     int dr = qright.get_dim(r);
+                     auto blk3 = site.get_rcf_symblk(ql,qr,qc);
+                     if(blk3.empty()) continue;
+                     // perform contraction Bnew[I] = \sum_J A[I,J]*B[J]
+                     ifexist = true;
+                     linalg::matrix<Tm> tmp(dl,dr,blk3.data());
+                     auto tmp2 = linalg::xgemm("N","N",tmp,bmats[r]);
+                     assert(tmp2.size() == bmat.size());
+                     // <s[i]m[i]S[i-1]M[i-1]|S[i]M[i]> [consistent with csf.cpp] 
+                     Tm cg = fock::cgcoeff(qc.ts(),qr.ts(),ql.ts(),na_i-nb_i,tmarray[i],tmarray[i+1]); 
+                     linalg::xaxpy(tmp2.size(), cg, tmp2.data(), bmat.data());
+                  }
+                  if(ifexist){
+                     std::cout << " ql=" << ql << std::endl;
+                     qleft.dims.push_back(std::make_pair(ql,dl));
+                     bmats2.push_back(bmat);
+                  }
+               } // l
+               std::cout << "qleft.size=" << qleft.size() << std::endl;
+               // in case this CTNS does not encode this csf, no such block 
+               if(qleft.size() == 0) return coeff;
+               qright = std::move(qleft);
+               bmats = std::move(bmats2);
+            } // tp
+         } // i
+         // final contraction with rwfun
+         auto wf2 = icomb.get_wf2();
+         for(int r=0; r<qright.size(); r++){
+            const auto& bmat = bmats[r];
+            const auto& qr = qright.get_sym(r);
+            int bc = wf2.info.qcol.existQ(qr);
+            assert(bc != -1);
+            auto wf2blk = wf2(0,bc);
+            auto wfcoeff = linalg::xgemm("N","N",wf2blk,bmat);
+            assert(wfcoeff.rows() == n && wfcoeff.cols() == 1);
+            linalg::xaxpy(n, 1.0, wfcoeff.data(), coeff.data());
+         }
+         tools::print_vector(coeff,"coeff");
+         
+         if(det.to_string() == "0ba2") exit(1);
+
+         return coeff;
       }
 
 } // ctns
