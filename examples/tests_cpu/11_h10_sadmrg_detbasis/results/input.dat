@@ -26,7 +26,7 @@ maxdets 10000
 thresh_proj 1.e-15
 thresh_ortho 1.e-8 
 schedule
-0 2 100 1.e-4 1.e-6
+0 2 100 1.e-4 0.0
 end
 maxsweep 1
 alg_hvec 4
