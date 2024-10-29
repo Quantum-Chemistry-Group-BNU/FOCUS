@@ -185,16 +185,13 @@ void SADMRG(const input::schedule& schd){
             ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
                   schd.ctns.saveconfs);
          }else{
-            std::cout << "error: not implemented yet!" << std::endl;
-            exit(1);
-         /*
-            ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+            ctns::rcanon_Sdiag_sample_det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                   schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
-         ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
-               schd.ctns.saveconfs);
-         ctns::rcanon_sample_samps2det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
-               schd.ctns.pthrd, schd.ctns.nprt);
+         /*
+            ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
+                  schd.ctns.saveconfs);
          */
+            exit(1);
          }
       }
    }
