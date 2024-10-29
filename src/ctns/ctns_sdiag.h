@@ -48,6 +48,73 @@ namespace ctns{
 
    // --- Sdiag_sample: Abelian & Non-Abelian MPS ---
 
+   template <typename statetype, typename Tm>
+      void print_samples(const std::string statestr,
+            const double ovlp,
+            std::map<statetype,int>& pop,
+            std::map<statetype,Tm>& coeff,
+            const int nsample,
+            const double pthrd,
+            const int nprt,
+            const std::string saveconfs){
+         const double cutoff = 0.0;
+         // convert map to vector 
+         size_t size = pop.size();
+         std::vector<statetype> states(size);
+         std::vector<int> counts(size);
+         std::vector<double> coeff2(size); 
+         double Sdpop = 0.0, IPRpop = 0.0;
+         size_t i = 0;
+         for(const auto& pr : pop){
+            states[i] = pr.first;
+            counts[i] = pr.second;
+            coeff2[i] = std::norm(coeff[pr.first]);
+            double ci2 = counts[i]/(1.0*nsample); // frequency in the sample
+            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
+            IPRpop += ci2*ci2*ovlp;
+            i++;
+         }
+         double psum = std::accumulate(coeff2.begin(), coeff2.end(), 0.0);
+         std::cout << "sampled unique " << statestr << ": pop.size=" << size 
+            << " psum=" << psum << " Sdiag[pop]=" << Sdpop << " IPR[pop]=" << IPRpop 
+            << std::endl;
+         // print the first n important configurations
+         auto indx = tools::sort_index(coeff2,1);
+         int sum = 0;
+         for(int i=0; i<size; i++){
+            int idx = indx[i];
+            auto state = states[idx];
+            auto ci = coeff[state];
+            double pi = coeff2[idx]/ovlp;
+            if(pi < pthrd or i >= nprt) break;
+            sum += counts[idx];
+            std::cout << " i=" << i << " state=" << state
+               << " c_i(exact)=" << std::scientific << std::setw(10) 
+               << std::setprecision(3) << ci/std::sqrt(ovlp)
+               << " p_i(exact)=" << pi
+               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
+               << " counts=" << counts[idx] 
+               << std::endl;
+         }
+         std::cout << "accumulated counts for listed confs=" << sum 
+            << " nsample=" << nsample 
+            << " per=" << 1.0*sum/nsample << std::endl;
+         // save configurations to text file
+         if(!saveconfs.empty()){
+            std::cout << "save to file " << saveconfs << ".txt" << std::endl;
+            std::ofstream file(saveconfs+".txt");
+            file << std::scientific << std::setprecision(12);
+            file << "size= " << size << " psum= " << psum << std::endl;
+            for(int i=0; i<size; i++){
+               int idx = indx[i];
+               const auto& state = states[idx];
+               const auto& ci = coeff[state];
+               file << state << " " << ci << std::endl;
+            }
+            file.close(); 
+         }
+      }
+
    // compute diagonal entropy via sampling:
    // S = -p[i]logp[i] = - (sum_i p[i]) <logp[i] > = -<psi|psi>*<logp[i]>
    template <typename Qm, typename Tm>
@@ -57,10 +124,9 @@ namespace ctns{
             const double pthrd=1.e-2,
             const int nprt=10, // no. of largest states to be printed
             const std::string saveconfs=""){
-         using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          auto ti = tools::get_time();
-         auto t0 = tools::get_time();
-         const double cutoff = 0.0;
+         std::string statestr = Qm::ifabelian? "det" : "csf";
+         using statetype = typename std::conditional<Qm::ifabelian, fock::onstate, fock::csfstate>::type; 
          std::cout << "\nctns::rcanon_Sdiag_sample:" 
             << " ifab=" << Qm::ifabelian
             << " iroot=" << iroot 
@@ -72,6 +138,7 @@ namespace ctns{
 #ifndef SERIAL
          assert(icomb.world.rank() == 0); // this function is only a serial version
 #endif
+         const double cutoff = 0.0;
          const int noff = (nsample+9)/10;
          // In case CTNS is not normalized 
          double ovlp = std::abs(get_Smat(icomb)(iroot,iroot));
@@ -80,6 +147,7 @@ namespace ctns{
          double Sd = 0.0, Sd2 = 0.0, IPR = 0.0, IPR2 = 0.0;
          std::map<statetype,int> pop;
          std::map<statetype,Tm> coeff;
+         auto t0 = tools::get_time();
          for(int i=0; i<nsample; i++){
             auto pr = rcanon_random(icomb,iroot);
             auto state = pr.first;
@@ -110,65 +178,12 @@ namespace ctns{
          }
          std::cout << "estimated Sdiag[MC]=" << Sd << " IPR[MC]=" << IPR << std::endl;
          // print important determinants
-         int size = pop.size();
-         std::vector<statetype> states(size);
-         std::vector<int> counts(size);
-         std::vector<double> coeff2(size); 
-         double Sdpop = 0.0, IPRpop = 0.0;
-         int i = 0;
-         for(const auto& pr : pop){
-            states[i] = pr.first;
-            counts[i] = pr.second;
-            coeff2[i] = std::norm(coeff[pr.first]);
-            double ci2 = counts[i]/(1.0*nsample); // frequency in the sample
-            Sdpop += (ci2 < cutoff)? 0.0 : -ci2*log(ci2)*ovlp;
-            IPRpop += ci2*ci2*ovlp;
-            i++;
-         }
-         double psum = std::accumulate(coeff2.begin(), coeff2.end(), 0.0);
-         std::cout << "sampled unique csf/det: pop.size=" << size 
-            << " psum=" << psum << " Sdiag[pop]=" << Sdpop << " IPR[pop]=" << IPRpop 
-            << std::endl;
-         // print the first n important configurations
-         auto indx = tools::sort_index(coeff2,1);
-         int sum = 0;
-         for(int i=0; i<size; i++){
-            int idx = indx[i];
-            auto state = states[idx];
-            auto ci = coeff[state];
-            double pop = coeff2[idx]/ovlp;
-            if(pop < pthrd or i >= nprt) break;
-            sum += counts[idx];
-            std::cout << " i=" << i << " state=" << state
-               << " c_i(exact)=" << std::scientific << std::setw(10) 
-               << std::setprecision(3) << ci/std::sqrt(ovlp)
-               << " p_i(exact)=" << pop
-               << " p_i(sample)=" << counts[idx]/(1.0*nsample)
-               << " counts=" << counts[idx] 
-               << std::endl;
-         }
-         std::cout << "accumulated counts for listed confs=" << sum 
-            << " nsample=" << nsample 
-            << " per=" << 1.0*sum/nsample << std::endl;
-         // save configurations to text file
-         if(!saveconfs.empty()){
-            std::cout << "save to file " << saveconfs << ".txt" << std::endl;
-            std::ofstream file(saveconfs+".txt");
-            file << std::scientific << std::setprecision(12);
-            file << "size= " << size << " psum= " << psum << std::endl;
-            for(int i=0; i<size; i++){
-               int idx = indx[i];
-               const auto& state = states[idx];
-               const auto& ci = coeff[state];
-               file << state << " " << ci << std::endl;
-            }
-            file.close(); 
-         }
+         print_samples(statestr, ovlp, pop, coeff, nsample, pthrd, nprt, saveconfs);
          auto tf = tools::get_time();
          tools::timing("ctns::rcanon_Sdiag_sample", ti, tf);
          return Sd;
       }
-
+        
 } // ctns
 
 #endif

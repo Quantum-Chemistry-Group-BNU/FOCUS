@@ -160,13 +160,13 @@ namespace ctns{
             return coeff;
          }
          // compute <n|CTNS> by contracting all sites
-         const auto& nodes = icomb.topo.nodes;
-         const auto& rindex = icomb.topo.rindex;
          qbond qright;
          qright.dims = {{qsym(3,0,0),1}};
          std::vector<linalg::matrix<Tm>> bmats(1);
          bmats[0] = linalg::identity_matrix<Tm>(1);
          // loop from the rightmost site of MPS to the left
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
          for(int i=icomb.topo.nbackbone-1; i>=0; i--){
             const auto& node = nodes[i][0];
             assert(i == node.lindex);

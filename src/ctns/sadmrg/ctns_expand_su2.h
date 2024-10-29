@@ -86,8 +86,9 @@ namespace ctns{
                const auto& state = fci_space[idx];
                std::cout << " i=" << i << " idx=" << idx
                   << " state=" << state
+                  << " coeff=" << std::scientific << std::setw(10)
+                  << std::setprecision(3) << coeff[idx] 
                   << " pop=" << pop[idx]
-                  << " coeff=" << coeff[idx] 
                   << std::endl;
             }
          }
@@ -158,14 +159,15 @@ namespace ctns{
             const auto& state = fci_space[idx];
             std::cout << " i=" << i << " idx=" << idx
                << " state=" << state
+               << " coeff=" << std::scientific << std::setw(10)
+               << std::setprecision(3) << coeff[idx] 
                << " pop=" << pop[idx]
-               << " coeff=" << coeff[idx] 
                << std::endl;
          }
          return std::make_pair(fci_space,coeff); 
       }
 
-   // expand CTNS into csf
+   // expand CTNS into determinants [ZL@2024/10/28]
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace(const comb<Qm,Tm>& icomb,
             const int iroot,
@@ -211,8 +213,9 @@ namespace ctns{
                const auto& state = fci_space[idx];
                std::cout << " i=" << i << " idx=" << idx
                   << " state=" << state
+                  << " coeff=" << std::scientific << std::setw(10) 
+                  << std::setprecision(3) << coeff[idx] 
                   << " pop=" << pop[idx]
-                  << " coeff=" << coeff[idx] 
                   << std::endl;
             }
          }

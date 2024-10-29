@@ -22,7 +22,6 @@ namespace ctns{
             const int iroot,
             const bool debug=false){
          if(debug) std::cout << "\nctns::rcanon_random iroot=" << iroot << std::endl; 
-
          const int nsite = icomb.get_nphysical();
          fock::onstate state(2*nsite);
          // initialize boundary wf for i-th state
@@ -74,7 +73,7 @@ namespace ctns{
                } // j
                wf = qt3.fix_mid(std::make_pair(0,0));
             } // tp
-         }
+         } // i
          /*
          // finally wf should be the corresponding CI coefficients
          double sgn = state.permute_sgn(icomb.topo.image2); // from orbital ordering
@@ -92,7 +91,7 @@ namespace ctns{
          }
          return std::make_pair(state,coeff0);
       }
-
+ 
 } // ctns
 
 #endif
