@@ -24,6 +24,7 @@
 #include "sadmrg/ctns_expand_su2.h"
 #include "sadmrg/ctns_random_su2.h"
 #include "sadmrg/ctns_sdiag_su2.h"
+#include "sadmrg/ctns_listcoeff_su2.h"
 
 #include "ctns_det2mps.h"
 #include "sadmrg/ctns_csf2samps.h"

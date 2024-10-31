@@ -3,6 +3,7 @@
 
 namespace ctns{
 
+   // add new site - Abelian case
    template <typename Tm>
       void update_space_new(const int i,
             const qsym& sym_state,
@@ -23,6 +24,7 @@ namespace ctns{
          }
       }
 
+   // add new site - non-Abelian case
    template <typename Tm>
       void update_space_new(const int i,
             const qsym& sym_state,
@@ -62,6 +64,45 @@ namespace ctns{
          } // bm
       }
 
+   template <typename Sm, typename Tm>
+      void print_listcoeff(std::vector<std::pair<Sm,Tm>>& space, // will be sorted
+            const double thresh_cabs,
+            const std::string saveconfs=""){
+
+         // sort by |coeff|
+         std::stable_sort(space.begin(), space.end(),
+               [](const auto& pr1, const auto& pr2){
+               return std::abs(pr1.second) > std::abs(pr2.second);
+               });
+
+         // print find results
+         std::cout << "find " << space.size() << " states with |coeff|>thresh_cabs=" << thresh_cabs << std::endl;
+         double psum = 0.0;
+         for(int i=0; i<space.size(); i++){
+            const auto& state = space[i].first;
+            const auto& coeff = space[i].second;
+            psum += std::norm(coeff);
+            std::cout << " i=" << i << " state=" << state 
+               << " coeff=" << std::scientific << std::setw(10) << std::setprecision(3) << coeff 
+               << " psum[accum]=" << psum 
+               << std::endl; 
+         }
+
+         // save configurations to text file
+         if(!saveconfs.empty()){
+            std::cout << "save to file " << saveconfs << "_" << "list.txt" << std::endl;
+            std::ofstream file(saveconfs+"_list.txt");
+            file << std::scientific << std::setprecision(12);
+            file << "size= " << space.size() << " psum= " << psum << std::endl;
+            for(int i=0; i<space.size(); i++){
+               const auto& state = space[i].first;
+               const auto& coeff = space[i].second;
+               file << state << " " << coeff << std::endl;
+            }
+            file.close(); 
+         }
+      }
+
    // list all states with |coeff|>thresh_cabs
    // code structure is similar to rcanon_random in ctns_rcandom.h
    template <typename Qm, typename Tm>
@@ -90,8 +131,8 @@ namespace ctns{
 
          // start iteration
          std::cout << "breadth first search for the configuration tree:"
-           << " depth=" << ks 
-           << std::endl;
+            << " depth=" << ks 
+            << std::endl;
          const auto& rindex = icomb.topo.rindex;
          auto sym_state = icomb.get_qsym_state();
          for(int i=0; i<ks; i++){
@@ -103,22 +144,22 @@ namespace ctns{
             for(int j=0; j<space.size(); j++){
                const auto& state = space[j].first;
                const auto& wf = space[j].second;
-               auto qt3 = contract_qt3_qt2("l",site,wf);
+               auto qt3 = contract_qt3_qt2("l",site, wf);
                update_space_new(i, sym_state, state, qt3, thresh_cabs, space_new);
             } // j
 #else            
             // openmp version
-            #pragma omp parallel
+#pragma omp parallel
             {
                std::vector<std::pair<statetype, qtensor2<ifab,Tm>>> space_local;
-               #pragma omp for schedule(static) nowait
+#pragma omp for schedule(static) nowait
                for(int j=0; j<space.size(); j++){
                   const auto& state = space[j].first;
                   const auto& wf = space[j].second;
-                  auto qt3 = contract_qt3_qt2("l",site,wf);
+                  auto qt3 = contract_qt3_qt2("l",site, wf);
                   update_space_new(i, sym_state, state, qt3, thresh_cabs, space_local);
                } // j
-               #pragma omp critical
+#pragma omp critical
                std::copy(space_local.begin(), space_local.end(), std::back_inserter(space_new)); 
             }
 #endif
@@ -129,41 +170,14 @@ namespace ctns{
                << std::endl;
          }
 
-         // sort by |coeff|
-         std::stable_sort(space.begin(), space.end(),
-               [](const auto& pr1, const auto& pr2){
-               return std::abs(pr1.second(0,0)(0,0)) > std::abs(pr2.second(0,0)(0,0));
-               });
-
-         // print find results
-         std::cout << "find " << space.size() << " states with |coeff|>thresh_cabs=" << thresh_cabs << std::endl;
-         double psum = 0.0;
-         for(int i=0; i<space.size(); i++){
-            const auto& state = space[i].first;
-            const auto& wf = space[i].second;
-            const auto& coeff = wf(0,0)(0,0);
-            psum += std::norm(coeff);
-            std::cout << " i=" << i << " state=" << state 
-               << " coeff=" << std::scientific << std::setw(10) << std::setprecision(3) << coeff 
-               << " psum[accum]=" << psum 
-               << std::endl; 
-         }
-
-         // save configurations to text file
-         if(!saveconfs.empty()){
-            std::cout << "save to file " << saveconfs << "_" << "list.txt" << std::endl;
-            std::ofstream file(saveconfs+"_list.txt");
-            file << std::scientific << std::setprecision(12);
-            file << "size= " << space.size() << " psum= " << psum << std::endl;
-            for(int i=0; i<space.size(); i++){
-               const auto& state = space[i].first;
-               const auto& wf = space[i].second;
-               const auto& coeff = wf(0,0)(0,0);
-               file << state << " " << coeff << std::endl;
-            }
-            file.close(); 
-         }
-
+         // cleanup  
+         size_t dim = space.size();         
+         std::vector<std::pair<statetype, Tm>> space_final(dim);
+         std::transform(space.begin(), space.end(), space_final.begin(),
+               [](const auto& x){ return std::make_pair(x.first,x.second(0,0)(0,0)); });
+         
+         print_listcoeff(space_final, thresh_cabs, saveconfs);
+         
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_listcoeff", t0, t1);
       }

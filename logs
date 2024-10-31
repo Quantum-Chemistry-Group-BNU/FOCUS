@@ -571,5 +571,6 @@
  * Determinant expansion for SA-MPS: [DONE@2024/11/01]
    - <det|SA-MPS> (ctns_cicoeff_su2.h, ctns_expand_su2.h): keyword detbasis [DONE@2024/10/28]
    - sampling algorithm (ctns_random_su2.h, ctns_sdiag_su2.h) [DONE@2024/10/29]
-   - search algorithm (ctns_listcoeff_su2.h)
+   - search algorithm (ctns_listcoeff_su2.h) [DONE@2024/11/01]
+
 

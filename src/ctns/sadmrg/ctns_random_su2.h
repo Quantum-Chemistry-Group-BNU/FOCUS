@@ -30,9 +30,8 @@ namespace ctns{
          auto wf = icomb.rwfuns[iroot];
          const auto& nodes = icomb.topo.nodes; 
          const auto& rindex = icomb.topo.rindex;
-         auto sym = icomb.get_qsym_state();
-         int ne = sym.ne();
-         int ts = sym.ts();
+         auto sym_state = icomb.get_qsym_state();
+         int ne = sym_state.ne(), ts = sym_state.ts();
          // loop from left to right
          for(int i=0; i<icomb.topo.nbackbone; i++){
             const auto& node = nodes[i][0];
@@ -116,11 +115,11 @@ namespace ctns{
          if(debug) std::cout << "\nctns::rcanon_random_det iroot=" << iroot << std::endl;
          const int nsite = icomb.get_nphysical();
          fock::onstate state(2*nsite);
-         auto sym = icomb.get_qsym_state();
-         int ne = sym.ne(), ts = sym.ts(), tm = ts; // high-spin component
+         auto sym_state = icomb.get_qsym_state();
+         int ne = sym_state.ne(), ts = sym_state.ts(), tm = ts; // high-spin component
          // initialize boundary wf for i-th state
          auto wf2 = icomb.rwfuns[iroot];
-         int bc = wf2.info.qcol.existQ(sym);
+         int bc = wf2.info.qcol.existQ(sym_state);
          assert(bc != -1);
          qbond qleft;
          qleft.dims.resize(1);
@@ -153,7 +152,7 @@ namespace ctns{
                      << " (na_ia,nb_i)=" << na_i << "," << nb_i
                      << " qc=" << qc
                      << std::endl;
-                  // construct Bnew[r] = sum_r B[l]*A[l,r] for each ndx
+                  // construct Bnew[r] = sum_l B[l]*A[l,r] for each ndx
                   for(int r=0; r<qcol.size(); r++){
                      auto qr = qcol.get_sym(r);
                      int dr = qcol.get_dim(r);
