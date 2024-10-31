@@ -503,7 +503,7 @@
          - alg_hvec = 16-19     DONE
    - single site entropy via rdm [DONE@2024/09/12] 
 
-### 2024 DMRG[init] ###
+### 2024 DMRG[INIT] ###
 
  * More robust initialization from dets, and canonicalization [DONE@2024/09/02]
     - initialization from SCI: support more than 100000 dets [DONE@2024/08/30]
@@ -528,6 +528,13 @@
      and a small Dcut DMRG.
    - support init_aufbau & init_seniority
     
+### 2024 DMRG[DET] ###
+
+ * Determinant expansion for SA-MPS: [DONE@2024/11/01]
+   - <det|SA-MPS> (ctns_cicoeff_su2.h, ctns_expand_su2.h): keyword detbasis [DONE@2024/10/28]
+   - sampling algorithm (ctns_random_su2.h, ctns_sdiag_su2.h) [DONE@2024/10/29]
+   - search algorithm (ctns_listcoeff_su2.h) [DONE@2024/11/01]
+
 ### 2024 DMRG[TDM] ###
 
  * Arbitrary types of transition density matrices (relevant for PT & SOC?),
@@ -547,30 +554,4 @@
       - 2p0h & 0p2h:
       - 2p1h & 1p2h:
       - 3p2h & 2p3h: communication is required for pattern 212 
-
- * Further optimized kernel for assembling RDM:
-   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
-   - Optimizations:
-      - alg_rdm=2: 
-         - classify l,r operators by symmetry
-         - batched dgemv operation for assembling?
-      - compare different options for alg_renorm and alg_rdm
-      - profiling for FeMoCo with D>=8000
-         - /public/home/bnulizdtest/tests/femoco/mpi8n2
-         - memory issue for openmp?
-      - optimize IO (prefetch?)
-      - batch algorithm (BatchedGEMV) for patterns 211
-      - GPU assembling algorithm via batch?
-   - Test systems:
-      - Hydrogen chain in 6-31G?
-      - Polyene?
-      - MR-TADF systems: singlet and triplet gaps?
-
- ### 2024 DMRG[DET] ###
-
- * Determinant expansion for SA-MPS: [DONE@2024/11/01]
-   - <det|SA-MPS> (ctns_cicoeff_su2.h, ctns_expand_su2.h): keyword detbasis [DONE@2024/10/28]
-   - sampling algorithm (ctns_random_su2.h, ctns_sdiag_su2.h) [DONE@2024/10/29]
-   - search algorithm (ctns_listcoeff_su2.h) [DONE@2024/11/01]
-
 
