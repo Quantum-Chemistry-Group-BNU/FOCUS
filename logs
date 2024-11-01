@@ -548,7 +548,7 @@
          - checked by forming 1-RDM using TDM [!!!]
       - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]> [DONE@2024/10/06]
       - 2p1h & 1p2h: <MPS[N]|p+q+r|MPS[N-1]>, <MPS[N-1]|p+qr|MPS[N]> [DONE@2024/10/06]
-      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/XX/XX]
+      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/11/01]
    - MPI version:
       - 1p0h & 0p1h:
       - 2p0h & 0p2h:

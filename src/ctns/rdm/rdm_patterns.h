@@ -111,6 +111,7 @@ namespace ctns{
               str = right;
             }
             bool valid = true;
+            // check whether - goes before +
             bool minusSeen = false; 
             for(char ch : str){
                if(ch == '-'){
@@ -121,6 +122,9 @@ namespace ctns{
                   }
                }
             }
+            // check no. of ncre and ann operators do not exceed 2
+            valid &= (std::count(str.begin(), str.end(), '+') <= 2) &
+                     (std::count(str.begin(), str.end(), '-') <= 2);
             return valid;
          }
          int get_ncre() const{ 

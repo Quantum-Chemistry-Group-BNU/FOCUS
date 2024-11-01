@@ -69,10 +69,21 @@ void RDM(const input::schedule& schd){
 
    // display task_prop
    if(rank == 0){
+      const std::set<std::string> keys_avail = {"ova",
+                                                "1p1h",
+                                                "2p2h",
+                                                "1p0h", "0p1h",
+                                                "2p0h", "0p2h",
+                                                "2p1h", "1p2h",
+                                                "3p3h"};
       std::cout << "\n" << tools::line_separator2 << std::endl;
       std::cout << "task_prop:";
       for(const auto& key : schd.ctns.task_prop){
          std::cout << " " << key;
+         if(keys_avail.find(key) == keys_avail.end()){
+            std::cout << "\nerror: keys_avail does not contain key=" << key << std::endl;
+            exit(1);
+         }
       }
       std::cout << "   is_same=" << is_same << std::endl;
       std::cout << " MPS1:"
@@ -102,10 +113,12 @@ void RDM(const input::schedule& schd){
 
    // --- rdms ---
    assert(schd.sorb == 2*icomb.get_nphysical());
-   int k = schd.sorb;
-   int k2 = k*(k-1)/2;
+   size_t k = schd.sorb;
+   size_t k2 = k*(k-1)/2;
+   size_t k3 = k*(k-1)*(k-2)/6;
    linalg::matrix<Tm> rdm1;
    linalg::matrix<Tm> rdm2;
+   linalg::matrix<Tm> rdm3;
 
    // 1: rdm1 
    if(tools::is_in_vector(schd.ctns.task_prop,"1p1h")){
@@ -484,16 +497,32 @@ void RDM(const input::schedule& schd){
       io::remove_scratch(scratch, (rank == 0));
       io::create_scratch(scratch, (rank == 0));
       // compute rdm3 = <p+q+r+stu> (p>q>r,s<t<u)
-      size_t k3 = k*(k-1)*(k-2)/6;
-      linalg::matrix<Tm> rdm3(k3,k3);
+      rdm3.resize(k3,k3);
       auto image1 = icomb.topo.get_image1();
+      auto t0 = tools::get_time();
       for(int i=0; i<k; i++){
+         auto tx = tools::get_time();
          int ki = i/2, spin_i = i%2;
          auto icomb2_i = apply_opC(icomb2, ki, spin_i, 0); // i|psi> (u=i)
          linalg::matrix<Tm> rdm32(k3,k2), tdm32;
          ctns::rdm_sweep("3p2h", false, icomb, icomb2_i, schd, scratch, rdm32, tdm32);
-         // copy data
+         // copy data to rdm3 <Psi_0|p+q+r+st|Psi_i>
+         int pi = 2*image1[ki] + spin_i; // map to the orbital index
+         for(int pt=0; pt<pi; pt++){ 
+            for(int ps=0; ps<pt; ps++){
+               auto psti = tools::canonical_triple0(pi,pt,ps);
+               auto pst = tools::canonical_pair0(pt,ps); 
+               Tm sgn1 = tools::sgn_triple0(pi,pt,ps);
+               Tm sgn2 = tools::sgn_pair0(pt,ps);
+               linalg::xaxpy(k3, sgn1*sgn2, rdm32.col(pst), rdm3.col(psti)); 
+            }
+         }
+         auto ty = tools::get_time();
+         std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
       } 
+      auto t1 = tools::get_time();
+      std::cout << "total time for 3-RDM:" << tools::get_duration(t1-t0) << " S" << std::endl;
+      // compared against other evaluation
       if(schd.ctns.debug_rdm and rank == 0 and Qm::ifabelian){
          auto rdm3b = ctns::rdm3_simple(icomb, icomb2, iroot, jroot);
          auto diff = rdm3 - rdm3b;
@@ -501,15 +530,19 @@ void RDM(const input::schedule& schd){
             << " |rdm3b|=" << rdm3b.normF()
             << " |rdm3-rdm3b|=" << diff.normF() << std::endl; 
          assert(diff.normF() < thresh);
-         exit(1);
       } 
    } // rdm3
 
    // save results
    if(rank == 0 and is_same){
-      if(rdm1.size()>0 or rdm2.size()>0) std::cout << "\nsave results for rdms:" << std::endl;
+      if(rdm1.size()>0 or rdm2.size()>0 or rdm3.size()>0){
+         std::cout << "\nsave results for rdms:" << std::endl;
+      }
+      // save text
       if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
       if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm3.size()>0) rdm3.save_txt("rdm3mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      // compute natural orbitals
       if(rdm1.size()>0){
          auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
          natorbs.save_txt("natorbs", schd.ctns.outprec);

@@ -59,7 +59,7 @@ namespace ctns{
          // assemble RDMs by pattern
          for(int i=0; i<allpatterns.size(); i++){
             const auto& pattern = allpatterns[i];
-            const auto& loptype = str2optype.at(pattern.left);
+            const auto& loptype  = str2optype.at(pattern.left);
             const auto& coptype = str2optype.at(pattern.center);
             const auto& roptype = str2optype.at(pattern.right);
             const auto& lkey = loptype.first; 

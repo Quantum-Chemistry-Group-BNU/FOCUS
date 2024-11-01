@@ -26,7 +26,8 @@ namespace ctns{
                num_string == "030" || num_string == "021" || num_string == "300" ||
                num_string == "012" || num_string == "003" || 
                // 3p2h 
-               num_string == "041"){
+               num_string == "041" || num_string == "311" || num_string == "320" ||
+               num_string == "410" || num_string == "401"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                if(rdx % size == rank) reval.push_back(rdx);
@@ -42,7 +43,10 @@ namespace ctns{
                // which will avoid repeated calculations in different ranks for ifhermi=true 
                num_string == "002" || num_string == "022" ||
                // 2p1h & 1p2h
-               num_string == "120" || num_string == "111" || num_string == "102"){
+               num_string == "120" || num_string == "111" || num_string == "102" ||
+               // 3p2h
+               num_string == "140" || num_string == "131" || num_string == "113" ||
+               num_string == "023" || num_string == "104" || num_string == "014"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                reval.push_back(rdx);
@@ -54,7 +58,31 @@ namespace ctns{
          // parallelize over left two-indexed ops
          }else if(num_string == "220" || num_string == "211" || num_string == "202" ||
                // 2p1h & 1p2h
-               num_string == "201" || num_string == "210"){
+               num_string == "201" || num_string == "210" ||
+               // 3p2h
+               num_string == "230" || num_string == "221" || num_string == "203"){
+            for(const auto& rpr : rops){
+               const auto& rdx = rpr.first;
+               reval.push_back(rdx); 
+            }
+            char key;
+            for(const auto& lpr : lops){
+               const auto& ldx = lpr.first;
+               if(distribute2(key, ifkr, size, ldx, sorb) == rank) leval.push_back(ldx);
+            }
+         // parallelize over right two-indexed ops
+         }else if(num_string == "032" || num_string == "122" || num_string == "302"){
+            char key;
+            for(const auto& rpr : rops){
+               const auto& rdx = rpr.first;
+               if(distribute2(key, ifkr, size, rdx, sorb) == rank) reval.push_back(rdx); 
+            }
+            for(const auto& lpr : lops){
+               const auto& ldx = lpr.first;
+               leval.push_back(ldx);
+            }
+         // needs spectical treatment later
+         }else if(num_string == "212"){
             for(const auto& rpr : rops){
                const auto& rdx = rpr.first;
                reval.push_back(rdx); 
