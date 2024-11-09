@@ -37,5 +37,6 @@
 #include "rdm/rdm_simple.h"
 #include "rdm/ctns_rdm.h"
 #include "rdm/rdm_auxdata.h"
+#include "rdm/rdm_mrpt2.h"
 
 #endif

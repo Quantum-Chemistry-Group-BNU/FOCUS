@@ -34,6 +34,7 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         
          // "2p2h" [C++ string count from left]
          // Using ASCII value subtraction
          int ncre = rdmtype[0]-'0';
