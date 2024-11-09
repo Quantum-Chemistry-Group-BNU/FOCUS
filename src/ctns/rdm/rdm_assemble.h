@@ -4,6 +4,7 @@
 #include "rdm_string.h"
 #include "rdm_distribute.h"
 #include "rdm_oputil.h"
+#include "rdm_auxdata.h"
 #include "../sadmrg/oper_dot_su2.h"
 
 namespace ctns{
@@ -18,7 +19,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const linalg::matrix<Tm>& tdm){
+            const rdmaux<Tm>& aux){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -94,7 +95,7 @@ namespace ctns{
             if(alg_rdm == 0){
 
                rdm_assemble_simple(is_same, pattern, lkey, ckey, rkey, ldagger, cdagger, rdagger, lops, cops, rops, 
-                     wf3bra, wf3ket, leval, reval, rdm, tdm, rank);
+                     wf3bra, wf3ket, leval, reval, rdm, aux, rank);
 
             }else if(alg_rdm == 1){
 
@@ -134,7 +135,7 @@ namespace ctns{
             const std::vector<int>& leval,
             const std::vector<int>& reval,
             linalg::matrix<Tm>& rdm,
-            const linalg::matrix<Tm>& tdm,
+            const rdmaux<Tm>& aux,
             const int rank){
          // assemble rdms
          int lparity = op2parity.at(lkey);
@@ -171,7 +172,7 @@ namespace ctns{
                   size_t idx = ijdx.first;
                   size_t jdx = ijdx.second;
                   rdm(idx,jdx) = sgn*val;
-                  double diff = std::abs(sgn*val - tdm(idx,jdx));
+                  double diff = std::abs(sgn*val - aux.rdm(idx,jdx));
                   std::cout << "rank=" << rank
                      << " pattern=" << pattern.to_string() 
                      << " ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
@@ -182,7 +183,7 @@ namespace ctns{
                      << " sgn=" << sgn 
                      << " val=" << std::setprecision(12) << sgn*val
                      << " idx,jdx=" << idx << "," << jdx
-                     << " tdm=" << tdm(idx,jdx)
+                     << " aux.rdm=" << aux.rdm(idx,jdx)
                      << " diff=" << diff
                      << std::endl;
                   assert(diff < 1.e-8);

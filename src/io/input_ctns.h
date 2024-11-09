@@ -108,7 +108,8 @@ namespace input{
                   & fromnosym
                   & ooparams
                   & inputconf & saveconfs & loadconfs
-                  & alg_rdm & debug_rdm;
+                  & alg_rdm & debug_rdm
+                  & alg_mrpt2 & nv2 & nc2;
             }
       public:
          void read(std::ifstream& istrm);
@@ -208,6 +209,10 @@ namespace input{
          std::string saveconfs = "";
          std::string loadconfs = "";
          bool debug_rdm = false;
+         // mrpt2
+         int alg_mrpt2 = 0;
+         int nv2 = 0;
+         int nc2 = 0;
    };
 
 } // input

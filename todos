@@ -1,4 +1,5 @@
 
+
  * Further optimized kernel for assembling RDM:
    - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
    - Optimizations:
@@ -16,6 +17,8 @@
       - Hydrogen chain in 6-31G?
       - Polyene?
       - MR-TADF systems: singlet and triplet gaps?
+      - 2-RDMs for Fe8S7 with large bond dimension!
+
 
 ### 2025 DMRG[RDM(SU2)] ###
 
@@ -40,7 +43,25 @@
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
 
-### 2025 FeMoco[+dynamical correlation/+SOC] ###
+
+### 2025 Profiling + Tests ###
+
+ * Profiling:
+   - better understand the cost of gpu2cpu memcpy for renorm? add timing to print in each renorm 
+   - renorm4占用内存过多
+   - decimation for su2 is not parallelized (using MPI) yet
+
+ * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
+   - Compilation on jiageng: need to used mkl for magma/zquatev, 
+                             but use mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist!
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
+
+
+### 2025 Dynamical correlation + SOC [DMRG] ###
 
  * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
    - This may be operationally useful like BS-DFT.
@@ -54,14 +75,6 @@
    - 用小体系n2测试?
    - combined with OO-DMRG?
 
- * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
-   - Compilation on jiageng: need to used mkl for magma/zquatev, 
-                             but use mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist!
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
 ### 2025 DMRG + QC ###
 
@@ -69,6 +82,7 @@
    - Combined with LEOs 
    - Python implementation for preparation of MPS [linear combination of CSF]
    - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!!!]
+
 
 ### TODOs: more functionalities ###
 
@@ -80,9 +94,8 @@
       requires 'Conj' operation in GEMM!] 
    - Two-RDMs: enable Rel-CASSCF with interface to other codes 
 
-### TODOs: better performance ###
 
- * Decimation for su2 is not parallelized (using MPI) yet
+### TODOs: better performance ###
 
  * Decimation on GPU?
    - cuSolver: svd
@@ -104,6 +117,7 @@
      and hence we only need to send rows of o[l,:] and o[r,:] as well as
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
+
 
 ### TODOs: applications ###
 

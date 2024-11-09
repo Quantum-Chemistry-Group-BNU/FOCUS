@@ -86,6 +86,8 @@ void params_ctns::read(ifstream& istrm){
          alg_decim = stoi(line.substr(9));
       }else if(line.substr(0,7)=="alg_rdm"){
          alg_rdm = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="alg_mrpt2"){
+         alg_mrpt2 = stoi(line.substr(9));
       }else if(line.substr(0,9)=="debug_rdm"){
          debug_rdm = true;
       }else if(line.substr(0,7)=="notrunc"){
@@ -235,6 +237,12 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,9)=="rcfprefix"){
          istringstream is(line.substr(9));
          is >> rcfprefix;
+      }else if(line.substr(0,5)=="mrpt2"){
+         std::string nv2s, nc2s;
+         istringstream is(line.substr(5));
+         is >> nv2s >> nc2s;
+         nv2 = stoi(nv2s);
+         nc2 = stoi(nc2s);
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
@@ -413,4 +421,8 @@ void params_ctns::print() const{
    cout << "saveconfs = " << saveconfs << endl;
    cout << "loadconfs = " << loadconfs << endl;
    cout << "debug_rdm = " << debug_rdm << endl;
+   // mrpt2
+   cout << "alg_mrpt2 = " << alg_mrpt2 << endl;
+   cout << "nv2 = " << nv2 << endl;
+   cout << "nc2 = " << nc2 << endl;
 }

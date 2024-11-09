@@ -9,6 +9,7 @@
 #include "rdm_patterns.h"
 #include "rdm_assemble.h"
 #include "rdm_assemble_su2.h"
+#include "rdm_auxdata.h"
 
 namespace ctns{
 
@@ -20,7 +21,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const linalg::matrix<Tm>& tdm){
+            const rdmaux<Tm>& aux){
          const int dots = 1;
          // copy MPS
          auto icomb = combi;
@@ -182,7 +183,7 @@ namespace ctns{
             
             // assemble rdm
             rdm_assemble(is_same, icomb, qops_dict, wf3bra, wf3ket,
-                    allpatterns, schd, scratch, rdm, tdm);
+                    allpatterns, schd, scratch, rdm, aux);
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation

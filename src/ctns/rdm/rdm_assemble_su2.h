@@ -13,7 +13,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const linalg::matrix<Tm>& tdm){
+            const rdmaux<Tm>& aux){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
