@@ -77,6 +77,10 @@
    - 用小体系n2测试?
    - combined with OO-DMRG?
 
+ * 子博 => PT2 correction on top of NQS?
+   - deterministic evaluation following Hanshi Hu's work
+   - stochastic evaluation following Sandeep Sharma's work
+   - more rigorous scheme akin to p-DMRG?
 
 ######################## !!! THIS VERSION IS OK FOR RELEASE !!! #########################
 
