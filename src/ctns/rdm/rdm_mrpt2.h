@@ -14,13 +14,19 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
-         
          const auto& nv2 = schd.ctns.nv2;
          const auto& nc2 = schd.ctns.nc2;
          const size_t k = schd.sorb;
          const size_t k2 = k*(k-1)/2;
          const size_t k3 = k*(k-1)*(k-2)/6;
-         linalg::matrix<Tm> rdm3;
+         const bool debug = (rank==0);
+         if(debug){
+            std::cout << "\nctns::rdm_mrpt2"
+               << " alg_mrpt2=" << schd.ctns.alg_mrpt2
+               << " nv2,nc2,no2=" << nv2 << "," << nc2 << "," << k
+               << " mpisize=" << size
+               << std::endl;
+         }
 
          // load dsrg information
          rdmaux<Tm> aux;
@@ -33,13 +39,13 @@ namespace ctns{
          if(schd.ctns.alg_mrpt2 == 0){
 
             // compute rdm3 = <p+q+r+stu> (p>q>r,s<t<u)
-            rdm3.resize(k3,k3);
+            linalg::matrix<Tm> rdm3(k3,k3);
             for(int i=0; i<k; i++){
                auto tx = tools::get_time();
                int ki = i/2, spin_i = i%2;
                auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi> (u=i)
                linalg::matrix<Tm> rdm32(k3,k2);
-               ctns::rdm_sweep("3p2h", false, icomb, icomb_i, schd, scratch, rdm32, aux);
+               rdm_sweep("3p2h", false, icomb, icomb_i, schd, scratch, rdm32, aux);
                // copy data to rdm3 <Psi_0|p+q+r+st|Psi_i>
                int pi = 2*image1[ki] + spin_i; // map to the orbital index
                for(int pt=0; pt<pi; pt++){ 
@@ -52,10 +58,10 @@ namespace ctns{
                   }
                }
                auto ty = tools::get_time();
-               if(rank == 0) std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
+               if(debug) std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
             } // i 
             auto tz = tools::get_time();
-            if(rank == 0) std::cout << "total time for 3-RDM: " << tools::get_duration(tz-t0) << " S" << std::endl;
+            if(debug) std::cout << "total time for 3-RDM: " << tools::get_duration(tz-t0) << " S" << std::endl;
 
             // assemble e2 by contracting <x+y+z+wvu>
             for(int px=0; px<k; px++){
@@ -113,8 +119,7 @@ namespace ctns{
                int ki = i/2, spin_i = i%2;
                auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi> (u=i)
                linalg::matrix<Tm> rdm32(k3,k2);
-               ctns::rdm_sweep("3p2h", false, icomb, icomb_i, schd, scratch, rdm32, aux);
-               // copy data to rdm3 <Psi_0|p+q+r+st|Psi_i>
+               rdm_sweep("3p2h", false, icomb, icomb_i, schd, scratch, rdm32, aux);
                int pw = 2*image1[ki] + spin_i; // map to the orbital index
                for(int px=0; px<k; px++){
                   for(int py=0; py<px; py++){
@@ -143,8 +148,25 @@ namespace ctns{
                   } // y
                } // x
                auto ty = tools::get_time();
-               if(rank == 0) std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
+               if(debug) std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
             } // i
+
+         }else if(schd.ctns.alg_mrpt2 == 2){
+
+            // on-the-fly contraction algorithm
+            aux.alg_mrpt2 = 2;
+            for(int i=0; i<k; i++){
+               auto tx = tools::get_time();
+               int ki = i/2, spin_i = i%2;
+               auto icomb_i = apply_opC(icomb, ki, spin_i, 0); // i|psi> (u=i)
+               aux.pw = 2*image1[ki] + spin_i; // map to the orbital index
+               linalg::matrix<Tm> rdm32; // this save the memory significantly
+               rdm_sweep("3p2h", false, icomb, icomb_i, schd, scratch, rdm32, aux);
+               auto ty = tools::get_time();
+               if(debug) std::cout << " i=" << i << " time=" << tools::get_duration(ty-tx) << " S" << std::endl;
+            } // i
+            ept2v = aux.ept2v;
+            ept2c = aux.ept2c;
 
          }else{
 
@@ -155,11 +177,11 @@ namespace ctns{
          auto t1 = tools::get_time();
 
          ept2 = ept2v + ept2c;
-         if(rank == 0){
+         if(debug){
             std::cout << "\nept2v = " << std::fixed << std::setprecision(schd.ctns.outprec) << ept2v << std::endl; 
             std::cout << "ept2c = " << std::fixed << std::setprecision(schd.ctns.outprec) << ept2c << std::endl; 
             std::cout << "ept2  = " << std::fixed << std::setprecision(schd.ctns.outprec) << ept2 << std::endl; 
-            std::cout << "total time for PT2: " << tools::get_duration(t1-t0) << " S" << std::endl;
+            tools::timing("ctns::rdm_mrpt2", t0, t1);
          }
          return ept2;
       }

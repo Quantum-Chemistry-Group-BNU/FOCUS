@@ -19,7 +19,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const rdmaux<Tm>& aux){
+            rdmaux<Tm>& aux){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -100,7 +100,7 @@ namespace ctns{
             }else if(alg_rdm == 1){
 
                rdm_assemble_simple_parallel(is_same, lkey, ckey, rkey, ldagger, cdagger, rdagger, lops, cops, rops, 
-                     wf3bra, wf3ket, leval, reval, rdm);
+                     wf3bra, wf3ket, leval, reval, rdm, aux);
 
             }else{
                tools::exit("error: no such option for alg_rdm");
@@ -135,7 +135,7 @@ namespace ctns{
             const std::vector<int>& leval,
             const std::vector<int>& reval,
             linalg::matrix<Tm>& rdm,
-            const rdmaux<Tm>& aux,
+            rdmaux<Tm>& aux,
             const int rank){
          // assemble rdms
          int lparity = op2parity.at(lkey);
@@ -208,7 +208,8 @@ namespace ctns{
             const qtensor3<ifab,Tm>& wf3ket,
             const std::vector<int>& leval,
             const std::vector<int>& reval,
-            linalg::matrix<Tm>& rdm){
+            linalg::matrix<Tm>& rdm,
+            rdmaux<Tm>& aux){
          // assemble rdms
          int lparity = op2parity.at(lkey);
          int cparity = op2parity.at(ckey);
@@ -259,19 +260,22 @@ namespace ctns{
 #pragma omp critical
 #endif
                   {
-                     rdm(idx,jdx) = sgn*val;
-                     if(is_same) rdm(jdx,idx) = tools::conjugate(rdm(idx,jdx));
+                     if(aux.alg_mrpt2 != 2){
+                    
+                        rdm(idx,jdx) = sgn*val;
+                        if(is_same) rdm(jdx,idx) = tools::conjugate(rdm(idx,jdx));
+                     
+                     }else{
 
-                     //std::cout << std::endl;
-                     //std::cout << "rdm: ijdx=" << idx << "," << jdx
-                     //   << " " << rdmstr.to_string1() 
-                     //   << " " << rdmstr.to_string() 
-                     //   << " rdm(i,j)=" << rdm(idx,jdx)
-                     //   << std::endl;
-                  }
-               }
-            }
-         }
+                        // on the fly contraction
+                        assert(!is_same);
+                        aux.dsrg_contract(idx, jdx, sgn*val);
+ 
+                     }
+                  } // critical region
+               } // l
+            } // c
+         } // r
       }
 
 } // ctns

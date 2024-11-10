@@ -21,7 +21,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const rdmaux<Tm>& aux){
+            rdmaux<Tm>& aux){ // aux may get changed
          const int dots = 1;
          // copy MPS
          auto icomb = combi;
