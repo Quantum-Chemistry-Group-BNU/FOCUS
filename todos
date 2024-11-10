@@ -1,25 +1,5 @@
 
 
- * Further optimized kernel for assembling RDM:
-   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
-   - Optimizations:
-      - alg_rdm=2: 
-         - classify l,r operators by symmetry
-         - batched dgemv operation for assembling?
-      - compare different options for alg_renorm and alg_rdm
-      - profiling for FeMoCo with D>=8000
-         - /public/home/bnulizdtest/tests/femoco/mpi8n2
-         - memory issue for openmp?
-      - optimize IO (prefetch?)
-      - batch algorithm (BatchedGEMV) for patterns 211
-      - GPU assembling algorithm via batch?
-   - Test systems:
-      - Hydrogen chain in 6-31G?
-      - Polyene?
-      - MR-TADF systems: singlet and triplet gaps?
-      - 2-RDMs for Fe8S7 with large bond dimension!
-
-
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
@@ -44,14 +24,33 @@
    - MPS-based CI? <A|H|B>
 
 
-### 2025 Profiling + Tests ###
+### 2025 Profiling + Optimization + More tests ###
+
+ * Further optimized kernel for assembling RDM:
+   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
+   - Optimizations:
+      - alg_rdm=2: 
+         - classify l,r operators by symmetry
+         - batched dgemv operation for assembling?
+      - compare different options for alg_renorm and alg_rdm
+      - profiling for FeMoCo with D>=8000
+         - /public/home/bnulizdtest/tests/femoco/mpi8n2
+         - memory issue for openmp?
+      - optimize IO (prefetch?)
+      - batch algorithm (BatchedGEMV) for patterns 211
+      - GPU assembling algorithm via batch?
+   - Test systems:
+      - Hydrogen chain in 6-31G?
+      - Polyene?
+      - MR-TADF systems: singlet and triplet gaps?
+      - 2-RDMs for Fe8S7 with large bond dimension!
 
  * Profiling:
    - better understand the cost of gpu2cpu memcpy for renorm? add timing to print in each renorm 
    - renorm4占用内存过多
    - decimation for su2 is not parallelized (using MPI) yet
 
- * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
+ * Benchmark: jiageng or other platform [DONE@2025/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
                              but use mkl2022 for focus,
                              otherwise, dgemv_batch does not exist!

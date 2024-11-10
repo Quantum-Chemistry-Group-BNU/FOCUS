@@ -555,7 +555,8 @@
 
    - Interface with DSRG-MRPT2 
       - on-the-fly assembling pt2 energy? [DONE@2024/11/10]
-      - orbital ordering problem
+
+      - orbital ordering problem [???]
 
    - MPI version:
       - 1p0h & 0p1h:
