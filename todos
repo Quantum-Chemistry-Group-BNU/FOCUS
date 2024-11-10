@@ -20,6 +20,9 @@
    - is_same=false: more patterns to be considered
       - rdm1
       - rdm2
+   - 3p2h for mrpt2 [need spin-summed rdms]
+      - theoretical formulation
+      - implementation taking advantage of su2 symmetry to reduce cost!
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
 
@@ -75,13 +78,15 @@
    - combined with OO-DMRG?
 
 
-### 2025 DMRG + QC ###
+######################## !!! THIS VERSION IS OK FOR RELEASE !!! #########################
+
+
+### TODOs: DMRG + QC ###
 
  * Disentangle transformation:
    - Combined with LEOs 
    - Python implementation for preparation of MPS [linear combination of CSF]
    - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!!!]
-
 
 ### TODOs: more functionalities ###
 
@@ -92,7 +97,6 @@
       otherwise renormalized state become complex, and the construction of H 
       requires 'Conj' operation in GEMM!] 
    - Two-RDMs: enable Rel-CASSCF with interface to other codes 
-
 
 ### TODOs: better performance ###
 
@@ -116,7 +120,6 @@
      and hence we only need to send rows of o[l,:] and o[r,:] as well as
      the full vector x & y to GPU, which minimize the memory usage of GPU.
    - Can renorm be performed in a similar way?
-
 
 ### TODOs: applications ###
 
