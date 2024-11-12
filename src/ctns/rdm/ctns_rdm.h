@@ -45,7 +45,7 @@ namespace ctns{
          const bool ifab = Qm::ifabelian;
          const int alg_rdm = schd.ctns.alg_rdm;
          const int alg_renorm = schd.ctns.alg_renorm;
-         const bool debug = (rank==0); 
+         const bool debug = true; //(rank==0); 
          if(debug){ 
             std::cout << "\nctns::rdm_sweep"
                << " rdmtype=" << rdmtype
@@ -225,6 +225,9 @@ namespace ctns{
             const auto p = dbond.get_current();
             const auto& pdx = icomb.topo.rindex.at(p);
             std::string fname;
+            if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
+               + "_isweep"+std::to_string(isweep)
+               + "_ibond"+std::to_string(ibond) + ".txt";
             std::string fmmtask;
             if(superblock == "lc"){
                icomb.sites[pdx] = rotbra.split_lc(wf3bra.info.qrow, wf3bra.info.qmid);
@@ -233,22 +236,11 @@ namespace ctns{
                qops_pool.clear_from_memory({fneed[1]}, fneed_next);
                rdm_renorm(ns_max, "lc", is_same, icomb, icomb2, p, schd,
                      lqops, cqops, qops, fname, timing, fmmtask);
-            /*
-            }else if(superblock == "cr"){
-               icomb.sites[pdx] = rotbra.split_cr(wf3bra.info.qmid, wf3bra.info.qcol);
-               icomb2.sites[pdx] = rotket.split_cr(wf3ket.info.qmid, wf3ket.info.qcol);
-               // renorm operators
-               qops_pool.clear_from_memory({fneed[0]}, fneed_next);
-               rdm_renorm(ne_max, "cr", is_same, icomb, icomb2, p, schd,
-                     cqops, rqops, qops, fname, timing, fmmtask);
-            }else{
-               tools::exit("error: superblock=lr is not supported yet!");
-            */
             }else{
                tools::exit("error: superblock must be 'lc' in RDM sweep!");
             }
             timing.tf = tools::get_time();
-
+            
             // 4. cleanup operators
             qops_pool.cleanup_sweep(fneed, fneed_next, frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
 
@@ -271,7 +263,7 @@ namespace ctns{
 
 #ifndef SERIAL
          if(size > 1){
-            mpi_wrapper::reduce(icomb.world, rdm.data(), rdm.size(), 0);
+            mpi_wrapper::allreduce(icomb.world, rdm.data(), rdm.size());
          }
 #endif
 

@@ -67,7 +67,7 @@ namespace ctns{
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
-               + "_ibond"+std::to_string(ibond) + ".txt";
+            + "_ibond"+std::to_string(ibond) + ".txt";
          std::string fmmtask;
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);

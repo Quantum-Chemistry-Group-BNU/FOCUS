@@ -18,8 +18,9 @@ namespace ctns{
             const bool ifkr,
             const bool ifhermi,
             const integral::two_body<Tm>& int2e,
-            const int& size,
-            const int& rank,
+            const int sorb,
+            const int size,
+            const int rank,
             const bool ifdist1,
             const bool ifdistc,
             const bool ifsave,
@@ -51,7 +52,7 @@ namespace ctns{
             auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
             for(const auto& pr : ainfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('A',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opA = symbolic_normxwf_opA_su2<Tm>(block1, block2, index, iformula);
                   formulae.append(std::make_tuple('A', index, opA));
@@ -71,7 +72,7 @@ namespace ctns{
             auto binfo = oper_combine_opB(cindex1, cindex2, ifkr, ifhermi);
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('B',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opB = symbolic_normxwf_opB_su2<Tm>(block1, block2, index, iformula, ifDop);
                   formulae.append(std::make_tuple('B', index, opB));
@@ -89,7 +90,7 @@ namespace ctns{
             counter["P"] = 0;	
             auto pindex = oper_index_opP(krest, ifkr);    
             for(const auto& index : pindex){
-               int iproc = distribute2('P',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('P',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opP = symbolic_compxwf_opP_su2<Tm>(block1, block2, cindex1, cindex2,
                         int2e, index);
@@ -108,7 +109,7 @@ namespace ctns{
             counter["Q"] = 0;
             auto qindex = oper_index_opQ(krest, ifkr); 
             for(const auto& index : qindex){
-               int iproc = distribute2('Q',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('Q',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opQ = symbolic_compxwf_opQ_su2<Tm>(block1, block2, cindex1, cindex2,
                         int2e, index);
@@ -144,7 +145,7 @@ namespace ctns{
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
             auto opH = symbolic_compxwf_opH_su2<Tm>(block1, block2, cindex1, cindex2,
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+                  ifkr, sorb, size, rank, ifdist1);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
                formulae.append(std::make_tuple('H', 0, opH));
@@ -191,7 +192,7 @@ namespace ctns{
             auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
             for(const auto& pr : ainfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('M',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('M',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opM = symbolic_normxwf_opM_su2<Tm>(block1, block2, index, iformula);
                   formulae.append(std::make_tuple('M', index, opM));
@@ -254,7 +255,7 @@ namespace ctns{
          std::map<std::string,int> counter;
          auto rformulae = gen_formulae_renorm_su2(qops.oplist,block1,block2,
                cindex1,cindex2,qops.krest,ifkr,ifhermi,
-               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+               int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
