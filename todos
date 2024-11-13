@@ -1,5 +1,4 @@
 
-
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
@@ -25,7 +24,6 @@
       - implementation taking advantage of su2 symmetry to reduce cost!
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
-
 
 ### 2025 Profiling + Optimization + More tests ###
 
@@ -62,7 +60,6 @@
    - fe8s7
    - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
-
 ### 2025 Dynamical correlation + SOC [DMRG] ###
 
  * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
@@ -82,7 +79,8 @@
    - stochastic evaluation following Sandeep Sharma's work
    - more rigorous scheme akin to p-DMRG?
 
-######################## !!! THIS VERSION IS OK FOR RELEASE !!! #########################
+
+######################## THIS VERSION IS READY FOR RELEASE ########################
 
 
 ### TODOs: DMRG + QC ###
