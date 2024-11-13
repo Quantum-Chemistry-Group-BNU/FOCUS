@@ -1,4 +1,31 @@
 
+### 2025 DMRG[RDM(SU2)] ###
+
+ * RDMs for su2 case:
+   - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
+      - oper_dot_su2.h
+   - rdm_renorm: support su2 operators {I,D,M} and {B} [DONE@2024/09/13]
+      - sadmrg/symbolic_normxwf_su2.h
+      - sadmrg/symbolic_formulae_renorm_su2.h
+   - check coupling of wf3
+   - is_same=true: IMPORTANT [!!!] 
+      - rdm1
+         - assemble spin-free 1-RDM?
+         - direct construction of env matrix
+         - using spin recoupling to get spin-orbital 1-RDM?
+      - rdm2
+         - assemble spin-free 2-RDM?
+         - using spin recoupling to get spin-orbital 2-RDM?
+   - is_same=false: more patterns to be considered
+      - rdm1
+      - rdm2
+   - 3p2h for mrpt2 [need spin-summed rdms]
+      - apply opC to a spin-adapted MPS? (ap+|Psi0>)
+      - theoretical formulation
+      - implementation taking advantage of su2 symmetry to reduce cost!
+   - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
+   - MPS-based CI? <A|H|B>
+
 ### 2025 Profiling + Optimization + More tests ###
 
  * Further optimized kernel for assembling RDM:
