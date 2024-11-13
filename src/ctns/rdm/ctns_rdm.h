@@ -45,7 +45,7 @@ namespace ctns{
          const bool ifab = Qm::ifabelian;
          const int alg_rdm = schd.ctns.alg_rdm;
          const int alg_renorm = schd.ctns.alg_renorm;
-         const bool debug = true; //(rank==0); 
+         const bool debug = (rank==0); 
          if(debug){ 
             std::cout << "\nctns::rdm_sweep"
                << " rdmtype=" << rdmtype
@@ -262,7 +262,7 @@ namespace ctns{
          qops_pool.finalize();
 
 #ifndef SERIAL
-         if(size > 1){
+         if(size > 1 and rdm.size() > 0){
             mpi_wrapper::allreduce(icomb.world, rdm.data(), rdm.size());
          }
 #endif

@@ -548,15 +548,16 @@
          - checked by forming 1-RDM using TDM [!!!]
       - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]> [DONE@2024/10/06]
       - 2p1h & 1p2h: <MPS[N]|p+q+r|MPS[N-1]>, <MPS[N-1]|p+qr|MPS[N]> [DONE@2024/10/06]
-
-      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/XX/XX]
+      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/11/12]
          - checked by computing 3-RDM
          - checked by using rdm_simple
-      - Interface with DSRG-MRPT2 
-         - on-the-fly assembling pt2 energy? [DONE@2024/11/10]
-      - MPI version:
-         - 1p0h & 0p1h:
-         - 2p0h & 0p2h:
-         - 2p1h & 1p2h:
-         - 3p2h & 2p3h: communication of two-indexed operators is required for pattern 212
+   - MPI version:
+      - 1p0h & 0p1h [DONE@2024/11/12]
+      - 2p0h & 0p2h [DONE@2024/11/12]
+      - 2p1h & 1p2h [DONE@2024/11/12]
+      - 3p2h & 2p3h: communication of two-indexed operators is required for pattern 212 [DONE@2024/11/13]
+      - 3p3h (use 3p2h) [DONE@2024/11/13]
+   - Interface with DSRG-MRPT2 
+      - on-the-fly assembling pt2 energy? [DONE@2024/11/10]
+      - MPI parallelization [DONE@2024/11/13]
 
