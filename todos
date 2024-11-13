@@ -1,30 +1,4 @@
 
-### 2025 DMRG[RDM(SU2)] ###
-
- * RDMs for su2 case:
-   - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
-      - oper_dot_su2.h
-   - rdm_renorm: support su2 operators {I,D,M} and {B} [DONE@2024/09/13]
-      - sadmrg/symbolic_normxwf_su2.h
-      - sadmrg/symbolic_formulae_renorm_su2.h
-   - check coupling of wf3
-   - is_same=true: IMPORTANT [!!!] 
-      - rdm1
-         - assemble spin-free 1-RDM?
-         - direct construction of env matrix
-         - using spin recoupling to get spin-orbital 1-RDM?
-      - rdm2
-         - assemble spin-free 2-RDM?
-         - using spin recoupling to get spin-orbital 2-RDM?
-   - is_same=false: more patterns to be considered
-      - rdm1
-      - rdm2
-   - 3p2h for mrpt2 [need spin-summed rdms]
-      - theoretical formulation
-      - implementation taking advantage of su2 symmetry to reduce cost!
-   - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
-   - MPS-based CI? <A|H|B>
-
 ### 2025 Profiling + Optimization + More tests ###
 
  * Further optimized kernel for assembling RDM:
@@ -46,10 +20,13 @@
       - MR-TADF systems: singlet and triplet gaps?
       - 2-RDMs for Fe8S7 with large bond dimension!
 
- * Profiling:
+ * Profiling and optimization:
    - better understand the cost of gpu2cpu memcpy for renorm? add timing to print in each renorm 
-   - renorm4占用内存过多
+   - alg_renorm=4 占用内存过多
    - decimation for su2 is not parallelized (using MPI) yet
+   - conversion between NC/CN parition for MPS:
+      - this can reduce the memory requirement for GPU!
+      - for formula see: https://block2.readthedocs.io/en/latest/theory/su2.html
 
  * Benchmark: jiageng or other platform [DONE@2025/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
@@ -83,12 +60,12 @@
 ######################## THIS VERSION IS READY FOR RELEASE ########################
 
 
-### TODOs: DMRG + QC ###
+### TODOs: DMRG + Quantum Computing ###
 
  * Disentangle transformation:
    - Combined with LEOs 
    - Python implementation for preparation of MPS [linear combination of CSF]
-   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!!!]
+   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!]
 
 ### TODOs: more functionalities ###
 
