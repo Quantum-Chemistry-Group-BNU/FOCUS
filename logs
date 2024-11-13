@@ -537,13 +537,13 @@
 
 ### 2024 DMRG[TDM] ###
 
- * Arbitrary types of transition density matrices (relevant for PT & SOC?),
-   which only require the storage of two-index renormalized operators:
+ * transition density matrices (relevant for PT & SOC?), which only requires 
+   the storage of two-index renormalized operators:
    - reference: rdm1/2/3_simple is working [DONE@2024/10/06]
    - how the orbitals are correctly mapped? [DONE@2024/10/06]
       - 1p1h: no special treatment is needed, as ops carry orbital indices
       - 1p0h: apply_opC combined with image1 = icomb.topo.get_image1()
-   - TDM for nonsu2 case: [DONE@2024/11/XX] 
+   - TDM for nonsu2 case: [DONE@2024/11/12] 
       - 1p0h & 0p1h: <MPS[N]|p+|MPS[N-1]>, <MPS[N-1]|p|MPS[N]> [DONE@2024/10/06]
          - checked by forming 1-RDM using TDM [!!!]
       - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]> [DONE@2024/10/06]
