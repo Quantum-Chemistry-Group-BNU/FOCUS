@@ -191,18 +191,31 @@ namespace ctns{
 
          // 2.1 reduction of opS and opH on GPU
 #ifndef SERIAL
-         if(ifdist1 and size > 1 and schd.ctns.ifnccl){
+         if(ifdist1 and size>1 and schd.ctns.ifnccl){
             reduce_opSH_gpu(qops, alg_renorm, ifkr, size, rank);
          }
 #endif
          timing.tf10 = tools::get_time();
 
 #ifdef GPU
-         // send back to CPU
-         if(alg_renorm>10) qops.to_cpu();
-#endif         
+	 // send back to CPU
+         if(alg_renorm>10){
+	    auto t0x = tools::get_time();
+	    qops.to_cpu();
+	    auto t1x = tools::get_time();
+	    double dt = tools::get_duration(t1x-t0x); 
+	    if(rank == 0){
+	       std::cout << "qops.to_cpu: size(tot)=" << qops.size()
+		       << ":" << tools::sizeMB<Tm>(qops.size()) << "MB" 
+		       << ":" << tools::sizeGB<Tm>(qops.size()) << "GB"
+		       << " t[to_cpu]=" << dt << "S"
+		       << " speed=" << tools::sizeGB<Tm>(qops.size())/dt << "GB/S"
+		       << std::endl;
+	    } 
+	 }
+#endif        
          timing.tf11 = tools::get_time();
-         
+
          Renorm.finalize();
          timing.tf12 = tools::get_time();
 
@@ -271,7 +284,7 @@ namespace ctns{
 
          // 2.2 reduction of opS and opH on CPU and send back to GPU 
 #ifndef SERIAL
-         if(ifdist1 and size > 1 and !schd.ctns.ifnccl){
+         if(ifdist1 and size>1 and !schd.ctns.ifnccl){
             reduce_opSH_cpu(qops, icomb, alg_renorm, size, rank);
          } 
 #endif 

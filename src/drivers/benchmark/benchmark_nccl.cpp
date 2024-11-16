@@ -94,12 +94,12 @@ int main(int argc, char * argv[]) {
       double t_bcast = tools::get_duration(t1y-t0y);
       double t_dealloc = tools::get_duration(t1z-t0z);
       std::cout << " rank=" << rank << " data_count: " << data_count
-         << "  t_cpu2gpu=" << t_cpu2gpu << " speed=" << count/t_cpu2gpu/std::pow(1024,3) << "GB/s"
-         << "  t_reduce="  << t_reduce  << " speed=" << count/t_reduce /std::pow(1024,3) << "GB/s" 
-         << "  t_gpu2cpu=" << t_gpu2cpu << " speed=" << count/t_gpu2cpu/std::pow(1024,3) << "GB/s" 
-         << "  t_alloc=" << t_alloc << " speed=" << count/t_alloc/std::pow(1024,3) << "GB/s"
-         << "  t_bcast="  << t_bcast  << " speed=" << count/t_bcast/std::pow(1024,3) << "GB/s" 
-         << "  t_dealloc=" << t_dealloc << " speed=" << count/t_dealloc/std::pow(1024,3) << "GB/s" 
+         << "  t_cpu2gpu=" << t_cpu2gpu << " speed=" << count/t_cpu2gpu/std::pow(1024,3) << "GB/S"
+         << "  t_reduce="  << t_reduce  << " speed=" << count/t_reduce /std::pow(1024,3) << "GB/S" 
+         << "  t_gpu2cpu=" << t_gpu2cpu << " speed=" << count/t_gpu2cpu/std::pow(1024,3) << "GB/S" 
+         << "  t_alloc=" << t_alloc << " speed=" << count/t_alloc/std::pow(1024,3) << "GB/S"
+         << "  t_bcast="  << t_bcast  << " speed=" << count/t_bcast/std::pow(1024,3) << "GB/S" 
+         << "  t_dealloc=" << t_dealloc << " speed=" << count/t_dealloc/std::pow(1024,3) << "GB/S" 
          << std::endl;
 
    }

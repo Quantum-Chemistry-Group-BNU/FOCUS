@@ -21,9 +21,9 @@ namespace ctns{
          double sizeGB = tools::sizeGB<Tm>(ndim);
          std::cout << " ndim=" << ndim << ":" << sizeGB << "GB" 
             << " t[comm(intra)]=" << time_comm1
-            << " speed=" << 2*sizeGB/time_comm1 << "GB/s" 
+            << " speed=" << 2*sizeGB/time_comm1 << "GB/S" 
             << " t[comm(inter)]=" << time_comm2
-            << " speed=" << 2*sizeGB/time_comm2 << "GB/s"
+            << " speed=" << 2*sizeGB/time_comm2 << "GB/S"
             << std::endl;
       }
 

@@ -104,7 +104,7 @@ namespace ctns{
                << tools::get_duration(t1-t0) << "," 
                << tools::get_duration(t2-t1) << ","
                << tot 
-               << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
+               << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/S" 
                << " disk[used]=" << usage << "GB"
                << std::endl;
          }
@@ -173,7 +173,7 @@ namespace ctns{
                << tools::get_duration(t2-t1) << ","
                << tools::get_duration(t3-t2) << "," 
                << tot 
-               << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/s" 
+               << " speed=" << tools::sizeGB<Tm>(qops._size)/tot << "GB/S" 
                << std::endl;
          }
       }

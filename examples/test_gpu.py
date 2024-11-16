@@ -1,7 +1,7 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
+mpiprefix = "mpirun -np 2 --allow-run-as-root "
 os.environ['OMP_NUM_THREADS'] = "10"
 #os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 #print('CUDA_VISIBLE_DEVICES=',os.environ.get('CUDA_VISIBLE_DEVICES'))

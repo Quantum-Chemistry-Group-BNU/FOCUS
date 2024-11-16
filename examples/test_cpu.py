@@ -1,8 +1,8 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
-os.environ['OMP_NUM_THREADS'] = "8"
+mpiprefix = "mpirun -np 2 --allow-run-as-root "
+os.environ['OMP_NUM_THREADS'] = "20"
 
 HOME = os.path.dirname(os.getcwd())
 SCI  = HOME+"/bin/sci.x"

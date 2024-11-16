@@ -31,7 +31,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
          auto t1 = tools::get_time();
          double dt = tools::get_duration(t1-t0);
          std::cout << "i=" << i << " mpi broadcast: rank=" << rank << " dt=" << dt
-            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/s" 
+            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/S" 
             << std::endl;
       }
       world.barrier();
@@ -41,7 +41,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
          auto t1 = tools::get_time();
          double dt = tools::get_duration(t1-t0);
          std::cout << "i=" << i << " mpi reduce: rank=" << rank << " dt=" << dt
-            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/s" 
+            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/S" 
             << std::endl;
       }
    }
@@ -62,7 +62,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
          auto t1 = tools::get_time();
          double dt = tools::get_duration(t1-t0);
          std::cout << "i=" << i << " nccl broadcast: rank=" << rank << " dt=" << dt
-            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/s" 
+            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/S" 
             << std::endl;
       }
       world.barrier();
@@ -73,7 +73,7 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
          auto t1 = tools::get_time();
          double dt = tools::get_duration(t1-t0);
          std::cout << "i=" << i << " nccl reduce: rank=" << rank << " dt=" << dt
-            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/s" 
+            << " speed=" << tools::sizeGB<Tm>(data_count)/dt << "GB/S" 
             << std::endl;
       }
    }

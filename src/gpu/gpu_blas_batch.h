@@ -180,7 +180,7 @@ namespace linalg{
                               Trans, 
                               m, n,
                               alpha,
-                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_A_array[ista], lda, // pointer of matrix should be on device
                               &dev_X_array[ista], incx,
                               beta,
                               &dev_Y_array[ista], incy,
@@ -275,7 +275,7 @@ namespace linalg{
                                  Trans, 
                                  m, n,
                                  alpha,
-                                 &dev_A_array[ista], lda, // pointer should be on device
+                                 &dev_A_array[ista], lda, // pointer of matrix should be on device
                                  &dev_X_array[ista], incx,
                                  beta,
                                  &dev_Y_array[ista], incy,
@@ -485,7 +485,6 @@ namespace linalg{
 #ifdef GEMMGROUPED
 
     // https://github.com/NVIDIA/CUDALibrarySamples/tree/master/cuBLAS/Level-3/gemmGroupedBatched
-    /*
     // --- GEMM GROUPED ---
     inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 
             const magma_int_t *m_array, const magma_int_t *n_array, const magma_int_t *k_array,
@@ -502,85 +501,74 @@ namespace linalg{
 
         auto t0 = tools::get_time();
 
-        int group_count = gsta.size()-1;
-        std::vector<int> group_size(group_count);
+	using cublas_int = int;
+        cublas_int group_count = gsta.size()-1;
+        std::vector<cublas_int> group_size(group_count);
+	std::vector<cublas_int> im_array(group_count);
+	std::vector<cublas_int> in_array(group_count);
+	std::vector<cublas_int> ik_array(group_count);
+	std::vector<cublas_int> ilda_array(group_count);
+	std::vector<cublas_int> ildb_array(group_count);
+	std::vector<cublas_int> ildc_array(group_count);
+	std::vector<double> alpha_array(group_count);
+        std::vector<double> beta_array(group_count);	
         std::vector<cublasOperation_t> transa_array(group_count);
         std::vector<cublasOperation_t> transb_array(group_count);
         double cost = 0.0;
         for(int i=0; i<group_count; i++){
            group_size[i] = gsta[i+1]-gsta[i];
-           cost += 2.0*double(m_array[i])*n_array[i]*k_array[i]*group_size[i];
-           transa_array[i] = (transa=='T' || transa=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
+           // convert from magma_int_t to int 
+           int ista = gsta[i];
+           im_array[i] = m_array[ista];
+	   in_array[i] = n_array[ista];
+	   ik_array[i] = k_array[ista];
+           ilda_array[i] = lda_array[ista];
+	   ildb_array[i] = ldb_array[ista];
+	   ildc_array[i] = ldc_array[ista]; 
+	   alpha_array[i] = alpha[ista];
+           beta_array[i] = beta[ista];
+	   transa_array[i] = (transa=='T' || transa=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
            transb_array[i] = (transb=='T' || transb=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
-        }
-
-        //dev_m,dev_n,dev_k,dev_lda,dev_ldb,dev_ldc
-        size_t total_isize = (6*batch_count+group_count)*sizeof(magma_int_t);
+           cost += 2.0*double(m_array[i])*n_array[i]*k_array[i]*group_size[i];
+	}
+ 
         size_t total_dsize = 3*batch_count*sizeof(double*);
-        size_t total_csize = 2*group_count*sizeof(double);
-        size_t total_tsize = 2*group_count*sizeof(cublasOperation_t);
-        void* dev_itotal = GPUmem.allocate(total_isize);
-        void* dev_dtotal = GPUmem.allocate(total_dsize);
-        void* dev_ctotal = GPUmem.allocate(total_csize);
-        void* dev_ttotal = GPUmem.allocate(total_tsize);
+        void* dev_dtotal = GPUmem.allocate(total_dsize); // a,b,c
         auto t1 = tools::get_time();
         
-        magma_int_t* dev_m = (magma_int_t*)dev_itotal;
-        magma_int_t* dev_n = dev_m + (batch_count);
-        magma_int_t* dev_k = dev_n + (batch_count);
-        magma_int_t* dev_lda = dev_k + (batch_count);
-        magma_int_t* dev_ldb = dev_lda + (batch_count);
-        magma_int_t* dev_ldc = dev_ldb + (batch_count);
-        magma_int_t* dev_group_size = dev_ldc + group_count;
         double** dev_a_array = (double**)dev_dtotal;
         double** dev_b_array = dev_a_array + batch_count;
         double** dev_c_array = dev_b_array + batch_count;
-        double* dev_alpha = (double*)dev_ctotal;
-        double* dev_beta = dev_alpha + group_count;
-        cublasOperation_t* dev_transa_array = (cublasOperation_t*)dev_ttotal;
-        cublasOperation_t* dev_transb_array = dev_transa_array + group_count;
-        GPUmem.to_gpu(dev_m, m_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_n, n_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_k, k_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_lda, lda_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_ldb, ldb_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_ldc, ldc_array, batch_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_group_size, group_size.data(), group_count*sizeof(magma_int_t));
-        GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
+	GPUmem.to_gpu(dev_a_array, a_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_b_array, b_array, batch_count*sizeof(double*));
         GPUmem.to_gpu(dev_c_array, c_array, batch_count*sizeof(double*));
-        GPUmem.to_gpu(dev_alpha, alpha, group_count*sizeof(double));
-        GPUmem.to_gpu(dev_beta, beta, group_count*sizeof(double));
-        GPUmem.to_gpu(dev_transa_array, transa_array.data(), group_count*sizeof(cublasOperation_t));
-        GPUmem.to_gpu(dev_transb_array, transb_array.data(), group_count*sizeof(cublasOperation_t));
         auto t2 = tools::get_time();
- 
-        CUBLAS_CHECK(cublasDgemmGroupedBatched(handle_cublas,
-                           dev_transa_array, dev_transb_array,
-                           dev_m, dev_n, dev_k,
-                           dev_alpha,
-                           dev_a_array, dev_lda, // pointer should be on device
-                           dev_b_array, dev_ldb,
-                           dev_beta,
-                           dev_c_array, dev_ldc,
-                           group_count,
-                           dev_group_size));
 
+        CUBLAS_CHECK(cublasDgemmGroupedBatched(handle_cublas,
+                           transa_array.data(), transb_array.data(),
+                           im_array.data(), in_array.data(), ik_array.data(),
+                           alpha_array.data(),
+                           dev_a_array, ilda_array.data(), // pointer of matrix should be on device
+                           dev_b_array, ildb_array.data(),
+                           beta_array.data(),
+                           dev_c_array, ildc_array.data(),
+                           group_count,
+                           group_size.data()));
         auto t3 = tools::get_time();
-        GPUmem.deallocate(dev_ttotal, total_tsize);
-        GPUmem.deallocate(dev_ctotal, total_csize);
-        GPUmem.deallocate(dev_dtotal, total_dsize);
-        GPUmem.deallocate(dev_itotal, total_isize);
+        
+	GPUmem.deallocate(dev_dtotal, total_dsize);
         auto t4 = tools::get_time();
-        std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
+       
+        /*	
+	std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
                   << " t2gpu=" << tools::get_duration(t2-t1)
                   << " tcomp=" << tools::get_duration(t3-t2)
                   << " tdealloc=" << tools::get_duration(t4-t3)
                   << " total=" << tools::get_duration(t4-t0)
                   << " flops=" << cost/tools::get_duration(t3-t2)
                   << std::endl;
+	 */
    }
-   */
 
 #else
 
@@ -636,7 +624,7 @@ namespace linalg{
                               transA, transB,
                               m, n, k,
                               alpha,
-                              &dev_a_array[ista], lda, // pointer should be on device
+                              &dev_a_array[ista], lda, // pointer of matrix should be on device
                               &dev_b_array[ista], ldb,
                               beta,
                               &dev_c_array[ista], ldc,
@@ -666,23 +654,23 @@ namespace linalg{
            }
            */
         } // group
-        
         //auto t3 = tools::get_time();
 
         GPUmem.deallocate(dev_dtotal, total_dsize);
-       
-        /* 
-        auto t4 = tools::get_time();
-        std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
+        //auto t4 = tools::get_time();
+        
+	/*
+	std::cout << "GEMM[grouped]: talloc=" << tools::get_duration(t1-t0)
                   << " t2gpu=" << tools::get_duration(t2-t1)
                   << " tcomp=" << tools::get_duration(t3-t2)
                   << " tdealloc=" << tools::get_duration(t4-t3)
                   << " total=" << tools::get_duration(t4-t0)
                   << " flops=" << cost/tools::get_duration(t3-t2)
                   << std::endl;
-        */
+	 */
     }
-#endif
+
+#endif // GEMMGROUPED [for cublas>=12.4]
 
     // complex
     inline void xgemm_batch_gpu_grouped(const char transa, const char transb, 
@@ -761,7 +749,7 @@ namespace linalg{
                                  transA, transB,
                                  m, n, k,
                                  alpha,
-                                 &dev_a_array[ista], lda, // pointer should be on device
+                                 &dev_a_array[ista], lda, // pointer of matrix should be on device
                                  &dev_b_array[ista], ldb,
                                  beta,
                                  &dev_c_array[ista], ldc,

@@ -47,7 +47,7 @@ int main(int argc, char * argv[]) {
       auto t1 = tools::get_time();
       double t_reduce = tools::get_duration(t1-t0);
       std::cout<<" rank=" << rank << " data_count: "<<data_count
-         << "  t_reduce=" << t_reduce << " speed=" << data_count*sizeof(double)/t_reduce/std::pow(1024,3) << "GB/s"  
+         << "  t_reduce=" << t_reduce << " speed=" << data_count*sizeof(double)/t_reduce/std::pow(1024,3) << "GB/S"  
          << std::endl;
 
       world.barrier();
