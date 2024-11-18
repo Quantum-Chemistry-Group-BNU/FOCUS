@@ -92,6 +92,8 @@ void params_ctns::read(ifstream& istrm){
          debug_rdm = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
+      }else if(line.substr(0,7)=="ifab2pq"){
+         ifab2pq = true;
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,7)=="ifdistc"){
@@ -367,6 +369,7 @@ void params_ctns::print() const{
    cout << "alg_rdm = " << alg_rdm << endl;
    cout << "alg_decim = " << alg_decim << endl;
    cout << "notrunc = " << notrunc << endl;
+   cout << "ifab2pq = " << ifab2pq << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "ifdistc = " << ifdistc << endl;
    cout << "save_formulae = " << save_formulae << endl;

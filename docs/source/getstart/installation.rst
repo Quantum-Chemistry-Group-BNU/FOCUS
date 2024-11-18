@@ -14,11 +14,13 @@ Requirements
 
 * nvcc (for gpu)
 
+* blas and lapack
+
 Libraries
 **********
 
-1. openmpi (if using mpi)
---------------------------
+1. openmpi (optional, if use mpi)
+---------------------------------
 
 Download `openmpi <https://www.open-mpi.org/software/ompi/v5.0/>`_, and build MPI libraries for 64-bit integers:
 
@@ -39,10 +41,10 @@ Add path:
 .. code-block::
    
    export PATH="XXX/openmpi/install64/bin:$PATH"
-   export LD_LIBRARY_PATH=="XXX/openmpi/install64/lib:$LD_LIBRARY_PATH"
+   export LD_LIBRARY_PATH="XXX/openmpi/install64/lib:$LD_LIBRARY_PATH"
 
-2. boost
----------
+2. boost (required)
+-------------------
 
 Download `boost <https://www.boost.org/users/download/>`_.
 
@@ -66,13 +68,13 @@ After this, one can find include and lib in the directory specified by prefix. A
 
 .. code-block::
 
-   export DYLD_LIBRARY_PATH="XXX/boost/install/lib:${DYLD_LIBRARY_PATH}"
+   export LD_LIBRARY_PATH="XXX/boost/install/lib:$LD_LIBRARY_PATH"
 
 
-3. FOCUS/extlibs/magma (if use gpu)
-------------------------------------
+3. FOCUS/extlibs/magma (optional, if use gpu)
+---------------------------------------------
 
-Select makefile template from ``make.inc-examples`` and edit ``make.inc``, then make
+Copy a makefile template from ``make.inc-examples`` (e.g., ``make.inc.mkl-gcc-ilp64``) to ``make.inc`` and edit, then make
 
 .. code-block::
 
@@ -86,8 +88,8 @@ Add to path.
 
    export LD_LIBRARY_PATH="XXX/magma-2.6.1/lib:$LD_LIBRARY_PATH"
 
-4. FOCUS/extlibs/nccl (if use nccl)
-------------------------------------
+4. FOCUS/extlibs/nccl (optional, if use nccl)
+---------------------------------------------
 
 Edit ``makefiles/common.mk``, then make
 
@@ -101,8 +103,8 @@ Add to path
 
    export LD_LIBRARY_PATH="XXX/nccl/build/lib:$LD_LIBRARY_PATH"
 
-5. FOCUS/extlibs/gsl (for SA-DMRG)
------------------------------------
+5. FOCUS/extlibs/gsl (required, for SA-DMRG)
+--------------------------------------------
 
 `GNU Scientific Library (GSL) <https://www.gnu.org/software/gsl>`_
 
@@ -114,8 +116,8 @@ Add to path
 
 Add to path
 
-6. FOCUS/extlibs/nlopt (for OO-DMRG)
--------------------------------------
+6. FOCUS/extlibs/nlopt (required, for OO-DMRG)
+----------------------------------------------
 
 `NLopt <https://nlopt.readthedocs.io/en/latest/>`_ for nonlinear optimization.
 
@@ -129,8 +131,8 @@ Add to path
 
 For more information, see `installation guide <https://nlopt.readthedocs.io/en/latest/NLopt_Installation/>`_.
 
-7. FOCUS/extlibs/zquatev (for KA-DMRG)
----------------------------------------
+7. FOCUS/extlibs/zquatev (required, for KA-DMRG)
+------------------------------------------------
 
 The library `zquatev <https://github.com/sunqm/zquatev>`_ is used for diagonalizing quaternion matrix, used in Kramers-adapted DMRG.
 
@@ -140,8 +142,8 @@ Edit ``Makefile`` and make.
 Install FOCUS
 **************
 
-1. FOCUS/src/ctns/gpu_kernel
------------------------------
+1. FOCUS/src/ctns/gpu_kernel (optional, if use gpu)
+---------------------------------------------------
 
 Edit ``Makefile`` and make.
 
@@ -157,4 +159,25 @@ Edit ``Makefile`` and make.
    * magma needs to be compiled with the same compiler as FOCUS,
      otherwise, there will be problems in using openmp.
 
+The final ``.bashrc`` file should include the following paths for dynamic libraries required for FOCUS: 
 
+.. code-block::
+
+   . /opt/intel/oneapi/setvars.sh
+   
+   export CUDADIR="/usr/local/cuda-12.2"
+   
+   MPI_HOME=/usr/local/openmpi
+   export PATH=${MPI_HOME}/bin:$PATH:/usr/local/cuda-12.2/bin/
+   export LD_LIBRARY_PATH=${MPI_HOME}/lib:$LD_LIBRARY_PATH
+   export MANPATH=${MPI_HOME}/share/man:$MANPATH
+  
+   # Required for running FOCUS 
+   export LD_LIBRARY_PATH="/storage/boost/install/lib:$LD_LIBRARY_PATH"
+   export LD_LIBRARY_PATH="/storage/FOCUS/extlibs/gsl-install/lib:$LD_LIBRARY_PATH"
+   export LD_LIBRARY_PATH="/storage/FOCUS/extlibs/nlopt-2.7.1/build/lib:$LD_LIBRARY_PATH"
+   export LD_LIBRARY_PATH="/storage/FOCUS/extlibs/magma-2.8.0/lib:$LD_LIBRARY_PATH"
+   export LD_LIBRARY_PATH="/root/nccl_apps/nccl220/lib:$LD_LIBRARY_PATH"
+   
+   export PATH="/storage/FOCUS/bin:${PATH}"
+   

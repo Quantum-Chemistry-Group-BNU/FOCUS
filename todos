@@ -1,4 +1,32 @@
 
+ * Profiling and optimization:
+   - memcpy in renorm: [DONE@2024/11/16]
+      - better understand the cost of gpu2cpu memcpy for renorm? 
+        [previous async_tocpu actually does not work well, the actual time is similar!]
+      - reduce the size of qops could help to reduce time for memcpy!
+
+   - conversion between NC/CN parition for MPS: can this reduce the memory requirement for GPU?
+
+      - difficulty lies in the design of MPI and GPU version,
+        in the later memory should be reduced.
+      - for formula see: https://block2.readthedocs.io/en/latest/theory/su2.html
+
+      - serial version:
+         - renorm of opS & opH:
+         - switch from AB to PQ:
+      - mpi version
+      - gpu version
+   
+   - decimation for su2 is not parallelized:
+
+      - using MPI
+
+      - using GPU
+         - cuSolver: svd
+         - cuSOlver: eig
+
+   - alg_renorm=4 占用内存过多
+
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
@@ -46,14 +74,6 @@
       - Polyene?
       - MR-TADF systems: singlet and triplet gaps?
       - 2-RDMs for Fe8S7 with large bond dimension!
-
- * Profiling and optimization:
-   - better understand the cost of gpu2cpu memcpy for renorm? add timing to print in each renorm 
-   - alg_renorm=4 占用内存过多
-   - decimation for su2 is not parallelized (using MPI) yet
-   - conversion between NC/CN parition for MPS:
-      - this can reduce the memory requirement for GPU!
-      - for formula see: https://block2.readthedocs.io/en/latest/theory/su2.html
 
  * Benchmark: jiageng or other platform [DONE@2025/XX/XX]
    - Compilation on jiageng: need to used mkl for magma/zquatev, 
@@ -105,10 +125,6 @@
    - Two-RDMs: enable Rel-CASSCF with interface to other codes 
 
 ### TODOs: better performance ###
-
- * Decimation on GPU?
-   - cuSolver: svd
-   - cuSOlver: eig
 
  * Point group symmetry (D2h) -> good for molecules like cr2
 

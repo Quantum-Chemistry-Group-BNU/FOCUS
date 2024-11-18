@@ -1,12 +1,13 @@
 #ifndef SWEEP_TWODOT_RENORM_H
 #define SWEEP_TWODOT_RENORM_H
 
-#include "sweep_onedot_renorm.h"
-#include "sweep_twodot_decim.h"
-#include "sweep_twodot_guess.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
+#include "sweep_onedot_renorm.h"
+#include "sweep_twodot_decim.h"
+#include "sweep_twodot_guess.h"
+#include "oper_ab2pq.h"
 
 namespace ctns{
 
@@ -62,8 +63,8 @@ namespace ctns{
          const auto& rqops  = qops_pool.at(fneed[1]);
          const auto& c1qops = qops_pool.at(fneed[2]);
          const auto& c2qops = qops_pool.at(fneed[3]);
-         const auto p = dbond.get_current();
-         const auto& pdx = icomb.topo.rindex.at(p); 
+         const auto pcoord = dbond.get_current();
+         const auto& pdx = icomb.topo.rindex.at(pcoord); 
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
@@ -83,7 +84,7 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
-            oper_renorm("lc", icomb, p, int2e, int1e, schd,
+            oper_renorm("lc", icomb, pcoord, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
@@ -96,7 +97,7 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
-            oper_renorm("cr", icomb, p, int2e, int1e, schd,
+            oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing, fmmtask);
          }else if(superblock == "lr"){
             assert(Qm::ifabelian);
@@ -110,7 +111,7 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
-            oper_renorm("lr", icomb, p, int2e, int1e, schd,
+            oper_renorm("lr", icomb, pcoord, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing, fmmtask); 
          }else if(superblock == "c1c2"){
             assert(Qm::ifabelian);
@@ -124,9 +125,15 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
-            oper_renorm("cr", icomb, p, int2e, int1e, schd,
+            oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
          } // superblock
+      
+         // switch from AB to PQ
+         exit(1);
+         if(schd.ctns.ifab2pq){
+            oper_ab2pq(superblock, icomb, pcoord, int2e, int1e, schd, qops_pool, frop); 
+         }
       }
 
 } // ctns
