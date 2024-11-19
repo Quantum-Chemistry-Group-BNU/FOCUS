@@ -83,10 +83,10 @@ namespace ctns{
             // b. perform renormalization for superblock {|cr>}
             std::string frop = oper_fname(scratch, pcoord, "r");
             std::string superblock = "cr";
-            std::string fname;
+            std::string fname, fmmtask;
             dot_timing timing_local;
             oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
-                  cqops, rqops, qops_pool[frop], fname, timing_local);
+                  cqops, rqops, qops_pool[frop], fname, timing_local, fmmtask);
 
             // c. save operators to disk
             qops_pool.join_and_erase(fneed);

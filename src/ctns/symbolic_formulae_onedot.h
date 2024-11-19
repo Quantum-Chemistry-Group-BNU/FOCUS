@@ -11,7 +11,10 @@
 namespace ctns{
 
    template <typename Tm>
-      symbolic_task<Tm> gen_formulae_onedot(const std::vector<int>& cindex_l,
+      symbolic_task<Tm> gen_formulae_onedot(const std::string oplist_l,
+            const std::string oplist_r,
+            const std::string oplist_c,
+            const std::vector<int>& cindex_l,
             const std::vector<int>& cindex_r,
             const std::vector<int>& cindex_c,
             const int isym,
@@ -24,7 +27,7 @@ namespace ctns{
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
-         const bool ifNC = cindex_l.size() <= cindex_r.size();
+         const bool ifNC = determine_NCorCN_opH(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
          const auto& cindex = ifNC? cindex_l : cindex_r;
          auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
          auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
@@ -50,7 +53,7 @@ namespace ctns{
                }
             }
             // 2. H^cr
-            auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
+            auto Hcr = symbolic_compxwf_opH<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r, 
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H2"] = Hcr.size();
             if(Hcr.size() > 0){
@@ -67,7 +70,7 @@ namespace ctns{
             counter["CS"] = 0;
             for(const auto& index : cindex_l){
                auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
-               auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cindex_c, cindex_r,
+               auto Scr = symbolic_compxwf_opS<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r,
                      int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Scr.size() == 0) continue;
                auto Cl_Scr = Cl.outer_product(Scr);
@@ -135,7 +138,7 @@ namespace ctns{
             
             // partition = lc|r
             // 1. H^lc 
-            auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
+            auto Hlc = symbolic_compxwf_opH<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c, 
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H1"] = Hlc.size();
             if(Hlc.size() > 0){
@@ -165,7 +168,7 @@ namespace ctns{
             // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
-               auto Slc = symbolic_compxwf_opS<Tm>("l", "c", cindex_l, cindex_c,
+               auto Slc = symbolic_compxwf_opS<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c,
                      int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Slc.size() == 0) continue;
                Slc.scale(-1.0);
@@ -253,7 +256,7 @@ namespace ctns{
          const auto& cindex_l = lqops.cindex;
          const auto& cindex_r = rqops.cindex;
          const auto& cindex_c = cqops.cindex;
-         const bool ifNC = cindex_l.size() <= cindex_r.size();
+         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, cindex_l.size(), cindex_r.size()); 
          const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr;
          std::streambuf *psbuf, *backup;
@@ -283,10 +286,12 @@ namespace ctns{
          std::map<std::string,int> counter;
          symbolic_task<Tm> formulae;
          if(ifab){
-            formulae = gen_formulae_onedot(cindex_l,cindex_r,cindex_c,isym,ifkr,
+            formulae = gen_formulae_onedot(lqops.oplist,rqops.oplist,cqops.oplist,
+                  cindex_l,cindex_r,cindex_c,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          }else{
-            formulae = gen_formulae_onedot_su2(cindex_l,cindex_r,cindex_c,isym,ifkr,
+            formulae = gen_formulae_onedot_su2(lqops.oplist,rqops.oplist,cqops.oplist,
+                  cindex_l,cindex_r,cindex_c,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          }
          // reorder if necessary
@@ -353,7 +358,7 @@ namespace ctns{
          const auto& cindex_c = cqops.cindex;
          const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr;
-         const bool ifNC = cindex_l.size() <= cindex_r.size();
+         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, cindex_l.size(), cindex_r.size()); 
          std::streambuf *psbuf, *backup;
          std::ofstream file;
          bool ifsave = !fname.empty();
@@ -402,7 +407,7 @@ namespace ctns{
                }
             }
             // 2. H^cr
-            auto Hcr = symbolic_compxwf_opH<Tm>("c", "r", cindex_c, cindex_r, 
+            auto Hcr = symbolic_compxwf_opH<Tm>(cqops.oplist, rqops.oplist, "c", "r", cindex_c, cindex_r, 
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H2"] = (Hcr.size()>0)? 1 : 0;
             if(Hcr.size() > 0){
@@ -419,7 +424,7 @@ namespace ctns{
             counter["CS"] = 0;
             for(const auto& index : cindex_l){
                auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
-               auto Scr = symbolic_compxwf_opS<Tm>("c", "r", cindex_c, cindex_r,
+               auto Scr = symbolic_compxwf_opS<Tm>(cqops.oplist, rqops.oplist, "c", "r", cindex_c, cindex_r,
                      int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Scr.size() == 0) continue;
                auto Cl_Scr = bipart_oper(Cl,Scr,"Cl_Scr["+std::to_string(index)+"]");
@@ -489,7 +494,7 @@ namespace ctns{
          }else{
             // partition = lc|r
             // 1. H^lc 
-            auto Hlc = symbolic_compxwf_opH<Tm>("l", "c", cindex_l, cindex_c, 
+            auto Hlc = symbolic_compxwf_opH<Tm>(lqops.oplist, cqops.oplist, "l", "c", cindex_l, cindex_c, 
                   ifkr, int2e.sorb, size, rank, ifdist1);
             counter["H1"] = (Hlc.size()>0)? 1 : 0;
             if(Hlc.size() > 0){
@@ -519,7 +524,7 @@ namespace ctns{
             // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
-               auto Slc = symbolic_compxwf_opS<Tm>("l", "c", cindex_l, cindex_c,
+               auto Slc = symbolic_compxwf_opS<Tm>(lqops.oplist, cqops.oplist, "l", "c", cindex_l, cindex_c,
                      int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                if(Slc.size() == 0) continue;
                Slc.scale(-1.0);

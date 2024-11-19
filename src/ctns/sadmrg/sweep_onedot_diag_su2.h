@@ -98,7 +98,9 @@ namespace ctns{
             const int size,
             const int rank){
          const bool ifkr = qops1.ifkr;
-         const bool ifNC = qops1.cindex.size() <= qops2.cindex.size();
+         const size_t csize1 = qops1.cindex.size();
+         const size_t csize2 = qops2.cindex.size();
+         const bool ifNC = determine_NCorCN_BQ(qops1.oplist, qops2.oplist, csize1, csize2);
          char BQ1 = ifNC? 'B' : 'Q';
          char BQ2 = ifNC? 'Q' : 'B';
          const auto& cindex = ifNC? qops1.cindex : qops2.cindex;

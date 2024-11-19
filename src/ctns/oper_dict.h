@@ -74,7 +74,36 @@ namespace ctns{
             qoper_dict& operator =(const qoper_dict& op_dict) = delete;
             // move
             qoper_dict(qoper_dict&& op_dict) = delete;
-            qoper_dict& operator =(qoper_dict&& op_dict) = delete;
+            // move assignment
+            qoper_dict& operator =(qoper_dict&& st){
+               if(this != &st){
+                  sorb = st.sorb;
+                  isym = st.isym;
+                  ifkr = st.ifkr;
+                  qbra = std::move(st.qbra);
+                  qket = std::move(st.qket);
+                  cindex = std::move(st.cindex);
+                  krest = std::move(st.krest);
+                  oplist = std::move(st.oplist);
+                  mpisize = st.mpisize;
+                  mpirank = st.mpirank;
+                  ifdist2 = st.ifdist2;
+                  ifhermi = st.ifhermi;
+                  _offset = std::move(st._offset);
+                  _opdict = std::move(st._opdict);
+                  _size = st._size;
+                  _opsize = st._opsize;
+                  delete[] _data;
+                  _data = st._data;
+                  st._data = nullptr;
+#ifdef GPU
+                  if(_dev_data != nullptr) GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
+#endif
+                  _dev_data = st._dev_data;
+                  st._dev_data = nullptr;
+               }
+               return *this;
+            }
             // initialize _opdict, _size, _opsize
             void setup_opdict(const bool debug=false);
             // setup the mapping to physical address

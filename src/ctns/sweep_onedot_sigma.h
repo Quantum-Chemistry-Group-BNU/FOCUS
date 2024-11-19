@@ -261,7 +261,10 @@ namespace ctns{
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
          const bool ifkr = lqops.ifkr;
-         const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
+         size_t csize1 = lqops.cindex.size();
+         size_t csize2 = rqops.cindex.size();
+         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize1, csize2);
+
          Hx_functors<Tm> Hx_funs;
          // Local terms:
          Hx_functor<Tm> Hx("Hloc", 0, 0);

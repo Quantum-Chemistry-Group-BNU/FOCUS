@@ -22,6 +22,7 @@ namespace ctns{
    extern const double thresh_opdiff;
 
    // renormalize operators
+   // ndots only matter for ifab2pq=true
    template <typename Qm, typename Tm>
       void oper_renorm(const std::string superblock,
             const comb<Qm,Tm>& icomb,
@@ -34,7 +35,8 @@ namespace ctns{
             qoper_dict<Qm::ifabelian,Tm>& qops,
             const std::string fname,
             dot_timing& timing,
-            const std::string fmmtask=""){
+            const std::string fmmtask,
+            const int ndots=2){
          int size = 1, rank = 0, maxthreads = 1;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -43,7 +45,7 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
-         auto oplist = oper_renorm_oplist(superblock, icomb, pcoord, schd);
+         auto oplist = oper_renorm_oplist(superblock, icomb, pcoord, schd, ndots);
          const bool ifdist1 = schd.ctns.ifdist1;
          const bool ifdistc = schd.ctns.ifdistc;
          const int sorb = icomb.get_nphysical()*2;
@@ -122,21 +124,21 @@ namespace ctns{
          timing.tf10 = tools::get_time();
 
 #ifdef GPU
-	 // send back to CPU
+         // send back to CPU
          if(alg_renorm>10){
-	    auto t0x = tools::get_time();
-	    qops.to_cpu();
-	    auto t1x = tools::get_time();
-	    double dt = tools::get_duration(t1x-t0x); 
-	    if(rank == 0){
-	       std::cout << "qops.to_cpu: size(tot)=" << qops.size()
-		       << ":" << tools::sizeMB<Tm>(qops.size()) << "MB" 
-		       << ":" << tools::sizeGB<Tm>(qops.size()) << "GB"
-		       << " t[to_cpu]=" << dt << "S"
-		       << " speed=" << tools::sizeGB<Tm>(qops.size())/dt << "GB/S"
-		       << std::endl;
-	    } 
-	 }
+            auto t0x = tools::get_time();
+            qops.to_cpu();
+            auto t1x = tools::get_time();
+            double dt = tools::get_duration(t1x-t0x); 
+            if(rank == 0){
+               std::cout << "qops.to_cpu: size(tot)=" << qops.size()
+                  << ":" << tools::sizeMB<Tm>(qops.size()) << "MB" 
+                  << ":" << tools::sizeGB<Tm>(qops.size()) << "GB"
+                  << " t[to_cpu]=" << dt << "S"
+                  << " speed=" << tools::sizeGB<Tm>(qops.size())/dt << "GB/S"
+                  << std::endl;
+            } 
+         }
 #endif        
          timing.tf11 = tools::get_time();
 
@@ -254,8 +256,12 @@ namespace ctns{
                }
             }
          } // end of consistency check
-
          timing.tf13 = tools::get_time();
+
+         if(schd.ctns.ifab2pq){
+            oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops, ndots);
+         }
+
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
             double t_tot = tools::get_duration(timing.tf13-timing.tf0); 

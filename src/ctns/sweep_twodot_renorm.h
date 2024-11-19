@@ -127,13 +127,7 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
-         } // superblock
-      
-         // switch from AB to PQ
-         exit(1);
-         if(schd.ctns.ifab2pq){
-            oper_ab2pq(superblock, icomb, pcoord, int2e, int1e, schd, qops_pool, frop); 
-         }
+         } // superblock      
       }
 
 } // ctns

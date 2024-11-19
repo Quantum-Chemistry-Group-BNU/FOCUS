@@ -10,6 +10,8 @@ namespace ctns{
 
    template <typename Tm>
       renorm_tasks<Tm> gen_formulae_renorm_su2(const std::string& oplist,
+            const std::string& oplist1,
+            const std::string& oplist2,
             const std::string& block1,
             const std::string& block2,
             const std::vector<int>& cindex1,
@@ -45,7 +47,6 @@ namespace ctns{
                }
             }
          }
-
          // opA
          if(oplist.find('A') != std::string::npos){
             counter["A"] = 0;
@@ -64,7 +65,6 @@ namespace ctns{
                }
             }
          }
-
          // opB
          if(oplist.find('B') != std::string::npos){
             bool ifDop = oplist.find('D') != std::string::npos; 
@@ -84,7 +84,6 @@ namespace ctns{
                }
             }
          }
-
          // opP
          if(oplist.find('P') != std::string::npos){
             counter["P"] = 0;	
@@ -103,7 +102,6 @@ namespace ctns{
                }
             }
          }
-
          // opQ
          if(oplist.find('Q') != std::string::npos){
             counter["Q"] = 0;
@@ -122,13 +120,12 @@ namespace ctns{
                }
             }
          }
-
          // opS
          if(oplist.find('S') != std::string::npos){
             counter["S"] = 0;
             auto sindex = oper_index_opS(krest, ifkr); 
             for(const auto& index : sindex){
-               auto opS = symbolic_compxwf_opS_su2<Tm>(block1, block2, cindex1, cindex2,
+               auto opS = symbolic_compxwf_opS_su2<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
                // opS can be empty for ifdist1=true
                if(opS.size() == 0) continue;
@@ -140,11 +137,10 @@ namespace ctns{
                }
             }
          }
-
          // opH
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
-            auto opH = symbolic_compxwf_opH_su2<Tm>(block1, block2, cindex1, cindex2,
+            auto opH = symbolic_compxwf_opH_su2<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
                   ifkr, sorb, size, rank, ifdist1);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
@@ -169,7 +165,6 @@ namespace ctns{
                opI.display("opI", print_level);
             }
          }
-
          // opD
          if(oplist.find('D') != std::string::npos){
             counter["D"] = 0;	   
@@ -185,7 +180,6 @@ namespace ctns{
                }
             }
          }
-
          // opM
          if(oplist.find('M') != std::string::npos){
             counter["M"] = 0;
@@ -204,7 +198,6 @@ namespace ctns{
                }
             }
          }
-
          return formulae;
       }
 
@@ -253,7 +246,8 @@ namespace ctns{
          }
          // generation of renorm
          std::map<std::string,int> counter;
-         auto rformulae = gen_formulae_renorm_su2(qops.oplist,block1,block2,
+         auto rformulae = gen_formulae_renorm_su2(qops.oplist,
+               qops1.oplist,qops2.oplist,block1,block2,
                cindex1,cindex2,qops.krest,ifkr,ifhermi,
                int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary

@@ -11,6 +11,8 @@ namespace ctns{
    // see oper_renorm_kernel.h
    template <typename Tm>
       renorm_tasks<Tm> gen_formulae_renorm(const std::string& oplist,
+            const std::string& oplist1,
+            const std::string& oplist2,
             const std::string& block1,
             const std::string& block2,
             const std::vector<int>& cindex1,
@@ -125,7 +127,7 @@ namespace ctns{
             counter["S"] = 0;
             auto sindex = oper_index_opS(krest, ifkr); 
             for(const auto& index : sindex){
-               auto opS = symbolic_compxwf_opS<Tm>(block1, block2, cindex1, cindex2,
+               auto opS = symbolic_compxwf_opS<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
                      int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
                // opS can be empty for ifdist1=true
                if(opS.size() == 0) continue;
@@ -140,7 +142,7 @@ namespace ctns{
          // opH
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
-            auto opH = symbolic_compxwf_opH<Tm>(block1, block2, cindex1, cindex2,
+            auto opH = symbolic_compxwf_opH<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
                   ifkr, sorb, size, rank, ifdist1);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
@@ -249,7 +251,8 @@ namespace ctns{
          }
          // generation of renorm
          std::map<std::string,int> counter;
-         auto rformulae = gen_formulae_renorm(qops.oplist,block1,block2,
+         auto rformulae = gen_formulae_renorm(qops.oplist,
+               qops1.oplist,qops2.oplist,block1,block2,
                cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
                int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary

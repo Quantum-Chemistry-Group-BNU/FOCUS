@@ -239,7 +239,8 @@ namespace ctns{
                   bool ifhermi = false;
                   bool ifsave = true;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_renorm(oplist, block1, block2, 
+                  auto formulae = gen_formulae_renorm(oplist, oplist, oplist,
+                        block1, block2, 
                         cindex1, cindex2, krest,
                         isym, ifkr, ifhermi, int2e, int2e.sorb,
                         mpisize, rank, ifdist1, ifdistc, 
@@ -288,9 +289,11 @@ namespace ctns{
                      << " mpirank=" << rank
                      << std::endl;
 
+                  std::string oplist = "CABPQSH";
                   bool ifsave = true;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                  auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                        cindex_l, cindex_r, cindex_c1, cindex_c2,
                         isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
@@ -320,7 +323,8 @@ namespace ctns{
             // Classification of Hx
             bool ifsave = false;
             std::map<std::string,int> counter;
-            auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+            auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                  cindex_l, cindex_r, cindex_c1, cindex_c2,
                   isym, ifkr, int2e, 1, 0, ifdist1, ifdistc,
                   ifsave, counter);
             std::map<std::string,std::vector<int>> maps;
@@ -361,7 +365,8 @@ namespace ctns{
                for(int rank=0; rank<mpisize; rank++){
                   bool ifsave = false;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                  auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                        cindex_l, cindex_r, cindex_c1, cindex_c2,
                         isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
                   for(int i=0; i<formulae.size(); i++){

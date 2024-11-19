@@ -3,6 +3,7 @@
 
 #include "symbolic_task.h"
 #include "symbolic_op1op2xwf.h"
+#include "oper_partition.h"
 
 namespace ctns{
 
@@ -125,7 +126,9 @@ namespace ctns{
 
    // kernel for computing renormalized Sp|ket> [6 terms]
    template <typename Tm>
-      symbolic_task<Tm> symbolic_compxwf_opS(const std::string block1,
+      symbolic_task<Tm> symbolic_compxwf_opS(const std::string oplist1,
+            const std::string oplist2,
+            const std::string block1,
             const std::string block2,
             const std::vector<int>& cindex1,
             const std::vector<int>& cindex2,
@@ -175,14 +178,16 @@ namespace ctns{
                      aindex2, formulae);
             }
          }else{
-            if(kc1 > kA2){
-               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     aindex2_dist, formulae);
-            }else{
+            assert(ifexistQ(oplist2,'A') or ifexistQ(oplist2,'P'));
+            bool combine_two_index3 = ifexistQ(oplist2,'P') and ((ifexistQ(oplist2,'A') and kc1<=kA2) or !ifexistQ(oplist2,'A'));
+            if(combine_two_index3){
                // sum_q aq^+[1]*Ppq[2]
                symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, 
                      int2e.sorb, size, rank, formulae);
+            }else{
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     aindex2_dist, formulae);
             }
          }
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
@@ -194,14 +199,16 @@ namespace ctns{
                      bindex2, formulae);
             }
          }else{ 
-            if(kc1 > kB2){
-               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     bindex2_dist, formulae);
-            }else{
+            assert(ifexistQ(oplist2,'B') or ifexistQ(oplist2,'Q'));
+            bool combine_two_index4 = ifexistQ(oplist2,'Q') and ((ifexistQ(oplist2,'B') and kc1<=kB2) or !ifexistQ(oplist2,'B'));
+            if(combine_two_index4){
                // sum_q aq[1]*Qpq[2]
                symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, p, ifkr, 
                      int2e.sorb, size, rank, formulae);
+            }else{
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     bindex2_dist, formulae);
             }
          }
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
@@ -213,14 +220,16 @@ namespace ctns{
                      aindex1, formulae);
             }
          }else{ 
-            if(kc2 > kA1){
-               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     aindex1_dist, formulae);
-            }else{
+            assert(ifexistQ(oplist1,'A') or ifexistQ(oplist1,'P'));
+            bool combine_two_index5 = ifexistQ(oplist1,'P') and ((ifexistQ(oplist1,'A') and kc2<=kA1) or !ifexistQ(oplist1,'A'));
+            if(combine_two_index5){
                // sum_q Ppq[1]*aq^+[2]
                symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, p, ifkr, 
                      int2e.sorb, size, rank, formulae);
+            }else{
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     aindex1_dist, formulae);
             }
          }
          // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
@@ -232,14 +241,16 @@ namespace ctns{
                      bindex1, formulae);
             }
          }else{
-            if(kc2 > kB1){
-               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     bindex1_dist, formulae);
-            }else{
+            assert(ifexistQ(oplist1,'B') or ifexistQ(oplist1,'Q'));
+            bool combine_two_index6 = ifexistQ(oplist1,'Q') and ((ifexistQ(oplist1,'B') and kc2<=kB1) or !ifexistQ(oplist1,'B'));
+            if(combine_two_index6){
                // sum_q Qpq^[1]*aq[2]
                symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, p, ifkr, 
                      int2e.sorb, size, rank, formulae);
+            }else{
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     bindex1_dist, formulae);
             }
          }
          return formulae;
@@ -747,7 +758,9 @@ namespace ctns{
 
    // kernel for computing renormalized H|ket>
    template <typename Tm>
-      symbolic_task<Tm> symbolic_compxwf_opH(const std::string block1,
+      symbolic_task<Tm> symbolic_compxwf_opH(const std::string oplist1,
+            const std::string oplist2,
+            const std::string block1,
             const std::string block2,
             const std::vector<int>& cindex1,
             const std::vector<int>& cindex2,
@@ -758,7 +771,7 @@ namespace ctns{
             const bool ifdist1){
          symbolic_task<Tm> formulae;
          // for AP,BQ terms: to ensure the optimal scaling!
-         const bool ifNC = cindex1.size() <= cindex2.size(); 
+         const bool ifNC = determine_NCorCN_opH(oplist1, oplist2, cindex1.size(), cindex2.size()); 
          auto AP1 = ifNC? 'A' : 'P';
          auto AP2 = ifNC? 'P' : 'A';
          auto BQ1 = ifNC? 'B' : 'Q';
