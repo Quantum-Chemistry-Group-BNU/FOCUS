@@ -256,6 +256,12 @@ void params_ctns::read(ifstream& istrm){
             string isweep, dots, dcut, eps, noise;
             is >> isweep >> dots >> dcut >> eps >> noise;
             tmp_ctrls.push_back({stoi(isweep),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
+            // consistency check
+            auto ndots = stoi(dots);
+            if(ndots != 1 and ndots != 2){
+               std::cout << "error in input: unsupported dots=" << ndots << std::endl;
+               exit(1); 
+            }
          }
       }else{
          tools::exit("error: no matching key! line = "+line);

@@ -51,7 +51,7 @@ namespace ctns{
          this->print_part(msg+": dvdson solver [comm(cpu)]   ", dtb8, tdvdsn, dtacc);
          this->print_part(msg+": dvdson solver [rest part]   ", dtb9, tdvdsn, dtacc);
 
-         double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtfb;
+         double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtf13 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
             << std::scientific << std::setprecision(3) << dt5 << " S"
             << "  T(sum) = " << trenrm << " S  per = " << trenrm/(dt5+eps)*100
@@ -71,6 +71,7 @@ namespace ctns{
          this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc); // t11-t10
          this->print_part(msg+": deallocate cpu and gpu memory", dtf11, trenrm, dtacc); // t12-t11
          this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc); // t13-t12
+         this->print_part(msg+": conversion from opAB to opPQ ", dtf13, trenrm, dtacc); // t14-t13
          this->print_part(msg+": after oper_renorm            ", dtfb, trenrm, dtacc);
       }
       void analysis(const std::string msg,
@@ -107,7 +108,8 @@ namespace ctns{
          dtf10 = tools::get_duration(tf11-tf10); 
          dtf11 = tools::get_duration(tf12-tf11); 
          dtf12 = tools::get_duration(tf13-tf12); 
-         dtfb = tools::get_duration(tf-tf13); 
+         dtf13 = tools::get_duration(tf14-tf13);
+         dtfb = tools::get_duration(tf-tf14); 
 
          if(debug) this->print(msg);
       }
@@ -150,6 +152,7 @@ namespace ctns{
          dtf10 += timer.dtf10;
          dtf11 += timer.dtf11;
          dtf12 += timer.dtf12;
+         dtf13 += timer.dtf13;
          dtfb += timer.dtfb; 
 
          if(debug) this->print(msg);
@@ -187,7 +190,8 @@ namespace ctns{
       Tm tf11; // qops memcpy gpu2cpu
       Tm tf12; // deallocate gpu memory
       Tm tf13; // reduction 
-      double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtfb=0;
+      Tm tf14; // ab2pq
+      double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtf13=0, dtfb=0;
    };
 
    // computed results at a given dot	

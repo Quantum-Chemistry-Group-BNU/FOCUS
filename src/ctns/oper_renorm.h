@@ -262,6 +262,7 @@ namespace ctns{
             oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops, ndots);
          }
 
+         timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
             double t_tot = tools::get_duration(timing.tf13-timing.tf0); 

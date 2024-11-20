@@ -7,30 +7,25 @@
 
    - conversion between NC/CN parition for MPS: can this reduce the memory requirement for GPU?
       - serial version:
-         - nonsu2 case:
+         - nonsu2 case: [DONE@2024/11/20]
             - construct PQ from AB: oper_ab2pq.h
             - renorm of opS & opH: oper_compxwf.h, symbolic_compxwf.h
             - twodot_H: [DONE@2024/11/19] 
                - sweep_twodot_diag.h, sweep_twodot_sigma.h, symbolic_formulae_twodot.h
-            - onedot_H: 
+            - onedot_H: [DONE@2024/11/20] 
                - sweep_onedot_diag.h
                - sweep_onedot_sigma.h
-               - alg_hvec=0: does not work yet!
-               - determine the position of switch?
-
-         - su2 case:
+         - su2 case: [DONE@2024/11/20]
             - construct PQ from AB
-            - renorm opSH / twodot / onedot: does not work yet!
-
-      - mpi version
-         - nonsu2 case [DONE@2024/11/19]
-         - su2 case 
-      - gpu version
-
-
-      - difficulty lies in the design of MPI and GPU version,
-        in the later memory should be reduced.
-      - for formula see: https://block2.readthedocs.io/en/latest/theory/su2.html
+            - renorm opSH for task_ham
+            - twodot and onedot for task_dmrg
+      - determine the position of switch? see oper_ab2pq.h [2 positions]
+      
+      - difficulty lies in the design of MPI and GPU version, and in the later memory usage should be reduced.
+         - mpi version:
+            - nonsu2 case [DONE@2024/11/19]
+            - su2 case [DONE@2024/11/20]
+         - gpu version
       - compare the performance with and without ifab2pq
    
    - decimation for su2 is not parallelized:

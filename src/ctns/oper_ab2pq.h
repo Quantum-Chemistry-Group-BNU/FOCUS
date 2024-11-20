@@ -19,26 +19,32 @@ namespace ctns{
             assert(icomb.topo.ifmps);
             int nsite = icomb.get_nphysical();
             int psite = pcoord.first;
-            //  0    1    2    3    4    5
-            //  *----*----*----*----*----*
-            //  <------------------------- [backword:cr]
-            //      rPQ  rPQ  rPQ  rAB  rAB 
-            //                     rPQ   
-            //  -------------------------> [forward:lc]
-            // lAB  lAB  lAB  lPQ  lPQ  lPQ
-            //           lPQ [such that lPQ-(2,3)-rAB for twodot]
-            //
-            //  0    1    2    3    4    5    6
-            //  *----*----*----*----*----*----*
-            //  <------------------------------ [backword:cr]
-            //      rPQ  rPQ  rPQ  rAB  rAB  rAB 
-            //                     rPQ   
-            //  ------------------------------> [forward:lc]
-            // lAB  lAB  lAB  lPQ  lPQ  lPQ  lPQ
-            //           lPQ [such that lPQ-(2,3)-rAB for twodot]
-            //
-            bool ifAB = (superblock=="cr" and psite>=nsite/2+1) or
-               (superblock=="lc" and psite<=nsite/2-ndots+1);
+            /*
+            (6+1)/2=3
+               0   1   2   3   4   5
+               *---*---*---X---*---*
+              rPQ rPQ rPQ rPQ rAB rAB [backward]
+              lAB lAB lPQ lPQ lPQ lPQ [forward]
+            3-1=2
+               0   1   2   3   4   5
+               *---*---X---X---*---*
+              rPQ rPQ rPQ rPQ rAB rAB
+              lAB lPQ lPQ lPQ lPQ lPQ
+            3-2=1
+            (7+1)/2=4
+               0   1   2   3   4   5   6
+               *---*---*---X---*---*---*
+              rPQ rPQ rPQ rPQ rPQ rAB rAB
+              lAB lAB lAB lPQ lPQ lPQ lPQ
+            4-1=3
+               0   1   2   3   4   5   6
+               *---*---X---X---*---*---*
+              rPQ rPQ rPQ rPQ rPQ rAB rAB
+              lAB lAB lPQ lPQ lPQ lPQ lPQ
+            4-2=2
+            */
+            bool ifAB = (superblock=="cr" and psite>=(nsite+1)/2) or
+                        (superblock=="lc" and psite<=(nsite+1)/2-ndots);
             oplist += (ifAB? "AB" : "PQ");
          }
          return oplist;
@@ -222,7 +228,6 @@ namespace ctns{
             auto qr = oper_unpack(iqr);
             int q2 = qr.first, kq = q2/2;
             int r2 = qr.second, kr = r2/2;
-            Tm wqr = (kq==kr)? 0.5 : 1.0;
             
             // bcast B to all processors
             stensor2su2<Tm> opBqr, opBrq;
@@ -253,11 +258,12 @@ namespace ctns{
                auto& opQ = qops2('Q')[ips];
                int ts = opQ.info.sym.ts();
                if(opBqr.info.sym == opQ.info.sym){
-                  Tm fac = wqr*get_vint2e_su2(int2e,ts,kp,kq,ks,kr);
+                  Tm fac = get_vint2e_su2(int2e,ts,kp,kq,ks,kr);
                   linalg::xaxpy(opQ.size(), fac, opBqr.data(), opQ.data());
                }
-               if(opBrq.info.sym == opQ.info.sym){
-                  Tm fac = wqr*get_vint2e_su2(int2e,ts,kp,kr,ks,kq); 
+               if(opBrq.info.sym == opQ.info.sym and kq != kr){
+                  Tm fac = get_vint2e_su2(int2e,ts,kp,kr,ks,kq); 
+                  if(ts == 2) fac = -fac; // (-1)^k in my note for Qps^k
                   linalg::xaxpy(opQ.size(), fac, opBrq.data(), opQ.data());
                }
             }
@@ -280,8 +286,8 @@ namespace ctns{
          assert(icomb.topo.ifmps);
          int nsite = icomb.get_nphysical();
          int psite = pcoord.first;
-         bool ab2pq = (superblock=="cr" and psite==nsite/2+1) or // determine switch point
-            (superblock=="lc" and psite==nsite/2-ndots+1); // -2 for twodot case 
+         bool ab2pq = (superblock=="cr" and psite==(nsite+1)/2) or // determine switch point
+                      (superblock=="lc" and psite==(nsite+1)/2-ndots); // -2 for twodot case 
          int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
