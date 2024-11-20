@@ -561,3 +561,50 @@
       - on-the-fly assembling pt2 energy? [DONE@2024/11/10]
       - MPI parallelization [DONE@2024/11/13]
 
+### 2024 DMRG: code optimization ###
+ 
+ * Benchmark: jiageng or a800_xiyun platform [DONE@2025/XX/XX]
+   - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
+   - Compilation on jiageng: need to use mkl for magma/zquatev, 
+                             but use mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist!
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
+
+ * Implement the switch from AB2PQ in the middle of the MPS chain: [DONE@2024/11/21]
+   - memcpy in renorm: [DONE@2024/11/16]
+      - better understand the cost of gpu2cpu memcpy for renorm? 
+        [previous async_tocpu actually does not work well, the actual time is similar!]
+      - reduce the size of qops could help to reduce time for memcpy!
+   - conversion between NC/CN parition for MPS: can this reduce the memory requirement for GPU?
+      - serial version:
+         - nonsu2 case: [DONE@2024/11/20]
+            - construct PQ from AB: oper_ab2pq.h
+            - renorm of opS & opH: oper_compxwf.h, symbolic_compxwf.h
+            - twodot_H: [DONE@2024/11/19] 
+               - sweep_twodot_diag.h, sweep_twodot_sigma.h, symbolic_formulae_twodot.h
+            - onedot_H: [DONE@2024/11/20] 
+               - sweep_onedot_diag.h
+               - sweep_onedot_sigma.h
+         - su2 case: [DONE@2024/11/20]
+            - construct PQ from AB
+            - renorm opSH for task_ham
+            - twodot and onedot for task_dmrg
+      - determine the position of switch: middle=(nsite+1)/2, see oper_ab2pq.h [two positions]
+      - difficulty lies in the design of MPI and GPU version, and in the later memory usage should be reduced.
+         - mpi version:
+            - nonsu2 case [DONE@2024/11/19]
+            - su2 case [DONE@2024/11/20]
+         - gpu version: [DONE@2024/11/20]
+      - compare the performance with and without ifab2pq
+  
+  * alg_renorm=4 占用内存过多
+
+  * decimation for su2 is not parallelized:
+    - using MPI
+    - using GPU
+       - cuSolver: svd
+       - cuSOlver: eig
+

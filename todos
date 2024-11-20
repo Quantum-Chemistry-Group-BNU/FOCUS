@@ -1,43 +1,4 @@
 
- * Profiling and optimization:
-   - memcpy in renorm: [DONE@2024/11/16]
-      - better understand the cost of gpu2cpu memcpy for renorm? 
-        [previous async_tocpu actually does not work well, the actual time is similar!]
-      - reduce the size of qops could help to reduce time for memcpy!
-
-   - conversion between NC/CN parition for MPS: can this reduce the memory requirement for GPU?
-      - serial version:
-         - nonsu2 case: [DONE@2024/11/20]
-            - construct PQ from AB: oper_ab2pq.h
-            - renorm of opS & opH: oper_compxwf.h, symbolic_compxwf.h
-            - twodot_H: [DONE@2024/11/19] 
-               - sweep_twodot_diag.h, sweep_twodot_sigma.h, symbolic_formulae_twodot.h
-            - onedot_H: [DONE@2024/11/20] 
-               - sweep_onedot_diag.h
-               - sweep_onedot_sigma.h
-         - su2 case: [DONE@2024/11/20]
-            - construct PQ from AB
-            - renorm opSH for task_ham
-            - twodot and onedot for task_dmrg
-      - determine the position of switch? see oper_ab2pq.h [2 positions]
-      
-      - difficulty lies in the design of MPI and GPU version, and in the later memory usage should be reduced.
-         - mpi version:
-            - nonsu2 case [DONE@2024/11/19]
-            - su2 case [DONE@2024/11/20]
-         - gpu version
-      - compare the performance with and without ifab2pq
-   
-   - decimation for su2 is not parallelized:
-
-      - using MPI
-
-      - using GPU
-         - cuSolver: svd
-         - cuSOlver: eig
-
-   - alg_renorm=4 占用内存过多
-
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
@@ -65,7 +26,7 @@
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
 
-### 2025 Profiling + Optimization + More tests ###
+### 2025 Large-scale CASSCF / dynamical correlation / SOC ###
 
  * Further optimized kernel for assembling RDM:
    - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
@@ -86,16 +47,11 @@
       - MR-TADF systems: singlet and triplet gaps?
       - 2-RDMs for Fe8S7 with large bond dimension!
 
- * Benchmark: jiageng or other platform [DONE@2025/XX/XX]
-   - Compilation on jiageng: need to used mkl for magma/zquatev, 
-                             but use mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist!
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
-### 2025 Dynamical correlation + SOC [DMRG] ###
+######################## THIS VERSION IS READY FOR RELEASE ########################
+
+
+### TODOs: initial guess & p-DMRG ###
 
  * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
    - This may be operationally useful like BS-DFT.
@@ -113,10 +69,6 @@
    - deterministic evaluation following Hanshi Hu's work
    - stochastic evaluation following Sandeep Sharma's work
    - more rigorous scheme akin to p-DMRG?
-
-
-######################## THIS VERSION IS READY FOR RELEASE ########################
-
 
 ### TODOs: DMRG + Quantum Computing ###
 
