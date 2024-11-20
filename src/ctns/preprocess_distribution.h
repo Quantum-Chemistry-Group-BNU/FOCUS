@@ -108,7 +108,10 @@ namespace ctns{
             int sc1 = suppc1.size();
             int sc2 = suppc2.size();
             assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-            bool ifNC = (sl+sc1 <= sc2+sr);
+            size_t csize_lc1 = sl+sc1;
+            size_t csize_c2r = sc2+sr;
+            std::string oplist = "CABPQSH";
+            bool ifNC = determine_NCorCN_opH(oplist, oplist, csize_lc1, csize_c2r);
             auto key1 = ifNC? "AP" : "PA";
             auto key2 = ifNC? "BQ" : "QB";
             std::cout << " (sl,sr,sc1,sc2)="
@@ -226,7 +229,6 @@ namespace ctns{
                      << " mpirank=" << rank
                      << std::endl;
 
-                  std::string oplist = "CABPQSH";
                   std::string block1, block2;
                   std::vector<int> cindex1, cindex2;
                   if(forward){
@@ -289,7 +291,6 @@ namespace ctns{
                      << " mpirank=" << rank
                      << std::endl;
 
-                  std::string oplist = "CABPQSH";
                   bool ifsave = true;
                   std::map<std::string,int> counter;
                   auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,

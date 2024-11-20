@@ -175,7 +175,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "ICABPQSHTFDM";
+         std::string opseq = "ICSHABPQTFDM";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
