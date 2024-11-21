@@ -3,10 +3,11 @@
 
 #include "../symbolic_task.h"
 #include "../oper_partition.h"
+#include "symbolic_compxwf_opS_su2.h"
 
 namespace ctns{
 
-   const bool debug_opS_su2 = false;
+   const bool debug_opS_su2 = true;
    extern const bool debug_opS_su2;
 
    //
@@ -27,7 +28,7 @@ namespace ctns{
             for(const auto& i : cindex1){
                auto op1C = symbolic_oper(block1,'C',i);      
                auto op1 = ifdagger1? op1C : op1C.H(); // default is [a^+]^+ = a
-               // top2 = sum_j oij a2[j]
+                                                      // top2 = sum_j oij a2[j]
                symbolic_sum<Tm> top2;
                for(const auto& j : cindex2){
                   auto op2C = symbolic_oper(block2,'C',j);		 
@@ -206,446 +207,227 @@ namespace ctns{
          int k2 = cindex2.size(), kc2 = 2*k2, kA2 = k2*k2, kB2 = 2*kA2;
 
          // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
-         if(ifdistc && block2[0]=='c'){ // lc
-            if(iproc == rank){
-               // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+ 
-               auto aindex2 = oper_index_opA(cindex2, ifkr);
-               assert(aindex2.size() == 1);
-               symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, int2e, p, 
-                     aindex2, formulae);
-            }
+         int formula3 = -1;
+         bool exist2A = ifexistQ(oplist2,'A');
+         bool exist2P = ifexistQ(oplist2,'P');
+         bool outer3s = kc1<=kA2; // outer sum is single index
+         if(exist2P and (!exist2A or (exist2A and outer3s))){
+            formula3 = 0;
+         }else if(exist2A and !outer3s){
+            formula3 = 1;
+         }else if(exist2A and !exist2P and outer3s){
+            formula3 = 2;
          }else{
-            assert(ifexistQ(oplist2,'A') or ifexistQ(oplist2,'P'));
-            bool combine_two_index3 = ifexistQ(oplist2,'P') and ((ifexistQ(oplist2,'A') and kc1<=kA2) or !ifexistQ(oplist2,'A'));
-            if(combine_two_index3){
-               symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, p, ifkr,
-                     int2e.sorb, size, rank, formulae);
+            tools::exit("error: no such case for opS3");
+         }  
+         auto size3 = formulae.size();
+         if(formula3 == 0){
+            symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula3 == 1){
+            // In the case of MPS with configuration lc, this formula can be calculated in two ways,
+            // since the centeral operators are replicated in all processors. In the general CTNS case,
+            // where ifdistc=false, central operators are also storaged distributedly, then only the 
+            // second branch is correct.
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+ 
+                  auto aindex2 = oper_index_opA(cindex2, ifkr);
+                  assert(aindex2.size() == 1);
+                  symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, int2e, p, 
+                        aindex2, formulae);
+               }
             }else{
                // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
                auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, int2e, p,
+               symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                     aindex2_dist, formulae);
+            }
+         }else if(formula3 == 2){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  auto aindex2 = oper_index_opA(cindex2, ifkr);
+                  assert(aindex2.size() == 1);
+                  symbolic_compxwf_opS3c_su2(block1, block2, cindex1, cindex2, int2e, p, 
+                        aindex2, formulae);
+               }
+            }else{
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS3c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex2_dist, formulae);
             }
          }
-
+         size3 = formulae.size()-size3;
+         if(debug_opS_su2){
+            std::cout << "formula3=" << formula3 << " size=" << size3 
+               << " exist2A,2P=" << exist2A << "," << exist2P
+               << " outer3s=" << outer3s
+               << std::endl;
+         }
+ 
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
-         if(ifdistc && block2[0]=='c'){ // lc
-            if(iproc == rank){
-               // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-               auto bindex2 = oper_index_opB(cindex2, ifkr);
-               symbolic_compxwf_opS4a_su2(block1, block2, cindex1, cindex2, int2e, p,
-                     bindex2, formulae);
-            }
+         int formula4 = -1;
+         bool exist2B = ifexistQ(oplist2,'B');
+         bool exist2Q = ifexistQ(oplist2,'Q');
+         bool outer4s = kc1<=kB2;
+         if(exist2Q and (!exist2B or (exist2B and outer4s))){
+            formula4 = 0;
+         }else if(exist2B and !outer4s){
+            formula4 = 1;
+         }else if(exist2B and !exist2Q and outer4s){
+            formula4 = 2;
          }else{
-            assert(ifexistQ(oplist2,'B') or ifexistQ(oplist2,'Q'));
-            bool combine_two_index4 = ifexistQ(oplist2,'Q') and ((ifexistQ(oplist2,'B') and kc1<=kB2) or !ifexistQ(oplist2,'B'));
-            if(combine_two_index4){
-               // sum_q aq[1]*Qpq[2]
-               symbolic_compxwf_opS4b_su2(block1, block2, cindex1, cindex2, p, ifkr,
-                     int2e.sorb, size, rank, formulae);
-            }else{ 
+            tools::exit("error: no such case for opS4");
+         }
+         auto size4 = formulae.size(); 
+         if(formula4 == 0){
+            // sum_q aq[1]*Qpq[2]
+            symbolic_compxwf_opS4a_su2(block1, block2, cindex1, cindex2, p, ifkr,
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula4 == 1){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+                  auto bindex2 = oper_index_opB(cindex2, ifkr);
+                  symbolic_compxwf_opS4b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        bindex2, formulae);
+               }
+            }else{
                auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS4a_su2(block1, block2, cindex1, cindex2, int2e, p, 
-                     bindex2_dist, formulae);
+               symbolic_compxwf_opS4b_su2(block1, block2, cindex1, cindex2, int2e, p, 
+                        bindex2_dist, formulae);
             }
+         }else if(formula4 == 2){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+                  auto bindex2 = oper_index_opB(cindex2, ifkr);
+                  symbolic_compxwf_opS4c_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        bindex2, formulae);
+               }
+            }else{
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS4c_su2(block1, block2, cindex1, cindex2, int2e, p, 
+                        bindex2_dist, formulae);
+            }
+         }
+         size4 = formulae.size()-size4;
+         if(debug_opS_su2){
+            std::cout << "formula4=" << formula4 << " size=" << size 
+               << " exist2B,2Q=" << exist2B << "," << exist2Q
+               << " outer4s=" << outer4s
+               << std::endl;
          }
 
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
-         if(ifdistc && block1[0]=='c'){ // cr
-            if(iproc == rank){
-               // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-               auto aindex1 = oper_index_opA(cindex1, ifkr);
-               assert(aindex1.size() == 1);
-               symbolic_compxwf_opS5a_su2(block1, block2, cindex1, cindex2, int2e, p,
-                     aindex1, formulae);
-            }
+         int formula5 = -1;
+         bool exist1A = ifexistQ(oplist1,'A');
+         bool exist1P = ifexistQ(oplist1,'P');
+         bool outer5s = kc2<=kA1;
+         if(exist1P and (!exist1A or (exist1A and outer5s))){
+            formula5 = 0;
+         }else if(exist1A and !outer5s){
+            formula5 = 1;
+         }else if(exist1A and !exist1P and outer5s){
+            formula5 = 2;
          }else{
-            assert(ifexistQ(oplist1,'A') or ifexistQ(oplist1,'P'));
-            bool combine_two_index5 = ifexistQ(oplist1,'P') and ((ifexistQ(oplist1,'A') and kc2<=kA1) or !ifexistQ(oplist1,'A'));
-            if(combine_two_index5){
-               // sum_q Ppq[1]*aq^+[2]
-               symbolic_compxwf_opS5b_su2(block1, block2, cindex1, cindex2, p, ifkr, 
-                     int2e.sorb, size, rank, formulae);
-            }else{ 
+            tools::exit("error: no such case for op5");
+         }
+         auto size5 = formulae.size();
+         if(formula5 == 0){
+            // sum_q Ppq[1]*aq^+[2]
+            symbolic_compxwf_opS5a_su2(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula5 == 1){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
+                  auto aindex1 = oper_index_opA(cindex1, ifkr);
+                  assert(aindex1.size() == 1);
+                  symbolic_compxwf_opS5b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        aindex1, formulae);
+               }
+            }else{
                auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS5a_su2(block1, block2, cindex1, cindex2, int2e, p,
+               symbolic_compxwf_opS5b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                     aindex1_dist, formulae);
+            }
+         }else if(formula5 == 2){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  auto aindex1 = oper_index_opA(cindex1, ifkr);
+                  assert(aindex1.size() == 1);
+                  symbolic_compxwf_opS5c_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        aindex1, formulae);
+               }
+            }else{
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS5c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex1_dist, formulae);
             }
          }
+         size5 = formulae.size()-size5;
+         if(debug_opS_su2){
+            std::cout << "formula5=" << formula5 << " size=" << size5 
+               << " exist1A,1P=" << exist1A << "," << exist1P
+               << " outer5s=" << outer5s
+               << std::endl;
+         }
 
          // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
-         if(ifdistc && block1[0]=='c'){ // cr
-            if(iproc == rank){
-               // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-               auto bindex1 = oper_index_opB(cindex1, ifkr);
-               symbolic_compxwf_opS6a_su2(block1, block2, cindex1, cindex2, int2e, p,
-                     bindex1, formulae);
-            }
+         int formula6 = -1;
+         bool exist1B = ifexistQ(oplist1,'B');
+         bool exist1Q = ifexistQ(oplist1,'Q');
+         bool outer6s = kc2<=kB1;
+         if(exist1Q and (!exist1B or (exist1B and outer6s))){
+            formula6 = 0;
+         }else if(exist1B and !outer6s){
+            formula6 = 1;
+         }else if(exist1B and !exist1Q and outer6s){
+            formula6 = 2;
          }else{
-            assert(ifexistQ(oplist1,'B') or ifexistQ(oplist1,'Q'));
-            bool combine_two_index6 = ifexistQ(oplist1,'Q') and ((ifexistQ(oplist1,'B') and kc2<=kB1) or !ifexistQ(oplist1,'B'));
-            if(combine_two_index6){
-               // sum_q Qpq^[1]*aq[2]
-               symbolic_compxwf_opS6b_su2(block1, block2, cindex1, cindex2, p, ifkr,
-                     int2e.sorb, size, rank, formulae);
-            }else{ 
+            tools::exit("error: no such case for opS6");
+         }
+         auto size6 = formulae.size();
+         if(formula6 == 0){
+            // sum_q Qpq^[1]*aq[2]
+            symbolic_compxwf_opS6a_su2(block1, block2, cindex1, cindex2, p, ifkr,
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula6 == 1){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+                  auto bindex1 = oper_index_opB(cindex1, ifkr);
+                  symbolic_compxwf_opS6b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        bindex1, formulae);
+               }
+            }else{
                auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
-               symbolic_compxwf_opS6a_su2(block1, block2, cindex1, cindex2, int2e, p,
+               symbolic_compxwf_opS6b_su2(block1, block2, cindex1, cindex2, int2e, p,
+                     bindex1_dist, formulae);
+            }
+         }else if(formula6 == 2){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+                  auto bindex1 = oper_index_opB(cindex1, ifkr);
+                  symbolic_compxwf_opS6c_su2(block1, block2, cindex1, cindex2, int2e, p,
+                        bindex1, formulae);
+               }
+            }else{
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               symbolic_compxwf_opS6c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      bindex1_dist, formulae);
             }
          }
+         size6 = formulae.size()-size6;
+         if(debug_opS_su2){
+            std::cout << "formula6=" << formula6 << " size=" << size6 
+               << " exist1B,1Q=" << exist1B << "," << exist1Q
+               << " outer6s=" << outer6s
+               << std::endl;
+         }
          return formulae;
-      }
-
-   // integrals for Ppq
-   template <typename Tm>
-      Tm get_xint2e_su2(const integral::two_body<Tm>& int2e,
-            const int ts,
-            const int kp,
-            const int kq,
-            const int ks,
-            const int kr){
-         if(ts == 0){
-            Tm fac = (ks==kr)? 0.5 : 1.0;
-            return -fac*(int2e.get(2*kp,2*kq+1,2*ks,2*kr+1) + int2e.get(2*kp,2*kq+1,2*kr,2*ks+1));
-         }else{
-            return int2e.get(2*kp,2*kq,2*ks,2*kr);
-         }
-      }
-
-   // integrals for Qps
-   template <typename Tm>
-      Tm get_vint2e_su2(const integral::two_body<Tm>& int2e,
-            const int ts,
-            const int kp,
-            const int kq,
-            const int ks,
-            const int kr){
-         if(ts == 0){
-            return int2e.get(2*kp,2*kq,2*ks,2*kr) + int2e.get(2*kp,2*kq+1,2*ks,2*kr+1);
-         }else{
-            return int2e.get(2*kp,2*kq+1,2*ks+1,2*kr);
-         }
-      }
-
-   // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-   template <typename Tm>
-      void symbolic_compxwf_opS3a_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const integral::two_body<Tm>& int2e,
-            const int p,
-            const std::vector<int>& aindex2,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS3a_su2 p=" << p << std::endl;
-         // loop over Asr
-         for(const auto& isr : aindex2){
-            auto sr = oper_unpack(isr);
-            int s2 = sr.first, ks = s2/2;
-            int r2 = sr.second, kr = r2/2;
-            int spin_s2 = s2%2, spin_r2 = r2%2;
-            int ts = (spin_s2!=spin_r2)? 0 : 2;
-            auto op2 = symbolic_oper(block2,'A',isr).H();
-            // sum_q <pq1||s2r2> aq[1]^+
-            symbolic_sum<Tm> top1;
-            for(const auto& q1 : cindex1){
-               auto op1 = symbolic_oper(block1,'C',q1);
-               double fac = (ts==0)? -1.0/std::sqrt(2.0) : +std::sqrt(3.0/2.0);
-               top1.sum(fac*get_xint2e_su2(int2e,ts,p/2,q1/2,ks,kr), op1);
-            }
-            auto op12 = symbolic_prod(top1,op2);
-            op12.ispins.push_back(std::make_tuple(1,ts,1));
-            formulae.append(op12);
-         }
-      }
-
-   // sum_q aq^+[1]*Ppq[2]
-   template <typename Tm>
-      void symbolic_compxwf_opS3b_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const int p,
-            const bool ifkr,
-            const int sorb,
-            const int size,
-            const int rank,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS3b_su2 p=" << p << std::endl;
-         // sum_q aq^+[1]*Ppq[2]
-         int kp = p/2, pa = p, pb = pa+1;
-         for(const auto& qa : cindex1){
-            int qb = qa+1, kq = qa/2;
-            auto op1c = symbolic_oper(block1,'C',qa);
-            // triplet Ppq:
-            int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
-            if(iproc_aa == rank){
-               auto op2P_AA = symbolic_oper(block2,'P',ipq_aa);
-               double fac = (kp<kq)? std::sqrt(3.0/2.0) : -std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
-               auto c1P2_AA = symbolic_prod<Tm>(op1c,op2P_AA,fac); 
-               c1P2_AA.ispins.push_back(std::make_tuple(1,2,1)); 
-               formulae.append(c1P2_AA);
-            }
-            // singlet Ppq:
-            int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
-            if(iproc_ab == rank){
-               auto op2P_AB = symbolic_oper(block2,'P',ipq_ab);
-               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
-               auto c1P2_AB = symbolic_prod<Tm>(op1c,op2P_AB,fac);
-               c1P2_AB.ispins.push_back(std::make_tuple(1,0,1));
-               formulae.append(c1P2_AB);
-            }
-         } // qa
-      }
-
-   // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-   template <typename Tm>
-      void symbolic_compxwf_opS4a_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const integral::two_body<Tm>& int2e,
-            const int p,
-            const std::vector<int>& bindex2,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS4a_su2 p=" << p << std::endl;
-         // loop over Bqr
-         for(const auto& iqr : bindex2){
-            auto qr = oper_unpack(iqr);
-            int q2 = qr.first, kq2 = q2/2;
-            int r2 = qr.second, kr2 = r2/2;
-            int spin_q2 = q2%2, spin_r2 = r2%2;
-            int ts = (spin_q2!=spin_r2)? 2 : 0;
-            auto op2 = symbolic_oper(block2,'B',iqr);
-            // sum_s <pq2||s1r2> as[1]
-            symbolic_sum<Tm> top1;
-            for(const auto& s1 : cindex1){
-               auto op1 = symbolic_oper(block1,'C',s1).H();
-               double fac = (ts==0)? 1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
-               top1.sum(fac*get_vint2e_su2(int2e,ts,p/2,kq2,s1/2,kr2), op1);
-            }
-            auto op12 = symbolic_prod(top1,op2);
-            op12.ispins.push_back(std::make_tuple(1,ts,1));
-            formulae.append(op12);
-            // Hermitian part: q2<->r2
-            if(kq2 == kr2) continue;
-            // We use [Brq]^k = (-1)^k*[Bqr]^k
-            auto op2H = op2.H();
-            symbolic_sum<Tm> top1H;
-            for(const auto& s1 : cindex1){
-               auto op1 = symbolic_oper(block1,'C',s1).H();
-               double fac = (ts==0)? 1.0/std::sqrt(2.0) : +std::sqrt(3.0/2.0);
-               top1H.sum(fac*get_vint2e_su2(int2e,ts,p/2,kr2,s1/2,kq2), op1);
-            }
-            auto op12H = symbolic_prod(top1H,op2H);
-            op12H.ispins.push_back(std::make_tuple(1,ts,1));
-            formulae.append(op12H);
-         }
-      }
-
-   // sum_q aq[1]*Qpq[2]
-   template <typename Tm>
-      void symbolic_compxwf_opS4b_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const int p,
-            const bool ifkr,
-            const int sorb,
-            const int size,
-            const int rank,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS4b_su2 p=" << p << std::endl;
-         // sum_q aq[1]*Qpq[2]
-         int kp = p/2, pa = p, pb = pa+1;
-         for(const auto& qa : cindex1){
-            int qb = qa+1, kq = qa/2;
-            auto op1a = symbolic_oper(block1,'C',qa).H();
-            // singlet Qpq
-            int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
-            if(iproc_aa == rank){
-               auto op2Q_AA = symbolic_oper(block2,'Q',ipq_aa);
-               double fac = 1.0/std::sqrt(2.0); // singlet case
-               auto a1Q2_AA = (kp<kq)? symbolic_prod<Tm>(op1a,op2Q_AA,fac) : 
-                  symbolic_prod<Tm>(op1a,op2Q_AA.H(),fac);
-               a1Q2_AA.ispins.push_back(std::make_tuple(1,0,1));
-               formulae.append(a1Q2_AA);
-            }
-            // triplet Qpq
-            int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
-            if(iproc_ab == rank){
-               auto op2Q_AB = symbolic_oper(block2,'Q',ipq_ab);
-               double fac = -std::sqrt(3.0/2.0); // triplet case: additional sign exist - different from nonSU2 case !
-               auto a1Q2_AB = (kp<kq)? symbolic_prod<Tm>(op1a,op2Q_AB,fac) :
-                  symbolic_prod<Tm>(op1a,op2Q_AB.H(),-fac); // Qpq^k = (-1)^k (Qqp^k)^d
-               a1Q2_AB.ispins.push_back(std::make_tuple(1,2,1));
-               formulae.append(a1Q2_AB);
-            }
-         } // qa
-      }
-
-   // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-   template <typename Tm>
-      void symbolic_compxwf_opS5a_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const integral::two_body<Tm>& int2e,
-            const int p,
-            const std::vector<int>& aindex1,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS5a_su2 p=" << p << std::endl;
-         // loop over Asr
-         for(const auto& isr : aindex1){
-            auto sr = oper_unpack(isr);
-            int s1 = sr.first , ks1 = s1/2, spin_s1 = s1%2;
-            int r1 = sr.second, kr1 = r1/2, spin_r1 = r1%2;
-            int ts = (spin_s1!=spin_r1)? 0 : 2;
-            auto op1 = symbolic_oper(block1,'A',isr).H();
-            // sum_q <pq2||s1r1> aq[2]^+
-            symbolic_sum<Tm> top2;
-            for(const auto& q2a : cindex2){
-               auto op2c = symbolic_oper(block2,'C',q2a);
-               double fac = (ts==0)? -1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
-               top2.sum(fac*get_xint2e_su2(int2e,ts,p/2,q2a/2,ks1,kr1), op2c);
-            }
-            auto op12 = symbolic_prod(op1,top2);
-            op12.ispins.push_back(std::make_tuple(ts,1,1));
-            formulae.append(op12);
-         }
-      }
-
-   // sum_q Ppq[1]*aq^+[2]
-   template <typename Tm>
-      void symbolic_compxwf_opS5b_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const int p,
-            const bool ifkr,
-            const int sorb,
-            const int size,
-            const int rank,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS5b_su2 p=" << p << std::endl;
-         // sum_q Ppq[1]*aq^+[2]
-         int kp = p/2, pa = p, pb = pa+1;
-         for(const auto& qa : cindex2){
-            int qb = qa+1, kq = qa/2;
-            auto op2c = symbolic_oper(block2,'C',qa);
-            // triplet Ppq: 
-            int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2('P',ifkr,size,ipq_aa,sorb);
-            if(iproc_aa == rank){
-               auto op1P_AA = symbolic_oper(block1,'P',ipq_aa);
-               double fac = (kp<kq)? -std::sqrt(3.0/2.0) : std::sqrt(3.0/2.0); // Ppq1 = -Pqp1
-               auto P1c2_AA = symbolic_prod<Tm>(op1P_AA,op2c,fac);
-               P1c2_AA.ispins.push_back(std::make_tuple(2,1,1));
-               formulae.append(P1c2_AA);
-            }
-            // singlet Ppq:
-            int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2('P',ifkr,size,ipq_ab,sorb);
-            if(iproc_ab == rank){
-               auto op1P_AB = symbolic_oper(block1,'P',ipq_ab);
-               double fac = -1.0/std::sqrt(2.0); // Ppq0 = Pqp0
-               auto P1c2_AB = symbolic_prod<Tm>(op1P_AB,op2c,fac);
-               P1c2_AB.ispins.push_back(std::make_tuple(0,1,1));
-               formulae.append(P1c2_AB);
-            }
-         } // qa
-      }
-
-   // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-   template <typename Tm>
-      void symbolic_compxwf_opS6a_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const integral::two_body<Tm>& int2e,
-            const int p,
-            const std::vector<int>& bindex1,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS6a_su2 p=" << p << std::endl;
-         // loop over Bqs
-         for(const auto& iqs : bindex1){
-            auto qs = oper_unpack(iqs);
-            int q1 = qs.first , kq1 = q1/2, spin_q1 = q1%2;
-            int s1 = qs.second, ks1 = s1/2, spin_s1 = s1%2;
-            int ts = (spin_q1!=spin_s1)? 2 : 0;
-            auto op1 = symbolic_oper(block1,'B',iqs);
-            // sum_r -<pq1||s1r2> ar[2]
-            symbolic_sum<Tm> top2;
-            for(const auto& r2a : cindex2){
-               auto op2 = symbolic_oper(block2,'C',r2a).H();
-               double fac = (ts==0)? 1.0/std::sqrt(2.0) : std::sqrt(3.0/2.0);
-               top2.sum(fac*get_vint2e_su2(int2e,ts,p/2,kq1,r2a/2,ks1), op2);
-            }
-            auto op12 = symbolic_prod(op1,top2);
-            op12.ispins.push_back(std::make_tuple(ts,1,1));
-            formulae.append(op12);
-            // Hermitian part: q1<->s1
-            if(kq1 == ks1) continue;
-            // We use [Bsq]^k = (-1)^k*[Bqs]^k
-            auto op1H = op1.H();
-            symbolic_sum<Tm> top2H;
-            for(const auto& r2a : cindex2){
-               auto op2 = symbolic_oper(block2,'C',r2a).H();
-               double fac = (ts==0)? 1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
-               top2H.sum(fac*get_vint2e_su2(int2e,ts,p/2,ks1,r2a/2,kq1), op2); // s<->q
-            }
-            auto op12H = symbolic_prod(op1H,top2H);
-            op12H.ispins.push_back(std::make_tuple(ts,1,1));
-            formulae.append(op12H);
-         }
-      }
-
-   // sum_q Qpq^[1]*aq[2]
-   template <typename Tm>
-      void symbolic_compxwf_opS6b_su2(const std::string block1,
-            const std::string block2,
-            const std::vector<int>& cindex1,
-            const std::vector<int>& cindex2,
-            const int p,
-            const bool ifkr,
-            const int sorb,
-            const int size,
-            const int rank,
-            symbolic_task<Tm>& formulae){
-         if(debug_opS_su2) std::cout << "symbolic_compxwf_opS6b_su2 p=" << p << std::endl;
-         // sum_q Qpq^[1]*aq[2]
-         int kp = p/2, pa = p, pb = pa+1;
-         for(const auto& qa : cindex2){
-            int qb = qa+1, kq = qa/2;
-            auto op2a = symbolic_oper(block2,'C',qa).H();
-            // singlet Qpq
-            int ipq_aa = (kp<kq)? oper_pack(pa,qa) : oper_pack(qa,pa);
-            int iproc_aa = distribute2('Q',ifkr,size,ipq_aa,sorb);
-            if(iproc_aa == rank){
-               auto op1Q_AA = symbolic_oper(block1,'Q',ipq_aa);
-               double fac = 1.0/std::sqrt(2.0); // singlet
-               auto Q1a2_AA = (kp<kq)? symbolic_prod<Tm>(op1Q_AA,op2a,fac) : 
-                  symbolic_prod<Tm>(op1Q_AA.H(),op2a,fac);
-               Q1a2_AA.ispins.push_back(std::make_tuple(0,1,1));
-               formulae.append(Q1a2_AA);
-            }
-            // triplet Qpq
-            int ipq_ab = (kp<kq)? oper_pack(pa,qb) : oper_pack(qa,pb);
-            int iproc_ab = distribute2('Q',ifkr,size,ipq_ab,sorb);
-            if(iproc_ab == rank){
-               auto op1Q_AB = symbolic_oper(block1,'Q',ipq_ab);
-               double fac = std::sqrt(3.0/2.0); // triplet case: additional sign exist - different from nonSU2 case !
-               auto Q1a2_AB = (kp<kq)? symbolic_prod<Tm>(op1Q_AB,op2a,fac) :
-                  symbolic_prod<Tm>(op1Q_AB.H(),op2a,-fac);
-               Q1a2_AB.ispins.push_back(std::make_tuple(2,1,1));
-               formulae.append(Q1a2_AB);
-            }
-         } // qa
       }
 
    // kernel for computing renormalized H|ket>

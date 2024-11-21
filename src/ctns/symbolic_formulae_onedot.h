@@ -302,7 +302,7 @@ namespace ctns{
             formulae.sort(dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY size=" << formulae.size();
+            std::cout << "\nSUMMARY[onedot] ifNC=" << ifNC << " size=" << formulae.size();
             if(ifNC){
                std::cout << " CSnc:" << counter["CS"] << " SCnc:" << counter["SC"]
                   << " APnc:" << counter["AP"] << " BQnc:" << counter["BQ"]
@@ -601,7 +601,7 @@ namespace ctns{
             sort(formulae, dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY size=" << idx;
+            std::cout << "\nSUMMARY[onedot2] ifNC=" << ifNC << " size=" << idx;
             if(ifNC){
                std::cout << " CSnc:" << counter["CS"] << " SCnc:" << counter["SC"]
                   << " APnc:" << counter["AP"] << " BQnc:" << counter["BQ"]
