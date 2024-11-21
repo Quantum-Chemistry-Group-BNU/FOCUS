@@ -598,7 +598,15 @@
             - nonsu2 case [DONE@2024/11/19]
             - su2 case [DONE@2024/11/20]
          - gpu version: [DONE@2024/11/20]
-      - compare the performance with and without ifab2pq
+      - compare the performance with and without ifab2pq: minimize the no. of formula is needed!
+         - revise symbolic_compxwf_opS_su2 [DONE@2024/11/21]: +2*Ks (at most)
+         - revise symbolic_compxwf_opH_su2 [DONE@2024/11/21]: +2
+            ifab2pq=false,ifdistc=true : SUMMARY[twodot] ifNC=1 size=486 H1:11 H2:19 CS:54 SC:126 AP:108 BQ:168
+            ifab2pq=true ,ifdistc=false: SUMMARY[twodot] ifNC=1 size=516 H1:13 H2:19 CS:54 SC:154 AP:108 BQ:168
+         - revise symbolic_compxwf_opS [DONE@2024/11/XX]
+         - revise symbolic_compxwf_opH [DONE@2024/11/XX]
+      - note: thers is still room for further optimize the cost by classifying the resulting formulae and factorizing,
+        this will probably lead to a factor to 2 (?) acceleration [to be explored in future].
   
   * alg_renorm=4 占用内存过多
 

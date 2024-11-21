@@ -31,16 +31,16 @@ namespace ctns{
          const int print_level = 1;
          const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
          const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = determine_NCorCN_opH(oplist_l, oplist_r, csize_lc1, csize_c2r);
+         const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, csize_lc1, csize_c2r);
          const bool ifhermi = true;
 
          symbolic_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
             auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
@@ -55,7 +55,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
             auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
@@ -235,7 +235,7 @@ namespace ctns{
          const auto& cindex_c2 = c2qops.cindex;
          const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
          const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr; 
          std::streambuf *psbuf, *backup;
@@ -343,7 +343,7 @@ namespace ctns{
          const bool ifkr = lqops.ifkr;
          const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
          const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const bool ifhermi = true;
          std::streambuf *psbuf, *backup;
          std::ofstream file;
@@ -370,13 +370,13 @@ namespace ctns{
          }
 
          bipart_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
          std::map<std::string,int> counter;
 
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = (Hlc1.size()>0)? 1 : 0;
          if(Hlc1.size() > 0){
             auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
@@ -389,7 +389,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = (Hc2r.size()>0)? 1 : 0;
          if(Hc2r.size() > 0){
             auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");

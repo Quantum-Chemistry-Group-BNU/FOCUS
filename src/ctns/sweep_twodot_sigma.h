@@ -284,7 +284,7 @@ namespace ctns{
          // Two-index terms:
          const size_t csize_lc1 = lqops.cindex.size() + c1qops.cindex.size();
          const size_t csize_c2r = c2qops.cindex.size() + rqops.cindex.size();
-         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const bool ifkr = lqops.ifkr;
          const bool ifhermi = true;
          auto ainfo = ifNC? oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr) :

@@ -71,7 +71,6 @@ namespace ctns{
                auto sr = oper_unpack(isr);
                int s = sr.first;
                int r = sr.second;
-               
                // bcast A to all processors
                stensor2<Tm> opCrs;               
                if(iproc == rank){
@@ -82,7 +81,6 @@ namespace ctns{
 #ifndef SERIAL
                if(size > 1) mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
 #endif
-               
                // loop over all opP indices via openmp
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -121,7 +119,6 @@ namespace ctns{
                auto qr = oper_unpack(iqr);
                int q = qr.first;
                int r = qr.second;
-               
                // bcast B to all processors
                stensor2<Tm> opBqr, opBrq;
                if(iproc == rank){
@@ -138,7 +135,6 @@ namespace ctns{
                   mpi_wrapper::broadcast(icomb.world, opBrq, iproc);
                }
 #endif
-               
                // loop over all opQ indices via openmp
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -179,7 +175,6 @@ namespace ctns{
             auto sr = oper_unpack(isr);
             int s2 = sr.first, ks = s2/2;
             int r2 = sr.second, kr = r2/2;
-            
             // bcast A to all processors
             stensor2su2<Tm> opCrs;
             if(iproc == rank){
@@ -190,7 +185,6 @@ namespace ctns{
 #ifndef SERIAL
             if(size > 1) mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
 #endif
-
             // loop over all opP indices via openmp
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -228,7 +222,6 @@ namespace ctns{
             auto qr = oper_unpack(iqr);
             int q2 = qr.first, kq = q2/2;
             int r2 = qr.second, kr = r2/2;
-            
             // bcast B to all processors
             stensor2su2<Tm> opBqr, opBrq;
             if(iproc == rank){
@@ -245,7 +238,6 @@ namespace ctns{
                mpi_wrapper::broadcast(icomb.world, opBrq, iproc);
             }
 #endif
-
             // loop over all opQ indices via openmp
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)

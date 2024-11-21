@@ -26,13 +26,13 @@ namespace ctns{
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
-         const bool ifNC = determine_NCorCN_opH(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
+         const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
          const auto& cindex = ifNC? cindex_l : cindex_r;
          auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
          auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
 
          symbolic_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          if(ifNC){
             
@@ -55,7 +55,7 @@ namespace ctns{
             }
             // 2. Il*H^cr
             auto Hcr = symbolic_compxwf_opH_su2<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r, 
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+                  int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
             counter["H2"] = Hcr.size();
             if(Hcr.size() > 0){
                auto Il = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'I',0)));
@@ -154,7 +154,7 @@ namespace ctns{
             // partition = lc|r
             // 1. H^lc*Ir 
             auto Hlc = symbolic_compxwf_opH_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c, 
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+                  int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
             counter["H1"] = Hlc.size();
             if(Hlc.size() > 0){
                auto Ir = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'I',0)));

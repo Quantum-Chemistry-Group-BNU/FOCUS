@@ -111,7 +111,7 @@ namespace ctns{
             size_t csize_lc1 = sl+sc1;
             size_t csize_c2r = sc2+sr;
             std::string oplist = "CABPQSH";
-            bool ifNC = determine_NCorCN_opH(oplist, oplist, csize_lc1, csize_c2r);
+            bool ifNC = determine_NCorCN_Ham(oplist, oplist, csize_lc1, csize_c2r);
             auto key1 = ifNC? "AP" : "PA";
             auto key2 = ifNC? "BQ" : "QB";
             std::cout << " (sl,sr,sc1,sc2)="

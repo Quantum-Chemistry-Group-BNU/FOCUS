@@ -27,7 +27,7 @@ namespace ctns{
          if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
          const size_t csize1 = lqops.cindex.size();
          const size_t csize2 = rqops.cindex.size();
-         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize1, csize2);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize1, csize2);
          const Tm scale = lqops.ifkr? 0.5 : 1.0;
          stensor3<Tm> Hwf;
          if(ifNC){
@@ -265,7 +265,7 @@ namespace ctns{
          const bool ifkr = lqops.ifkr;
          const size_t csize1 = lqops.cindex.size();
          const size_t csize2 = rqops.cindex.size();
-         const bool ifNC = determine_NCorCN_opH(lqops.oplist, rqops.oplist, csize1, csize2);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize1, csize2);
 
          Hx_functors<Tm> Hx_funs;
 

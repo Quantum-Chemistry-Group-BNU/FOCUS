@@ -32,7 +32,7 @@ namespace ctns{
          const int print_level = 1;
 
          renorm_tasks<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          // opC
          if(oplist.find('C') != std::string::npos){
@@ -143,7 +143,7 @@ namespace ctns{
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
             auto opH = symbolic_compxwf_opH<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
-                  ifkr, sorb, size, rank, ifdist1);
+                  int2e, ifkr, sorb, size, rank, ifdist1, ifdistc);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
                formulae.append(std::make_tuple('H', 0, opH));

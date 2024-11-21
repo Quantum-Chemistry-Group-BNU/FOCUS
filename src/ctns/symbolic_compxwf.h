@@ -764,21 +764,14 @@ namespace ctns{
             const std::string block2,
             const std::vector<int>& cindex1,
             const std::vector<int>& cindex2,
+            const integral::two_body<Tm>& int2e,
             const bool ifkr,
             const int sorb,
             const int size,
             const int rank,
-            const bool ifdist1){
+            const bool ifdist1,
+            const bool ifdistc){
          symbolic_task<Tm> formulae;
-         // for AP,BQ terms: to ensure the optimal scaling!
-         const bool ifNC = determine_NCorCN_opH(oplist1, oplist2, cindex1.size(), cindex2.size()); 
-         auto AP1 = ifNC? 'A' : 'P';
-         auto AP2 = ifNC? 'P' : 'A';
-         auto BQ1 = ifNC? 'B' : 'Q';
-         auto BQ2 = ifNC? 'Q' : 'B';
-         const auto& cindex = ifNC? cindex1 : cindex2;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, sorb);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, sorb);
          //
          // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
          //   = H1 + H2
@@ -822,6 +815,15 @@ namespace ctns{
             }
          }
          // Two-index operators
+         // for AP,BQ terms: to ensure the optimal scaling!
+         const bool ifNC = determine_NCorCN_Ham(oplist1, oplist2, cindex1.size(), cindex2.size()); 
+         auto AP1 = ifNC? 'A' : 'P';
+         auto AP2 = ifNC? 'P' : 'A';
+         auto BQ1 = ifNC? 'B' : 'Q';
+         auto BQ2 = ifNC? 'Q' : 'B';
+         const auto& cindex = ifNC? cindex1 : cindex2;
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, sorb);
          // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
          for(const auto& index : aindex_dist){
             const double wt = ifkr? wfacAP(index) : 1.0;

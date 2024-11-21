@@ -591,7 +591,7 @@ namespace ctns{
          // for AP,BQ terms
          const auto& cindex1 = qops1.cindex;
          const auto& cindex2 = qops2.cindex;
-         const bool ifNC = determine_NCorCN_opH(qops1.oplist, qops2.oplist, cindex1.size(), cindex2.size());
+         const bool ifNC = determine_NCorCN_Ham(qops1.oplist, qops2.oplist, cindex1.size(), cindex2.size());
          char AP1 = ifNC? 'A' : 'P';
          char AP2 = ifNC? 'P' : 'A';
          char BQ1 = ifNC? 'B' : 'Q';

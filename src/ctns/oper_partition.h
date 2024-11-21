@@ -7,7 +7,7 @@ namespace ctns{
       return oplist.find(key) != std::string::npos;
    }
 
-   inline bool determine_NCorCN_opH(const std::string oplist1,
+   inline bool determine_NCorCN_Ham(const std::string oplist1,
          const std::string oplist2,
          const size_t csize1,
          const size_t csize2){
