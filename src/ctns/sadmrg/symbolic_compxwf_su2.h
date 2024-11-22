@@ -7,7 +7,7 @@
 
 namespace ctns{
 
-   const bool debug_compxwf_su2 = true;
+   const bool debug_compxwf_su2 = false;
    extern const bool debug_compxwf_su2;
 
    //
