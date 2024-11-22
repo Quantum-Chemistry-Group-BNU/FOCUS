@@ -669,7 +669,7 @@ namespace ctns{
                   formulae.append(op12);
                }
             }
-         } 
+         }
          if(debug_compxwf_su2){
             tsize = formulae.size()-tsize;
             std::cout << "formula(two-index)=" << formula << " size=" << tsize 

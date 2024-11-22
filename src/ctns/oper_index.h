@@ -116,17 +116,24 @@ namespace ctns{
 
    // --- generate indices for A/B operators from cindex --- 
    inline std::vector<int> oper_index_opA(const std::vector<int>& cindex1, const bool& ifkr){
-      std::vector<int> aindex;
+      // ZL@2024/11/22 separate same-spin and opposite-spin pairs 
+      // for symbolic_compxwf_opS & opH [formula=2] which requires memory contiguous
+      std::vector<int> aindex, aindex2;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
             if(p1 < q1){ 
-               aindex.push_back( oper_pack(p1,q1) );
-               if(ifkr) aindex.push_back( oper_pack(p1,q1+1) );
+               if(p1%2 == q1%2){
+                  aindex.push_back( oper_pack(p1,q1) );
+               }else{
+                  aindex2.push_back( oper_pack(p1,q1) );
+               }
+               if(ifkr) aindex2.push_back( oper_pack(p1,q1+1) );
             }else if(p1 == q1){
-               if(ifkr) aindex.push_back( oper_pack(p1,p1+1) );
+               if(ifkr) aindex2.push_back( oper_pack(p1,p1+1) );
             }
          }
       }
+      std::copy(aindex2.begin(), aindex2.end(), std::back_inserter(aindex));
       assert(aindex.size() == oper_num_opA(cindex1.size(),ifkr));
       return aindex;
    }
@@ -137,21 +144,30 @@ namespace ctns{
    }
 
    inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr, const bool ifhermi=true){
-      std::vector<int> bindex;
+      std::vector<int> bindex, bindex2;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
             if(ifhermi){
                if(p1 <= q1){
-                  bindex.push_back( oper_pack(p1,q1) );
-                  if(ifkr) bindex.push_back( oper_pack(p1,q1+1) );
+                  if(p1%2 == q1%2){
+                     bindex.push_back( oper_pack(p1,q1) );
+                  }else{
+                     bindex2.push_back( oper_pack(p1,q1) );
+                  }
+                  if(ifkr) bindex2.push_back( oper_pack(p1,q1+1) );
                }
             }else{
                // ZL@20240906 for general case
-               bindex.push_back( oper_pack(p1,q1) );
-               if(ifkr) bindex.push_back( oper_pack(p1,q1+1) ); 
+               if(p1%2 == q1%2){
+                  bindex.push_back( oper_pack(p1,q1) );
+               }else{
+                  bindex2.push_back( oper_pack(p1,q1) );
+               }
+               if(ifkr) bindex2.push_back( oper_pack(p1,q1+1) ); 
             }
          }
       }
+      std::copy(bindex2.begin(), bindex2.end(), std::back_inserter(bindex));
       assert(bindex.size() == oper_num_opB(cindex1.size(),ifkr,ifhermi));
       return bindex;
    }
@@ -178,24 +194,25 @@ namespace ctns{
    // --- generate index for complementary operators: P,Q,S ---
    // tricky part: determine the storage pattern for Ppq for p,q in krest
    inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+      std::vector<int> index, index2;
       for(int kp : krest){
          int pa = 2*kp, pb = pa+1;
          for(int kq : krest){
             int qa = 2*kq, qb = qa+1;
             if(kp < kq){
                index.push_back(oper_pack(pa,qa)); // Paa 
-               index.push_back(oper_pack(pa,qb)); // Pab
+               index2.push_back(oper_pack(pa,qb)); // Pab
                if(!ifkr){
                   // since if kp<kq, pb<qa and pb<qb hold
-                  index.push_back(oper_pack(pb,qa));
+                  index2.push_back(oper_pack(pb,qa));
                   index.push_back(oper_pack(pb,qb));
                }
             }else if(kp == kq){
-               index.push_back(oper_pack(pa,pb)); // Pab 
+               index2.push_back(oper_pack(pa,pb)); // Pab 
             }
          } // kq
       } // kp
+      std::copy(index2.begin(), index2.end(), std::back_inserter(index));
       assert(index.size() == oper_num_opP(krest.size(),ifkr)); 
       return index;
    }
@@ -206,23 +223,24 @@ namespace ctns{
    }
 
    inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+      std::vector<int> index, index2;
       for(int kp : krest){
          int pa = 2*kp, pb = pa+1;
          for(int ks : krest){
             int sa = 2*ks, sb = sa+1;
             if(kp <= ks){ 
                index.push_back(oper_pack(pa,sa));
-               index.push_back(oper_pack(pa,sb));
+               index2.push_back(oper_pack(pa,sb));
                if(!ifkr){
                   // if kp=ks, QpApB is stored while QpBpA is redundant,
                   // because it can be related with QpApB using Hermiticity if bra=ket.
-                  if(kp != ks) index.push_back(oper_pack(pb,sa));
+                  if(kp != ks) index2.push_back(oper_pack(pb,sa));
                   index.push_back(oper_pack(pb,sb));
                }
             }
          } // ks
       } // kp
+      std::copy(index2.begin(), index2.end(), std::back_inserter(index));
       assert(index.size() == oper_num_opQ(krest.size(),ifkr));
       return index;
    }
@@ -233,12 +251,13 @@ namespace ctns{
    }
 
    inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+      std::vector<int> index, index2;
       for(int kp: krest){
          int pa = 2*kp, pb = pa+1;
          index.push_back(pa);
-         if(!ifkr) index.push_back(pb);
+         if(!ifkr) index2.push_back(pb);
       }
+      std::copy(index2.begin(), index2.end(), std::back_inserter(index));
       return index;
    }
    inline std::vector<int> oper_index_opC(const std::vector<int>& ksupp, const bool& ifkr){

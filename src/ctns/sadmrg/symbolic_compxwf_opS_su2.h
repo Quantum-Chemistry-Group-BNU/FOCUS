@@ -243,7 +243,7 @@ namespace ctns{
          }
       }
 
-   // sum_s as[1] sum_qr <pq2||s1r2> aq[2]^+ar[2]
+   // sum_s as[1] (sum_qr <pq2||s1r2> aq[2]^+ar[2])
    template <typename Tm>
       void symbolic_compxwf_opS4c_su2(const std::string block1,
             const std::string block2,

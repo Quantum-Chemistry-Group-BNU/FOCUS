@@ -264,7 +264,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = op0.size(); 
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dims for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -395,7 +394,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = op0.size(); 
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops

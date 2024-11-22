@@ -29,3 +29,4 @@ tmp
 src/python/backup/
 .vscode/settings.json
 docs/build
+rdm*.txt

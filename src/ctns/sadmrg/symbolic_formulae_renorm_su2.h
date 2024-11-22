@@ -259,6 +259,8 @@ namespace ctns{
          if(ifsave){
             std::cout << "\nSUMMARY:" << std::endl;
             rformulae.display("total");
+            qops1.print("qops1",2);
+            qops2.print("qops2",2);
             qops.print("qops",2);
             std::cout.rdbuf(backup); // restore cout's original streambuf
             file.close();

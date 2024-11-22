@@ -1,4 +1,12 @@
 
+ * Code optimization
+   - alg_renorm=4 占用内存过多
+   - decimation for su2 is not parallelized:
+      - using MPI
+      - using GPU
+         - cuSolver: svd
+         - cuSOlver: eig
+
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
