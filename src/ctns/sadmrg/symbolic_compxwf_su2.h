@@ -264,7 +264,7 @@ namespace ctns{
                << " outer3s=" << outer3s
                << std::endl;
          }
- 
+
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
          int formula4 = -1;
          bool exist2B = ifexistQ(oplist2,'B');
@@ -470,6 +470,7 @@ namespace ctns{
             I1_H2.ispins.push_back(std::make_tuple(0,0,0));
             formulae.append(I1_H2);
          }
+
          // One-index operators
          // 3. sum_p1 p1^+ Sp1^2 + h.c. 
          for(const auto& p1 : cindex1){
@@ -493,6 +494,7 @@ namespace ctns{
                formulae.append(S1C2);
             }
          }
+
          // Two-index operators
          int formula = 0;
          if(ifdistc and block1[0]=='l' and block2[0]=='c' and !ifexistQ(oplist1,'P')){ // lc 
@@ -541,7 +543,8 @@ namespace ctns{
                BQ.ispins.push_back(std::make_tuple(ts,ts,0));
                formulae.append(BQ);
             }
-         }else if(formula == 1){ // AL*PC = {AL*x}*AC[all are available for dot!]
+         }else if(formula == 1){ 
+            // AL*PC = {AL*x}*AC[all are available for dot!]
             auto aindex2 = oper_index_opA(cindex2, ifkr);
             auto bindex2 = oper_index_opB(cindex2, ifkr);
             auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, sorb);
@@ -605,7 +608,8 @@ namespace ctns{
                   formulae.append(op12);
                }
             }
-         }else if(formula == 2){ // PC*AR = AC*{x*AR}
+         }else if(formula == 2){ 
+            // PC*AR = AC*{x*AR}
             auto aindex1 = oper_index_opA(cindex1, ifkr);
             auto bindex1 = oper_index_opB(cindex1, ifkr);
             auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, sorb);

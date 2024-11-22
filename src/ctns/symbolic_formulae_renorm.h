@@ -262,7 +262,7 @@ namespace ctns{
             rformulae.sort(dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY:" << std::endl;
+            std::cout << "\nSUMMARY: superblock=" << superblock << std::endl;
             rformulae.display("total");
             qops1.print("qops1",2);
             qops2.print("qops2",2);

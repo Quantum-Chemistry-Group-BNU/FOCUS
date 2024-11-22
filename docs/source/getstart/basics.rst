@@ -26,6 +26,7 @@ A typical input file
 .. code-block::
 
    dtype 0
+   sorb 40
    nelec 30
    twom 0
    twos 0
@@ -71,9 +72,7 @@ A typical input file
    maxsweep 20
    maxcycle 2
    task_dmrg
-   alg_hvec 7
-   batchgemm 3
-   batchmem 5
+   alg_hvec 4
    alg_renorm 2
    $end
 
@@ -159,6 +158,14 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
          * =18: rintermediates [GPU + single]
          * =19: rintermediates [GPU + direct + single]
 
+* ``alg_hinter``: hintermediates (sum of operators), see ``preprocess_hinter.h``. Note that for direct algorithm (7,9,17,19), alg_hinter must be specified.
+
+   * =0: cpu axpy + openmp [work for alg_hvec=4,5,6,8] 
+   * =1: cpu batchgemv [work for alg_hvec=4,5,6,7,8,9]
+   * =2: gpu batchgemv [work for alg_hvec=16,17,18,19]
+
+* ``alg_rinter``: rintermediates (sum of operators), see ``preprocess_rinter.h``
+
 * ``alg_hcoper``: see ``preprocess_hmu.h``
 
    * =0: always contract op[c1/c2] - most general case
@@ -170,7 +177,21 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
    * =0: always contract op[c1/c2] - most general case
    * =1: the same with alg_hcoper, but in rmmtask there is no need to copy x, because in renorm psi* will contract with sigma
 
-* ``ioasync``: =0 (default: sequential)
+* ``batchhvec``: specifying options for hinter, gemm, reduction in batch GPU algorithm
+
+   * =2: magma (gemv/gemm)
+   * =3: cublas batch (gemv/gemm) 
+   * =4: cublas batch (gemv/gemm) + stream
+
+* ``batchrenorm``: specifying options for rinter, gemm, reduction in batch GPU algoirthm
+
+* ``ioasync``: =false (default: sequential)
+   
+* ``ifdist1``: distributed C*S terms for Hx
+
+* ``ifdistc``: whether to treat dot in dmrg specially 
+
+* ``ifab2pq``: switch from A,B to P,Q in renormalization
 
 Some keyworks useful for debugging
 ==================================
@@ -178,4 +199,31 @@ Some keyworks useful for debugging
 * ``maxbond``: stop the sweep after this bond and ``maxsweep``
 * ``save_formulae``: save formulae for Hx & renorm
 * ``save_mmtasks``: save mmtasks for checking
+
+Further examples
+****************
+
+Example for dmrg cpu
+====================
+
+.. code-block::
+
+   task_dmrg
+   alg_hvec 4
+   alg_renorm 4
+
+Example for dmrg gpu
+====================
+
+.. code-block::
+
+   task_dmrg
+   alg_hvec 19
+   alg_hinter 1
+   alg_coper 2
+   alg_renorm 19
+   alg_rinter 1
+   alg_roper 1
+   batchhvec 4 4 4
+   batchrenorm 4 4 4
 

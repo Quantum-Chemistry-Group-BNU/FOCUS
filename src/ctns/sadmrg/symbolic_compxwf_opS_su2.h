@@ -266,24 +266,28 @@ namespace ctns{
                int r2 = qr.second, kr = r2/2;
                int spin_q2 = q2%2, spin_r2 = r2%2;
                int ts = (spin_q2!=spin_r2)? 2 : 0;
+               double wqr = (kq==kr)? 0.5 : 1.0; 
                auto op2 = symbolic_oper(block2,'B',iqr);
                // sum_s <pq2||s1r2> as[1]
                if(ts == 0){
-                  double fac = 1.0/std::sqrt(2.0);
+                  double fac = 1.0/std::sqrt(2.0)*wqr;
                   top2s.sum(fac*get_vint2e_su2(int2e,ts,kp,kq,ks,kr), op2);
                }else{
-                  double fac = -std::sqrt(3.0/2.0);
+                  double fac = -std::sqrt(3.0/2.0)*wqr;
                   top2t.sum(fac*get_vint2e_su2(int2e,ts,kp,kq,ks,kr), op2);
                }
-               // Hermitian part: q2<->r2
-               if(kq == kr) continue;
+               // ZL@2024/11/24: we use this to ensure top2sH also include all B operators
+               // such that the memory for operators in (um_qr <pq2||s1r2> aq[2]^+ar[2])
+               // becomes contiguous and the batchgemv algorithm can be applied!
+               //// Hermitian part: q2<->r2
+               //if(kq == kr) continue;
                // We use [Brq]^k = (-1)^k*[Bqr]^k
                auto op2H = op2.H();
                if(ts == 0){
-                  double fac = 1.0/std::sqrt(2.0);
+                  double fac = 1.0/std::sqrt(2.0)*wqr;
                   top2sH.sum(fac*get_vint2e_su2(int2e,ts,kp,kr,ks,kq), op2H);
                }else{
-                  double fac = +std::sqrt(3.0/2.0);
+                  double fac = +std::sqrt(3.0/2.0)*wqr;
                   top2tH.sum(fac*get_vint2e_su2(int2e,ts,kp,kr,ks,kq), op2H);
                }
             }
@@ -307,7 +311,7 @@ namespace ctns{
                op12.ispins.push_back(std::make_tuple(1,2,1));
                formulae.append(op12);
             }
-         } // qa
+         } // sa
       }
 
    //------
@@ -539,24 +543,28 @@ namespace ctns{
                int q1 = qs.first , kq = q1/2, spin_q1 = q1%2;
                int s1 = qs.second, ks = s1/2, spin_s1 = s1%2;
                int ts = (spin_q1!=spin_s1)? 2 : 0;
+               double wqs = (kq==ks)? 0.5 : 1.0;
                auto op1 = symbolic_oper(block1,'B',iqs);
                // sum_r -<pq1||s1r2> ar[2]
                if(ts == 0){
-                  double fac = 1.0/std::sqrt(2.0);
+                  double fac = 1.0/std::sqrt(2.0)*wqs;
                   top1s.sum(fac*get_vint2e_su2(int2e,ts,kp,kq,kr,ks), op1);
                }else{
-                  double fac = std::sqrt(3.0/2.0);
+                  double fac = std::sqrt(3.0/2.0)*wqs;
                   top1t.sum(fac*get_vint2e_su2(int2e,ts,kp,kq,kr,ks), op1);
                }
-               // Hermitian part: q1<->s1
-               if(kq == ks) continue;
+               // ZL@2024/11/24: we use this to ensure top2sH also include all B operators
+               // such that the memory for operators in (um_qr <pq2||s1r2> aq[2]^+ar[2])
+               // becomes contiguous and the batchgemv algorithm can be applied!
+               //// Hermitian part: q1<->s1
+               //if(kq == ks) continue;
                // We use [Bsq]^k = (-1)^k*[Bqs]^k
                auto op1H = op1.H();
                if(ts == 0){
-                  double fac = 1.0/std::sqrt(2.0);
+                  double fac = 1.0/std::sqrt(2.0)*wqs;
                   top1sH.sum(fac*get_vint2e_su2(int2e,ts,kp,ks,kr,kq), op1H); // s<->q
                }else{
-                  double fac = -std::sqrt(3.0/2.0);
+                  double fac = -std::sqrt(3.0/2.0)*wqs;
                   top1tH.sum(fac*get_vint2e_su2(int2e,ts,kp,ks,kr,kq), op1H); // s<->q
                }
             }

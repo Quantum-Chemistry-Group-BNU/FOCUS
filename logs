@@ -599,18 +599,19 @@
             - su2 case [DONE@2024/11/20]
          - gpu version: [DONE@2024/11/20]
       - compare the performance with and without ifab2pq: minimize the no. of formula is needed!
+        note: thers is still room for further optimize the cost by classifying the resulting formulae and factorizing,
+        this will probably lead to a factor to 2 (?) acceleration [to be explored in future].
          - revise symbolic_compxwf_opS_su2 [DONE@2024/11/21]: +2*Ks (at most)
          - revise symbolic_compxwf_opH_su2 [DONE@2024/11/21]: +2
             ifab2pq=false,ifdistc=true : SUMMARY[twodot] ifNC=1 size=486 H1:11 H2:19 CS:54 SC:126 AP:108 BQ:168
             ifab2pq=true ,ifdistc=false: SUMMARY[twodot] ifNC=1 size=516 H1:13 H2:19 CS:54 SC:154 AP:108 BQ:168
-      
          - question: is the memory layout for {C,S,A,B,P,Q} contiguous after partition? or for rank-0?
+           note: batchgemv (alg_hinter=1,2) should be used carefully [!!!]
              - oper_index.h
- 
+             - revise S4c,S6c in symbolic_compxwf_opS_su2.h 
+
          - revise symbolic_compxwf_opS [DONE@2024/11/XX]
          - revise symbolic_compxwf_opH [DONE@2024/11/XX]
-      - note: thers is still room for further optimize the cost by classifying the resulting formulae and factorizing,
-        this will probably lead to a factor to 2 (?) acceleration [to be explored in future].
 
       - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
  

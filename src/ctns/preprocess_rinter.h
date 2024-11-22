@@ -26,8 +26,8 @@ namespace ctns{
             // initialization
             // alg_rinter:
             //    = 0 omp
-            //    = 1 cpu batch
-            //    = 2 gpu batch
+            //    = 1 cpu batch gemv
+            //    = 2 gpu batch gemv
             void init(const bool ifDirect,
                   const int alg_rinter,
                   const int batchgemv,

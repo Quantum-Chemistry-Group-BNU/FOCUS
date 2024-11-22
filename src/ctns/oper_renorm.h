@@ -219,6 +219,11 @@ namespace ctns{
          {
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
+            
+            //debug:
+            //opH.to_matrix().print("lzd opH",10);
+            //if(pcoord.first == 15) exit(1);
+            
             // NAN check
             for(int i=0; i<opH.size(); i++){
                double Hr = std::real(opH._data[i]);
