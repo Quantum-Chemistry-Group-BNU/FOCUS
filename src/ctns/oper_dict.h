@@ -245,13 +245,13 @@ namespace ctns{
          }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M'){
             std::vector<int> index2;
             if(key == 'A' || key == 'M'){
-               index2 = oper_index_opA(cindex, ifkr);
+               index2 = oper_index_opA(cindex, ifkr, isym);
             }else if(key == 'B'){
-               index2 = oper_index_opB(cindex, ifkr, ifhermi);
+               index2 = oper_index_opB(cindex, ifkr, isym, ifhermi);
             }else if(key == 'P'){
-               index2 = oper_index_opP(krest, ifkr);
+               index2 = oper_index_opP(krest, ifkr, isym);
             }else if(key == 'Q'){
-               index2 = oper_index_opQ(krest, ifkr);
+               index2 = oper_index_opQ(krest, ifkr, isym);
             }
             // distribute two index operators
             if(ifdist2 && mpisize > 1){

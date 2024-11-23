@@ -108,7 +108,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -184,7 +184,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -311,7 +311,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -450,7 +450,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -514,7 +514,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates

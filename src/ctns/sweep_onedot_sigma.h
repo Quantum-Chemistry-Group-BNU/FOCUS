@@ -262,6 +262,7 @@ namespace ctns{
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
+         const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr;
          const size_t csize1 = lqops.cindex.size();
          const size_t csize2 = rqops.cindex.size();
@@ -309,10 +310,10 @@ namespace ctns{
          }
          
          // Two-index terms:
-         auto aindex_dist = ifNC? oper_index_opA_dist(lqops.cindex, ifkr, size, rank, int2e.sorb) : 
-            oper_index_opA_dist(rqops.cindex, ifkr, size, rank, int2e.sorb);
-         auto bindex_dist = ifNC? oper_index_opB_dist(lqops.cindex, ifkr, size, rank, int2e.sorb) : 
-            oper_index_opB_dist(rqops.cindex, ifkr, size, rank, int2e.sorb);
+         auto aindex_dist = ifNC? oper_index_opA_dist(lqops.cindex, ifkr, isym, size, rank, int2e.sorb) : 
+            oper_index_opA_dist(rqops.cindex, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex_dist = ifNC? oper_index_opB_dist(lqops.cindex, ifkr, isym, size, rank, int2e.sorb) : 
+            oper_index_opB_dist(rqops.cindex, ifkr, isym, size, rank, int2e.sorb);
          auto afun = ifNC? &onedot_Hx_APnc<Tm> : &onedot_Hx_PAcn<Tm>;
          auto bfun = ifNC? &onedot_Hx_BQnc<Tm> : &onedot_Hx_QBcn<Tm>;
          auto alabel = ifNC? "APnc" : "PAcn";

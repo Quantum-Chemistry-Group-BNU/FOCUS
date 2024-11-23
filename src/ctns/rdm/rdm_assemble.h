@@ -328,8 +328,8 @@ namespace ctns{
          int cparity = op2parity.at(ckey);
          int rparity = op2parity.at(rkey);
          // generate full set of indices         
-         auto rindex2 = (rkey=='A' or rkey=='M')? oper_index_opA(rqops.cindex, rqops.ifkr) :
-            oper_index_opB(rqops.cindex, rqops.ifkr, rqops.ifhermi);
+         auto rindex2 = (rkey=='A' or rkey=='M')? oper_index_opA(rqops.cindex, rqops.ifkr, rqops.isym) :
+            oper_index_opB(rqops.cindex, rqops.ifkr, rqops.isym, rqops.ifhermi);
          for(const auto& rdx : rindex2){
             //---------------------------------------------------------
             // broadcast lop to all processors to perform contractions
@@ -419,8 +419,8 @@ namespace ctns{
          int cparity = op2parity.at(ckey);
          int rparity = op2parity.at(rkey);
          // generate full set of indices         
-         auto rindex2 = (rkey=='A' or rkey=='M')? oper_index_opA(rqops.cindex, rqops.ifkr) :
-            oper_index_opB(rqops.cindex, rqops.ifkr, rqops.ifhermi);
+         auto rindex2 = (rkey=='A' or rkey=='M')? oper_index_opA(rqops.cindex, rqops.ifkr, rqops.isym) :
+            oper_index_opB(rqops.cindex, rqops.ifkr, rqops.isym, rqops.ifhermi);
          for(const auto& rdx : rindex2){
             //---------------------------------------------------------
             // broadcast lop to all processors to perform contractions

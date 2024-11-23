@@ -28,6 +28,7 @@ namespace ctns{
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
+         const int isym = 3;
 
          renorm_tasks<Tm> formulae;
          size_t idx = 0;
@@ -87,7 +88,7 @@ namespace ctns{
          // opP
          if(oplist.find('P') != std::string::npos){
             counter["P"] = 0;	
-            auto pindex = oper_index_opP(krest, ifkr);    
+            auto pindex = oper_index_opP(krest, ifkr, isym);    
             for(const auto& index : pindex){
                int iproc = distribute2('P',ifkr,size,index,sorb);
                if(iproc == rank){
@@ -105,7 +106,7 @@ namespace ctns{
          // opQ
          if(oplist.find('Q') != std::string::npos){
             counter["Q"] = 0;
-            auto qindex = oper_index_opQ(krest, ifkr); 
+            auto qindex = oper_index_opQ(krest, ifkr, isym); 
             for(const auto& index : qindex){
                int iproc = distribute2('Q',ifkr,size,index,sorb);
                if(iproc == rank){

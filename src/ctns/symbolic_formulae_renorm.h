@@ -89,7 +89,7 @@ namespace ctns{
          // opP
          if(oplist.find('P') != std::string::npos){
             counter["P"] = 0;	
-            auto pindex = oper_index_opP(krest, ifkr);    
+            auto pindex = oper_index_opP(krest, ifkr, isym);
             for(const auto& index : pindex){
                int iproc = distribute2('P',ifkr,size,index,sorb);
                if(iproc == rank){
@@ -107,7 +107,7 @@ namespace ctns{
          // opQ
          if(oplist.find('Q') != std::string::npos){
             counter["Q"] = 0;
-            auto qindex = oper_index_opQ(krest, ifkr); 
+            auto qindex = oper_index_opQ(krest, ifkr, isym); 
             for(const auto& index : qindex){
                int iproc = distribute2('Q',ifkr,size,index,sorb);
                if(iproc == rank){
@@ -143,7 +143,7 @@ namespace ctns{
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
             auto opH = symbolic_compxwf_opH<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
-                  int2e, ifkr, sorb, size, rank, ifdist1, ifdistc);
+                  int2e, isym, ifkr, sorb, size, rank, ifdist1, ifdistc);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
                formulae.append(std::make_tuple('H', 0, opH));

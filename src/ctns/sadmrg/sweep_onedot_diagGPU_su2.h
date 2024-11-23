@@ -133,6 +133,7 @@ namespace ctns{
             double* dev_fac,
             const int size,
             const int rank){
+         const int isym = qops1.isym;
          const bool ifkr = qops1.ifkr;
          const size_t csize1 = qops1.cindex.size();
          const size_t csize2 = qops2.cindex.size();
@@ -140,7 +141,7 @@ namespace ctns{
          char BQ1 = ifNC? 'B' : 'Q';
          char BQ2 = ifNC? 'Q' : 'B';
          const auto& cindex = ifNC? qops1.cindex : qops2.cindex;
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, qops1.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, qops1.sorb);
          if(rank == 0 && debug_onedot_diag){ 
             std::cout << "onedot_diagGPU_BQ(su2) superblock=" << superblock
                << " ifNC=" << ifNC << " " << BQ1 << BQ2 

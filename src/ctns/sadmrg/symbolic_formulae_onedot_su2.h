@@ -28,8 +28,8 @@ namespace ctns{
          const int print_level = 1;
          const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
          const auto& cindex = ifNC? cindex_l : cindex_r;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, int2e.sorb);
 
          symbolic_task<Tm> formulae;
          size_t idx = 0;

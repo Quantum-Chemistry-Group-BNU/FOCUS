@@ -112,7 +112,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -194,7 +194,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -327,7 +327,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -463,7 +463,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -534,7 +534,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates

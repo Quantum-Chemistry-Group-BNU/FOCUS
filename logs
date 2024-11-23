@@ -607,11 +607,14 @@
             ifab2pq=true ,ifdistc=false: SUMMARY[twodot] ifNC=1 size=516 H1:13 H2:19 CS:54 SC:154 AP:108 BQ:168
          - question: is the memory layout for {C,S,A,B,P,Q} contiguous after partition? or for rank-0?
            note: batchgemv (alg_hinter=1,2) should be used carefully [!!!]
-             - oper_index.h
-             - revise S4c,S6c in symbolic_compxwf_opS_su2.h 
+            - oper_index.h
+            - revise S4c,S6c in symbolic_compxwf_opS_su2.h 
 
+         - revise symbolic_compxwf_opH [DONE@2024/11/23]
+            - oper_index.h [classify opA,B,P,Q by symmetry, 3 cases for opA, 4 cases for opB]
          - revise symbolic_compxwf_opS [DONE@2024/11/XX]
-         - revise symbolic_compxwf_opH [DONE@2024/11/XX]
+
+         - check the correctness of onedot algorithm
 
       - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
 	      - profiling: communication or xaxpy? change to GEMV?

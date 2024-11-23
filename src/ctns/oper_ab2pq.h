@@ -64,7 +64,7 @@ namespace ctns{
             tools::exit("error: oper_a2p does not support ifkr=true!");
          }else{
             // loop over all A
-            auto aindex = oper_index_opA(qops.cindex, qops.ifkr);
+            auto aindex = oper_index_opA(qops.cindex, qops.ifkr, qops.isym);
             auto pindex = qops2.oper_index_op('P');
             for(const auto& isr : aindex){
                auto iproc = distribute2('A',ifkr,size,isr,sorb);
@@ -112,7 +112,7 @@ namespace ctns{
          }else{
             assert(qops.ifhermi);
             // loop over all B
-            auto bindex = oper_index_opB(qops.cindex, qops.ifkr, qops.ifhermi);
+            auto bindex = oper_index_opB(qops.cindex, qops.ifkr, qops.isym, qops.ifhermi);
             auto qindex = qops2.oper_index_op('Q');
             for(const auto& iqr : bindex){
                auto iproc = distribute2('B',ifkr,size,iqr,sorb);
@@ -168,7 +168,7 @@ namespace ctns{
          const int sorb = qops.sorb;
          assert(ifkr);
          // loop over all A
-         auto aindex = oper_index_opA(qops.cindex, qops.ifkr);
+         auto aindex = oper_index_opA(qops.cindex, qops.ifkr, qops.isym);
          auto pindex = qops2.oper_index_op('P');
          for(const auto& isr : aindex){
             auto iproc = distribute2('A',ifkr,size,isr,sorb);
@@ -215,7 +215,7 @@ namespace ctns{
          assert(ifkr);
          assert(qops.ifhermi);
          // loop over all B
-         auto bindex = oper_index_opB(qops.cindex, qops.ifkr, qops.ifhermi);
+         auto bindex = oper_index_opB(qops.cindex, qops.ifkr, qops.isym, qops.ifhermi);
          auto qindex = qops2.oper_index_op('Q');
          for(const auto& iqr : bindex){
             auto iproc = distribute2('B',ifkr,size,iqr,sorb);

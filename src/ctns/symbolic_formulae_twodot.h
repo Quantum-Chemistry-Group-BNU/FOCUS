@@ -40,7 +40,7 @@ namespace ctns{
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1, 
-               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
             auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
@@ -55,7 +55,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r, 
-               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
             auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
@@ -376,7 +376,7 @@ namespace ctns{
          // Local terms:
          // H[lc1]
          auto Hlc1 = symbolic_compxwf_opH<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1, 
-               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = (Hlc1.size()>0)? 1 : 0;
          if(Hlc1.size() > 0){
             auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
@@ -389,7 +389,7 @@ namespace ctns{
          }
          // H[c2r]
          auto Hc2r = symbolic_compxwf_opH<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r, 
-               int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = (Hc2r.size()>0)? 1 : 0;
          if(Hc2r.size() > 0){
             auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");

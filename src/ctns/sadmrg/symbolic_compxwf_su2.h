@@ -178,6 +178,7 @@ namespace ctns{
             const bool ifdist1,
             const bool ifdistc){
          assert(ifkr == true);
+         const int isym = 3;
          symbolic_task<Tm> formulae;
          int p = index, kp = p/2;
          //
@@ -232,27 +233,27 @@ namespace ctns{
             if(ifdistc && block2[0]=='c'){ // lc
                if(iproc == rank){
                   // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+ 
-                  auto aindex2 = oper_index_opA(cindex2, ifkr);
+                  auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
                   assert(aindex2.size() == 1);
                   symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, int2e, p, 
                         aindex2, formulae);
                }
             }else{
                // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS3b_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex2_dist, formulae);
             }
          }else if(formula3 == 2){
             if(ifdistc && block2[0]=='c'){ // lc
                if(iproc == rank){
-                  auto aindex2 = oper_index_opA(cindex2, ifkr);
+                  auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
                   assert(aindex2.size() == 1);
                   symbolic_compxwf_opS3c_su2(block1, block2, cindex1, cindex2, int2e, p, 
                         aindex2, formulae);
                }
             }else{
-               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS3c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex2_dist, formulae);
             }
@@ -288,12 +289,12 @@ namespace ctns{
             if(ifdistc && block2[0]=='c'){ // lc
                if(iproc == rank){
                   // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-                  auto bindex2 = oper_index_opB(cindex2, ifkr);
+                  auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
                   symbolic_compxwf_opS4b_su2(block1, block2, cindex1, cindex2, int2e, p,
                         bindex2, formulae);
                }
             }else{
-               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS4b_su2(block1, block2, cindex1, cindex2, int2e, p, 
                         bindex2_dist, formulae);
             }
@@ -301,12 +302,12 @@ namespace ctns{
             if(ifdistc && block2[0]=='c'){ // lc
                if(iproc == rank){
                   // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-                  auto bindex2 = oper_index_opB(cindex2, ifkr);
+                  auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
                   symbolic_compxwf_opS4c_su2(block1, block2, cindex1, cindex2, int2e, p,
                         bindex2, formulae);
                }
             }else{
-               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb);
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS4c_su2(block1, block2, cindex1, cindex2, int2e, p, 
                         bindex2_dist, formulae);
             }
@@ -342,26 +343,26 @@ namespace ctns{
             if(ifdistc && block1[0]=='c'){ // cr
                if(iproc == rank){
                   // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-                  auto aindex1 = oper_index_opA(cindex1, ifkr);
+                  auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
                   assert(aindex1.size() == 1);
                   symbolic_compxwf_opS5b_su2(block1, block2, cindex1, cindex2, int2e, p,
                         aindex1, formulae);
                }
             }else{
-               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS5b_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex1_dist, formulae);
             }
          }else if(formula5 == 2){
             if(ifdistc && block1[0]=='c'){ // cr
                if(iproc == rank){
-                  auto aindex1 = oper_index_opA(cindex1, ifkr);
+                  auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
                   assert(aindex1.size() == 1);
                   symbolic_compxwf_opS5c_su2(block1, block2, cindex1, cindex2, int2e, p,
                         aindex1, formulae);
                }
             }else{
-               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS5c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      aindex1_dist, formulae);
             }
@@ -397,12 +398,12 @@ namespace ctns{
             if(ifdistc && block1[0]=='c'){ // cr
                if(iproc == rank){
                   // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-                  auto bindex1 = oper_index_opB(cindex1, ifkr);
+                  auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
                   symbolic_compxwf_opS6b_su2(block1, block2, cindex1, cindex2, int2e, p,
                         bindex1, formulae);
                }
             }else{
-               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS6b_su2(block1, block2, cindex1, cindex2, int2e, p,
                      bindex1_dist, formulae);
             }
@@ -410,12 +411,12 @@ namespace ctns{
             if(ifdistc && block1[0]=='c'){ // cr
                if(iproc == rank){
                   // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-                  auto bindex1 = oper_index_opB(cindex1, ifkr);
+                  auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
                   symbolic_compxwf_opS6c_su2(block1, block2, cindex1, cindex2, int2e, p,
                         bindex1, formulae);
                }
             }else{
-               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
                symbolic_compxwf_opS6c_su2(block1, block2, cindex1, cindex2, int2e, p,
                      bindex1_dist, formulae);
             }
@@ -446,6 +447,7 @@ namespace ctns{
             const bool ifdist1,
             const bool ifdistc){
          assert(ifkr == true);
+         const int isym = 3;
          symbolic_task<Tm> formulae;
          //
          // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
@@ -513,8 +515,8 @@ namespace ctns{
             auto BQ1 = ifNC? 'B' : 'Q';
             auto BQ2 = ifNC? 'Q' : 'B';
             const auto& cindex = ifNC? cindex1 : cindex2;
-            auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, sorb);
-            auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, sorb);
+            auto aindex_dist = oper_index_opA_dist(cindex, ifkr, isym, size, rank, sorb);
+            auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, sorb);
             // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
             for(const auto& index : aindex_dist){
                auto pr = oper_unpack(index);
@@ -545,10 +547,10 @@ namespace ctns{
             }
          }else if(formula == 1){ 
             // AL*PC = {AL*x}*AC[all are available for dot!]
-            auto aindex2 = oper_index_opA(cindex2, ifkr);
-            auto bindex2 = oper_index_opB(cindex2, ifkr);
-            auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, sorb);
-            auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, sorb);
+            auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
+            auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
+            auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, sorb);
+            auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, sorb);
             for(const auto& isr : aindex2){
                auto sr = oper_unpack(isr); // sr [Abar_sr]^0
                int s2 = sr.first, ks = s2/2, spin_s = s2%2;
@@ -610,10 +612,10 @@ namespace ctns{
             }
          }else if(formula == 2){ 
             // PC*AR = AC*{x*AR}
-            auto aindex1 = oper_index_opA(cindex1, ifkr);
-            auto bindex1 = oper_index_opB(cindex1, ifkr);
-            auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, sorb);
-            auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, sorb);
+            auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
+            auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
+            auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, sorb);
+            auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, sorb);
             for(const auto& isr : aindex1){
                auto sr = oper_unpack(isr); // sr [Abar_sr]^0
                int s2 = sr.first, ks = s2/2, spin_s = s2%2;

@@ -145,10 +145,10 @@ namespace ctns{
             }
             auto cindex = oper_index_opC(ksupp, ifkr);
             auto sindex = oper_index_opS(krest, ifkr);
-            auto aindex = oper_index_opA(cindex, ifkr);
-            auto bindex = oper_index_opB(cindex, ifkr);
-            auto pindex = oper_index_opP(krest, ifkr); 
-            auto qindex = oper_index_opQ(krest, ifkr);
+            auto aindex = oper_index_opA(cindex, ifkr, isym);
+            auto bindex = oper_index_opB(cindex, ifkr, isym);
+            auto pindex = oper_index_opP(krest, ifkr, isym);
+            auto qindex = oper_index_opQ(krest, ifkr, isym);
             std::cout << " renormalized operators: C:" << cindex.size() 
                << " S:" << sindex.size()
                << " A:" << aindex.size()
