@@ -275,7 +275,7 @@ else ifeq ($(strip $(machine)), jiageng)
    endif
 
 else ifeq ($(strip $(machine)), a800_xiyun)
-   CUDA_DIR= ${CUDADIR}
+   CUDA_DIR= ${CUDA_ROOT}
    MAGMA_DIR = /storage/FOCUS/extlibs/magma-2.8.0
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include -DGEMMGROUPED
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
