@@ -614,4 +614,5 @@
          - revise symbolic_compxwf_opH [DONE@2024/11/XX]
 
       - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
- 
+	 - optimize oper_ab2pq [use gpu to perform communication?]
+
