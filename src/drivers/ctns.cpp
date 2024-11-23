@@ -246,11 +246,11 @@ void CTNS(const input::schedule& schd){
          // save results
          if(rank == 0){
             if(rdm1.size()>0 or rdm2.size()>0) std::cout << "\nsave results for rdms:" << std::endl;
-            if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
-            if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm1.size()>0) rdm1.save_txt(schd.scratch+"/rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm2.size()>0) rdm2.save_txt(schd.scratch+"/rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
             if(rdm1.size()>0){
                auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
-               natorbs.save_txt("natorbs", schd.ctns.outprec);
+               natorbs.save_txt(schd.scratch+"/natorbs", schd.ctns.outprec);
             }
          }
       } // prop

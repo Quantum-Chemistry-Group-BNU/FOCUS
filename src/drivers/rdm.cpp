@@ -651,23 +651,27 @@ void RDM(const input::schedule& schd){
       } // rank-0
    } // rdm3
 
-   // save results
+   //-----------
+   // save rdms
+   //-----------
    if(rank == 0 and is_same){
       if(rdm1.size()>0 or rdm2.size()>0 or rdm3.size()>0){
          std::cout << "\nsave results for rdms:" << std::endl;
       }
       // save text
-      if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
-      if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
-      if(rdm3.size()>0) rdm3.save_txt("rdm3mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm1.size()>0) rdm1.save_txt(schd.scratch+"/rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm2.size()>0) rdm2.save_txt(schd.scratch+"/rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+      if(rdm3.size()>0) rdm3.save_txt(schd.scratch+"/rdm3mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
       // compute natural orbitals
       if(rdm1.size()>0){
          auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
-         natorbs.save_txt("natorbs", schd.ctns.outprec);
+         natorbs.save_txt(schd.scratch+"/natorbs", schd.ctns.outprec);
       }
    }
 
-   // 4: dsrg-mrpt2
+   //------------
+   // dsrg-mrpt2
+   //------------
    if(tools::is_in_vector(schd.ctns.task_prop,"mrpt2")){
       // create scratch
       auto scratch = schd.scratch+"/sweep";

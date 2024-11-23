@@ -49,7 +49,7 @@ void SCI(const input::schedule& schd){
       int k2 = k*(k-1)/2;
       linalg::matrix<Tm> rdm1(k,k), rdm2(k2,k2);
       assert(schd.ci.iroot < nroots and schd.ci.jroot < nroots);
-      fci::get_rdm12(sci_space, vs, schd.ci.iroot, schd.ci.jroot, int2e, int1e, ecore, rdm1, rdm2);
+      fci::get_rdm12(sci_space, vs, schd.ci.iroot, schd.ci.jroot, int2e, int1e, ecore, rdm1, rdm2, schd.scratch);
    }
   
    // pt2 for single root
