@@ -1,5 +1,9 @@
 
  * Code optimization
+   - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
+	   - profiling: communication or xaxpy? change to GEMV?
+      - adjust the switch position via a function? 
+      - optimize oper_ab2pq [use gpu to perform communication?]
    - alg_renorm=4 占用内存过多
    - decimation for su2 is not parallelized:
       - using MPI
