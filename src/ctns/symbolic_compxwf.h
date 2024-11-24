@@ -172,7 +172,7 @@ namespace ctns{
          int kA2 = kc2*(kc2-1)/2;
          int kB2 = kc2*kc2;
          
-         // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	  
+         // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	(see eq109 in R_CTNS.pdf) 
          int formula3 = get_formula_opS3(oplist2, kc1, kA2);
          auto size3 = formulae.size();
          if(formula3 == 0){ 
@@ -210,7 +210,7 @@ namespace ctns{
             std::cout << "formula3=" << formula3 << " size=" << size3 << std::endl;
          }
 
-         // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]
+         // 4. <pq2||s1r2> aq[2]^+ar[2]as[1] (see eq110 in R_CTNS.pdf)
          int formula4 = get_formula_opS4(oplist2, kc1, kB2);
          auto size4 = formulae.size(); 
          if(formula4 == 0){
@@ -249,7 +249,7 @@ namespace ctns{
             std::cout << "formula4=" << formula4 << " size=" << size << std::endl;
          }
 
-         // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
+         // 5. <pq2||s1r1> aq[2]^+ar[1]as[1] (see eq111 in R_CTNS.pdf)
          int formula5 = get_formula_opS5(oplist1, kc2, kA1);
          auto size5 = formulae.size();
          if(formula5 == 0){
@@ -288,7 +288,7 @@ namespace ctns{
             std::cout << "formula5=" << formula5 << " size=" << size5 << std::endl;
          }
 
-         // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
+         // 6. <pq1||s1r2> aq[1]^+ar[2]as[1] (see eq112 in R_CTNS.pdf) 
          int formula6 = get_formula_opS6(oplist1, kc2, kB1);
          auto size6 = formulae.size();
          if(formula6 == 0){
@@ -409,7 +409,7 @@ namespace ctns{
             const auto& cindex = ifNC? cindex1 : cindex2;
             auto aindex_dist = oper_index_opA_dist(cindex, ifkr, isym, size, rank, sorb);
             auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, sorb);
-            // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c.
+            // 5. Apq^1*Ppq^2 + h.c. / Prs^1+Ars^2+ + h.c. (see eq25 in R_CTNS.pdf)
             for(const auto& index : aindex_dist){
                const double wt = ifkr? wfacAP(index) : 1.0;
                auto op1 = symbolic_oper(block1,AP1,index);
