@@ -609,14 +609,14 @@
            note: batchgemv (alg_hinter=1,2) should be used carefully [!!!]
             - oper_index.h
             - revise S4c,S6c in symbolic_compxwf_opS_su2.h 
-
          - revise symbolic_compxwf_opH [DONE@2024/11/23]
             - oper_index.h [classify opA,B,P,Q by symmetry, 3 cases for opA, 4 cases for opB]
-         - revise symbolic_compxwf_opS [DONE@2024/11/XX]
+         - revise symbolic_compxwf_opS [DONE@2024/11/24]
+         - check the correctness of onedot algorithm and add examples
 
-         - check the correctness of onedot algorithm
 
       - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
 	      - profiling: communication or xaxpy? change to GEMV?
          - adjust the switch position via a function? 
          - optimize oper_ab2pq [use gpu to perform communication?]
+

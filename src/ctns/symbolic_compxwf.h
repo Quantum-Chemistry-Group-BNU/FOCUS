@@ -163,6 +163,7 @@ namespace ctns{
                   symbolic_oper(block2,'S',index));
             formulae.append(S2p);
          }
+
          // cross terms
          int kc1 = ifkr? 2*cindex1.size() : cindex1.size();
          int kA1 = kc1*(kc1-1)/2;
@@ -170,89 +171,160 @@ namespace ctns{
          int kc2 = ifkr? 2*cindex2.size() : cindex2.size();
          int kA2 = kc2*(kc2-1)/2;
          int kB2 = kc2*kc2;
-         // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
-         if(ifdistc && block2[0]=='c'){ // lc
-            if(iproc == rank){
-               // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
-               auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
-               symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     aindex2, formulae);
-            }
-         }else{
-            assert(ifexistQ(oplist2,'A') or ifexistQ(oplist2,'P'));
-            bool combine_two_index3 = ifexistQ(oplist2,'P') and ((ifexistQ(oplist2,'A') and kc1<=kA2) or !ifexistQ(oplist2,'A'));
-            if(combine_two_index3){
-               // sum_q aq^+[1]*Ppq[2]
-               symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, p, ifkr, 
-                     int2e.sorb, size, rank, formulae);
+         
+         // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	  
+         int formula3 = get_formula_opS3(oplist2, kc1, kA2);
+         auto size3 = formulae.size();
+         if(formula3 == 0){ 
+            symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula3 == 1){ 
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_sr (sum_q <pq1||s2r2> aq[1]^+) Asr[2]^+
+                  auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
+                  symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        aindex2, formulae);
+               }
             }else{
                auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
-               symbolic_compxwf_opS3a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+               symbolic_compxwf_opS3b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     aindex2_dist, formulae);
+            }
+         }else if(formula3 == 2){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_q aq[1]^+ (sum_sr <pq1||s2r2> Asr[2]^+)
+                  auto aindex2 = oper_index_opA(cindex2, ifkr, isym);
+                  symbolic_compxwf_opS3c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        aindex2, formulae);
+               }
+            }else{
+               auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
+               symbolic_compxwf_opS3c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      aindex2_dist, formulae);
             }
          }
-         // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
-         if(ifdistc && block2[0]=='c'){ // lc
-            if(iproc == rank){
-               // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
-               auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
-               symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     bindex2, formulae);
-            }
-         }else{ 
-            assert(ifexistQ(oplist2,'B') or ifexistQ(oplist2,'Q'));
-            bool combine_two_index4 = ifexistQ(oplist2,'Q') and ((ifexistQ(oplist2,'B') and kc1<=kB2) or !ifexistQ(oplist2,'B'));
-            if(combine_two_index4){
-               // sum_q aq[1]*Qpq[2]
-               symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, p, ifkr, 
-                     int2e.sorb, size, rank, formulae);
-            }else{
+         if(debug_compxwf){
+            size3 = formulae.size()-size3;
+            std::cout << "formula3=" << formula3 << " size=" << size3 << std::endl;
+         }
+
+         // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]
+         int formula4 = get_formula_opS4(oplist2, kc1, kB2);
+         auto size4 = formulae.size(); 
+         if(formula4 == 0){
+            // sum_q aq[1]*Qpq[2]
+            symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula4 == 1){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_qr (sum_s <pq2||s1r2> as[1]) aq[2]^+ar[2]
+                  auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
+                  symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        bindex2, formulae);
+               }
+            }else{ 
                auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
-               symbolic_compxwf_opS4a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+               symbolic_compxwf_opS4b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     bindex2_dist, formulae);
+            }
+         }else if(formula4 == 2){
+            if(ifdistc && block2[0]=='c'){ // lc
+               if(iproc == rank){
+                  // sum_s as[1] (sum_qr <pq2||s1r2> aq[2]^+ar[2])
+                  auto bindex2 = oper_index_opB(cindex2, ifkr, isym);
+                  symbolic_compxwf_opS4c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        bindex2, formulae);
+               }
+            }else{ 
+               auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
+               symbolic_compxwf_opS4c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      bindex2_dist, formulae);
             }
          }
+         if(debug_compxwf){
+            size4 = formulae.size()-size4;
+            std::cout << "formula4=" << formula4 << " size=" << size << std::endl;
+         }
+
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
-         if(ifdistc && block1[0]=='c'){ // cr
-            if(iproc == rank){
-               // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
-               auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
-               symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     aindex1, formulae);
-            }
-         }else{ 
-            assert(ifexistQ(oplist1,'A') or ifexistQ(oplist1,'P'));
-            bool combine_two_index5 = ifexistQ(oplist1,'P') and ((ifexistQ(oplist1,'A') and kc2<=kA1) or !ifexistQ(oplist1,'A'));
-            if(combine_two_index5){
-               // sum_q Ppq[1]*aq^+[2]
-               symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, p, ifkr, 
-                     int2e.sorb, size, rank, formulae);
-            }else{
+         int formula5 = get_formula_opS5(oplist1, kc2, kA1);
+         auto size5 = formulae.size();
+         if(formula5 == 0){
+            // sum_q Ppq[1]*aq^+[2]
+            symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula5 == 1){ 
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_sr Asr[1]^+ (sum_q <pq2||s1r1> aq[2]^+)
+                  auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
+                  symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        aindex1, formulae);
+               }
+            }else{ 
                auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
-               symbolic_compxwf_opS5a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+               symbolic_compxwf_opS5b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     aindex1_dist, formulae);
+            }
+         }else if(formula5 == 2){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_q (sum_sr Asr[1]^+ <pq2||s1r1>) aq[2]^+
+                  auto aindex1 = oper_index_opA(cindex1, ifkr, isym);
+                  symbolic_compxwf_opS5c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        aindex1, formulae);
+               }
+            }else{ 
+               auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
+               symbolic_compxwf_opS5c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      aindex1_dist, formulae);
             }
          }
+         if(debug_compxwf){
+            size5 = formulae.size()-size5;
+            std::cout << "formula5=" << formula5 << " size=" << size5 << std::endl;
+         }
+
          // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
-         if(ifdistc && block1[0]=='c'){ // cr
-            if(iproc == rank){
-               // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
-               auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
-               symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
-                     bindex1, formulae);
-            }
-         }else{
-            assert(ifexistQ(oplist1,'B') or ifexistQ(oplist1,'Q'));
-            bool combine_two_index6 = ifexistQ(oplist1,'Q') and ((ifexistQ(oplist1,'B') and kc2<=kB1) or !ifexistQ(oplist1,'B'));
-            if(combine_two_index6){
-               // sum_q Qpq^[1]*aq[2]
-               symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, p, ifkr, 
-                     int2e.sorb, size, rank, formulae);
+         int formula6 = get_formula_opS6(oplist1, kc2, kB1);
+         auto size6 = formulae.size();
+         if(formula6 == 0){
+            // sum_q Qpq^[1]*aq[2]
+            symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, p, ifkr, 
+                  int2e.sorb, size, rank, formulae);
+         }else if(formula6 == 1){ 
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_qs aq[1]^+as[1] (sum_r -<pq1||s1r2> ar[2])
+                  auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
+                  symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        bindex1, formulae);
+               }
             }else{
                auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
-               symbolic_compxwf_opS6a(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+               symbolic_compxwf_opS6b(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
                      bindex1_dist, formulae);
             }
+         }else if(formula6 == 2){
+            if(ifdistc && block1[0]=='c'){ // cr
+               if(iproc == rank){
+                  // sum_r (sum_qs aq[1]^+as[1] -<pq1||s1r2>) ar[2]
+                  auto bindex1 = oper_index_opB(cindex1, ifkr, isym);
+                  symbolic_compxwf_opS6c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                        bindex1, formulae);
+               }
+            }else{
+               auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
+               symbolic_compxwf_opS6c(block1, block2, cindex1, cindex2, int2e, p, isym, ifkr, 
+                     bindex1_dist, formulae);
+            }
+         }
+         if(debug_compxwf){
+            size6 = formulae.size()-size6;
+            std::cout << "formula6=" << formula6 << " size=" << size6 << std::endl;
          }
          return formulae;
       }

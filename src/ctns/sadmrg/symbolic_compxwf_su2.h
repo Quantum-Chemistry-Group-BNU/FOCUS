@@ -3,6 +3,7 @@
 
 #include "../symbolic_task.h"
 #include "../oper_partition.h"
+#include "../symbolic_compxwf_opS.h" 
 #include "symbolic_compxwf_opS_su2.h"
 
 namespace ctns{
@@ -208,19 +209,7 @@ namespace ctns{
          int k2 = cindex2.size(), kc2 = 2*k2, kA2 = k2*k2, kB2 = 2*kA2;
 
          // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	   
-         int formula3 = -1;
-         bool exist2A = ifexistQ(oplist2,'A');
-         bool exist2P = ifexistQ(oplist2,'P');
-         bool outer3s = kc1<=kA2; // outer sum is single index
-         if(exist2P and (!exist2A or (exist2A and outer3s))){
-            formula3 = 0;
-         }else if(exist2A and !outer3s){
-            formula3 = 1;
-         }else if(exist2A and !exist2P and outer3s){
-            formula3 = 2;
-         }else{
-            tools::exit("error: no such case for opS3");
-         }  
+         int formula3 = get_formula_opS3(oplist2, kc1, kA2);
          auto size3 = formulae.size();
          if(formula3 == 0){
             symbolic_compxwf_opS3a_su2(block1, block2, cindex1, cindex2, p, ifkr, 
@@ -260,26 +249,11 @@ namespace ctns{
          }
          if(debug_compxwf_su2){
             size3 = formulae.size()-size3;
-            std::cout << "formula3=" << formula3 << " size=" << size3 
-               << " exist2A,2P=" << exist2A << "," << exist2P
-               << " outer3s=" << outer3s
-               << std::endl;
+            std::cout << "formula3=" << formula3 << " size=" << size3 << std::endl;
          }
 
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1]    
-         int formula4 = -1;
-         bool exist2B = ifexistQ(oplist2,'B');
-         bool exist2Q = ifexistQ(oplist2,'Q');
-         bool outer4s = kc1<=kB2;
-         if(exist2Q and (!exist2B or (exist2B and outer4s))){
-            formula4 = 0;
-         }else if(exist2B and !outer4s){
-            formula4 = 1;
-         }else if(exist2B and !exist2Q and outer4s){
-            formula4 = 2;
-         }else{
-            tools::exit("error: no such case for opS4");
-         }
+         int formula4 = get_formula_opS4(oplist2, kc1, kB2);
          auto size4 = formulae.size(); 
          if(formula4 == 0){
             // sum_q aq[1]*Qpq[2]
@@ -314,26 +288,11 @@ namespace ctns{
          }
          if(debug_compxwf_su2){
             size4 = formulae.size()-size4;
-            std::cout << "formula4=" << formula4 << " size=" << size 
-               << " exist2B,2Q=" << exist2B << "," << exist2Q
-               << " outer4s=" << outer4s
-               << std::endl;
+            std::cout << "formula4=" << formula4 << " size=" << size << std::endl;
          }
 
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1]
-         int formula5 = -1;
-         bool exist1A = ifexistQ(oplist1,'A');
-         bool exist1P = ifexistQ(oplist1,'P');
-         bool outer5s = kc2<=kA1;
-         if(exist1P and (!exist1A or (exist1A and outer5s))){
-            formula5 = 0;
-         }else if(exist1A and !outer5s){
-            formula5 = 1;
-         }else if(exist1A and !exist1P and outer5s){
-            formula5 = 2;
-         }else{
-            tools::exit("error: no such case for op5");
-         }
+         int formula5 = get_formula_opS5(oplist1, kc2, kA1);
          auto size5 = formulae.size();
          if(formula5 == 0){
             // sum_q Ppq[1]*aq^+[2]
@@ -369,26 +328,11 @@ namespace ctns{
          }
          if(debug_compxwf_su2){
             size5 = formulae.size()-size5;
-            std::cout << "formula5=" << formula5 << " size=" << size5 
-               << " exist1A,1P=" << exist1A << "," << exist1P
-               << " outer5s=" << outer5s
-               << std::endl;
+            std::cout << "formula5=" << formula5 << " size=" << size5 << std::endl;
          }
 
-         // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]  
-         int formula6 = -1;
-         bool exist1B = ifexistQ(oplist1,'B');
-         bool exist1Q = ifexistQ(oplist1,'Q');
-         bool outer6s = kc2<=kB1;
-         if(exist1Q and (!exist1B or (exist1B and outer6s))){
-            formula6 = 0;
-         }else if(exist1B and !outer6s){
-            formula6 = 1;
-         }else if(exist1B and !exist1Q and outer6s){
-            formula6 = 2;
-         }else{
-            tools::exit("error: no such case for opS6");
-         }
+         // 6. <pq1||s1r2> aq[1]^+ar[2]as[1]
+         int formula6 = get_formula_opS6(oplist1, kc2, kB1);
          auto size6 = formulae.size();
          if(formula6 == 0){
             // sum_q Qpq^[1]*aq[2]
@@ -423,10 +367,7 @@ namespace ctns{
          }
          if(debug_compxwf_su2){
             size6 = formulae.size()-size6;
-            std::cout << "formula6=" << formula6 << " size=" << size6 
-               << " exist1B,1Q=" << exist1B << "," << exist1Q
-               << " outer6s=" << outer6s
-               << std::endl;
+            std::cout << "formula6=" << formula6 << " size=" << size6 << std::endl;
          }
          return formulae;
       }
