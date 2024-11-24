@@ -5,7 +5,36 @@
 
 namespace ctns{
 
-   // renormalize operators
+   // determine switch point from ab2pq
+   /*
+   (6+1)/2=3
+      0   1   2   3   4   5
+      *---*---*---X---*---*
+     rPQ rPQ rPQ rPQ rAB rAB [backward]
+     lAB lAB lPQ lPQ lPQ lPQ [forward]
+   3-1=2
+      0   1   2   3   4   5
+      *---*---X---X---*---*
+     rPQ rPQ rPQ rPQ rAB rAB
+     lAB lPQ lPQ lPQ lPQ lPQ
+   3-2=1
+   (7+1)/2=4
+      0   1   2   3   4   5   6
+      *---*---*---X---*---*---*
+     rPQ rPQ rPQ rPQ rPQ rAB rAB
+     lAB lAB lAB lPQ lPQ lPQ lPQ
+   4-1=3
+      0   1   2   3   4   5   6
+      *---*---X---X---*---*---*
+     rPQ rPQ rPQ rPQ rPQ rAB rAB
+     lAB lAB lPQ lPQ lPQ lPQ lPQ
+   4-2=2
+   */
+   inline int get_ab2pq_pos(const int nsite){
+      return (nsite+1)/2;
+   }
+
+   // determine which set of renormalize operators is to be used
    template <typename Qm, typename Tm>
       std::string oper_renorm_oplist(const std::string superblock,
             const comb<Qm,Tm>& icomb,
@@ -19,32 +48,9 @@ namespace ctns{
             assert(icomb.topo.ifmps);
             int nsite = icomb.get_nphysical();
             int psite = pcoord.first;
-            /*
-            (6+1)/2=3
-               0   1   2   3   4   5
-               *---*---*---X---*---*
-              rPQ rPQ rPQ rPQ rAB rAB [backward]
-              lAB lAB lPQ lPQ lPQ lPQ [forward]
-            3-1=2
-               0   1   2   3   4   5
-               *---*---X---X---*---*
-              rPQ rPQ rPQ rPQ rAB rAB
-              lAB lPQ lPQ lPQ lPQ lPQ
-            3-2=1
-            (7+1)/2=4
-               0   1   2   3   4   5   6
-               *---*---*---X---*---*---*
-              rPQ rPQ rPQ rPQ rPQ rAB rAB
-              lAB lAB lAB lPQ lPQ lPQ lPQ
-            4-1=3
-               0   1   2   3   4   5   6
-               *---*---X---X---*---*---*
-              rPQ rPQ rPQ rPQ rPQ rAB rAB
-              lAB lAB lPQ lPQ lPQ lPQ lPQ
-            4-2=2
-            */
-            bool ifAB = (superblock=="cr" and psite>=(nsite+1)/2) or
-                        (superblock=="lc" and psite<=(nsite+1)/2-ndots);
+            int pos = get_ab2pq_pos(nsite);
+            bool ifAB = (superblock=="cr" and psite>=pos) or
+                        (superblock=="lc" and psite<=pos-ndots);
             oplist += (ifAB? "AB" : "PQ");
          }
          return oplist;
@@ -55,7 +61,11 @@ namespace ctns{
       void oper_a2p(const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
-            qoper_dict<Qm::ifabelian,Tm>& qops2){
+            qoper_dict<Qm::ifabelian,Tm>& qops2,
+            double& tcomm,
+            double& tcomp){
+         tcomm = 0.0;
+         tcomp = 0.0;
          const bool ifkr = Qm::ifkr;
          const int size = qops.mpisize;
          const int rank = qops.mpirank;
@@ -79,9 +89,15 @@ namespace ctns{
                   linalg::xcopy(optmp.size(), optmp.data(), opCrs.data());
                }
 #ifndef SERIAL
-               if(size > 1) mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
+               if(size > 1){
+                  auto t0 = tools::get_time();
+                  mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
+                  auto t1 = tools::get_time();
+                  tcomm += tools::get_duration(t1-t0);
+               }
 #endif
                // loop over all opP indices via openmp
+               auto t0 = tools::get_time();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -94,7 +110,9 @@ namespace ctns{
                   if(opCrs.info.sym != opP.info.sym) continue;
                   linalg::xaxpy(opP.size(), int2e.get(p,q,s,r), opCrs.data(), opP.data()); 
                }
-            }
+               auto t1 = tools::get_time();
+               tcomp += tools::get_duration(t1-t0);
+            } // isr
          } // ifkr
       }
 
@@ -102,7 +120,11 @@ namespace ctns{
       void oper_b2q(const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
-            qoper_dict<Qm::ifabelian,Tm>& qops2){
+            qoper_dict<Qm::ifabelian,Tm>& qops2,
+            double& tcomm,
+            double& tcomp){
+         tcomm = 0.0;
+         tcomp = 0.0;
          const bool ifkr = Qm::ifkr;
          const int size = qops.mpisize;
          const int rank = qops.mpirank;
@@ -131,11 +153,15 @@ namespace ctns{
                }
 #ifndef SERIAL
                if(size > 1){
+                  auto t0 = tools::get_time();
                   mpi_wrapper::broadcast(icomb.world, opBqr, iproc);
                   mpi_wrapper::broadcast(icomb.world, opBrq, iproc);
+                  auto t1 = tools::get_time();
+                  tcomm += tools::get_duration(t1-t0);
                }
 #endif
                // loop over all opQ indices via openmp
+               auto t0 = tools::get_time();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -152,7 +178,9 @@ namespace ctns{
                      linalg::xaxpy(opQ.size(), int2e.get(p,r,s,q), opBrq.data(), opQ.data());
                   }
                }
-            }
+               auto t1 = tools::get_time();
+               tcomp += tools::get_duration(t1-t0);
+            } // iqr
          } // ifkr
       }
 
@@ -161,7 +189,11 @@ namespace ctns{
       void oper_a2p(const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
-            qoper_dict<Qm::ifabelian,Tm>& qops2){
+            qoper_dict<Qm::ifabelian,Tm>& qops2,
+            double& tcomm,
+            double& tcomp){
+         tcomm = 0.0;
+         tcomp = 0.0;
          const bool ifkr = Qm::ifkr;
          const int size = qops.mpisize;
          const int rank = qops.mpirank;
@@ -183,9 +215,15 @@ namespace ctns{
                linalg::xcopy(optmp.size(), optmp.data(), opCrs.data());
             }
 #ifndef SERIAL
-            if(size > 1) mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
+            if(size > 1){
+               auto t0 = tools::get_time();
+               mpi_wrapper::broadcast(icomb.world, opCrs, iproc);
+               auto t1 = tools::get_time();
+               tcomm += tools::get_duration(t1-t0);
+            }
 #endif
             // loop over all opP indices via openmp
+            auto t0 = tools::get_time();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -200,14 +238,20 @@ namespace ctns{
                Tm fac = get_xint2e_su2(int2e,ts,kp,kq,ks,kr);
                linalg::xaxpy(opP.size(), fac, opCrs.data(), opP.data()); 
             }
-         }
+            auto t1 = tools::get_time();
+            tcomp += tools::get_duration(t1-t0);
+         } // isr
       }
 
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       void oper_b2q(const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
-            qoper_dict<Qm::ifabelian,Tm>& qops2){
+            qoper_dict<Qm::ifabelian,Tm>& qops2,
+            double& tcomm,
+            double& tcomp){
+         tcomm = 0.0;
+         tcomp = 0.0;
          const bool ifkr = Qm::ifkr;
          const int size = qops.mpisize;
          const int rank = qops.mpirank;
@@ -234,11 +278,15 @@ namespace ctns{
             }
 #ifndef SERIAL
             if(size > 1){
+               auto t0 = tools::get_time();
                mpi_wrapper::broadcast(icomb.world, opBqr, iproc);
                mpi_wrapper::broadcast(icomb.world, opBrq, iproc);
+               auto t1 = tools::get_time();
+               tcomm += tools::get_duration(t1-t0);
             }
 #endif
             // loop over all opQ indices via openmp
+            auto t0 = tools::get_time();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -259,7 +307,9 @@ namespace ctns{
                   linalg::xaxpy(opQ.size(), fac, opBrq.data(), opQ.data());
                }
             }
-         }
+            auto t1 = tools::get_time();
+            tcomp += tools::get_duration(t1-t0);
+         } // iqr
       }
 
    template <typename Qm, typename Tm>
@@ -278,8 +328,9 @@ namespace ctns{
          assert(icomb.topo.ifmps);
          int nsite = icomb.get_nphysical();
          int psite = pcoord.first;
-         bool ab2pq = (superblock=="cr" and psite==(nsite+1)/2) or // determine switch point
-                      (superblock=="lc" and psite==(nsite+1)/2-ndots); // -2 for twodot case 
+         int pos = get_ab2pq_pos(nsite);
+         bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
+                      (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
          int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
@@ -321,11 +372,13 @@ namespace ctns{
          auto tb = tools::get_time();
 
          // 2. transform A to P
-         oper_a2p(icomb, int2e, qops, qops2);
+         double tp_comm, tp_comp;
+         oper_a2p(icomb, int2e, qops, qops2, tp_comm, tp_comp);
          auto tc = tools::get_time();
 
          // 3. transform B to Q
-         oper_b2q(icomb, int2e, qops, qops2);
+         double tq_comm, tq_comp;
+         oper_b2q(icomb, int2e, qops, qops2, tq_comm, tq_comp);
          auto td = tools::get_time();
 
          // 4. to gpu (if necessary)
@@ -345,13 +398,23 @@ namespace ctns{
 
          if(debug){
             auto t1 = tools::get_time();
+            double tinit = tools::get_duration(ta-t0);
+            double tcomm = tools::get_duration(tb-ta);
+            double tp = tools::get_duration(tc-tb);
+            double tq = tools::get_duration(td-tc);
+            double tgpu = tools::get_duration(te-td);
+            double tmove = tools::get_duration(t1-te);
             std::cout << "----- TIMING FOR oper_ab2pq : " << tools::get_duration(t1-t0) << " S"
-               << " T(init/copyCSH/opP/opQ/to_gpu/move)=" << tools::get_duration(ta-t0) << "," 
-               << tools::get_duration(tb-ta) << ","
-               << tools::get_duration(tc-tb) << ","
-               << tools::get_duration(td-tc) << ","
-               << tools::get_duration(te-td) << ","
-               << tools::get_duration(t1-te) << " -----"
+               << " T(init/copyCSH/opP/opQ/to_gpu/move)=" << tinit << "," 
+               << tcomm << "," << tp << "," << tq << "," << tgpu << "," << tmove << " -----"
+               << std::endl;
+            double tp_rest = tp - tp_comm - tp_comp;
+            std::cout << "tp[tot,comm,comp,rest]=" << tp << ","
+               << tp_comm << "," << tp_comp << tp_rest 
+               << std::endl;
+            double tq_rest = tq - tq_comm - tq_comp;
+            std::cout << "tq[tot,comm,comp,rest]=" << tq << ","
+               << tq_comm << "," << tq_comp << tq_rest
                << std::endl;
          }
       }
