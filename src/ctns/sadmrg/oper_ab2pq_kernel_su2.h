@@ -99,6 +99,9 @@ namespace ctns{
                if(iproc == rank){
                   auto t0 = tools::get_time();
                   auto aindex = qops.oper_index_op('A');
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
                   for(int idx=0; idx<aindex.size(); idx++){
                      auto isr = aindex[idx];
                      auto optmp = qops('A').at(isr).H(true);
