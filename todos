@@ -1,15 +1,24 @@
 
  * Code optimization
+
    - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
 	   - profiling: communication or xaxpy? change to GEMV?
       - adjust the switch position via a function? 
       - optimize oper_ab2pq [use gpu to perform communication?]
+      - better management of cpu&gpu memory usage
+      - scale up the present algorithm to fe8s7 with D>5000 on a800_xiyun [10TB] !!!
+      - scale up the present algorithm to fe8s7 with D>10000 on jiageng [50TB] !!!
+
    - alg_renorm=4 占用内存过多
+
    - decimation for su2 is not parallelized:
       - using MPI
       - using GPU
          - cuSolver: svd
          - cuSOlver: eig
+      
+   - Reach D>20000 with more GPUs?
+
 
 ### 2025 DMRG[RDM(SU2)] ###
 
@@ -47,7 +56,7 @@
          - classify l,r operators by symmetry
          - batched dgemv operation for assembling?
       - compare different options for alg_renorm and alg_rdm
-      - profiling for FeMoCo with D>=8000
+      - profiling for FeMoCo with D>=8000 for RDMs
          - /public/home/bnulizdtest/tests/femoco/mpi8n2
          - memory issue for openmp?
       - optimize IO (prefetch?)

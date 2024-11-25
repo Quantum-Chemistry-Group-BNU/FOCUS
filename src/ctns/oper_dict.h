@@ -124,6 +124,8 @@ namespace ctns{
             std::vector<int> oper_index_op(const char key) const;
             // symmetry of op
             qsym get_qsym_op(const char key, const int idx) const;
+            // return qindexmap for certain type of op
+            qindexmap oper_index_opmap(const char key) const;
             // access
             const qoper_map<ifab,Tm>& operator()(const char key) const{
                return _opdict.at(key);
@@ -131,9 +133,17 @@ namespace ctns{
             qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
             }
+            const qindexmap& get_qindexmap(const char key) const{
+               return _indexmap.at(key);
+            }
             // check existence
             bool ifexist(const char key) const{
                return _opdict.find(key) != _opdict.end();
+            }
+            // start offset
+            size_t start_offset(const char key) const{
+               int start_index = _opdict.at(key).begin()->first;
+               return _offset.at(std::make_pair(key,start_index));
             }
             // helpers
             size_t size() const{ return _size; };
@@ -154,6 +164,9 @@ namespace ctns{
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,qoper_map<ifab,Tm>> _opdict;
+             
+            std::map<char,qindexmap> _indexmap; // should be put into move?
+            
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
@@ -330,6 +343,7 @@ namespace ctns{
                auto sym_op = this->get_qsym_op(key,idx);
                // only compute size 
                _opdict[key][idx].init(sym_op, qbra, qket, {1,0}, false);
+               _indexmap[key][sym_op].push_back(idx);
                size_t sz = _opdict[key][idx].size();
                _offset[std::make_pair(key,idx)] = _size;
                _size += sz;
