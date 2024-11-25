@@ -78,10 +78,8 @@ namespace ctns{
 
             // construct qmap for {opPpq} on current process
             const auto& pmap = qops2.get_qindexmap('P');
-
             // loop over rank
             for(int iproc=0; iproc<size; iproc++){
-
                // broadcast {opCrs} for given sym from iproc
                qoper_dict<Qm::ifabelian,Tm> qops_tmp;
                qops_tmp.sorb = qops.sorb;

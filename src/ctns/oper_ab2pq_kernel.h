@@ -17,8 +17,10 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
+         double tadjt = 0.0;
          tcomm = 0.0;
          tcomp = 0.0;
+         auto t_start = tools::get_time();
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
          if(ifkr){
@@ -37,9 +39,12 @@ namespace ctns{
                   // bcast A to all processors
                   stensor2<Tm> opCrs;               
                   if(iproc == rank){
+                     auto t0 = tools::get_time();
                      auto optmp = qops('A').at(isr).H(); 
                      opCrs.init(optmp.info);
                      linalg::xcopy(optmp.size(), optmp.data(), opCrs.data());
+                     auto t1 = tools::get_time();
+                     tadjt += tools::get_duration(t1-t0);
                   }
 #ifndef SERIAL
                   if(size > 1){
@@ -70,17 +75,95 @@ namespace ctns{
             }else if(alg_ab2pq == 1){
 
                // construct qmap for {opPpq} on current process
-               qops2.print("qops2",2);
                const auto& pmap = qops2.get_qindexmap('P');
-               for(const auto& pr : pmap){
-                  std::cout << "pr.sym=" << pr.first << " size=" << pr.second.size() << std::endl;
-                  tools::print_vector(pr.second,"index");
-               }
-               exit(1);
-
-               tools::exit("not implemented yet");
+               // loop over rank
+               for(int iproc=0; iproc<size; iproc++){
+                  // broadcast {opCrs} for given sym from iproc
+                  qoper_dict<Qm::ifabelian,Tm> qops_tmp;
+                  qops_tmp.sorb = qops.sorb;
+                  qops_tmp.isym = qops.isym;
+                  qops_tmp.ifkr = qops.ifkr;
+                  qops_tmp.cindex = qops.cindex;
+                  qops_tmp.krest = qops.krest;
+                  qops_tmp.qbra = qops.qbra;
+                  qops_tmp.qket = qops.qket;
+                  qops_tmp.oplist = "M";
+                  qops_tmp.mpisize = size;
+                  qops_tmp.mpirank = iproc; // not rank
+                  qops_tmp.ifdist2 = true;
+                  qops_tmp.init(true);
+                  if(iproc == rank){
+                     auto t0 = tools::get_time();
+                     auto aindex = qops.oper_index_op('A');
+                     for(int idx=0; idx<aindex.size(); idx++){
+                        auto isr = aindex[idx];
+                        auto optmp = qops('A').at(isr).H();
+                        auto& opAbar = qops_tmp('M')[isr];
+                        assert(optmp.size() == opAbar.size()); 
+                        linalg::xcopy(optmp.size(), optmp.data(), opAbar.data());
+                     }
+                     auto t1 = tools::get_time();
+                     tadjt += tools::get_duration(t1-t0);
+                  }
+#ifndef SERIAL
+                  if(size > 1){
+                     auto t0 = tools::get_time();
+                     mpi_wrapper::broadcast(icomb.world, qops_tmp._data, qops_tmp.size(), iproc);
+                     auto t1 = tools::get_time();
+                     double tbcast = tools::get_duration(t1-t0);
+                     tcomm += tbcast;
+                     size_t data_size = qops_tmp.size();
+                     std::cout << "rank=" << rank << " tbcast=" << tbcast << " size=" << data_size << ":"
+                        << tools::sizeGB<Tm>(data_size) << "GB" 
+                        << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                        << std::endl;
+                  }
+#endif
+                  auto t0 = tools::get_time();
+                  const auto& amap = qops_tmp.get_qindexmap('M');
+                  for(const auto& pr : amap){
+                     const auto& symP = pr.first;
+                     const auto& aindex = pr.second;
+                     if(pmap.find(symP) == pmap.end()) continue;
+                     const auto& pindex = pmap.at(symP);
+                     // construct coefficient matrix
+                     size_t rows = aindex.size();
+                     size_t cols = pindex.size();
+                     linalg::matrix<Tm> coeff(rows,cols);
+                     for(int icol=0; icol<cols; icol++){
+                        int ipq = pindex[icol];
+                        auto pq = oper_unpack(ipq);
+                        int p = pq.first;
+                        int q = pq.second;
+                        for(int irow=0; irow<rows; irow++){
+                           int isr = aindex[irow];
+                           auto sr = oper_unpack(isr);
+                           int s = sr.first;
+                           int r = sr.second;
+                           coeff(irow,icol) = int2e.get(p,q,s,r);
+                        } // irow
+                     } // icol
+                     // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq) via BatchGEMM or by NNZ blocks?
+                     size_t opsize = qops2('P').at(pindex[0]).size();
+                     const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
+                     const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
+                     Tm* ptr_opP = qops2('P')[pindex[0]].data(); 
+                     linalg::xgemm("N", "N", opsize, cols, rows, alpha,
+                           ptr_opM, opsize, coeff.data(), rows, beta,
+                           ptr_opP, opsize);
+                  } // amap
+                  auto t1 = tools::get_time();
+                  tcomp += tools::get_duration(t1-t0);
+               } // iproc
 
             } // alg_ab2pq
+            auto t_end = tools::get_time();
+            if(rank == 0){
+               double t_tot = tools::get_duration(t_end-t_start);
+               std::cout << "----- TIMING FOR oper_a2p : " << t_tot << " S"
+                  << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
+                  << std::endl;
+            }
          } // ifkr
       }
 
@@ -97,8 +180,10 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
+         double tadjt = 0.0;
          tcomm = 0.0;
          tcomp = 0.0;
+         auto t_start = tools::get_time();
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
          if(ifkr){
@@ -117,12 +202,15 @@ namespace ctns{
                   // bcast B to all processors
                   stensor2<Tm> opBqr, opBrq;
                   if(iproc == rank){
+                     auto t0 = tools::get_time();
                      auto optmp1 = qops('B').at(iqr);
                      auto optmp2 = qops('B').at(iqr).H();
                      opBqr.init(optmp1.info);
                      opBrq.init(optmp2.info);
                      linalg::xcopy(optmp1.size(), optmp1.data(), opBqr.data());
                      linalg::xcopy(optmp2.size(), optmp2.data(), opBrq.data());
+                     auto t1 = tools::get_time();
+                     tadjt += tools::get_duration(t1-t0);
                   }
 #ifndef SERIAL
                   if(size > 1){
@@ -158,6 +246,13 @@ namespace ctns{
 
                tools::exit("not implemented yet");
 
+            } // alg_ab2pq
+            auto t_end = tools::get_time();
+            if(rank == 0){
+               double t_tot = tools::get_duration(t_end-t_start);
+               std::cout << "----- TIMING FOR oper_b2q : " << t_tot << " S"
+                  << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
+                  << std::endl;
             }
          } // ifkr
       }

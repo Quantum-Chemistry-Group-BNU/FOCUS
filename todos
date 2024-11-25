@@ -2,12 +2,12 @@
  * Code optimization
 
    - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
-	   - profiling: communication or xaxpy? change to GEMV?
-      - adjust the switch position via a function? 
+	   - profiling: communication or xaxpy? change to GEMM or GEMV?
       - optimize oper_ab2pq [use gpu to perform communication?]
       - better management of cpu&gpu memory usage
       - scale up the present algorithm to fe8s7 with D>5000 on a800_xiyun [10TB] !!!
       - scale up the present algorithm to fe8s7 with D>10000 on jiageng [50TB] !!!
+      - adjust the switch position via a function? 
 
    - alg_renorm=4 占用内存过多
 
