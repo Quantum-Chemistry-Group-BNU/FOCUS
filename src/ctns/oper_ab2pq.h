@@ -79,12 +79,14 @@ namespace ctns{
          int pos = get_ab2pq_pos(nsite);
          bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
             (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
-         int alg_renorm = schd.ctns.alg_renorm;
+         const int alg_ab2pq = schd.ctns.alg_ab2pq;
+         const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
             std::cout << "ctns::oper_ab2pq coord=" << pcoord
                << " superblock=" << superblock
                << " ab2pq=" << ab2pq
+               << " alg_ab2pq=" << alg_ab2pq
                << " alg_renorm=" << alg_renorm
                << std::endl;
          }
@@ -120,13 +122,11 @@ namespace ctns{
          auto tb = tools::get_time();
 
          // 2. transform A to P
-         double tp_comm, tp_comp;
-         oper_a2p(icomb, int2e, qops, qops2, schd.ctns.alg_ab2pq, tp_comm, tp_comp);
+         oper_a2p(icomb, int2e, qops, qops2, alg_ab2pq);
          auto tc = tools::get_time();
 
          // 3. transform B to Q
-         double tq_comm, tq_comp;
-         oper_b2q(icomb, int2e, qops, qops2, schd.ctns.alg_ab2pq, tq_comm, tq_comp);
+         oper_b2q(icomb, int2e, qops, qops2, alg_ab2pq);
          auto td = tools::get_time();
 
          // 4. to gpu (if necessary)
@@ -155,14 +155,6 @@ namespace ctns{
             std::cout << "----- TIMING FOR oper_ab2pq : " << tools::get_duration(t1-t0) << " S"
                << " T(init/copyCSH/opP/opQ/to_gpu/move)=" << tinit << "," 
                << tcomm << "," << tp << "," << tq << "," << tgpu << "," << tmove << " -----"
-               << std::endl;
-            double tp_rest = tp - tp_comm - tp_comp;
-            std::cout << "tp[tot]=" << tp << " t[comm,comp,rest]="
-               << tp_comm << "," << tp_comp << "," << tp_rest 
-               << std::endl;
-            double tq_rest = tq - tq_comm - tq_comp;
-            std::cout << "tq[tot]=" << tq << " t[comm,comp,rest]="
-               << tq_comm << "," << tq_comp << "," << tq_rest
                << std::endl;
          }
       }

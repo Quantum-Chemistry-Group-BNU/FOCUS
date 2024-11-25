@@ -9,17 +9,13 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
-            const int alg_ab2pq,
-            double& tcomm,
-            double& tcomp){
+            const int alg_ab2pq){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
-         double tadjt = 0.0;
-         tcomm = 0.0;
-         tcomp = 0.0;
+         double tadjt = 0.0, tcomm = 0.0, tcomp = 0.0;
          auto t_start = tools::get_time();
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
@@ -111,14 +107,14 @@ namespace ctns{
 #ifndef SERIAL
                   if(size > 1){
                      auto t0 = tools::get_time();
-                     mpi_wrapper::broadcast(icomb.world, qops_tmp._data, qops_tmp.size(), iproc);
+                     size_t data_size = qops_tmp.size();
+                     mpi_wrapper::broadcast(icomb.world, qops_tmp._data, data_size, iproc);
                      auto t1 = tools::get_time();
                      double tbcast = tools::get_duration(t1-t0);
                      tcomm += tbcast;
-                     size_t data_size = qops_tmp.size();
-                     std::cout << "rank=" << rank << " tbcast[opA.H]=" << tbcast << " size=" << data_size << ":"
-                        << tools::sizeGB<Tm>(data_size) << "GB" 
-                        << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                     std::cout << "rank=" << rank 
+                        << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                        << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                         << std::endl;
                   }
 #endif
@@ -146,7 +142,7 @@ namespace ctns{
                            coeff(irow,icol) = int2e.get(p,q,s,r);
                         } // irow
                      } // icol
-                       // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
+                     // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
                      size_t opsize = qops2('P').at(pindex[0]).size();
                      const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                      const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
@@ -163,8 +159,10 @@ namespace ctns{
             auto t_end = tools::get_time();
             if(rank == 0){
                double t_tot = tools::get_duration(t_end-t_start);
+               double trest = t_tot - tadjt - tcomm - tcomp;
                std::cout << "----- TIMING FOR oper_a2p : " << t_tot << " S"
-                  << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
+                  << " T(adjt/bcast/comp/rest)=" << tadjt << "," << tcomm << "," 
+                  << tcomp << "," << trest << " -----"  
                   << std::endl;
             }
          } // ifkr
@@ -175,17 +173,13 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
-            const int alg_ab2pq,
-            double& tcomm,
-            double& tcomp){
+            const int alg_ab2pq){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
-         double tadjt = 0.0;
-         tcomm = 0.0;
-         tcomp = 0.0;
+         double tadjt = 0.0, tcomm = 0.0, tcomp = 0.0;
          auto t_start = tools::get_time();
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
@@ -288,14 +282,14 @@ namespace ctns{
 #ifndef SERIAL
                      if(size > 1){
                         auto t0 = tools::get_time();
-                        mpi_wrapper::broadcast(icomb.world, qops_tmp._data, qops_tmp.size(), iproc);
+                        size_t data_size = qops_tmp.size();
+                        mpi_wrapper::broadcast(icomb.world, qops_tmp._data, data_size, iproc);
                         auto t1 = tools::get_time();
                         double tbcast = tools::get_duration(t1-t0);
                         tcomm += tbcast;
-                        size_t data_size = qops_tmp.size();
-                        std::cout << "rank=" << rank << " tbcast[opB]=" << tbcast << " size=" << data_size << ":"
-                           << tools::sizeGB<Tm>(data_size) << "GB" 
-                           << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                        std::cout << "rank=" << rank 
+                           << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                           << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                            << std::endl;
                      }
 #endif
@@ -324,7 +318,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*int2e.get(p,q,s,r);
                            } // irow
                         } // icol
-                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
+                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         size_t opsize = qops2('Q').at(qindex[0]).size();
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('B').at(bindex[0]).data();
@@ -371,14 +365,14 @@ namespace ctns{
 #ifndef SERIAL
                      if(size > 1){
                         auto t0 = tools::get_time();
-                        mpi_wrapper::broadcast(icomb.world, qops_tmp._data, qops_tmp.size(), iproc);
+                        size_t data_size = qops_tmp.size();
+                        mpi_wrapper::broadcast(icomb.world, qops_tmp._data, data_size, iproc);
                         auto t1 = tools::get_time();
                         double tbcast = tools::get_duration(t1-t0);
                         tcomm += tbcast;
-                        size_t data_size = qops_tmp.size();
-                        std::cout << "rank=" << rank << " tbcast[opB]=" << tbcast << " size=" << data_size << ":"
-                           << tools::sizeGB<Tm>(data_size) << "GB" 
-                           << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                        std::cout << "rank=" << rank 
+                           << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                           << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                            << std::endl;
                      }
 #endif
@@ -407,7 +401,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*int2e.get(p,r,s,q);
                            } // irow
                         } // icol
-                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
+                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         size_t opsize = qops2('Q').at(qindex[0]).size();
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('N').at(bindex[0]).data();
@@ -426,8 +420,10 @@ namespace ctns{
             auto t_end = tools::get_time();
             if(rank == 0){
                double t_tot = tools::get_duration(t_end-t_start);
+               double trest = t_tot - tadjt - tcomm - tcomp;
                std::cout << "----- TIMING FOR oper_b2q : " << t_tot << " S"
-                  << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
+                  << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," 
+                  << tcomp << "," << trest << " -----"  
                   << std::endl;
             }
          } // ifkr

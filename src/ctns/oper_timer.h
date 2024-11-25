@@ -46,9 +46,9 @@ namespace ctns{
             const double eps = 1.e-16;
             double tot = tinter + tgemm + tred;
             std::cout << std::scientific << std::setprecision(1);
-            std::cout << "--- TIMING FOR " << name << " :"
+            std::cout << "----- TIMING FOR " << name << " :"
                << " t_inter=" << tinter << " t_gemm=" << tgemm << " t_reduction=" << tred
-               << " tot=" << tot << " ---" 
+               << " tot=" << tot << " -----" 
                << std::endl;
             // inter
             std::cout << " " << name << "[inter] counter=" << counter << " t=" << tinter

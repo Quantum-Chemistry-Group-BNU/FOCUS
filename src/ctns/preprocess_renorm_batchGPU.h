@@ -148,7 +148,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batchDirectGPU: t[inter,gemm,reduction]="
+            std::cout << "preprocess_renorm_batchDirectGPU: T(inter,gemm,reduction)="
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;
             oper_timer.renorm.analysis();
@@ -281,7 +281,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batchDirectGPUDirect: t[inter,gemm,reduction]="
+            std::cout << "preprocess_renorm_batchDirectGPUDirect: T(inter,gemm,reduction)="
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;
             oper_timer.renorm.analysis();
