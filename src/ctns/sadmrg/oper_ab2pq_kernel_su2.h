@@ -19,6 +19,7 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
+         double tadjt = 0.0;
          tcomm = 0.0;
          tcomp = 0.0;
          auto t_start = tools::get_time();
@@ -38,9 +39,12 @@ namespace ctns{
                // bcast A to all processors
                stensor2su2<Tm> opCrs;
                if(iproc == rank){
+                  auto t0 = tools::get_time();
                   auto optmp = qops('A').at(isr).H(true);
                   opCrs.init(optmp.info);
                   linalg::xcopy(optmp.size(), optmp.data(), opCrs.data());
+                  auto t1 = tools::get_time();
+                  tadjt += tools::get_duration(t1-t0);
                }
 #ifndef SERIAL
                if(size > 1){
@@ -93,6 +97,7 @@ namespace ctns{
                qops_tmp.ifdist2 = true;
                qops_tmp.init(true);
                if(iproc == rank){
+                  auto t0 = tools::get_time();
                   auto aindex = qops.oper_index_op('A');
                   for(int idx=0; idx<aindex.size(); idx++){
                      auto isr = aindex[idx];
@@ -101,6 +106,8 @@ namespace ctns{
                      assert(optmp.size() == opAbar.size()); 
                      linalg::xcopy(optmp.size(), optmp.data(), opAbar.data());
                   }
+                  auto t1 = tools::get_time();
+                  tadjt += tools::get_duration(t1-t0);
                }
 #ifndef SERIAL
                if(size > 1){
@@ -159,7 +166,7 @@ namespace ctns{
          if(rank == 0){
             double t_tot = tools::get_duration(t_end-t_start);
             std::cout << "----- TIMING FOR oper_a2p(su2) : " << t_tot << " S"
-               << " T(hermi/bcast/comp)=" << tcomm << "," << tcomp << " -----"  
+               << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
                << std::endl;
          }
       }
@@ -177,6 +184,7 @@ namespace ctns{
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
+         double tadjt = 0.0;
          tcomm = 0.0;
          tcomp = 0.0;
          auto t_start = tools::get_time();
@@ -197,12 +205,15 @@ namespace ctns{
                // bcast B to all processors
                stensor2su2<Tm> opBqr, opBrq;
                if(iproc == rank){
+                  auto t0 = tools::get_time();
                   auto optmp1 = qops('B').at(iqr);
                   auto optmp2 = qops('B').at(iqr).H(true);
                   opBqr.init(optmp1.info);
                   opBrq.init(optmp2.info);
                   linalg::xcopy(optmp1.size(), optmp1.data(), opBqr.data());
                   linalg::xcopy(optmp2.size(), optmp2.data(), opBrq.data());
+                  auto t1 = tools::get_time();
+                  tadjt += tools::get_duration(t1-t0);
                }
 #ifndef SERIAL
                if(size > 1){
@@ -248,7 +259,7 @@ namespace ctns{
          if(rank == 0){
             double t_tot = tools::get_duration(t_end-t_start);
             std::cout << "----- TIMING FOR oper_b2q(su2) : " << t_tot << " S"
-               << " T(hermi/bcast/comp)=" << tcomm << "," << tcomp << " -----"  
+               << " T(adjt/bcast/comp)=" << tadjt << "," << tcomm << "," << tcomp << " -----"  
                << std::endl;
          }
       }
