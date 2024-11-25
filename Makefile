@@ -1,5 +1,5 @@
 
-machine = jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = lenovo #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = no #yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -27,6 +27,9 @@ ifeq ($(strip $(machine)), lenovo)
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
    endif
+   NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/install/lib64
+   NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/install/include 
+
 else ifeq ($(strip $(machine)), dell)
    MATHLIB = /opt/intel/oneapi/mkl/2022.0.2/lib/intel64
    BOOST = /home/dell/lzd/boost/install
