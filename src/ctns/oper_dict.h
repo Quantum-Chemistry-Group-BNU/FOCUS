@@ -74,7 +74,37 @@ namespace ctns{
             qoper_dict& operator =(const qoper_dict& op_dict) = delete;
             // move
             qoper_dict(qoper_dict&& op_dict) = delete;
-            qoper_dict& operator =(qoper_dict&& op_dict) = delete;
+            // move assignment
+            qoper_dict& operator =(qoper_dict&& st){
+               if(this != &st){
+                  sorb = st.sorb;
+                  isym = st.isym;
+                  ifkr = st.ifkr;
+                  qbra = std::move(st.qbra);
+                  qket = std::move(st.qket);
+                  cindex = std::move(st.cindex);
+                  krest = std::move(st.krest);
+                  oplist = std::move(st.oplist);
+                  mpisize = st.mpisize;
+                  mpirank = st.mpirank;
+                  ifdist2 = st.ifdist2;
+                  ifhermi = st.ifhermi;
+                  _offset = std::move(st._offset);
+                  _opdict = std::move(st._opdict);
+                  _indexmap = std::move(st._indexmap);
+                  _size = st._size;
+                  _opsize = st._opsize;
+                  delete[] _data;
+                  _data = st._data;
+                  st._data = nullptr;
+#ifdef GPU
+                  if(_dev_data != nullptr) GPUmem.deallocate(_dev_data, _size*sizeof(Tm));
+#endif
+                  _dev_data = st._dev_data;
+                  st._dev_data = nullptr;
+               }
+               return *this;
+            }
             // initialize _opdict, _size, _opsize
             void setup_opdict(const bool debug=false);
             // setup the mapping to physical address
@@ -95,12 +125,17 @@ namespace ctns{
             std::vector<int> oper_index_op(const char key) const;
             // symmetry of op
             qsym get_qsym_op(const char key, const int idx) const;
+            // return qindexmap for certain type of op
+            qindexmap oper_index_opmap(const char key) const;
             // access
             const qoper_map<ifab,Tm>& operator()(const char key) const{
                return _opdict.at(key);
             }
             qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
+            }
+            const qindexmap& get_qindexmap(const char key) const{
+               return _indexmap.at(key);
             }
             // check existence
             bool ifexist(const char key) const{
@@ -125,6 +160,7 @@ namespace ctns{
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,qoper_map<ifab,Tm>> _opdict;
+            std::map<char,qindexmap> _indexmap; // should be put into move?
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
@@ -146,7 +182,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "ICABPQSHTFDM";
+         std::string opseq = "ICSHABPQTFDMN";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
@@ -213,16 +249,16 @@ namespace ctns{
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
-         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M'){
+         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M' || key == 'N'){
             std::vector<int> index2;
             if(key == 'A' || key == 'M'){
-               index2 = oper_index_opA(cindex, ifkr);
-            }else if(key == 'B'){
-               index2 = oper_index_opB(cindex, ifkr, ifhermi);
+               index2 = oper_index_opA(cindex, ifkr, isym);
+            }else if(key == 'B' || key == 'N'){
+               index2 = oper_index_opB(cindex, ifkr, isym, ifhermi);
             }else if(key == 'P'){
-               index2 = oper_index_opP(krest, ifkr);
+               index2 = oper_index_opP(krest, ifkr, isym);
             }else if(key == 'Q'){
-               index2 = oper_index_opQ(krest, ifkr);
+               index2 = oper_index_opQ(krest, ifkr, isym);
             }
             // distribute two index operators
             if(ifdist2 && mpisize > 1){
@@ -255,6 +291,9 @@ namespace ctns{
       }else if(key == 'M'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opM(isym, pr.first, pr.second);
+      }else if(key == 'N'){
+         auto pr = oper_unpack(idx);
+         sym_op = get_qsym_opN(isym, pr.first, pr.second);
       }else if(key == 'H' || key == 'I'){
          sym_op = qsym(isym,0,0);	   
       }else if(key == 'S'){
@@ -301,6 +340,7 @@ namespace ctns{
                auto sym_op = this->get_qsym_op(key,idx);
                // only compute size 
                _opdict[key][idx].init(sym_op, qbra, qket, {1,0}, false);
+               _indexmap[key][sym_op].push_back(idx);
                size_t sz = _opdict[key][idx].size();
                _offset[std::make_pair(key,idx)] = _size;
                _size += sz;

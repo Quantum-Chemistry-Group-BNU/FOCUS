@@ -26,8 +26,8 @@ namespace ctns{
             // initialization
             // alg_rinter:
             //    = 0 omp
-            //    = 1 cpu batch
-            //    = 2 gpu batch
+            //    = 1 cpu batch gemv
+            //    = 2 gpu batch gemv
             void init(const bool ifDirect,
                   const int alg_rinter,
                   const int batchgemv,
@@ -112,7 +112,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -194,7 +194,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -264,7 +264,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = op0.size(); 
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dims for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -328,7 +327,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -395,7 +394,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = op0.size(); 
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -465,7 +463,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates
@@ -536,7 +534,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "rintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << rtasks.size() << std::endl;
+            std::cout << " no. of rformulae=" << rtasks.size() << std::endl;
          }
 
          // count the size of rintermediates

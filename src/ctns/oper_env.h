@@ -160,17 +160,17 @@ namespace ctns{
          dot_timing timing_sweep, timing;
          qoper_pool<Qm::ifabelian,Tm> qops_pool(iomode, debug && schd.ctns.verbose>1);
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            auto p = icomb.topo.rcoord[idx];
-            const auto& node = icomb.topo.get_node(p);
-            if(node.type != 0 || p.first == 0){
+            auto pcoord = icomb.topo.rcoord[idx];
+            const auto& node = icomb.topo.get_node(pcoord);
+            if(node.type != 0 || pcoord.first == 0){
                auto tb = tools::get_time();
                timing.t0 = tools::get_time();
-               if(debug) std::cout << "\nidx=" << idx << " coord=" << p << std::endl;
+               if(debug) std::cout << "\nidx=" << idx << " coord=" << pcoord << std::endl;
                
-               // a. get operators from memory / disk    
+               // a. get operators from memory / disk
                std::vector<std::string> fneed(2);
-               fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
-               fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
+               fneed[0] = icomb.topo.get_fqop(pcoord, "c", scratch);
+               fneed[1] = icomb.topo.get_fqop(pcoord, "r", scratch);
                qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
                const auto& cqops = qops_pool.at(fneed[0]);
                const auto& rqops = qops_pool.at(fneed[1]);
@@ -187,7 +187,7 @@ namespace ctns{
                timing.te = timing.ta;
 
                // b. perform renormalization for superblock {|cr>}
-               std::string frop = oper_fname(scratch, p, "r");
+               std::string frop = oper_fname(scratch, pcoord, "r");
                std::string superblock = "cr";
                std::string fname;
                if(schd.ctns.save_formulae) fname = scratch+"/rformulae_env_idx"
@@ -196,7 +196,7 @@ namespace ctns{
                if(debug && schd.ctns.save_mmtask){
                   fmmtask =  "rmmtasks_idx"+std::to_string(idx);
                }
-               oper_renorm(superblock, icomb, p, int2e, int1e, schd,
+               oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
                      cqops, rqops, qops_pool[frop], fname, timing, fmmtask);
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);

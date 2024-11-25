@@ -108,7 +108,10 @@ namespace ctns{
             int sc1 = suppc1.size();
             int sc2 = suppc2.size();
             assert(sc1+sc2+sl+sr == icomb.topo.nphysical);
-            bool ifNC = (sl+sc1 <= sc2+sr);
+            size_t csize_lc1 = sl+sc1;
+            size_t csize_c2r = sc2+sr;
+            std::string oplist = "CABPQSH";
+            bool ifNC = determine_NCorCN_Ham(oplist, oplist, csize_lc1, csize_c2r);
             auto key1 = ifNC? "AP" : "PA";
             auto key2 = ifNC? "BQ" : "QB";
             std::cout << " (sl,sr,sc1,sc2)="
@@ -142,10 +145,10 @@ namespace ctns{
             }
             auto cindex = oper_index_opC(ksupp, ifkr);
             auto sindex = oper_index_opS(krest, ifkr);
-            auto aindex = oper_index_opA(cindex, ifkr);
-            auto bindex = oper_index_opB(cindex, ifkr);
-            auto pindex = oper_index_opP(krest, ifkr); 
-            auto qindex = oper_index_opQ(krest, ifkr);
+            auto aindex = oper_index_opA(cindex, ifkr, isym);
+            auto bindex = oper_index_opB(cindex, ifkr, isym);
+            auto pindex = oper_index_opP(krest, ifkr, isym);
+            auto qindex = oper_index_opQ(krest, ifkr, isym);
             std::cout << " renormalized operators: C:" << cindex.size() 
                << " S:" << sindex.size()
                << " A:" << aindex.size()
@@ -226,7 +229,6 @@ namespace ctns{
                      << " mpirank=" << rank
                      << std::endl;
 
-                  std::string oplist = "CABPQSH";
                   std::string block1, block2;
                   std::vector<int> cindex1, cindex2;
                   if(forward){
@@ -239,9 +241,11 @@ namespace ctns{
                   bool ifhermi = false;
                   bool ifsave = true;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_renorm(oplist, block1, block2, 
+                  auto formulae = gen_formulae_renorm(oplist, oplist, oplist,
+                        block1, block2, 
                         cindex1, cindex2, krest,
-                        isym, ifkr, ifhermi, int2e, mpisize, rank, ifdist1, ifdistc, 
+                        isym, ifkr, ifhermi, int2e, int2e.sorb,
+                        mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
                   formulae.display("total");
@@ -289,7 +293,8 @@ namespace ctns{
 
                   bool ifsave = true;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                  auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                        cindex_l, cindex_r, cindex_c1, cindex_c2,
                         isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
 
@@ -319,7 +324,8 @@ namespace ctns{
             // Classification of Hx
             bool ifsave = false;
             std::map<std::string,int> counter;
-            auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+            auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                  cindex_l, cindex_r, cindex_c1, cindex_c2,
                   isym, ifkr, int2e, 1, 0, ifdist1, ifdistc,
                   ifsave, counter);
             std::map<std::string,std::vector<int>> maps;
@@ -360,7 +366,8 @@ namespace ctns{
                for(int rank=0; rank<mpisize; rank++){
                   bool ifsave = false;
                   std::map<std::string,int> counter;
-                  auto formulae = gen_formulae_twodot(cindex_l, cindex_r, cindex_c1, cindex_c2,
+                  auto formulae = gen_formulae_twodot(oplist, oplist, oplist, oplist,
+                        cindex_l, cindex_r, cindex_c1, cindex_c2,
                         isym, ifkr, int2e, mpisize, rank, ifdist1, ifdistc, 
                         ifsave, counter);
                   for(int i=0; i<formulae.size(); i++){

@@ -25,8 +25,10 @@ namespace ctns{
             const int& rank,
             const bool& ifdist1){
          if(debug_onedot_sigma) std::cout << "onedot_Hx_local" << std::endl;
+         const size_t csize1 = lqops.cindex.size();
+         const size_t csize2 = rqops.cindex.size();
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize1, csize2);
          const Tm scale = lqops.ifkr? 0.5 : 1.0;
-         const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
          stensor3<Tm> Hwf;
          if(ifNC){
             // 1. H^l + 2. H^cr
@@ -260,9 +262,14 @@ namespace ctns{
          const auto& lqops = qops_dict.at("l");
          const auto& rqops = qops_dict.at("r");
          const auto& cqops = qops_dict.at("c");
+         const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr;
-         const bool ifNC = lqops.cindex.size() <= rqops.cindex.size();
+         const size_t csize1 = lqops.cindex.size();
+         const size_t csize2 = rqops.cindex.size();
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize1, csize2);
+
          Hx_functors<Tm> Hx_funs;
+
          // Local terms:
          Hx_functor<Tm> Hx("Hloc", 0, 0);
          Hx.opxwf = bind(&onedot_Hx_local<Tm>,
@@ -270,6 +277,7 @@ namespace ctns{
                std::cref(ecore), std::cref(wf), std::cref(size), std::cref(rank),
                std::cref(ifdist1));
          Hx_funs.push_back(Hx);
+         
          // One-index terms:
          // 3. p1^l+*Sp1^cr + h.c. or 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
          const auto& cnindex = ifNC? lqops.cindex : rqops.cindex;
@@ -300,11 +308,12 @@ namespace ctns{
                Hx_funs.push_back(Hx);
             }
          }
+         
          // Two-index terms:
-         auto aindex_dist = ifNC? oper_index_opA_dist(lqops.cindex, ifkr, size, rank, int2e.sorb) : 
-            oper_index_opA_dist(rqops.cindex, ifkr, size, rank, int2e.sorb);
-         auto bindex_dist = ifNC? oper_index_opB_dist(lqops.cindex, ifkr, size, rank, int2e.sorb) : 
-            oper_index_opB_dist(rqops.cindex, ifkr, size, rank, int2e.sorb);
+         auto aindex_dist = ifNC? oper_index_opA_dist(lqops.cindex, ifkr, isym, size, rank, int2e.sorb) : 
+            oper_index_opA_dist(rqops.cindex, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex_dist = ifNC? oper_index_opB_dist(lqops.cindex, ifkr, isym, size, rank, int2e.sorb) : 
+            oper_index_opB_dist(rqops.cindex, ifkr, isym, size, rank, int2e.sorb);
          auto afun = ifNC? &onedot_Hx_APnc<Tm> : &onedot_Hx_PAcn<Tm>;
          auto bfun = ifNC? &onedot_Hx_BQnc<Tm> : &onedot_Hx_QBcn<Tm>;
          auto alabel = ifNC? "APnc" : "PAcn";
@@ -323,9 +332,11 @@ namespace ctns{
                   std::cref(int2e), std::cref(wf), std::cref(size), std::cref(rank));
             Hx_funs.push_back(Hx);
          }
+
          // debug
          if(rank == 0 and debug){
-            std::cout << "onedot_Hx_functors: size=" << Hx_funs.size() 
+            std::cout << "onedot_Hx_functors: ifNC=" << ifNC
+               << " size=" << Hx_funs.size() 
                << " " << cnlabel << ":" << cnindex.size()
                << " " << cclabel << ":" << ccinfo.size()
                << " " << alabel << ":" << aindex_dist.size()

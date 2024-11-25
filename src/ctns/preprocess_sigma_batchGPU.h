@@ -21,9 +21,9 @@ namespace ctns{
          double sizeGB = tools::sizeGB<Tm>(ndim);
          std::cout << " ndim=" << ndim << ":" << sizeGB << "GB" 
             << " t[comm(intra)]=" << time_comm1
-            << " speed=" << 2*sizeGB/time_comm1 << "GB/s" 
+            << " speed=" << 2*sizeGB/time_comm1 << "GB/S" 
             << " t[comm(inter)]=" << time_comm2
-            << " speed=" << 2*sizeGB/time_comm2 << "GB/s"
+            << " speed=" << 2*sizeGB/time_comm2 << "GB/S"
             << std::endl;
       }
 
@@ -268,7 +268,7 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchDirectGPU: t[comm,inter,gemm,reduction,tot]="
+            std::cout << "preprocess_Hx_batchDirectGPU: T(comm,inter,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
                << "," << tools::get_duration(t1-t0)
                << std::endl;
@@ -511,7 +511,7 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchDirectGPUSingle: t[comm,inter,gemm,reduction,tot]="
+            std::cout << "preprocess_Hx_batchDirectGPUSingle: T(comm,inter,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
                << "," << tools::get_duration(t1-t0)
                << std::endl;

@@ -167,8 +167,9 @@ namespace ctns{
             } // lk
          } // ij
          if(debug){
+            int nelec2 = icomb2.get_qsym_state().ne();
             auto rdm1 = rdm1_simple(icomb1,icomb2,iroot1,iroot2);
-            auto rdm1b = fock::get_rdm1_from_rdm2(rdm2);
+            auto rdm1b = fock::get_rdm1_from_rdm2(rdm2,true,nelec2);
             auto diff = (rdm1b-rdm1).normF();
             std::cout << "Check |rdm1b-rdm1|=" << diff << std::endl;
             assert(diff < 1.e-6);
@@ -249,12 +250,13 @@ namespace ctns{
             } // lmn
          } // ijk
          if(debug){
+            int nelec2 = icomb2.get_qsym_state().ne();
             auto rdm2 = rdm2_simple(icomb1,icomb2,iroot1,iroot2);
-            auto rdm2b = fock::get_rdm2_from_rdm3(rdm3);
+            auto rdm2b = fock::get_rdm2_from_rdm3(rdm3,true,nelec2);
             auto diff2 = (rdm2b-rdm2).normF();
             std::cout << "\nCheck |rdm2b-rdm2|=" << diff2 << std::endl;
-            auto rdm1 = fock::get_rdm1_from_rdm2(rdm2);
-            auto rdm1b = fock::get_rdm1_from_rdm2(rdm2b);
+            auto rdm1 = fock::get_rdm1_from_rdm2(rdm2,true,nelec2);
+            auto rdm1b = fock::get_rdm1_from_rdm2(rdm2b,true,nelec2);
             auto diff1 = (rdm1b-rdm1).normF();
             std::cout << "\nCheck |rdm1b-rdm1|=" << diff1 << std::endl;
             assert(diff2 < 1.e-6 and diff1 < 1.e-6);
@@ -373,7 +375,7 @@ namespace ctns{
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-            tdm1(pi,1) = smat(iroot1,iroot2);
+            tdm1(pi,0) = smat(iroot1,iroot2);
          } // i
          auto t1 = tools::get_time();
          tools::timing("ctns::tdm1p0h_simple", t0, t1);
@@ -427,7 +429,7 @@ namespace ctns{
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-            tdm2(pij,1) = sgn1*smat(iroot1,iroot2);
+            tdm2(pij,0) = sgn1*smat(iroot1,iroot2);
          } // ij
          auto t1 = tools::get_time();
          tools::timing("ctns::tdm2p0h_simple", t0, t1);

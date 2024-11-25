@@ -10,7 +10,10 @@
 namespace ctns{
 
    template <typename Tm>
-      symbolic_task<Tm> gen_formulae_onedot_su2(const std::vector<int>& cindex_l,
+      symbolic_task<Tm> gen_formulae_onedot_su2(const std::string oplist_l,
+            const std::string oplist_r,
+            const std::string oplist_c,
+            const std::vector<int>& cindex_l,
             const std::vector<int>& cindex_r,
             const std::vector<int>& cindex_c,
             const int isym, // for uniform interface only
@@ -23,13 +26,13 @@ namespace ctns{
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
-         const bool ifNC = cindex_l.size() <= cindex_r.size();
+         const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
          const auto& cindex = ifNC? cindex_l : cindex_r;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, int2e.sorb);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, int2e.sorb);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, int2e.sorb);
 
          symbolic_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          if(ifNC){
             
@@ -51,8 +54,8 @@ namespace ctns{
                }
             }
             // 2. Il*H^cr
-            auto Hcr = symbolic_compxwf_opH_su2<Tm>("c", "r", cindex_c, cindex_r, 
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+            auto Hcr = symbolic_compxwf_opH_su2<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r, 
+                  int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
             counter["H2"] = Hcr.size();
             if(Hcr.size() > 0){
                auto Il = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'I',0)));
@@ -69,7 +72,7 @@ namespace ctns{
             counter["CS"] = 0;
             for(const auto& index : cindex_l){
                auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
-               auto Scr = symbolic_compxwf_opS_su2<Tm>("c", "r", cindex_c, cindex_r,
+               auto Scr = symbolic_compxwf_opS_su2<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
                if(Scr.size() == 0) continue;
                auto Cl_Scr = Cl.outer_product(Scr);
@@ -150,8 +153,8 @@ namespace ctns{
             
             // partition = lc|r
             // 1. H^lc*Ir 
-            auto Hlc = symbolic_compxwf_opH_su2<Tm>("l", "c", cindex_l, cindex_c, 
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+            auto Hlc = symbolic_compxwf_opH_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c, 
+                  int2e, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
             counter["H1"] = Hlc.size();
             if(Hlc.size() > 0){
                auto Ir = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'I',0)));
@@ -183,7 +186,7 @@ namespace ctns{
             // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
-               auto Slc = symbolic_compxwf_opS_su2<Tm>("l", "c", cindex_l, cindex_c,
+               auto Slc = symbolic_compxwf_opS_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
                if(Slc.size() == 0) continue;
                auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));

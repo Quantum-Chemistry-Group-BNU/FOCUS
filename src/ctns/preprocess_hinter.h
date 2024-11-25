@@ -108,7 +108,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_omp maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -184,7 +184,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -248,7 +248,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = ndim;
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -312,7 +311,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::init_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -373,7 +372,6 @@ namespace ctns{
             mv.transA = 'N';
             mv.M = ndim;
             mv.N = len;
-            //mv.LDA = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
             mv.LDA = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
             mv.locA = oploc.at(block); 
             mv.offA = qops._offset.at(std::make_pair(label,index0)); // qops
@@ -452,7 +450,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::initDirect_batch_cpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates
@@ -516,7 +514,7 @@ namespace ctns{
 #endif
          if(debug){
             std::cout << "hintermediates<ifab,Tm>::initDirect_batch_gpu maxthreads=" << maxthreads << std::endl;
-            std::cout << " no. of formulae=" << H_formulae.size() << std::endl;
+            std::cout << " no. of hformulae=" << H_formulae.size() << std::endl;
          }
 
          // count the size of hintermediates

@@ -1,21 +1,24 @@
 
- * Further optimized kernel for assembling RDM:
-   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
-   - Optimizations:
-      - alg_rdm=2: 
-         - classify l,r operators by symmetry
-         - batched dgemv operation for assembling?
-      - compare different options for alg_renorm and alg_rdm
-      - profiling for FeMoCo with D>=8000
-         - /public/home/bnulizdtest/tests/femoco/mpi8n2
-         - memory issue for openmp?
-      - optimize IO (prefetch?)
-      - batch algorithm (BatchedGEMV) for patterns 211
-      - GPU assembling algorithm via batch?
-   - Test systems:
-      - Hydrogen chain in 6-31G?
-      - Polyene?
-      - MR-TADF systems: singlet and triplet gaps?
+ * Code optimization
+
+   - TODOs: futher profiling and optimization of ab2pq [seems to be very slow! => DGEMV?]
+	   - profiling: communication or xaxpy? change to GEMM or GEMV?
+      - optimize oper_ab2pq [use gpu to perform communication?]
+      - better management of cpu&gpu memory usage
+      - scale up the present algorithm to fe8s7 with D>5000 on a800_xiyun [10TB] !!!
+      - scale up the present algorithm to fe8s7 with D>10000 on jiageng [50TB] !!!
+      - adjust the switch position via a function? 
+
+   - alg_renorm=4 占用内存过多
+
+   - decimation for su2 is not parallelized:
+      - using MPI
+      - using GPU
+         - cuSolver: svd
+         - cuSOlver: eig
+      
+   - Reach D>20000 with more GPUs?
+
 
 ### 2025 DMRG[RDM(SU2)] ###
 
@@ -37,10 +40,39 @@
    - is_same=false: more patterns to be considered
       - rdm1
       - rdm2
+   - 3p2h for mrpt2 [need spin-summed rdms]
+      - apply opC to a spin-adapted MPS? (ap+|Psi0>)
+      - theoretical formulation
+      - implementation taking advantage of su2 symmetry to reduce cost!
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
 
-### 2025 FeMoco[+dynamical correlation/+SOC] ###
+### 2025 Large-scale CASSCF / dynamical correlation / SOC ###
+
+ * Further optimized kernel for assembling RDM:
+   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
+   - Optimizations:
+      - alg_rdm=2: 
+         - classify l,r operators by symmetry
+         - batched dgemv operation for assembling?
+      - compare different options for alg_renorm and alg_rdm
+      - profiling for FeMoCo with D>=8000 for RDMs
+         - /public/home/bnulizdtest/tests/femoco/mpi8n2
+         - memory issue for openmp?
+      - optimize IO (prefetch?)
+      - batch algorithm (BatchedGEMV) for patterns 211
+      - GPU assembling algorithm via batch?
+   - Test systems:
+      - Hydrogen chain in 6-31G?
+      - Polyene?
+      - MR-TADF systems: singlet and triplet gaps?
+      - 2-RDMs for Fe8S7 with large bond dimension!
+
+
+######################## THIS VERSION IS READY FOR RELEASE ########################
+
+
+### TODOs: initial guess & p-DMRG ###
 
  * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
    - This may be operationally useful like BS-DFT.
@@ -54,21 +86,17 @@
    - 用小体系n2测试?
    - combined with OO-DMRG?
 
- * Benchmark: jiageng or other platform [DONE@2024/XX/XX]
-   - Compilation on jiageng: need to used mkl for magma/zquatev, 
-                             but use mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist!
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco: 不同初始化策略，产生不同guess，然后筛选？
+ * 子博 => PT2 correction on top of NQS?
+   - deterministic evaluation following Hanshi Hu's work
+   - stochastic evaluation following Sandeep Sharma's work
+   - more rigorous scheme akin to p-DMRG?
 
-### 2025 DMRG + QC ###
+### TODOs: DMRG + Quantum Computing ###
 
  * Disentangle transformation:
    - Combined with LEOs 
    - Python implementation for preparation of MPS [linear combination of CSF]
-   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!!!]
+   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!]
 
 ### TODOs: more functionalities ###
 
@@ -81,12 +109,6 @@
    - Two-RDMs: enable Rel-CASSCF with interface to other codes 
 
 ### TODOs: better performance ###
-
- * Decimation for su2 is not parallelized (using MPI) yet
-
- * Decimation on GPU?
-   - cuSolver: svd
-   - cuSOlver: eig
 
  * Point group symmetry (D2h) -> good for molecules like cr2
 

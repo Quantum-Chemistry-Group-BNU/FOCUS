@@ -114,133 +114,188 @@ namespace ctns{
       return num;
    }
 
-   // --- generate indices for A/B operators from cindex --- 
-   inline std::vector<int> oper_index_opA(const std::vector<int>& cindex1, const bool& ifkr){
-      std::vector<int> aindex;
+   // ### IMPORTANT NOTE ###
+   // ZL@2024/11/23: operators are classfied by their symmetries to make memory contiguous 
+   // because symbolic_compxwf_opS & opH [formula=2] requires memory contiguous {A,B,P,Q}
+   using qindexmap = std::map<qsym,std::vector<int>>;
+   inline std::vector<int> flatten_qindexmap(const qindexmap& qmap){
+      std::vector<int> index;
+      for(const auto& vec : qmap){
+         std::copy(vec.second.begin(), vec.second.end(), std::back_inserter(index)); 
+      }
+      return index;
+   }
+
+   // --- generate index for normal operators: A,B ---
+   
+   // opA
+   inline qindexmap oper_index_opAmap(const std::vector<int>& cindex1, const bool& ifkr, const int& isym){
+      qindexmap qmap;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
             if(p1 < q1){ 
-               aindex.push_back( oper_pack(p1,q1) );
-               if(ifkr) aindex.push_back( oper_pack(p1,q1+1) );
+               auto sym = get_qsym_opA(isym,p1,q1);
+               qmap[sym].push_back( oper_pack(p1,q1) );
+               if(ifkr){
+                  auto sym = get_qsym_opA(isym,p1,q1+1);
+                  qmap[sym].push_back( oper_pack(p1,q1+1) );
+               }
             }else if(p1 == q1){
-               if(ifkr) aindex.push_back( oper_pack(p1,p1+1) );
+               if(ifkr){
+                  auto sym = get_qsym_opA(isym,p1,q1+1);
+                  qmap[sym].push_back( oper_pack(p1,p1+1) );
+               }
             }
          }
       }
-      assert(aindex.size() == oper_num_opA(cindex1.size(),ifkr));
-      return aindex;
+      return qmap;
    }
-   inline std::vector<int> oper_index_opA_dist(const std::vector<int>& cindex1, const bool& ifkr,
+   inline std::vector<int> oper_index_opA(const std::vector<int>& cindex1, const bool& ifkr, const int& isym){
+      auto qmap = oper_index_opAmap(cindex1, ifkr, isym);
+      auto index = flatten_qindexmap(qmap);
+      assert(index.size() == oper_num_opA(cindex1.size(),ifkr));
+      return index;
+   }
+   inline std::vector<int> oper_index_opA_dist(const std::vector<int>& cindex1, const bool& ifkr, const int& isym,
          const int size, const int rank, const int sorb){
-      std::vector<int> aindex = oper_index_opA(cindex1, ifkr);
+      auto aindex = oper_index_opA(cindex1, ifkr, isym);
       return distribute2vec('A', ifkr, size, aindex, rank, sorb);
    }
 
-   inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr, const bool ifhermi=true){
-      std::vector<int> bindex;
+   // opB
+   inline qindexmap oper_index_opBmap(const std::vector<int>& cindex1, const bool& ifkr, 
+         const int& isym, const bool ifhermi=true){
+      qindexmap qmap;
       for(int p1 : cindex1){
          for(int q1 : cindex1){
             if(ifhermi){
                if(p1 <= q1){
-                  bindex.push_back( oper_pack(p1,q1) );
-                  if(ifkr) bindex.push_back( oper_pack(p1,q1+1) );
+                  auto sym = get_qsym_opB(isym,p1,q1);
+                  qmap[sym].push_back( oper_pack(p1,q1) );
+                  if(ifkr){
+                     auto sym = get_qsym_opB(isym,p1,q1+1);
+                     qmap[sym].push_back( oper_pack(p1,q1+1) );
+                  }
                }
             }else{
                // ZL@20240906 for general case
-               bindex.push_back( oper_pack(p1,q1) );
-               if(ifkr) bindex.push_back( oper_pack(p1,q1+1) ); 
+               auto sym = get_qsym_opB(isym,p1,q1);
+               qmap[sym].push_back( oper_pack(p1,q1) );
+               if(ifkr){
+                  auto sym = get_qsym_opB(isym,p1,q1+1);
+                  qmap[sym].push_back( oper_pack(p1,q1+1) );
+               } 
             }
          }
       }
-      assert(bindex.size() == oper_num_opB(cindex1.size(),ifkr,ifhermi));
-      return bindex;
+      return qmap;
    }
-   inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, const bool& ifkr,
+   inline std::vector<int> oper_index_opB(const std::vector<int>& cindex1, const bool& ifkr, 
+         const int& isym, const bool ifhermi=true){
+      auto qmap = oper_index_opBmap(cindex1, ifkr, isym, ifhermi);
+      auto index = flatten_qindexmap(qmap);
+      assert(index.size() == oper_num_opB(cindex1.size(),ifkr,ifhermi));
+      return index;
+   }
+   inline std::vector<int> oper_index_opB_dist(const std::vector<int>& cindex1, const bool& ifkr, const int& isym,
          const int size, const int rank, const int sorb, const bool ifhermi=true){
-      std::vector<int> bindex = oper_index_opB(cindex1, ifkr, ifhermi);
-      return distribute2vec('B', ifkr, size, bindex, rank, sorb);
-   }
-
-   inline std::vector<int> oper_index_opBdiag(const std::vector<int>& cindex1, const bool& ifkr){
-      std::vector<int> bindex;
-      for(int p1 : cindex1){
-         bindex.push_back( oper_pack(p1,p1) );
-      }
-      assert(bindex.size() == cindex1.size());
-      return bindex;
-   }
-   inline std::vector<int> oper_index_opBdiag_dist(const std::vector<int>& cindex1, const bool& ifkr,
-         const int size, const int rank, const int sorb){
-      std::vector<int> bindex = oper_index_opBdiag(cindex1, ifkr);
+      auto bindex = oper_index_opB(cindex1, ifkr, isym, ifhermi);
       return distribute2vec('B', ifkr, size, bindex, rank, sorb);
    }
 
    // --- generate index for complementary operators: P,Q,S ---
    // tricky part: determine the storage pattern for Ppq for p,q in krest
-   inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+   
+   // opP
+   inline qindexmap oper_index_opPmap(const std::vector<int>& krest, const bool& ifkr, const int& isym){
+      qindexmap qmap;
       for(int kp : krest){
          int pa = 2*kp, pb = pa+1;
          for(int kq : krest){
             int qa = 2*kq, qb = qa+1;
             if(kp < kq){
-               index.push_back(oper_pack(pa,qa)); // Paa 
-               index.push_back(oper_pack(pa,qb)); // Pab
+               auto sym1 = get_qsym_opP(isym,pa,qa);  
+               qmap[sym1].push_back(oper_pack(pa,qa)); // Paa 
+               auto sym2 = get_qsym_opP(isym,pa,qb); 
+               qmap[sym2].push_back(oper_pack(pa,qb)); // Pab
                if(!ifkr){
                   // since if kp<kq, pb<qa and pb<qb hold
-                  index.push_back(oper_pack(pb,qa));
-                  index.push_back(oper_pack(pb,qb));
+                  auto sym1 = get_qsym_opP(isym,pb,qa);
+                  qmap[sym1].push_back(oper_pack(pb,qa));
+                  auto sym2 = get_qsym_opP(isym,pb,qb);
+                  qmap[sym2].push_back(oper_pack(pb,qb));
                }
             }else if(kp == kq){
-               index.push_back(oper_pack(pa,pb)); // Pab 
+               auto sym1 = get_qsym_opP(isym,pa,pb);
+               qmap[sym1].push_back(oper_pack(pa,pb)); // Pab 
             }
          } // kq
       } // kp
+      return qmap;
+   }
+   inline std::vector<int> oper_index_opP(const std::vector<int>& krest, const bool& ifkr, const int& isym){
+      auto qmap = oper_index_opPmap(krest, ifkr, isym);
+      auto index = flatten_qindexmap(qmap);
       assert(index.size() == oper_num_opP(krest.size(),ifkr)); 
       return index;
    }
-   inline std::vector<int> oper_index_opP_dist(const std::vector<int>& krest, const bool& ifkr,
+   inline std::vector<int> oper_index_opP_dist(const std::vector<int>& krest, const bool& ifkr, const int& isym,
          const int size, const int rank, const int sorb){
-      std::vector<int> pindex = oper_index_opP(krest, ifkr);
+      auto pindex = oper_index_opP(krest, ifkr, isym);
       return distribute2vec('P', ifkr, size, pindex, rank, sorb);
    }
 
-   inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+   // opQ
+   inline qindexmap oper_index_opQmap(const std::vector<int>& krest, const bool& ifkr, const int& isym){
+      qindexmap qmap;
       for(int kp : krest){
          int pa = 2*kp, pb = pa+1;
          for(int ks : krest){
             int sa = 2*ks, sb = sa+1;
-            if(kp <= ks){ 
-               index.push_back(oper_pack(pa,sa));
-               index.push_back(oper_pack(pa,sb));
+            if(kp <= ks){
+               auto sym1 = get_qsym_opQ(isym,pa,sa); 
+               qmap[sym1].push_back(oper_pack(pa,sa));
+               auto sym2 = get_qsym_opQ(isym,pa,sb);
+               qmap[sym2].push_back(oper_pack(pa,sb));
                if(!ifkr){
                   // if kp=ks, QpApB is stored while QpBpA is redundant,
                   // because it can be related with QpApB using Hermiticity if bra=ket.
-                  if(kp != ks) index.push_back(oper_pack(pb,sa));
-                  index.push_back(oper_pack(pb,sb));
+                  if(kp != ks){
+                     auto sym = get_qsym_opQ(isym,pb,sa);
+                     qmap[sym].push_back(oper_pack(pb,sa));
+                  }
+                  auto sym = get_qsym_opQ(isym,pb,sb);
+                  qmap[sym].push_back(oper_pack(pb,sb));
                }
             }
          } // ks
       } // kp
+      return qmap;
+   }
+   inline std::vector<int> oper_index_opQ(const std::vector<int>& krest, const bool& ifkr, const int& isym){
+      auto qmap = oper_index_opQmap(krest, ifkr, isym);
+      auto index = flatten_qindexmap(qmap);
       assert(index.size() == oper_num_opQ(krest.size(),ifkr));
       return index;
    }
-   inline std::vector<int> oper_index_opQ_dist(const std::vector<int>& krest, const bool& ifkr,
+   inline std::vector<int> oper_index_opQ_dist(const std::vector<int>& krest, const bool& ifkr, const int& isym,
          const int size, const int rank, const int sorb){
-      std::vector<int> qindex = oper_index_opQ(krest, ifkr);
+      auto qindex = oper_index_opQ(krest, ifkr, isym);
       return distribute2vec('Q', ifkr, size, qindex, rank, sorb);
    }
 
+   // opS
    inline std::vector<int> oper_index_opS(const std::vector<int>& krest, const bool& ifkr){
-      std::vector<int> index;
+      std::vector<int> index, index2;
       for(int kp: krest){
          int pa = 2*kp, pb = pa+1;
          index.push_back(pa);
-         if(!ifkr) index.push_back(pb);
+         if(!ifkr) index2.push_back(pb);
       }
+      std::copy(index2.begin(), index2.end(), std::back_inserter(index));
       return index;
    }
+   // opC
    inline std::vector<int> oper_index_opC(const std::vector<int>& ksupp, const bool& ifkr){
       return oper_index_opS(ksupp, ifkr);
    }

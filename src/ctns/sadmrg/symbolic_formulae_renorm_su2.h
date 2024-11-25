@@ -10,6 +10,8 @@ namespace ctns{
 
    template <typename Tm>
       renorm_tasks<Tm> gen_formulae_renorm_su2(const std::string& oplist,
+            const std::string& oplist1,
+            const std::string& oplist2,
             const std::string& block1,
             const std::string& block2,
             const std::vector<int>& cindex1,
@@ -18,16 +20,18 @@ namespace ctns{
             const bool ifkr,
             const bool ifhermi,
             const integral::two_body<Tm>& int2e,
-            const int& size,
-            const int& rank,
+            const int sorb,
+            const int size,
+            const int rank,
             const bool ifdist1,
             const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
+         const int isym = 3;
 
          renorm_tasks<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          // opC
          if(oplist.find('C') != std::string::npos){
@@ -44,14 +48,13 @@ namespace ctns{
                }
             }
          }
-
          // opA
          if(oplist.find('A') != std::string::npos){
             counter["A"] = 0;
             auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
             for(const auto& pr : ainfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('A',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('A',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opA = symbolic_normxwf_opA_su2<Tm>(block1, block2, index, iformula);
                   formulae.append(std::make_tuple('A', index, opA));
@@ -63,7 +66,6 @@ namespace ctns{
                }
             }
          }
-
          // opB
          if(oplist.find('B') != std::string::npos){
             bool ifDop = oplist.find('D') != std::string::npos; 
@@ -71,7 +73,7 @@ namespace ctns{
             auto binfo = oper_combine_opB(cindex1, cindex2, ifkr, ifhermi);
             for(const auto& pr : binfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('B',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('B',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opB = symbolic_normxwf_opB_su2<Tm>(block1, block2, index, iformula, ifDop);
                   formulae.append(std::make_tuple('B', index, opB));
@@ -83,13 +85,12 @@ namespace ctns{
                }
             }
          }
-
          // opP
          if(oplist.find('P') != std::string::npos){
             counter["P"] = 0;	
-            auto pindex = oper_index_opP(krest, ifkr);    
+            auto pindex = oper_index_opP(krest, ifkr, isym);    
             for(const auto& index : pindex){
-               int iproc = distribute2('P',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('P',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opP = symbolic_compxwf_opP_su2<Tm>(block1, block2, cindex1, cindex2,
                         int2e, index);
@@ -102,13 +103,12 @@ namespace ctns{
                }
             }
          }
-
          // opQ
          if(oplist.find('Q') != std::string::npos){
             counter["Q"] = 0;
-            auto qindex = oper_index_opQ(krest, ifkr); 
+            auto qindex = oper_index_opQ(krest, ifkr, isym); 
             for(const auto& index : qindex){
-               int iproc = distribute2('Q',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('Q',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opQ = symbolic_compxwf_opQ_su2<Tm>(block1, block2, cindex1, cindex2,
                         int2e, index);
@@ -121,13 +121,12 @@ namespace ctns{
                }
             }
          }
-
          // opS
          if(oplist.find('S') != std::string::npos){
             counter["S"] = 0;
             auto sindex = oper_index_opS(krest, ifkr); 
             for(const auto& index : sindex){
-               auto opS = symbolic_compxwf_opS_su2<Tm>(block1, block2, cindex1, cindex2,
+               auto opS = symbolic_compxwf_opS_su2<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
                // opS can be empty for ifdist1=true
                if(opS.size() == 0) continue;
@@ -139,12 +138,11 @@ namespace ctns{
                }
             }
          }
-
          // opH
          if(oplist.find('H') != std::string::npos){
             counter["H"] = 0;	   
-            auto opH = symbolic_compxwf_opH_su2<Tm>(block1, block2, cindex1, cindex2,
-                  ifkr, int2e.sorb, size, rank, ifdist1);
+            auto opH = symbolic_compxwf_opH_su2<Tm>(oplist1, oplist2, block1, block2, cindex1, cindex2,
+                  int2e, ifkr, sorb, size, rank, ifdist1, ifdistc);
             // opH can be empty for ifdist1=true
             if(opH.size() > 0){
                formulae.append(std::make_tuple('H', 0, opH));
@@ -168,7 +166,6 @@ namespace ctns{
                opI.display("opI", print_level);
             }
          }
-
          // opD
          if(oplist.find('D') != std::string::npos){
             counter["D"] = 0;	   
@@ -184,14 +181,13 @@ namespace ctns{
                }
             }
          }
-
          // opM
          if(oplist.find('M') != std::string::npos){
             counter["M"] = 0;
             auto ainfo = oper_combine_opA(cindex1, cindex2, ifkr);
             for(const auto& pr : ainfo){
                int index = pr.first, iformula = pr.second;
-               int iproc = distribute2('M',ifkr,size,index,int2e.sorb);
+               int iproc = distribute2('M',ifkr,size,index,sorb);
                if(iproc == rank){
                   auto opM = symbolic_normxwf_opM_su2<Tm>(block1, block2, index, iformula);
                   formulae.append(std::make_tuple('M', index, opM));
@@ -203,7 +199,6 @@ namespace ctns{
                }
             }
          }
-
          return formulae;
       }
 
@@ -252,9 +247,10 @@ namespace ctns{
          }
          // generation of renorm
          std::map<std::string,int> counter;
-         auto rformulae = gen_formulae_renorm_su2(qops.oplist,block1,block2,
+         auto rformulae = gen_formulae_renorm_su2(qops.oplist,
+               qops1.oplist,qops2.oplist,block1,block2,
                cindex1,cindex2,qops.krest,ifkr,ifhermi,
-               int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
+               int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
@@ -262,8 +258,10 @@ namespace ctns{
             rformulae.sort(dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY:" << std::endl;
+            std::cout << "\nSUMMARY: superblock=" << superblock << std::endl;
             rformulae.display("total");
+            qops1.print("qops1",2);
+            qops2.print("qops2",2);
             qops.print("qops",2);
             std::cout.rdbuf(backup); // restore cout's original streambuf
             file.close();

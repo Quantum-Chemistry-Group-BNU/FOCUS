@@ -85,8 +85,8 @@ int main(int argc, char * argv[]) {
         double t_save = tools::get_duration(t1-t0);
         double t_load = tools::get_duration(t2-t1);
         std::cout<<" rank=" << rank << " data_count: "<<data_count
-            << "  t_save=" << t_save << " speed=" << data_count*sizeof(double)/t_save/std::pow(1024,3) << "GB/s"  
-            << "  t_load=" << t_load << " speed=" << data_count*sizeof(double)/t_load/std::pow(1024,3) << "GB/s"
+            << "  t_save=" << t_save << " speed=" << data_count*sizeof(double)/t_save/std::pow(1024,3) << "GB/S"  
+            << "  t_load=" << t_load << " speed=" << data_count*sizeof(double)/t_load/std::pow(1024,3) << "GB/S"
             << std::endl;
 
 #ifndef SERIAL

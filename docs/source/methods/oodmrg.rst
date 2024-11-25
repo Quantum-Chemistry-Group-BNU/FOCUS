@@ -2,7 +2,8 @@
 Orbital optimization
 ####################
 
-We can find less entangled orbitals by compressing entanglement.
+We can find less entangled orbitals (LEOs) by compressing entanglement during sweeps.
+This functionality can be executed using the keyword ``task_oodmrg``.
 
 .. code-block::
 

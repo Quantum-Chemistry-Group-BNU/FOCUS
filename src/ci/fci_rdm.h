@@ -212,6 +212,7 @@ namespace fci{
             const double ecore,
             linalg::matrix<Tm>& rdm1,
             linalg::matrix<Tm>& rdm2,
+            const std::string scratch,
             const bool debug = false){
          const bool Htype = tools::is_complex<Tm>();
          std::cout << "\nfci:get_rdm12 Htype=" << Htype << " k=" << rdm1.rows() << std::endl;
@@ -232,8 +233,8 @@ namespace fci{
          std::cout << "\nCheck: I,J=" << iroot << "," << jroot
             << " H(I,J)=" << std::fixed << std::setprecision(12) << Hij 
             << std::endl;
-         rdm1.save_txt("rdm1ci."+std::to_string(iroot)+"."+std::to_string(jroot),12);
-         rdm2.save_txt("rdm2ci."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm1.save_txt(scratch+"/rdm1ci."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm2.save_txt(scratch+"/rdm2ci."+std::to_string(iroot)+"."+std::to_string(jroot),12);
          auto t1 = tools::get_time();
          tools::timing("fci:get_rdm12", t0, t1);
          return Hij;

@@ -253,7 +253,8 @@ namespace ctns{
       std::vector<type_pattern> tpatterns;
       auto patterns = number_patterns(ncre+nann);
       for(const auto& pt : patterns){
-         std::cout << std::get<0>(pt) << "|" << std::get<1>(pt) << "|" << std::get<2>(pt) << std::endl;
+         // debug: type pattern
+         // std::cout << std::get<0>(pt) << "|" << std::get<1>(pt) << "|" << std::get<2>(pt) << std::endl;
          auto tps = gen_type_patterns(pt, ncre, nann, "c");
          std::copy(tps.begin(), tps.end(), std::back_inserter(tpatterns));          
       }

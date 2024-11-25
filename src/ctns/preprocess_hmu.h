@@ -123,7 +123,6 @@ namespace ctns{
                   const auto& sop1 = sop.sums[1].second; // used for determine LDA
                   const auto& index1 = sop1.index;
                   const auto& op1 = qops(label).at(index1);
-                  //ldaInter = std::distance(op0._data, op1._data); // Ca & Cb can be of different dimes for isym=2
                   ldaInter = qops._offset.at(std::make_pair(label,index1)) - qops._offset.at(std::make_pair(label,index0));
                }
             }

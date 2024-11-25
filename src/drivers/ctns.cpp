@@ -226,15 +226,16 @@ void CTNS(const input::schedule& schd){
          const int iroot = schd.ctns.iroot; 
          int k = schd.sorb;
          int k2 = k*(k-1)/2;
-         linalg::matrix<Tm> rdm1, tdm1, rdm2, tdm2;
+         ctns::rdmaux<Tm> aux;
+         linalg::matrix<Tm> rdm1, rdm2;
          if(tools::is_in_vector(schd.ctns.task_prop,"1p1h")){
             rdm1.resize(k, k);
-            ctns::rdm_sweep("1p1h", is_same, icomb, icomb, schd, scratch, rdm1, tdm1);
+            ctns::rdm_sweep("1p1h", is_same, icomb, icomb, schd, scratch, rdm1, aux);
 
          }
          if(tools::is_in_vector(schd.ctns.task_prop,"2p2h")){
             rdm2.resize(k2, k2);
-            ctns::rdm_sweep("2p2h", is_same, icomb, icomb, schd, scratch, rdm2, tdm2);
+            ctns::rdm_sweep("2p2h", is_same, icomb, icomb, schd, scratch, rdm2, aux);
             if(rank == 0){
                rdm1 = get_rdm1_from_rdm2(rdm2, false, schd.nelec);
                auto Sij = rdm1.trace()/Tm(schd.nelec);
@@ -245,11 +246,11 @@ void CTNS(const input::schedule& schd){
          // save results
          if(rank == 0){
             if(rdm1.size()>0 or rdm2.size()>0) std::cout << "\nsave results for rdms:" << std::endl;
-            if(rdm1.size()>0) rdm1.save_txt("rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
-            if(rdm2.size()>0) rdm2.save_txt("rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm1.size()>0) rdm1.save_txt(schd.scratch+"/rdm1mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
+            if(rdm2.size()>0) rdm2.save_txt(schd.scratch+"/rdm2mps."+std::to_string(iroot)+"."+std::to_string(iroot), schd.ctns.outprec);
             if(rdm1.size()>0){
                auto natorbs = fock::get_natorbs(fock::get_rdm1s(rdm1));
-               natorbs.save_txt("natorbs", schd.ctns.outprec);
+               natorbs.save_txt(schd.scratch+"/natorbs", schd.ctns.outprec);
             }
          }
       } // prop

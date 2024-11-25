@@ -66,12 +66,12 @@ namespace ctns{
          const auto& lqops = qops_pool.at(fneed[0]);
          const auto& rqops = qops_pool.at(fneed[1]);
          const auto& cqops = qops_pool.at(fneed[2]);
-         const auto p = dbond.get_current();
-         const auto& pdx = icomb.topo.rindex.at(p); 
+         const auto pcoord = dbond.get_current();
+         const auto& pdx = icomb.topo.rindex.at(pcoord); 
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
-               + "_ibond"+std::to_string(ibond) + ".txt";
+            + "_ibond"+std::to_string(ibond) + ".txt";
          std::string fmmtask;
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
@@ -87,8 +87,8 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[1]}, fneed_next);
-            oper_renorm("lc", icomb, p, int2e, int1e, schd,
-                  lqops, cqops, qops, fname, timing, fmmtask);
+            oper_renorm("lc", icomb, pcoord, int2e, int1e, schd,
+                  lqops, cqops, qops, fname, timing, fmmtask, 1);
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -100,8 +100,8 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[2]}, fneed_next);
-            oper_renorm("lr", icomb, p, int2e, int1e, schd,
-                  lqops, rqops, qops, fname, timing, fmmtask); 
+            oper_renorm("lr", icomb, pcoord, int2e, int1e, schd,
+                  lqops, rqops, qops, fname, timing, fmmtask, 1);
          }else if(superblock == "cr"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -113,8 +113,8 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0]}, fneed_next);
-            oper_renorm("cr", icomb, p, int2e, int1e, schd,
-                  cqops, rqops, qops, fname, timing, fmmtask); 
+            oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
+                  cqops, rqops, qops, fname, timing, fmmtask, 1);
          }
       }
 

@@ -1,7 +1,7 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
+mpiprefix = "mpirun -np 2 --allow-run-as-root "
 os.environ['OMP_NUM_THREADS'] = "10"
 #os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 #print('CUDA_VISIBLE_DEVICES=',os.environ.get('CUDA_VISIBLE_DEVICES'))
@@ -32,6 +32,10 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_cisolver',
         'tests_gpu/h6_sadmrg_cisolver',
         'tests_gpu/h6_sadmrg_onedot',
-        'tests_gpu/h6_sadmrg_nccl'
+        'tests_gpu/h6_sadmrg_nccl',
+        'tests_gpu/h6_ab2pq',
+        'tests_gpu/h6_sadmrg_ab2pq',
+        'tests_gpu/fe2s2_sadmrg',
+        'tests_gpu/fe2s2_sadmrg_ab2pq'
         ]
 test_utils.test_run(dirs)

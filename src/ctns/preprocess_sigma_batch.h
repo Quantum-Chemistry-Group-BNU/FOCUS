@@ -153,7 +153,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_Hx_batchDirect: t[inter,gemm,reduction]="
+            std::cout << "preprocess_Hx_batchDirect: T(inter,gemm,reduction)="
                << time_inter << "," << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.sigma.analysis();
@@ -294,7 +294,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_Hx_batchDirectSingle: t[inter,gemm,reduction]="
+            std::cout << "preprocess_Hx_batchDirectSingle: T(inter,gemm,reduction)="
                << time_inter << "," << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.sigma.analysis();

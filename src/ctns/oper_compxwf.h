@@ -7,6 +7,7 @@
 
 #include "oper_op1op2xwf.h"
 #include "oper_timer.h"
+#include "oper_partition.h"
 
 namespace ctns{
 
@@ -194,14 +195,19 @@ namespace ctns{
          int kc2 = ifkr? 2*cindex2.size() : cindex2.size();
          int kA2 = kc2*(kc2-1)/2;
          int kB2 = kc2*kc2;
-         bool combine_two_index3 = (kc1 <= kA2);
-         bool combine_two_index4 = (kc1 <= kB2);
-         bool combine_two_index5 = (kc2 <= kA1);
-         bool combine_two_index6 = (kc2 <= kB1);
-         auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, size, rank, int2e.sorb);
-         auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, size, rank, int2e.sorb);
-         auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, size, rank, int2e.sorb);
-         auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, size, rank, int2e.sorb); 
+         // determine NC or CN partition
+         assert(qops2.ifexist('A') or qops2.ifexist('Q'));
+         assert(qops2.ifexist('B') or qops2.ifexist('Q'));
+         assert(qops1.ifexist('A') or qops1.ifexist('P'));
+         assert(qops1.ifexist('B') or qops1.ifexist('Q'));
+         bool combine_two_index3 = qops2.ifexist('P') and ((qops2.ifexist('A') and kc1<=kA2) or !qops2.ifexist('A')); 
+         bool combine_two_index4 = qops2.ifexist('Q') and ((qops2.ifexist('B') and kc1<=kB2) or !qops2.ifexist('B'));
+         bool combine_two_index5 = qops1.ifexist('P') and ((qops1.ifexist('A') and kc2<=kA1) or !qops1.ifexist('A'));
+         bool combine_two_index6 = qops1.ifexist('Q') and ((qops1.ifexist('B') and kc2<=kB1) or !qops1.ifexist('B'));
+         auto aindex1_dist = oper_index_opA_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex1_dist = oper_index_opB_dist(cindex1, ifkr, isym, size, rank, int2e.sorb);
+         auto aindex2_dist = oper_index_opA_dist(cindex2, ifkr, isym, size, rank, int2e.sorb);
+         auto bindex2_dist = oper_index_opB_dist(cindex2, ifkr, isym, size, rank, int2e.sorb); 
          const auto& qrow1 = qops1.qbra;
          const auto& qcol1 = qops1.qket;
          const auto& qrow2 = qops2.qbra;
@@ -585,14 +591,14 @@ namespace ctns{
          // for AP,BQ terms
          const auto& cindex1 = qops1.cindex;
          const auto& cindex2 = qops2.cindex;
-         const bool ifNC = cindex1.size() <= cindex2.size(); 
+         const bool ifNC = determine_NCorCN_Ham(qops1.oplist, qops2.oplist, cindex1.size(), cindex2.size());
          char AP1 = ifNC? 'A' : 'P';
          char AP2 = ifNC? 'P' : 'A';
          char BQ1 = ifNC? 'B' : 'Q';
          char BQ2 = ifNC? 'Q' : 'B';
          const auto& cindex = ifNC? cindex1 : cindex2;
-         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, size, rank, qops1.sorb);
-         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, size, rank, qops1.sorb);
+         auto aindex_dist = oper_index_opA_dist(cindex, ifkr, isym, size, rank, qops1.sorb);
+         auto bindex_dist = oper_index_opB_dist(cindex, ifkr, isym, size, rank, qops1.sorb);
          //
          // H = hpq ap^+aq + <pq||sr> ap^+aq^+aras [p<q,r>s]
          //   = H1 + H2

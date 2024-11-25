@@ -102,8 +102,16 @@ namespace ctns{
             assert(fname.size() > 0);
             auto rcanon_file = schd.scratch+"/"+fname;
             std::cout << "\nctns::comb_load fname=" << fname << std::endl;
-            icomb.topo.read(schd.ctns.topology_file, debug);
+           
+            // load topology
+            if(!schd.ctns.topology_file.empty()){
+               icomb.topo.read(schd.ctns.topology_file, debug);
+            }else{
+               icomb.topo.gen1d(schd.sorb/2);
+            }
             if(debug) icomb.topo.print();
+            
+            // load RCF
             rcanon_load(icomb, rcanon_file, debug);
             if(debug) rcanon_check(icomb, schd.ctns.thresh_ortho);
          } // rank 0

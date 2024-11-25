@@ -9,6 +9,7 @@
 #include "rdm_patterns.h"
 #include "rdm_assemble.h"
 #include "rdm_assemble_su2.h"
+#include "rdm_auxdata.h"
 
 namespace ctns{
 
@@ -20,7 +21,7 @@ namespace ctns{
             const input::schedule& schd,
             const std::string scratch,
             linalg::matrix<Tm>& rdm,
-            const linalg::matrix<Tm>& tdm){
+            rdmaux<Tm>& aux){ // aux may get changed
          const int dots = 1;
          // copy MPS
          auto icomb = combi;
@@ -33,6 +34,7 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
+         
          // "2p2h" [C++ string count from left]
          // Using ASCII value subtraction
          int ncre = rdmtype[0]-'0';
@@ -182,7 +184,7 @@ namespace ctns{
             
             // assemble rdm
             rdm_assemble(is_same, icomb, qops_dict, wf3bra, wf3ket,
-                    allpatterns, schd, scratch, rdm, tdm);
+                    allpatterns, schd, scratch, rdm, aux);
             timing.tc = tools::get_time();
 
             // propagtion of MPS via decimation
@@ -223,6 +225,9 @@ namespace ctns{
             const auto p = dbond.get_current();
             const auto& pdx = icomb.topo.rindex.at(p);
             std::string fname;
+            if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
+               + "_isweep"+std::to_string(isweep)
+               + "_ibond"+std::to_string(ibond) + ".txt";
             std::string fmmtask;
             if(superblock == "lc"){
                icomb.sites[pdx] = rotbra.split_lc(wf3bra.info.qrow, wf3bra.info.qmid);
@@ -231,22 +236,11 @@ namespace ctns{
                qops_pool.clear_from_memory({fneed[1]}, fneed_next);
                rdm_renorm(ns_max, "lc", is_same, icomb, icomb2, p, schd,
                      lqops, cqops, qops, fname, timing, fmmtask);
-            /*
-            }else if(superblock == "cr"){
-               icomb.sites[pdx] = rotbra.split_cr(wf3bra.info.qmid, wf3bra.info.qcol);
-               icomb2.sites[pdx] = rotket.split_cr(wf3ket.info.qmid, wf3ket.info.qcol);
-               // renorm operators
-               qops_pool.clear_from_memory({fneed[0]}, fneed_next);
-               rdm_renorm(ne_max, "cr", is_same, icomb, icomb2, p, schd,
-                     cqops, rqops, qops, fname, timing, fmmtask);
-            }else{
-               tools::exit("error: superblock=lr is not supported yet!");
-            */
             }else{
                tools::exit("error: superblock must be 'lc' in RDM sweep!");
             }
             timing.tf = tools::get_time();
-
+            
             // 4. cleanup operators
             qops_pool.cleanup_sweep(fneed, fneed_next, frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
 
@@ -268,8 +262,8 @@ namespace ctns{
          qops_pool.finalize();
 
 #ifndef SERIAL
-         if(size > 1){
-            mpi_wrapper::reduce(icomb.world, rdm.data(), rdm.size(), 0);
+         if(size > 1 and rdm.size() > 0){
+            mpi_wrapper::allreduce(icomb.world, rdm.data(), rdm.size());
          }
 #endif
 

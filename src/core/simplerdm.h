@@ -293,7 +293,8 @@ namespace fock{
             const integral::one_body<Tm>& int1e,
             const double ecore,
             linalg::matrix<Tm>& rdm1,
-            linalg::matrix<Tm>& rdm2){
+            linalg::matrix<Tm>& rdm2,
+            const std::string scratch){
          std::cout << "\nfock:get_rdm12 k=" << rdm1.rows() << std::endl;
          auto t0 = tools::get_time();
          size_t dim = space.size();
@@ -310,8 +311,8 @@ namespace fock{
          std::cout << "\nCheck: I,J=" << iroot << "," << jroot
             << " H(I,J)=" << std::fixed << std::setprecision(12) << Hij 
             << std::endl;
-         rdm1.save_txt("rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
-         rdm2.save_txt("rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm1.save_txt(scratch+"/rdm1."+std::to_string(iroot)+"."+std::to_string(jroot),12);
+         rdm2.save_txt(scratch+"/rdm2."+std::to_string(iroot)+"."+std::to_string(jroot),12);
          auto t1 = tools::get_time();
          tools::timing("fock:get_rdm12", t0, t1);
          return Hij;

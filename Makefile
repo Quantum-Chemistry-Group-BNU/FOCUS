@@ -60,6 +60,18 @@ else ifeq ($(strip $(machine)), jiageng)
    NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/lzdnlopt/lib64
    NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/lzdnlopt/include
 
+else ifeq ($(strip $(machine)), a800_xiyun)
+   MATHLIB = ${MKLROOT}
+   BOOST = /storage/boost/install
+   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_chrono-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
+   ifeq ($(strip $(USE_MPI)), yes)   
+      LFLAGS += -lboost_mpi-mt-x64
+   endif
+   #FLAGS += -no-multibyte-chars
+   GSLDIR = ./extlibs/gsl-install
+   NLOPTDIR_LIB = /storage/FOCUS/extlibs/nlopt-2.7.1/build/lib
+   NLOPTDIR_INCLUDE = /storage/FOCUS/extlibs/nlopt-2.7.1/build/include
+
 else ifeq ($(strip $(machine)), a800)
    MATHLIB = $(MKLROOT)
    BOOST = /GLOBALFS/bnu_pp_1/boost/install
@@ -253,6 +265,7 @@ else ifeq ($(strip $(machine)), dell)
    MAGMA_DIR = ../magma/magma-2.6.1
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
+
 else ifeq ($(strip $(machine)), jiageng)
    CUDA_DIR= ${CUDADIR}
    MAGMA_DIR = /public/home/bnulizdtest/magma
@@ -260,6 +273,17 @@ else ifeq ($(strip $(machine)), jiageng)
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /public/home/bnulizdtest/nccl/build
+      FLAGS += -DNCCL -I${NCCL_DIR}/include
+      LFLAGS += -L${NCCL_DIR}/lib -lnccl
+   endif
+
+else ifeq ($(strip $(machine)), a800_xiyun)
+   CUDA_DIR= ${CUDA_ROOT}
+   MAGMA_DIR = /storage/FOCUS/extlibs/magma-2.8.0
+   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include -DGEMMGROUPED
+   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   ifeq ($(strip $(USE_NCCL)), yes)
+      NCCL_DIR = /root/nccl_apps/nccl220
       FLAGS += -DNCCL -I${NCCL_DIR}/include
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif

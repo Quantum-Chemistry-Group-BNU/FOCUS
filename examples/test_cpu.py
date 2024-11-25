@@ -1,8 +1,8 @@
 import os
 import test_utils
 
-mpiprefix = "mpirun -np 2 "
-os.environ['OMP_NUM_THREADS'] = "8"
+mpiprefix = "mpirun -np 2 --allow-run-as-root "
+os.environ['OMP_NUM_THREADS'] = "20"
 
 HOME = os.path.dirname(os.getcwd())
 SCI  = HOME+"/bin/sci.x"
@@ -31,6 +31,10 @@ dirs = ['tests_cpu/0_h6_tns',
         'tests_cpu/8_h6+_sadmrg',
         'tests_cpu/9_h6+_sadmrg_cisolver',
         'tests_cpu/10_h6_uhf',
-        'tests_cpu/11_h10_sadmrg_detbasis'
+        'tests_cpu/11_h10_sadmrg_detbasis',
+        'tests_cpu/12_h6_ab2pq',
+        'tests_cpu/12_h6_sadmrg_ab2pq',
+        'tests_cpu/13_fe2s2_ab2pq',
+        'tests_cpu/13_fe2s2_sadmrg_ab2pq'
         ]
 test_utils.test_run(dirs)

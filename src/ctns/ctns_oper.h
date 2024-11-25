@@ -65,13 +65,13 @@ namespace ctns{
 
          // c-R0-[R1]-... & c-[R0]-R1-...
          std::vector<comb_coord> plst = {std::make_pair(1,0),std::make_pair(0,0)};
-         for(const auto& p : plst){ 
-            if(rank == 0) std::cout << "\ncoord=" << p << std::endl;
+         for(const auto& pcoord : plst){ 
+            if(rank == 0) std::cout << "\ncoord=" << pcoord << std::endl;
 
             // a. get operators from memory / disk    
             std::vector<std::string> fneed(2);
-            fneed[0] = icomb.topo.get_fqop(p, "c", scratch);
-            fneed[1] = icomb.topo.get_fqop(p, "r", scratch);
+            fneed[0] = icomb.topo.get_fqop(pcoord, "c", scratch);
+            fneed[1] = icomb.topo.get_fqop(pcoord, "r", scratch);
             qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
             const auto& cqops = qops_pool.at(fneed[0]);
             const auto& rqops = qops_pool.at(fneed[1]);
@@ -81,12 +81,12 @@ namespace ctns{
             }
 
             // b. perform renormalization for superblock {|cr>}
-            std::string frop = oper_fname(scratch, p, "r");
+            std::string frop = oper_fname(scratch, pcoord, "r");
             std::string superblock = "cr";
-            std::string fname;
+            std::string fname, fmmtask;
             dot_timing timing_local;
-            oper_renorm(superblock, icomb, p, int2e, int1e, schd,
-                  cqops, rqops, qops_pool[frop], fname, timing_local);
+            oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
+                  cqops, rqops, qops_pool[frop], fname, timing_local, fmmtask);
 
             // c. save operators to disk
             qops_pool.join_and_erase(fneed);

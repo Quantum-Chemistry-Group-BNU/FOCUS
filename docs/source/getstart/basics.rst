@@ -1,6 +1,11 @@
 
-Basics
-######
+Basics and keywords
+###################
+
+.. contents:: Table of contents
+   :local:
+   :backlinks: entry
+   :depth: 2
 
 Basic usages
 ************
@@ -21,6 +26,7 @@ A typical input file
 .. code-block::
 
    dtype 0
+   sorb 40
    nelec 30
    twom 0
    twos 0
@@ -66,14 +72,15 @@ A typical input file
    maxsweep 20
    maxcycle 2
    task_dmrg
-   alg_hvec 7
-   batchgemm 3
-   batchmem 5
+   alg_hvec 4
    alg_renorm 2
    $end
 
+Keywords
+********
+
 Common settings
-***************
+===============
 
 * ``dtype``: data type used in calculations =0 double, =1 complex
 * ``nelec``: :math:`N_{\alpha}+N_{\beta}` - no. of electrons
@@ -83,8 +90,8 @@ Common settings
 * ``scratch``: scratch directory
 * ``perfcomm``: performance analysis with file size ``1ULL<<27``
 
-SCI
-***
+CI (exactdiag.x, fci.x, sci.x)
+==============================
 
 * ``dets ... end``: occupied orbitals (abab ordering) in the starting determinant 
   multiple determinants are allowed by separate lines
@@ -94,8 +101,9 @@ SCI
 * ``schedule``: iteration & tolerance for selecting determinants :math:`|H_{AI}*c_I|>\epsilon_1`
 * ``maxiter``: max no of SCI iterations
 
-CTNS
-****
+DMRG (ctns.x, sadmrg.x, rdm.x)
+==============================
+
 * ``verbose``: 0,1,2 - print level for debugging
 * ``qkind``: rNSz - symmetry of the calculation: rNSz - real, N, Sz
 * ``topology_file``: topology file for CTNS
@@ -114,37 +122,49 @@ CTNS
 * ``maxcycle``: max no. of iteration in Davidson iteration
 * ``task_dmrg``: perform dmrg optimization
  
-* ``alg_hvec``: algorithm for :math:`H\psi`
+* ``alg_hvec``: algorithm for :math:`H\psi` (>=4 for su2 case)
 
    * =0: oldest version
-   * =1: symbolic formulae + dynamic allocation of memory
-   * =2: symbolic formulae + preallocation of workspace: ``worktot = maxthreads*(opsize + 3*wfsize)``
-   * =3: symbolic formulae (factorized) + preallocation of workspace: ``worktot = maxthreads*(opsize + 4*wfsize)``
-   * =4: symbolic formulae + preallocation of workspace + intermediates [Hxlst]: ``worktot = maxthreads*(blksize*2 + ndim)`` [local]
-   * =5: symbolic formulae + preallocation of workspace + intermediates [Hxlst2]: ``worktot = maxthreads*(blksize*3)`` [local]
-   * =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]: ``worktot = batchsize*(blksize*2)``
-   * =7: symbolic formulae + preallocation of workspace + intermediates [direct]
-   * =8: symbolic formulae + preallocation of workspace + intermediates [single]
-   * =9: symbolic formulae + preallocation of workspace + intermediates [direct + single]
-   * =16: symbolic formulae + preallocation of workspace + intermediates [GPU]
-   * =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct inter]
-   * =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
-   * =19: symbolic formulae + preallocation of workspace + intermediates [GPU + direct + single]
+   * Algorithm based on symbolic formulae:
+      * =1:  dynamic allocation of memory
+      * =2:  preallocation of workspace: ``worktot = maxthreads*(opsize + 3*wfsize)``
+      * =3:  (factorized) + preallocation of workspace: ``worktot = maxthreads*(opsize + 4*wfsize)``
+      * =4:  preallocation of workspace + hintermediates [Hxlst]: ``worktot = maxthreads*(blksize*2 + ndim)`` [local]
+      * =5:  preallocation of workspace + hintermediates [Hxlst2]: ``worktot = maxthreads*(blksize*3)`` [local]
+      * Batched contractions: preallocation of workspace + Hxlst + Hmmtasks
+         * =6: hintermediates [CPU]: ``worktot = batchsize*(blksize*2)``
+         * =7: hintermediates [CPU + direct]
+         * =8: hintermediates [CPU + single list]
+         * =9: hintermediates [CPU + direct + single list]
+         * =16: hintermediates [GPU]
+         * =17: hintermediates [GPU + direct inter]
+         * =18: hintermediates [GPU + single list]
+         * =19: hintermediates [GPU + direct + single list]
 
-* ``alg_renorm``: algorithm for renormalization
+* ``alg_renorm``: algorithm for renormalization (>=4 for su2 case)
    
    * =0: oldest version
-   * =1: symbolic formulae + dynamic allocation of memory
-   * =2: symbolic formulae + preallocation of workspace
-   * =4: symbolic formulae + preallocation of workspace + intermediates [Rlst]
-   * =6: symbolic formulae + preallocation of workspace + intermediates [BatchGEMM]
-   * =7: symbolic formulae + preallocation of workspace + intermediates [direct]
-   * =8: symbolic formulae + preallocation of workspace + intermediates [single]
-   * =9: symbolic formulae + preallocation of workspace + intermediates [direct + single]
-   * =16: symbolic formulae + preallocation of workspace + intermediates [GPU]
-   * =17: symbolic formulae + preallocation of workspace + intermediates [GPU + direct]
-   * =18: symbolic formulae + preallocation of workspace + intermediates [GPU + single]
-   * =19: symbolic formulae + preallocation of workspace + intermediates [GPU + direct + single]
+   * Algorithms based on symbolic formulae:
+      * =1: dynamic allocation of memory
+      * =2: preallocation of workspace
+      * =4: preallocation of workspace + rintermediates [Rlst]
+      * Batched contractions: preallocation of workspace + Rlist + Rmmtasks
+         * =6: rintermediates [CPU]
+         * =7: rintermediates [CPU + direct]
+         * =8: rintermediates [CPU + single]
+         * =9: rintermediates [CPU + direct + single]
+         * =16: rintermediates [GPU]
+         * =17: rintermediates [GPU + direct]
+         * =18: rintermediates [GPU + single]
+         * =19: rintermediates [GPU + direct + single]
+
+* ``alg_hinter``: hintermediates (sum of operators), see ``preprocess_hinter.h``. Note that for direct algorithm (7,9,17,19), alg_hinter must be specified.
+
+   * =0: cpu axpy + openmp [work for alg_hvec=4,5,6,8] 
+   * =1: cpu batchgemv [work for alg_hvec=4,5,6,7,8,9]
+   * =2: gpu batchgemv [work for alg_hvec=16,17,18,19]
+
+* ``alg_rinter``: rintermediates (sum of operators), see ``preprocess_rinter.h``
 
 * ``alg_hcoper``: see ``preprocess_hmu.h``
 
@@ -157,11 +177,53 @@ CTNS
    * =0: always contract op[c1/c2] - most general case
    * =1: the same with alg_hcoper, but in rmmtask there is no need to copy x, because in renorm psi* will contract with sigma
 
-* ``ioasync``: =0 (default: sequential)
+* ``batchhvec``: specifying options for hinter, gemm, reduction in batch GPU algorithm
+
+   * =2: magma (gemv/gemm)
+   * =3: cublas batch (gemv/gemm) 
+   * =4: cublas batch (gemv/gemm) + stream
+
+* ``batchrenorm``: specifying options for rinter, gemm, reduction in batch GPU algoirthm
+
+* ``ioasync``: =false (default: sequential)
+   
+* ``ifdist1``: distributed C*S terms for Hx
+
+* ``ifdistc``: whether to treat dot in dmrg specially 
+
+* ``ifab2pq``: switch from A,B to P,Q in renormalization
 
 Some keyworks useful for debugging
-**********************************
+==================================
 
 * ``maxbond``: stop the sweep after this bond and ``maxsweep``
 * ``save_formulae``: save formulae for Hx & renorm
+* ``save_mmtasks``: save mmtasks for checking
+
+Further examples
+****************
+
+Example for dmrg cpu
+====================
+
+.. code-block::
+
+   task_dmrg
+   alg_hvec 4
+   alg_renorm 4
+
+Example for dmrg gpu
+====================
+
+.. code-block::
+
+   task_dmrg
+   alg_hvec 19
+   alg_hinter 1
+   alg_coper 2
+   alg_renorm 19
+   alg_rinter 1
+   alg_roper 1
+   batchhvec 4 4 4
+   batchrenorm 4 4 4
 

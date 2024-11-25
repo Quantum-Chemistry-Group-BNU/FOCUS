@@ -537,21 +537,80 @@
 
 ### 2024 DMRG[TDM] ###
 
- * Arbitrary types of transition density matrices (relevant for PT & SOC?),
-   which only require the storage of two-index renormalized operators:
+ * transition density matrices (relevant for PT & SOC?), which only requires 
+   the storage of two-index renormalized operators:
    - reference: rdm1/2/3_simple is working [DONE@2024/10/06]
    - how the orbitals are correctly mapped? [DONE@2024/10/06]
       - 1p1h: no special treatment is needed, as ops carry orbital indices
       - 1p0h: apply_opC combined with image1 = icomb.topo.get_image1()
-   - TDM for nonspin-adapted case: 
+   - TDM for nonsu2 case: [DONE@2024/11/12] 
       - 1p0h & 0p1h: <MPS[N]|p+|MPS[N-1]>, <MPS[N-1]|p|MPS[N]> [DONE@2024/10/06]
          - checked by forming 1-RDM using TDM [!!!]
       - 2p0h & 0p2h: <MPS[N]|p+q+|MPS[N-2]>, <MPS[N-2]|pq|MPS[N]> [DONE@2024/10/06]
       - 2p1h & 1p2h: <MPS[N]|p+q+r|MPS[N-1]>, <MPS[N-1]|p+qr|MPS[N]> [DONE@2024/10/06]
-      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/11/01]
+      - 3p2h & 2p3h: <MPS[N]|p+q+r+st|MPS[N-1]>, <MPS[N-1]|p+q+rst|MPS[N]> [DONE@2024/11/12]
+         - checked by computing 3-RDM
+         - checked by using rdm_simple
    - MPI version:
-      - 1p0h & 0p1h:
-      - 2p0h & 0p2h:
-      - 2p1h & 1p2h:
-      - 3p2h & 2p3h: communication is required for pattern 212 
+      - 1p0h & 0p1h [DONE@2024/11/12]
+      - 2p0h & 0p2h [DONE@2024/11/12]
+      - 2p1h & 1p2h [DONE@2024/11/12]
+      - 3p2h & 2p3h: communication of two-indexed operators is required for pattern 212 [DONE@2024/11/13]
+      - 3p3h (use 3p2h) [DONE@2024/11/13]
+   - Interface with DSRG-MRPT2 
+      - on-the-fly assembling pt2 energy? [DONE@2024/11/10]
+      - MPI parallelization [DONE@2024/11/13]
+
+### 2024 DMRG: code optimization ###
+ 
+ * Benchmark: jiageng or a800_xiyun platform [DONE@2025/XX/XX]
+   - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
+   - Compilation on jiageng: need to use mkl for magma/zquatev, 
+                             but use mkl2022 for focus,
+                             otherwise, dgemv_batch does not exist!
+   - fe2s2
+   - fe4s4
+   - fe8s7
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
+
+ * Implement the switch from AB2PQ in the middle of the MPS chain: [DONE@2024/11/21]
+   - memcpy in renorm: [DONE@2024/11/16]
+      - better understand the cost of gpu2cpu memcpy for renorm? 
+        [previous async_tocpu actually does not work well, the actual time is similar!]
+      - reduce the size of qops could help to reduce time for memcpy!
+   - conversion between NC/CN parition for MPS: can this reduce the memory requirement for GPU?
+      - serial version:
+         - nonsu2 case: [DONE@2024/11/20]
+            - construct PQ from AB: oper_ab2pq.h
+            - renorm of opS & opH: oper_compxwf.h, symbolic_compxwf.h
+            - twodot_H: [DONE@2024/11/19] 
+               - sweep_twodot_diag.h, sweep_twodot_sigma.h, symbolic_formulae_twodot.h
+            - onedot_H: [DONE@2024/11/20] 
+               - sweep_onedot_diag.h
+               - sweep_onedot_sigma.h
+         - su2 case: [DONE@2024/11/20]
+            - construct PQ from AB
+            - renorm opSH for task_ham
+            - twodot and onedot for task_dmrg
+      - determine the position of switch: middle=(nsite+1)/2, see oper_ab2pq.h [two positions]
+      - difficulty lies in the design of MPI and GPU version, and in the later memory usage should be reduced.
+         - mpi version:
+            - nonsu2 case [DONE@2024/11/19]
+            - su2 case [DONE@2024/11/20]
+         - gpu version: [DONE@2024/11/20]
+      - compare the performance with and without ifab2pq: minimize the no. of formula is needed! [DONE@2024/11/24]
+        note: thers is still room for further optimize the cost by classifying the resulting formulae and factorizing,
+        this will probably lead to a factor to 2 (?) acceleration [to be explored in future].
+         - revise symbolic_compxwf_opS_su2 [DONE@2024/11/21]: +2*Ks (at most)
+         - revise symbolic_compxwf_opH_su2 [DONE@2024/11/21]: +2
+            ifab2pq=false,ifdistc=true : SUMMARY[twodot] ifNC=1 size=486 H1:11 H2:19 CS:54 SC:126 AP:108 BQ:168
+            ifab2pq=true ,ifdistc=false: SUMMARY[twodot] ifNC=1 size=516 H1:13 H2:19 CS:54 SC:154 AP:108 BQ:168
+         - question: is the memory layout for {C,S,A,B,P,Q} contiguous after partition? or for rank-0?
+           note: batchgemv (alg_hinter=1,2) should be used carefully [!!!]
+            - oper_index.h
+            - revise S4c,S6c in symbolic_compxwf_opS_su2.h 
+         - revise symbolic_compxwf_opH [DONE@2024/11/23]
+            - oper_index.h [classify opA,B,P,Q by symmetry, 3 cases for opA, 4 cases for opB]
+         - revise symbolic_compxwf_opS [DONE@2024/11/24]
+         - check the correctness of onedot algorithm and add fe2s2[cpu/gpu] examples
 

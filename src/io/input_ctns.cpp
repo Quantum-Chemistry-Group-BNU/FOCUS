@@ -84,12 +84,18 @@ void params_ctns::read(ifstream& istrm){
          alg_rcoper = stoi(line.substr(10));
       }else if(line.substr(0,9)=="alg_decim"){
          alg_decim = stoi(line.substr(9));
+      }else if(line.substr(0,9)=="alg_ab2pq"){
+         alg_ab2pq = stoi(line.substr(9));
       }else if(line.substr(0,7)=="alg_rdm"){
          alg_rdm = stoi(line.substr(7));
+      }else if(line.substr(0,9)=="alg_mrpt2"){
+         alg_mrpt2 = stoi(line.substr(9));
       }else if(line.substr(0,9)=="debug_rdm"){
          debug_rdm = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
+      }else if(line.substr(0,7)=="ifab2pq"){
+         ifab2pq = true;
       }else if(line.substr(0,7)=="ifdist1"){
          ifdist1 = true;	      
       }else if(line.substr(0,7)=="ifdistc"){
@@ -235,6 +241,12 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,9)=="rcfprefix"){
          istringstream is(line.substr(9));
          is >> rcfprefix;
+      }else if(line.substr(0,5)=="mrpt2"){
+         std::string nv2s, nc2s;
+         istringstream is(line.substr(5));
+         is >> nv2s >> nc2s;
+         nv2 = stoi(nv2s);
+         nc2 = stoi(nc2s);
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
@@ -246,6 +258,12 @@ void params_ctns::read(ifstream& istrm){
             string isweep, dots, dcut, eps, noise;
             is >> isweep >> dots >> dcut >> eps >> noise;
             tmp_ctrls.push_back({stoi(isweep),stoi(dots),stoi(dcut),stod(eps),stod(noise)});
+            // consistency check
+            auto ndots = stoi(dots);
+            if(ndots != 1 and ndots != 2){
+               std::cout << "error in input: unsupported dots=" << ndots << std::endl;
+               exit(1); 
+            }
          }
       }else{
          tools::exit("error: no matching key! line = "+line);
@@ -358,7 +376,9 @@ void params_ctns::print() const{
    cout << "alg_rcoper = " << alg_rcoper << endl;
    cout << "alg_rdm = " << alg_rdm << endl;
    cout << "alg_decim = " << alg_decim << endl;
+   cout << "alg_ab2pq = " << alg_ab2pq << endl;
    cout << "notrunc = " << notrunc << endl;
+   cout << "ifab2pq = " << ifab2pq << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "ifdistc = " << ifdistc << endl;
    cout << "save_formulae = " << save_formulae << endl;
@@ -413,4 +433,8 @@ void params_ctns::print() const{
    cout << "saveconfs = " << saveconfs << endl;
    cout << "loadconfs = " << loadconfs << endl;
    cout << "debug_rdm = " << debug_rdm << endl;
+   // mrpt2
+   cout << "alg_mrpt2 = " << alg_mrpt2 << endl;
+   cout << "nv2 = " << nv2 << endl;
+   cout << "nc2 = " << nc2 << endl;
 }

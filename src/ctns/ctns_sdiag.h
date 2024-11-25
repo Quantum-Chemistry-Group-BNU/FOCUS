@@ -135,9 +135,19 @@ namespace ctns{
             << " nprt=" << nprt
             << " saveconfs=" << saveconfs
             << std::endl;
+         
+         // check
+         if(iroot > icomb.get_nroots()-1){
+            std::cout << "eroor: iroot exceeds nroots=" << icomb.get_nroots() << std::endl;
+            exit(1); 
+         }
 #ifndef SERIAL
-         assert(icomb.world.rank() == 0); // this function is only a serial version
+         if(icomb.world.rank() != 0){
+            std::cout << "error: this function is only a serial version!" << std::endl;
+            exit(1);
+         }
 #endif
+
          const double cutoff = 0.0;
          const int noff = (nsample+9)/10;
          // In case CTNS is not normalized 

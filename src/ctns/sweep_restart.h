@@ -49,8 +49,8 @@ namespace ctns{
          icomb.topo.check_partition(1, dbond, debug, schd.ctns.verbose);
 
          // 1. load site (only for rank 0)
-         const auto p = dbond.get_current();
-         const auto& pdx = icomb.topo.rindex.at(p);
+         const auto pcoord = dbond.get_current();
+         const auto& pdx = icomb.topo.rindex.at(pcoord);
          if(rank == 0) sweep_load(icomb, schd, scratch, sweeps, isweep, ibond);
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx], 0);
@@ -59,7 +59,7 @@ namespace ctns{
          // 2. load operators & renorm
          auto fneed = icomb.topo.get_fqops(1, dbond, scratch, false); // lrc
          auto frop = icomb.topo.get_fbond(dbond, scratch, false).first;
-         std::string superblock, fname;
+         std::string superblock, fname, fmmtask;
          if(dbond.forward){
             superblock = dbond.is_cturn()? "lr" : "lc";
             if(superblock == "lc") fneed[1] = fneed[2];
@@ -71,9 +71,9 @@ namespace ctns{
          qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
          
          dot_timing timing_local;
-         oper_renorm(superblock, icomb, p, int2e, int1e, schd,
+         oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
                qops_pool.at(fneed[0]), qops_pool.at(fneed[1]), qops_pool[frop], 
-               fname, timing_local); 
+               fname, timing_local, fmmtask); 
          
          qops_pool.join_and_erase(fneed);
          qops_pool.save_to_disk(frop, schd.ctns.async_save);

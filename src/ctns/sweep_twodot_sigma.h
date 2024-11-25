@@ -282,9 +282,9 @@ namespace ctns{
             Hx_funs.push_back(Hx); 
          }
          // Two-index terms:
-         int slc1 = lqops.cindex.size() + c1qops.cindex.size();
-         int sc2r = c2qops.cindex.size() + rqops.cindex.size();
-         const bool ifNC = (slc1 <= sc2r);
+         const size_t csize_lc1 = lqops.cindex.size() + c1qops.cindex.size();
+         const size_t csize_c2r = c2qops.cindex.size() + rqops.cindex.size();
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const bool ifkr = lqops.ifkr;
          const bool ifhermi = true;
          auto ainfo = ifNC? oper_combine_opA(lqops.cindex, c1qops.cindex, ifkr) :
@@ -323,7 +323,8 @@ namespace ctns{
          }
          // debug
          if(rank == 0 and debug){
-            std::cout << "twodot_Hx_functors: size=" << Hx_funs.size() 
+            std::cout << "twodot_Hx_functors: ifNC=" << ifNC
+               << " size=" << Hx_funs.size() 
                << " CS:" << infoC1.size()
                << " SC:" << infoC2.size()
                << " " << alabel << ":" << ainfo.size()

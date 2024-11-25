@@ -11,7 +11,11 @@
 namespace ctns{
 
    template <typename Tm>
-      symbolic_task<Tm> gen_formulae_twodot(const std::vector<int>& cindex_l,
+      symbolic_task<Tm> gen_formulae_twodot(const std::string oplist_l,
+            const std::string oplist_r,
+            const std::string oplist_c1,
+            const std::string oplist_c2,
+            const std::vector<int>& cindex_l,
             const std::vector<int>& cindex_r,
             const std::vector<int>& cindex_c1,
             const std::vector<int>& cindex_c2,
@@ -25,18 +29,18 @@ namespace ctns{
             const bool ifsave,
             std::map<std::string,int>& counter){
          const int print_level = 1;
-         int slc1 = cindex_l.size() + cindex_c1.size();
-         int sc2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = (slc1 <= sc2r);
+         const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
+         const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
+         const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, csize_lc1, csize_c2r);
          const bool ifhermi = true;
 
          symbolic_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
 
          // Local terms:
          // H[lc1]
-         auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+         auto Hlc1 = symbolic_compxwf_opH<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1, 
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = Hlc1.size();
          if(Hlc1.size() > 0){
             auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
@@ -50,8 +54,8 @@ namespace ctns{
             }
          }
          // H[c2r]
-         auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+         auto Hc2r = symbolic_compxwf_opH<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r, 
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = Hc2r.size();
          if(Hc2r.size() > 0){
             auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
@@ -74,7 +78,7 @@ namespace ctns{
             int iformula = pr.second;
             // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
             auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-            auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
+            auto Sc2r = symbolic_compxwf_opS<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Sc2r.size() == 0) continue;
             auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
@@ -92,7 +96,7 @@ namespace ctns{
             int index = pr.first;
             int iformula = pr.second;
             // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-            auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
+            auto Slc1 = symbolic_compxwf_opS<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Slc1.size() == 0) continue;
             auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
@@ -229,9 +233,9 @@ namespace ctns{
          const auto& cindex_r = rqops.cindex;
          const auto& cindex_c1 = c1qops.cindex;
          const auto& cindex_c2 = c2qops.cindex;
-         int slc1 = cindex_l.size() + cindex_c1.size();
-         int sc2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = (slc1 <= sc2r);
+         const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
+         const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr; 
          std::streambuf *psbuf, *backup;
@@ -261,10 +265,12 @@ namespace ctns{
          std::map<std::string,int> counter;
          symbolic_task<Tm> formulae;
          if(ifab){
-            formulae = gen_formulae_twodot(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
+            formulae = gen_formulae_twodot(lqops.oplist,rqops.oplist,c1qops.oplist,c2qops.oplist,
+                  cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          }else{
-            formulae = gen_formulae_twodot_su2(cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
+            formulae = gen_formulae_twodot_su2(lqops.oplist,rqops.oplist,c1qops.oplist,c2qops.oplist,
+                  cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
          }
          // reorder if necessary
@@ -276,7 +282,8 @@ namespace ctns{
             formulae.sort(dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY size=" << formulae.size();
+            std::cout << "\nSUMMARY[twodot] ifNC=" << ifNC << " size=" << formulae.size()
+               << " H1:" << counter["H1"] << " H2:" << counter["H2"];
             if(ifNC){
                std::cout << " CS:" << counter["CS"] << " SC:" << counter["SC"]
                   << " AP:" << counter["AP"] << " BQ:" << counter["BQ"]
@@ -334,9 +341,9 @@ namespace ctns{
          const auto& cindex_c2 = c2qops.cindex;
          const int isym = lqops.isym;
          const bool ifkr = lqops.ifkr;
-         int slc1 = cindex_l.size() + cindex_c1.size();
-         int sc2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = (slc1 <= sc2r);
+         const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
+         const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const bool ifhermi = true;
          std::streambuf *psbuf, *backup;
          std::ofstream file;
@@ -363,13 +370,13 @@ namespace ctns{
          }
 
          bipart_task<Tm> formulae;
-         int idx = 0;
+         size_t idx = 0;
          std::map<std::string,int> counter;
 
          // Local terms:
          // H[lc1]
-         auto Hlc1 = symbolic_compxwf_opH<Tm>("l", "c1", cindex_l, cindex_c1, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+         auto Hlc1 = symbolic_compxwf_opH<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1, 
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H1"] = (Hlc1.size()>0)? 1 : 0;
          if(Hlc1.size() > 0){
             auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
@@ -381,8 +388,8 @@ namespace ctns{
             }
          }
          // H[c2r]
-         auto Hc2r = symbolic_compxwf_opH<Tm>("c2", "r", cindex_c2, cindex_r, 
-               ifkr, int2e.sorb, size, rank, ifdist1);
+         auto Hc2r = symbolic_compxwf_opH<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r, 
+               int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
          counter["H2"] = (Hc2r.size()>0)? 1 : 0;
          if(Hc2r.size() > 0){
             auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
@@ -403,7 +410,7 @@ namespace ctns{
             int iformula = pr.second;
             // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
             auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-            auto Sc2r = symbolic_compxwf_opS<Tm>("c2", "r", cindex_c2, cindex_r,
+            auto Sc2r = symbolic_compxwf_opS<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Sc2r.size() == 0) continue;
             auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
@@ -422,7 +429,7 @@ namespace ctns{
             int index = pr.first;
             int iformula = pr.second;
             // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-            auto Slc1 = symbolic_compxwf_opS<Tm>("l", "c1", cindex_l, cindex_c1,
+            auto Slc1 = symbolic_compxwf_opS<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Slc1.size() == 0) continue;
             auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
@@ -546,7 +553,8 @@ namespace ctns{
             sort(formulae, dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY size=" << idx;
+            std::cout << "\nSUMMARY[twodot2] ifNC=" << ifNC << " size=" << idx
+               << " H1:" << counter["H1"] << " H2:" << counter["H2"];
             if(ifNC){
                std::cout << " CS:" << counter["CS"] << " SC:" << counter["SC"]
                   << " AP:" << counter["AP"] << " BQ:" << counter["BQ"]

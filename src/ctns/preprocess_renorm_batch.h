@@ -143,7 +143,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batchDirect: t[inter,gemm,reduction]="
+            std::cout << "preprocess_renorm_batchDirect: T(inter,gemm,reduction)="
                << time_inter << "," << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.renorm.analysis();
@@ -274,7 +274,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batchDirectSingle: t[inter,gemm,reduction]="
+            std::cout << "preprocess_renorm_batchDirectSingle: T(inter,gemm,reduction)="
                << time_inter << "," << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.renorm.analysis();
