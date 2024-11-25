@@ -11,9 +11,9 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
+            const int alg_ab2pq,
             double& tcomm,
-            double& tcomp,
-            const int alg_ab2pq=1){
+            double& tcomp){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -118,7 +118,7 @@ namespace ctns{
                   double tbcast = tools::get_duration(t1-t0);
                   tcomm += tbcast;
                   size_t data_size = qops_tmp.size();
-                  std::cout << "rank=" << rank << " tbcast=" << tbcast << " size=" << data_size << ":"
+                  std::cout << "rank=" << rank << " tbcast[opA]=" << tbcast << " size=" << data_size << ":"
                      << tools::sizeGB<Tm>(data_size) << "GB" 
                      << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                      << std::endl;
@@ -149,7 +149,7 @@ namespace ctns{
                         coeff(irow,icol) = get_xint2e_su2(int2e,ts,kp,kq,ks,kr);
                      } // irow
                   } // icol
-                  // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq) via BatchGEMM or by NNZ blocks?
+                  // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
                   size_t opsize = qops2('P').at(pindex[0]).size();
                   const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                   const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
@@ -177,9 +177,9 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
+            const int alg_ab2pq,
             double& tcomm,
-            double& tcomp,
-            const int alg_ab2pq=0){
+            double& tcomp){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();

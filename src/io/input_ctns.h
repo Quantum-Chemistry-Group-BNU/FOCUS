@@ -95,7 +95,7 @@ namespace input{
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
-                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim & notrunc 
+                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_ab2pq & notrunc 
                   & ifab2pq & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
@@ -160,6 +160,7 @@ namespace input{
          int alg_rcoper = 0;
          int alg_rdm = 1;
          int alg_decim = 1;
+         int alg_ab2pq = 1;
          bool notrunc = false;
          bool ifab2pq = false; // switch from NC to CN partition for MPS
          bool ifdist1 = false;

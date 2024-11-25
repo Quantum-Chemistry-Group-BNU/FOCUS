@@ -121,12 +121,12 @@ namespace ctns{
 
          // 2. transform A to P
          double tp_comm, tp_comp;
-         oper_a2p(icomb, int2e, qops, qops2, tp_comm, tp_comp);
+         oper_a2p(icomb, int2e, qops, qops2, schd.ctns.alg_ab2pq, tp_comm, tp_comp);
          auto tc = tools::get_time();
 
          // 3. transform B to Q
          double tq_comm, tq_comp;
-         oper_b2q(icomb, int2e, qops, qops2, tq_comm, tq_comp);
+         oper_b2q(icomb, int2e, qops, qops2, schd.ctns.alg_ab2pq, tq_comm, tq_comp);
          auto td = tools::get_time();
 
          // 4. to gpu (if necessary)

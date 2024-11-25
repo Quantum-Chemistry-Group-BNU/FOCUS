@@ -91,6 +91,7 @@ namespace ctns{
                   ifhermi = st.ifhermi;
                   _offset = std::move(st._offset);
                   _opdict = std::move(st._opdict);
+                  _indexmap = std::move(st._indexmap);
                   _size = st._size;
                   _opsize = st._opsize;
                   delete[] _data;
@@ -140,11 +141,6 @@ namespace ctns{
             bool ifexist(const char key) const{
                return _opdict.find(key) != _opdict.end();
             }
-            // start offset
-            size_t start_offset(const char key) const{
-               int start_index = _opdict.at(key).begin()->first;
-               return _offset.at(std::make_pair(key,start_index));
-            }
             // helpers
             size_t size() const{ return _size; };
             size_t opsize() const{ return _opsize; };
@@ -164,9 +160,7 @@ namespace ctns{
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,qoper_map<ifab,Tm>> _opdict;
-             
             std::map<char,qindexmap> _indexmap; // should be put into move?
-            
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
@@ -188,7 +182,7 @@ namespace ctns{
       void qoper_dict<ifab,Tm>::print(const std::string name, const int level) const{
          std::cout << " " << name << ": oplist=" << oplist;
          // count no. of operators in each class
-         std::string opseq = "ICSHABPQTFDM";
+         std::string opseq = "ICSHABPQTFDMN";
          std::map<char,int> exist;
          std::string s = " nops=";
          for(const auto& key : opseq){
@@ -255,11 +249,11 @@ namespace ctns{
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
-         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M'){
+         }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M' || key == 'N'){
             std::vector<int> index2;
             if(key == 'A' || key == 'M'){
                index2 = oper_index_opA(cindex, ifkr, isym);
-            }else if(key == 'B'){
+            }else if(key == 'B' || key == 'N'){
                index2 = oper_index_opB(cindex, ifkr, isym, ifhermi);
             }else if(key == 'P'){
                index2 = oper_index_opP(krest, ifkr, isym);
@@ -297,6 +291,9 @@ namespace ctns{
       }else if(key == 'M'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opM(isym, pr.first, pr.second);
+      }else if(key == 'N'){
+         auto pr = oper_unpack(idx);
+         sym_op = get_qsym_opN(isym, pr.first, pr.second);
       }else if(key == 'H' || key == 'I'){
          sym_op = qsym(isym,0,0);	   
       }else if(key == 'S'){
