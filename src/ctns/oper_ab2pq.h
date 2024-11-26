@@ -79,6 +79,7 @@ namespace ctns{
          int pos = get_ab2pq_pos(nsite);
          bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
             (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
+         if(!ab2pq) return;
          const int alg_ab2pq = schd.ctns.alg_ab2pq;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0);
@@ -90,7 +91,6 @@ namespace ctns{
                << " alg_renorm=" << alg_renorm
                << std::endl;
          }
-         if(!ab2pq) return;
          auto t0 = tools::get_time();
 
          // 0. initialization: for simplicity, we perform the transformation on CPU
