@@ -71,7 +71,7 @@ namespace ctns{
             }else if(alg_ab2pq == 1){
 
                // construct qmap for {opPpq} on current process
-               const auto& pmap = qops2.get_qindexmap('P');
+               const auto& pmap = qops2.indexmap('P');
                // loop over rank
                for(int iproc=0; iproc<size; iproc++){
                   // broadcast {opCrs} for given sym from iproc
@@ -112,14 +112,16 @@ namespace ctns{
                      auto t1 = tools::get_time();
                      double tbcast = tools::get_duration(t1-t0);
                      tcomm += tbcast;
-                     std::cout << "iproc=" << iproc << " rank=" << rank 
-                        << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
-                        << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-                        << std::endl;
+                     if(rank == 0){
+                        std::cout << "iproc=" << iproc << " rank=" << rank 
+                           << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                           << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                           << std::endl;
+                     }
                   }
 #endif
                   auto t0 = tools::get_time();
-                  const auto& amap = qops_tmp.get_qindexmap('M');
+                  const auto& amap = qops_tmp.indexmap('M');
                   for(const auto& pr : amap){
                      const auto& symP = pr.first;
                      const auto& aindex = pr.second;
@@ -142,7 +144,7 @@ namespace ctns{
                            coeff(irow,icol) = int2e.get(p,q,s,r);
                         } // irow
                      } // icol
-                     // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
+                       // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
                      size_t opsize = qops2('P').at(pindex[0]).size();
                      const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                      const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
@@ -244,7 +246,7 @@ namespace ctns{
             }else if(alg_ab2pq == 1){
 
                // construct qmap for {opQps} on current process
-               const auto& qmap = qops2.get_qindexmap('Q');
+               const auto& qmap = qops2.indexmap('Q');
                // loop over rank
                for(int iproc=0; iproc<size; iproc++){
 
@@ -287,14 +289,16 @@ namespace ctns{
                         auto t1 = tools::get_time();
                         double tbcast = tools::get_duration(t1-t0);
                         tcomm += tbcast;
-                        std::cout << "iproc=" << iproc << " rank=" << rank 
-                           << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
-                           << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-                           << std::endl;
+                        if(rank == 0){
+                           std::cout << "iproc=" << iproc << " rank=" << rank 
+                              << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                              << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                              << std::endl;
+                        }
                      }
 #endif
                      auto t0 = tools::get_time();
-                     const auto& bmap = qops_tmp.get_qindexmap('B');
+                     const auto& bmap = qops_tmp.indexmap('B');
                      for(const auto& pr : bmap){
                         const auto& symQ = pr.first;
                         const auto& bindex = pr.second;
@@ -318,7 +322,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*int2e.get(p,q,s,r);
                            } // irow
                         } // icol
-                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
+                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         size_t opsize = qops2('Q').at(qindex[0]).size();
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('B').at(bindex[0]).data();
@@ -370,14 +374,16 @@ namespace ctns{
                         auto t1 = tools::get_time();
                         double tbcast = tools::get_duration(t1-t0);
                         tcomm += tbcast;
-                        std::cout << "rank=" << rank 
-                           << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
-                           << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-                           << std::endl;
+                        if(rank == 0){
+                           std::cout << "iproc=" << iproc << " rank=" << rank 
+                              << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
+                              << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
+                              << std::endl;
+                        }
                      }
 #endif
                      auto t0 = tools::get_time();
-                     const auto& bmap = qops_tmp.get_qindexmap('N');
+                     const auto& bmap = qops_tmp.indexmap('N');
                      for(const auto& pr : bmap){
                         const auto& symQ = pr.first;
                         const auto& bindex = pr.second;
@@ -401,7 +407,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*int2e.get(p,r,s,q);
                            } // irow
                         } // icol
-                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
+                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         size_t opsize = qops2('Q').at(qindex[0]).size();
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('N').at(bindex[0]).data();

@@ -9,6 +9,8 @@
       - scale up the present algorithm to fe8s7 with D>10000 on jiageng [50TB] !!!
       - adjust the switch position via a function? 
 
+   - large-scale cpu parallelization test (mpisize>100)
+
    - alg_renorm=4 占用内存过多
 
    - decimation for su2 is not parallelized:

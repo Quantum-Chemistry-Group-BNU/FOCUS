@@ -125,8 +125,6 @@ namespace ctns{
             std::vector<int> oper_index_op(const char key) const;
             // symmetry of op
             qsym get_qsym_op(const char key, const int idx) const;
-            // return qindexmap for certain type of op
-            qindexmap oper_index_opmap(const char key) const;
             // access
             const qoper_map<ifab,Tm>& operator()(const char key) const{
                return _opdict.at(key);
@@ -134,12 +132,21 @@ namespace ctns{
             qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
             }
-            const qindexmap& get_qindexmap(const char key) const{
+            // return qindexmap for certain type of op
+            const qindexmap& indexmap(const char key) const{
+               assert(this->numop(key) > 0);
                return _indexmap.at(key);
             }
             // check existence
             bool ifexist(const char key) const{
                return _opdict.find(key) != _opdict.end();
+            }
+            size_t numop(const char key) const{
+               if(!this->ifexist(key)){
+                  return 0;
+               }else{
+                  return _opdict.at(key).size();
+               }
             }
             // helpers
             size_t size() const{ return _size; };
