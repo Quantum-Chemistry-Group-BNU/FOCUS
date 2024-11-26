@@ -114,7 +114,7 @@ namespace ctns{
                   auto t1 = tools::get_time();
                   double tbcast = tools::get_duration(t1-t0);
                   tcomm += tbcast;
-                  std::cout << "rank=" << rank 
+                  std::cout << "iproc=" << iproc << " rank=" << rank 
                      << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                      << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                      << std::endl;
@@ -291,7 +291,7 @@ namespace ctns{
                      auto t1 = tools::get_time();
                      double tbcast = tools::get_duration(t1-t0);
                      tcomm += tbcast;
-                     std::cout << "rank=" << rank 
+                     std::cout << "iproc=" << iproc << " rank=" << rank 
                         << " size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                         << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                         << std::endl;
