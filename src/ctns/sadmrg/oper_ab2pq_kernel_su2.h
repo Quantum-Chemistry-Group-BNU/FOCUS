@@ -114,7 +114,7 @@ namespace ctns{
                   double tbcast = tools::get_duration(t1-t0);
                   tcomm += tbcast;
                   if(rank == 0){
-                     std::cout << "iproc=" << iproc << " rank=" << rank 
+                     std::cout << " iproc=" << iproc << " rank=" << rank 
                         << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                         << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                         << std::endl;
@@ -294,7 +294,7 @@ namespace ctns{
                      double tbcast = tools::get_duration(t1-t0);
                      tcomm += tbcast;
                      if(rank == 0){
-                        std::cout << "iproc=" << iproc << " rank=" << rank 
+                        std::cout << " iproc=" << iproc << " rank=" << rank 
                            << " size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                            << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                            << std::endl;
@@ -383,7 +383,7 @@ namespace ctns{
                      double tbcast = tools::get_duration(t1-t0);
                      tcomm += tbcast;
                      if(rank == 0){
-                        std::cout << "rank=" << rank 
+                        std::cout << " iproc=" << iproc << " rank=" << rank 
                            << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                            << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
                            << std::endl;
