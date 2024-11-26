@@ -50,6 +50,7 @@ namespace ctns{
                   tcomm += tools::get_duration(t1-t0);
                }
 #endif
+               if(opCrs.size() == 0) continue;
                // loop over all opP indices via openmp
                auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -89,7 +90,8 @@ namespace ctns{
                qops_tmp.mpisize = size;
                qops_tmp.mpirank = iproc; // not rank
                qops_tmp.ifdist2 = true;
-               qops_tmp.init(true);
+               qops_tmp.init();
+               if(qops_tmp.size() == 0) continue;  
                if(iproc == rank){
                   auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -132,6 +134,8 @@ namespace ctns{
                      if(pmap.find(symP) == pmap.end()) continue;
                      int ts = symP.ts();
                      const auto& pindex = pmap.at(symP);
+                     size_t opsize = qops2('P').at(pindex[0]).size();
+                     if(opsize == 0) continue;
                      // construct coefficient matrix
                      size_t rows = aindex.size();
                      size_t cols = pindex.size();
@@ -149,11 +153,10 @@ namespace ctns{
                            coeff(irow,icol) = get_xint2e_su2(int2e,ts,kp,kq,ks,kr);
                         } // irow
                      } // icol
-                       // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
-                     size_t opsize = qops2('P').at(pindex[0]).size();
+                     // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
                      const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                      const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
-                     Tm* ptr_opP = qops2('P')[pindex[0]].data(); 
+                     Tm* ptr_opP = qops2('P')[pindex[0]].data();
                      linalg::xgemm("N", "N", opsize, cols, rows, alpha,
                            ptr_opM, opsize, coeff.data(), rows, beta,
                            ptr_opP, opsize);
@@ -224,6 +227,7 @@ namespace ctns{
                   tcomm += tools::get_duration(t1-t0);
                }
 #endif
+               if(opBqr.size() == 0) continue;
                // loop over all opQ indices via openmp
                auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -269,7 +273,8 @@ namespace ctns{
                   qops_tmp.mpisize = size;
                   qops_tmp.mpirank = iproc; // not rank
                   qops_tmp.ifdist2 = true;
-                  qops_tmp.init(true);
+                  qops_tmp.init();
+                  if(qops_tmp.size() == 0) continue;  
                   if(iproc == rank){
                      auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -312,6 +317,8 @@ namespace ctns{
                         if(qmap.find(symQ) == qmap.end()) continue;
                         int ts = symQ.ts();
                         const auto& qindex = qmap.at(symQ);
+                        size_t opsize = qops2('Q').at(qindex[0]).size();
+                        if(opsize == 0) continue; 
                         // construct coefficient matrix
                         size_t rows = bindex.size();
                         size_t cols = qindex.size();
@@ -330,8 +337,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*get_vint2e_su2(int2e,ts,kp,kq,ks,kr);
                            } // irow
                         } // icol
-                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
-                        size_t opsize = qops2('Q').at(qindex[0]).size();
+                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('B').at(bindex[0]).data();
                         Tm* ptr_opQ = qops2('Q')[qindex[0]].data(); 
@@ -358,7 +364,8 @@ namespace ctns{
                   qops_tmp.mpisize = size;
                   qops_tmp.mpirank = iproc; // not rank
                   qops_tmp.ifdist2 = true;
-                  qops_tmp.init(true);
+                  qops_tmp.init();
+                  if(qops_tmp.size() == 0) continue;  
                   if(iproc == rank){
                      auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -400,6 +407,8 @@ namespace ctns{
                         if(qmap.find(symQ) == qmap.end()) continue;
                         int ts = symQ.ts();
                         const auto& qindex = qmap.at(symQ);
+                        size_t opsize = qops2('Q').at(qindex[0]).size();
+                        if(opsize == 0) continue;
                         // construct coefficient matrix
                         size_t rows = bindex.size();
                         size_t cols = qindex.size();
@@ -419,8 +428,7 @@ namespace ctns{
                               coeff(irow,icol) = wqr*get_vint2e_su2(int2e,ts,kp,kr,ks,kq);
                            } // irow
                         } // icol
-                          // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
-                        size_t opsize = qops2('Q').at(qindex[0]).size();
+                        // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opB = qops_tmp('N').at(bindex[0]).data();
                         Tm* ptr_opQ = qops2('Q')[qindex[0]].data(); 

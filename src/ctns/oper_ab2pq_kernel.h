@@ -50,6 +50,9 @@ namespace ctns{
                      tcomm += tools::get_duration(t1-t0);
                   }
 #endif
+                  // ZL@2024/11/26: this can happen for small bond dimension,
+                  // where no symmetry sectors are connected by deltaN=-2
+                  if(opCrs.size() == 0) continue;
                   // loop over all opP indices via openmp
                   auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -87,7 +90,8 @@ namespace ctns{
                   qops_tmp.mpisize = size;
                   qops_tmp.mpirank = iproc; // not rank
                   qops_tmp.ifdist2 = true;
-                  qops_tmp.init(true);
+                  qops_tmp.init();
+                  if(qops_tmp.size() == 0) continue;  
                   if(iproc == rank){
                      auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -129,6 +133,8 @@ namespace ctns{
                         const auto& aindex = pr.second;
                         if(pmap.find(symP) == pmap.end()) continue;
                         const auto& pindex = pmap.at(symP);
+                        size_t opsize = qops2('P').at(pindex[0]).size();
+                        if(opsize == 0) continue;
                         // construct coefficient matrix
                         size_t rows = aindex.size();
                         size_t cols = pindex.size();
@@ -147,7 +153,6 @@ namespace ctns{
                            } // irow
                         } // icol
                         // contract opP(dat,pq) = opCrs(dat,rs)*x(rs,pq)
-                        size_t opsize = qops2('P').at(pindex[0]).size();
                         const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                         const Tm* ptr_opM = qops_tmp('M').at(aindex[0]).data();
                         Tm* ptr_opP = qops2('P')[pindex[0]].data(); 
@@ -224,6 +229,7 @@ namespace ctns{
                      tcomm += tools::get_duration(t1-t0);
                   }
 #endif
+                  if(opBqr.size() == 0) continue;
                   // loop over all opQ indices via openmp
                   auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -265,7 +271,8 @@ namespace ctns{
                      qops_tmp.mpisize = size;
                      qops_tmp.mpirank = iproc; // not rank
                      qops_tmp.ifdist2 = true;
-                     qops_tmp.init(true);
+                     qops_tmp.init();
+                     if(qops_tmp.size() == 0) continue;  
                      if(iproc == rank){
                         auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -307,6 +314,8 @@ namespace ctns{
                            const auto& bindex = pr.second;
                            if(qmap.find(symQ) == qmap.end()) continue;
                            const auto& qindex = qmap.at(symQ);
+                           size_t opsize = qops2('Q').at(qindex[0]).size();
+                           if(opsize == 0) continue;
                            // construct coefficient matrix
                            size_t rows = bindex.size();
                            size_t cols = qindex.size();
@@ -326,7 +335,6 @@ namespace ctns{
                               } // irow
                            } // icol
                            // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
-                           size_t opsize = qops2('Q').at(qindex[0]).size();
                            const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                            const Tm* ptr_opB = qops_tmp('B').at(bindex[0]).data();
                            Tm* ptr_opQ = qops2('Q')[qindex[0]].data(); 
@@ -353,7 +361,8 @@ namespace ctns{
                      qops_tmp.mpisize = size;
                      qops_tmp.mpirank = iproc; // not rank
                      qops_tmp.ifdist2 = true;
-                     qops_tmp.init(true);
+                     qops_tmp.init();
+                     if(qops_tmp.size() == 0) continue;  
                      if(iproc == rank){
                         auto t0 = tools::get_time();
                         auto bindex = qops.oper_index_op('B');
@@ -395,6 +404,8 @@ namespace ctns{
                            const auto& bindex = pr.second;
                            if(qmap.find(symQ) == qmap.end()) continue;
                            const auto& qindex = qmap.at(symQ);
+                           size_t opsize = qops2('Q').at(qindex[0]).size();
+                           if(opsize == 0) continue;
                            // construct coefficient matrix
                            size_t rows = bindex.size();
                            size_t cols = qindex.size();
@@ -414,7 +425,6 @@ namespace ctns{
                               } // irow
                            } // icol
                            // contract opQ(dat,ps) = opBqr(dat,qr)*x(ps,qr)
-                           size_t opsize = qops2('Q').at(qindex[0]).size();
                            const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                            const Tm* ptr_opB = qops_tmp('N').at(bindex[0]).data();
                            Tm* ptr_opQ = qops2('Q')[qindex[0]].data(); 
