@@ -327,6 +327,7 @@ void onstate::get_vlst(int* vlst) const{
 }
 
 // perform operations ~(not), ^(xor), &(and) on onstate 
+
 onstate fock::operator ~(const onstate& state1){
    onstate dstate(state1._size);
    for(int i=0; i<state1._len-1; i++){
