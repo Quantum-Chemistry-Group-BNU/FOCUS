@@ -32,8 +32,8 @@ int tests::test_hamiltonian(){
    // test get_Hij
    cout << space2[16] << endl;
    cout << space2[1] << endl;
-   assert(space2[16].to_string1() == "000000110011");
-   assert(space2[1].to_string1() == "000000100111");
+   assert(space2[16].to_string_spinorb() == "000000110011");
+   assert(space2[1].to_string_spinorb() == "000000100111");
    auto Ha = fock::get_Hij(space2[16], space2[1], int2e, int1e);
    auto Hb = fock::get_Hij(space2[1], space2[16], int2e, int1e);
    cout << setprecision(12);

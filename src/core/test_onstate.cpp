@@ -26,19 +26,19 @@ int tests::test_onstate(){
       cout << "i=" << i << " occ=" << state1[i] << endl;
    };
    cout << "state1=" << state1.to_string() << endl;
-   cout << "state1=" << state1.to_string1() << endl; 
+   cout << "state1=" << state1.to_string_spinorb() << endl; 
 
    // test constructor from string
    fock::onstate state2("00000101",1);
    cout << "state2=" << state2.to_string() << endl;
-   cout << "state2=" << state2.to_string1() << endl; 
+   cout << "state2=" << state2.to_string_spinorb() << endl; 
 
    // test assignment
    fock::onstate state3(state1.size());
    state3 = state1;
    state3[1] = 1;
    cout << "state3=" << state3.to_string() << endl; 
-   cout << "state3=" << state3.to_string1() << endl; 
+   cout << "state3=" << state3.to_string_spinorb() << endl; 
 
    // test count
    cout << "Ne1=" << " " << state1.nelec() 
@@ -61,7 +61,7 @@ int tests::test_onstate(){
    fock::onstate non;
    cout << "non=" << non << endl;
    cout << "non=" << non.to_string() << endl;
-   cout << "non=" << non.to_string1() << endl;
+   cout << "non=" << non.to_string_spinorb() << endl;
 
    // test cre/ann
    cout << "input\n" << state4 << endl;
@@ -265,8 +265,11 @@ int tests::test_onstate(){
    nvec.push_back(128);
 
    for(const auto& n : nvec){
+
+      std::cout << "\n### n=" << n << " ###" << std::endl;
       fock::onstate bstate(n);
-      cout << bstate.to_string(2) << endl;
+      cout << bstate.to_string_spinorb() << endl;
+      cout << (~bstate).to_string_spinorb() << endl;
       std::vector<int> olst0,vlst0;
       bstate.get_olst(olst0);
       bstate.get_vlst(vlst0);
@@ -275,14 +278,14 @@ int tests::test_onstate(){
 
       fock::onstate bstate2(n);
       bstate2[0] = 1;
-      cout << bstate2.to_string(2) << endl;
+      cout << bstate2.to_string_spinorb() << endl;
+      cout << (~bstate2).to_string_spinorb() << endl;
       std::vector<int> olst2,vlst2;
       bstate2.get_olst(olst2);
       bstate2.get_vlst(vlst2);
       tools::print_vector(olst2,"olst2");
       tools::print_vector(vlst2,"vlst2");
    }
-   exit(1);
 
    return 0;   
 }

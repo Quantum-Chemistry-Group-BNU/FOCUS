@@ -195,8 +195,8 @@ namespace ctns{
                   std::cout << "rank=" << rank
                      << " pattern=" << pattern.to_string() 
                      << " ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
-                     << " rdmstr=" << rdmstr.to_string1()
-                     << " rdmstr2=" << rdmstr2.to_string1()
+                     << " rdmstr=" << rdmstr.to_string_spinorb()
+                     << " rdmstr2=" << rdmstr2.to_string_spinorb()
                      << " rdmstr=" << rdmstr.to_string()
                      << " rdmstr2=" << rdmstr2.to_string()
                      << " sgn=" << sgn 
@@ -374,8 +374,8 @@ namespace ctns{
                   std::cout << "rank=" << rank
                      << " pattern=" << pattern.to_string() 
                      << " ldx,cdx,rdx=" << ldx << "," << cdx << "," << rdx 
-                     << " rdmstr=" << rdmstr.to_string1()
-                     << " rdmstr2=" << rdmstr2.to_string1()
+                     << " rdmstr=" << rdmstr.to_string_spinorb()
+                     << " rdmstr2=" << rdmstr2.to_string_spinorb()
                      << " rdmstr=" << rdmstr.to_string()
                      << " rdmstr2=" << rdmstr2.to_string()
                      << " sgn=" << sgn 

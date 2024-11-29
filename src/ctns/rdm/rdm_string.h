@@ -220,7 +220,7 @@ namespace ctns{
             }
             return str;
          }
-         std::string to_string1() const{
+         std::string to_string_spinorb() const{
             std::string str="";
             for(int i=0; i<calst.size(); i++){
                str += std::to_string(calst[i].first)

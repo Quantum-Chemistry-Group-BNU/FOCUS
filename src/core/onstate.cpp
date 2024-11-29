@@ -123,7 +123,7 @@ ostream& fock::operator <<(ostream& os, const onstate& state){
 }
 
 // print 01 string: "010011" (read from right to left)
-string onstate::to_string1() const{
+string onstate::to_string_spinorb() const{
    string s; // loop from left to right for +=
    for(int i = _size-1; i >= 0; i--){
       s += (*this)[i] ? '1' : '0'; 
@@ -291,7 +291,7 @@ void onstate::get_vlst(std::vector<int>& vlst) const{
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       // be careful about the virtual orbital case 
-      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones(_size%64));  
+      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones((_size%64==0)? 64 : _size%64));
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          vlst.push_back(i*64+j);
@@ -315,7 +315,7 @@ void onstate::get_vlst(int* vlst) const{
    unsigned long tmp;
    for(int i=0; i<_len; i++){
       // be careful about the virtual orbital case 
-      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones(_size%64));  
+      tmp = (i!=_len-1)? (~_repr[i]) : ((~_repr[i]) & get_ones((_size%64==0)? 64 : _size%64));
       while(tmp != 0){
          int j = __builtin_ctzl(tmp);
          vlst[ic] = i*64+j;
@@ -334,7 +334,7 @@ onstate fock::operator ~(const onstate& state1){
       dstate._repr[i] = ~state1._repr[i];
    }
    int i = state1._len-1;
-   dstate._repr[i] = ((~state1._repr[i]) & get_ones(state1._size%64));
+   dstate._repr[i] = ((~state1._repr[i]) & get_ones((state1._size%64==0)? 64 : state1._size%64));
    return dstate;
 }
 
