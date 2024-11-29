@@ -15,7 +15,8 @@ namespace fock{
    // assuming i <= 64, return 0[i=0],1[i=1],11[i=2],...11111.1111[i=64]
    // must be inlined in header
    inline unsigned long get_ones(const int& n){
-      return (n == 64) ? ~0ULL : (1ULL << n) - 1ULL; // parenthesis must be added due to priority
+      //return (n == 64) ? ~0ULL : (1ULL << n) - 1ULL; // parenthesis must be added due to priority
+      return (1ULL << n) - 1ULL; // parenthesis must be added due to priority
    }
 
    // count the number of nonzero bits

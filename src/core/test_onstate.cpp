@@ -257,5 +257,26 @@ int tests::test_onstate(){
    cout << state_v2 << " " << state_v2.get_even() << " " << state_v2.get_odd() << endl;
    cout << state_v3 << " " << state_v3.get_even() << " " << state_v3.get_odd() << endl;
 
+   cout << "\ntests boundary case" << endl;
+
+   fock::onstate bstate(64);
+   cout << bstate << endl;
+   std::vector<int> olst0,vlst0;
+   bstate.get_olst(olst0);
+   bstate.get_vlst(vlst0);
+   tools::print_vector(olst0,"olst0");
+   tools::print_vector(vlst0,"vlst0");
+
+   fock::onstate bstate2(64);
+   bstate2[0] = 1;
+   cout << bstate2.to_string(1) << endl;
+   std::vector<int> olst2,vlst2;
+   bstate2.get_olst(olst2);
+   bstate2.get_vlst(vlst2);
+   tools::print_vector(olst2,"olst2");
+   tools::print_vector(vlst2,"vlst2");
+
+   exit(1);
+
    return 0;   
 }
