@@ -109,7 +109,8 @@ namespace input{
                   & ooparams
                   & inputconf & saveconfs & loadconfs
                   & alg_rdm & debug_rdm
-                  & alg_mrpt2 & nv2 & nc2;
+                  & alg_mrpt2 & nv2 & nc2
+                  & mpisize_debug;
             }
       public:
          void read(std::ifstream& istrm);
@@ -215,6 +216,8 @@ namespace input{
          int alg_mrpt2 = 0;
          int nv2 = 0;
          int nc2 = 0;
+         // debug distribution
+         int mpisize_debug = 1;
    };
 
 } // input

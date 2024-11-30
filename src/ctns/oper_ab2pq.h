@@ -39,26 +39,25 @@ namespace ctns{
    }
 
    // determine which set of renormalize operators is to be used
-   template <typename Qm, typename Tm>
-      std::string oper_renorm_oplist(const std::string superblock,
-            const comb<Qm,Tm>& icomb,
-            const comb_coord& pcoord,
-            const input::schedule& schd,
-            const int ndots=2){
-         std::string oplist = "CSH";
-         if(!schd.ctns.ifab2pq){
-            oplist += "ABPQ";
-         }else{
-            assert(icomb.topo.ifmps);
-            int nsite = icomb.get_nphysical();
-            int psite = pcoord.first;
-            int pos = get_ab2pq_pos(nsite);
-            bool ifAB = (superblock=="cr" and psite>=pos) or
-               (superblock=="lc" and psite<=pos-ndots);
-            oplist += (ifAB? "AB" : "PQ");
-         }
-         return oplist;
+   inline std::string oper_renorm_oplist(const std::string superblock,
+         const bool ifmps,
+         const int nsite,
+         const comb_coord& pcoord,
+         const bool ifab2pq,
+         const int ndots=2){
+      std::string oplist = "CSH";
+      if(!ifab2pq){
+         oplist += "ABPQ";
+      }else{
+         assert(ifmps);
+         int psite = pcoord.first;
+         int pos = get_ab2pq_pos(nsite);
+         bool ifAB = (superblock=="cr" and psite>=pos) or
+            (superblock=="lc" and psite<=pos-ndots);
+         oplist += (ifAB? "AB" : "PQ");
       }
+      return oplist;
+   }
 
    template <typename Qm, typename Tm>
       void oper_ab2pq(const std::string superblock,

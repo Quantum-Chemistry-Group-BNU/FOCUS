@@ -45,10 +45,12 @@ namespace ctns{
 #ifdef _OPENMP
          maxthreads = omp_get_max_threads();
 #endif
-         auto oplist = oper_renorm_oplist(superblock, icomb, pcoord, schd, ndots);
+         const int nsite = icomb.get_nphysical();
+         const bool ifmps = icomb.topo.ifmps;
+         auto oplist = oper_renorm_oplist(superblock, ifmps, nsite, pcoord, schd.ctns.ifab2pq, ndots);
+         const int sorb = nsite*2;
          const bool ifdist1 = schd.ctns.ifdist1;
          const bool ifdistc = schd.ctns.ifdistc;
-         const int sorb = icomb.get_nphysical()*2;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool ifab = Qm::ifabelian;
          const int isym = Qm::isym;
@@ -112,7 +114,7 @@ namespace ctns{
          Renorm_wrapper<Qm,Tm,qtensor3<ifab,Tm>> Renorm;
          const bool is_same = true;
          const bool skipId = true;
-         Renorm.kernel(superblock, is_same, skipId, icomb.topo.ifmps, site, site,
+         Renorm.kernel(superblock, is_same, skipId, ifmps, site, site,
                qops1, qops2, qops, int2e, schd, size, rank, maxthreads, timing, fname, fmmtask);
 
          // 2.1 reduction of opS and opH on GPU

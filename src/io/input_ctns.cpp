@@ -247,6 +247,8 @@ void params_ctns::read(ifstream& istrm){
          is >> nv2s >> nc2s;
          nv2 = stoi(nv2s);
          nc2 = stoi(nc2s);
+      }else if(line.substr(0,13)=="mpisize_debug"){
+         mpisize_debug = stoi(line.substr(13));
       }else if(line.substr(0,8)=="schedule"){
          while(true){
             line.clear();
@@ -437,4 +439,6 @@ void params_ctns::print() const{
    cout << "alg_mrpt2 = " << alg_mrpt2 << endl;
    cout << "nv2 = " << nv2 << endl;
    cout << "nc2 = " << nc2 << endl;
+   // debug distribution
+   cout << "mpisize_debug = " << mpisize_debug << endl;
 }
