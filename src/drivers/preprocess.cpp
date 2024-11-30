@@ -10,14 +10,14 @@ using namespace std;
 using namespace fock;
 
 template <typename Qm, typename Tm>  
-void preCTNS(const input::schedule& schd){
+void PREPROCESS(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
    size = schd.world.size();
 #endif
    
-   // preCTNS 
+   // PREPROCESS 
    ctns::comb<Qm,Tm> icomb;
    // convert from SCI or load from files
    if(rank == 0){
@@ -78,21 +78,26 @@ int main(int argc, char *argv[]){
    io::create_scratch(schd.scratch, (rank == 0));
 
    if(schd.ctns.qkind == "rZ2"){
-      preCTNS<ctns::qkind::qZ2,double>(schd);
+      PREPROCESS<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      preCTNS<ctns::qkind::qZ2,std::complex<double>>(schd);
+      PREPROCESS<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      preCTNS<ctns::qkind::qN,double>(schd);
+      PREPROCESS<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      preCTNS<ctns::qkind::qN,std::complex<double>>(schd);
+      PREPROCESS<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      preCTNS<ctns::qkind::qNSz,double>(schd);
+      PREPROCESS<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      preCTNS<ctns::qkind::qNSz,std::complex<double>>(schd);
+      PREPROCESS<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      preCTNS<ctns::qkind::qNK,std::complex<double>>(schd);
+      PREPROCESS<ctns::qkind::qNK,std::complex<double>>(schd);
+   // spin-adapted version
+   }if(schd.ctns.qkind == "rNS"){
+      PREPROCESS<ctns::qkind::qNS,double>(schd);
+   }else if(schd.ctns.qkind == "cNS"){
+      PREPROCESS<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
-      tools::exit("error: no such qkind for ctns!");
+      tools::exit("error: no such qkind for preprocess!");
    } // qkind
 
 #ifndef SERIAL

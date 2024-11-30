@@ -1,14 +1,14 @@
 
-machine = lenovo #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = no #yes
+DEBUG = yes
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -423,7 +423,7 @@ endif
 
 ifeq ($(strip $(INSTALL_CTNS)), yes)
 ctns: $(LIB_DIR)/libctns.a $(BIN_DIR)/tests_ctns.x \
-	$(BIN_DIR)/tests_oper.x $(BIN_DIR)/prectns.x \
+	$(BIN_DIR)/tests_oper.x $(BIN_DIR)/preprocess.x \
 	$(BIN_DIR)/ctns.x $(BIN_DIR)/sadmrg.x $(BIN_DIR)/rdm.x
 else
 ctns:	
@@ -555,9 +555,9 @@ $(BIN_DIR)/sci.x: $(OBJ_DIR)/sci.o $(LIB_DIR)/libci.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/sci.o -L$(LIB_DIR) -lci $(LFLAGS) 
 
-$(BIN_DIR)/prectns.x: $(OBJ_DIR)/prectns.o $(LIB_DIR)/libctns.a
+$(BIN_DIR)/preprocess.x: $(OBJ_DIR)/preprocess.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
-	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/prectns.o -L$(LIB_DIR) -lctns $(LFLAGS) 
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/preprocess.o -L$(LIB_DIR) -lctns $(LFLAGS) 
 
 $(BIN_DIR)/ctns.x: $(OBJ_DIR)/ctns.o $(LIB_DIR)/libctns.a
 	@echo "=== LINK $@"
