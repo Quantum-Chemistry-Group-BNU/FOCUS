@@ -1,10 +1,11 @@
 #ifndef SYMBOLIC_FORMULAE_RENORM_H
 #define SYMBOLIC_FORMULAE_RENORM_H
 
+#include "../core/tools.h"
 #include "symbolic_task.h"
 #include "symbolic_normxwf.h"
 #include "symbolic_compxwf.h"
-#include "../core/tools.h"
+#include "sadmrg/symbolic_formulae_renorm_su2.h"
 
 namespace ctns{
 
@@ -203,12 +204,12 @@ namespace ctns{
          return formulae;
       }
 
-   template <typename Tm>
+   template <bool ifab, typename Tm>
       renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
             const integral::two_body<Tm>& int2e,
-            const oper_dict<Tm>& qops1,
-            const oper_dict<Tm>& qops2,
-            const oper_dict<Tm>& qops,
+            const qoper_dict<ifab,Tm>& qops1,
+            const qoper_dict<ifab,Tm>& qops2,
+            const qoper_dict<ifab,Tm>& qops,
             const int& size,
             const int& rank,
             const std::string fname,
@@ -230,6 +231,7 @@ namespace ctns{
          if(ifsave){
             if(rank == 0 and debug){
                std::cout << "ctns::symbolic_formulae_renorm"
+                  << " ifab=" << ifab
                   << " qops.oplist=" << qops.oplist
                   << " mpisize=" << size
                   << " fname=" << fname
@@ -242,6 +244,7 @@ namespace ctns{
             std::cout.rdbuf(psbuf); // assign streambuf to cout
             std::cout << "ctns::symbolic_formulae_renorm"
                << " isym=" << isym
+               << " ifab=" << ifab
                << " ifkr=" << ifkr
                << " block1=" << block1
                << " block2=" << block2
@@ -251,10 +254,16 @@ namespace ctns{
          }
          // generation of renorm
          std::map<std::string,int> counter;
-         auto rformulae = gen_formulae_renorm(qops.oplist,
-               qops1.oplist,qops2.oplist,block1,block2,
-               cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
-               int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
+         renorm_tasks<Tm> rformulae;
+         if(ifab){
+            rformulae = gen_formulae_renorm(qops.oplist,qops1.oplist,qops2.oplist,
+                  block1,block2,cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
+                  int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }else{
+            rformulae = gen_formulae_renorm_su2(qops.oplist,qops1.oplist,qops2.oplist,
+                  block1,block2,cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
+                  int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
+         }
          // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},

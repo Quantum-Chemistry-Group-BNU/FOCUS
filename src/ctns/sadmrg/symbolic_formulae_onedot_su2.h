@@ -25,6 +25,7 @@ namespace ctns{
             const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
+         assert(isym == 3);
          const int print_level = 1;
          const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, cindex_l.size(), cindex_r.size()); 
          const auto& cindex = ifNC? cindex_l : cindex_r;

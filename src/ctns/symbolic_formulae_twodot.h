@@ -254,7 +254,7 @@ namespace ctns{
             backup = std::cout.rdbuf(); // back up cout's streambuf
             psbuf = file.rdbuf(); // get file's streambuf
             std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "cnts::symbolic_formulae_twodot"
+            std::cout << "ctns::symbolic_formulae_twodot"
                << " isym=" << isym
                << " ifkr=" << ifkr
                << " mpisize=" << size
@@ -360,7 +360,7 @@ namespace ctns{
             backup = std::cout.rdbuf(); // back up cout's streambuf
             psbuf = file.rdbuf(); // get file's streambuf
             std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "cnts::symbolic_formulae_twodot2"
+            std::cout << "ctns::symbolic_formulae_twodot2"
                << " isym=" << isym
                << " ifkr=" << ifkr
                << " ifNC=" << ifNC

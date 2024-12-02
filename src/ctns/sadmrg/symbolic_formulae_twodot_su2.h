@@ -27,6 +27,7 @@ namespace ctns{
             const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
+         assert(isym == 3);
          const int print_level = 1;
          const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
          const size_t csize_c2r = cindex_c2.size() + cindex_r.size();

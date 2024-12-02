@@ -494,6 +494,6 @@ namespace ctns{
          }
       }
 
-} // cnts
+} // ctns
 
 #endif

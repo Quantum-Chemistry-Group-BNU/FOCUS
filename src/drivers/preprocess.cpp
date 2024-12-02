@@ -92,7 +92,7 @@ int main(int argc, char *argv[]){
    }else if(schd.ctns.qkind == "cNK"){
       PREPROCESS<ctns::qkind::qNK,std::complex<double>>(schd);
    // spin-adapted version
-   }if(schd.ctns.qkind == "rNS"){
+   }else if(schd.ctns.qkind == "rNS"){
       PREPROCESS<ctns::qkind::qNS,double>(schd);
    }else if(schd.ctns.qkind == "cNS"){
       PREPROCESS<ctns::qkind::qNS,std::complex<double>>(schd);

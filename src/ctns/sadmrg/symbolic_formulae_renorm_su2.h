@@ -17,6 +17,7 @@ namespace ctns{
             const std::vector<int>& cindex1,
             const std::vector<int>& cindex2,
             const std::vector<int>& krest,
+            const int isym,
             const bool ifkr,
             const bool ifhermi,
             const integral::two_body<Tm>& int2e,
@@ -27,8 +28,8 @@ namespace ctns{
             const bool ifdistc,
             const bool ifsave,
             std::map<std::string,int>& counter){
+         assert(isym == 3);
          const int print_level = 1;
-         const int isym = 3;
 
          renorm_tasks<Tm> formulae;
          size_t idx = 0;
@@ -200,78 +201,6 @@ namespace ctns{
             }
          }
          return formulae;
-      }
-
-   template <typename Tm>
-      renorm_tasks<Tm> symbolic_formulae_renorm(const std::string superblock,
-            const integral::two_body<Tm>& int2e,
-            const opersu2_dict<Tm>& qops1,
-            const opersu2_dict<Tm>& qops2,
-            const opersu2_dict<Tm>& qops,
-            const int& size,
-            const int& rank,
-            const std::string fname,
-            const bool sort_formulae,
-            const bool ifdist1,
-            const bool ifdistc,
-            const bool debug=false){
-         auto t0 = tools::get_time();
-         const std::string block1 = superblock.substr(0,1);
-         const std::string block2 = superblock.substr(1,2);
-         const auto& cindex1 = qops1.cindex;
-         const auto& cindex2 = qops2.cindex;
-         const bool ifkr = qops.ifkr;
-         const bool ifhermi = qops.ifhermi;
-         std::streambuf *psbuf, *backup;
-         std::ofstream file;
-         bool ifsave = !fname.empty();
-         if(ifsave){
-            if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_renorm(su2)"
-                  << " mpisize=" << size
-                  << " fname=" << fname
-                  << std::endl;
-            }
-            // http://www.cplusplus.com/reference/ios/ios/rdbuf/
-            file.open(fname);
-            backup = std::cout.rdbuf(); // back up cout's streambuf
-            psbuf = file.rdbuf(); // get file's streambuf
-            std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "ctns::symbolic_formulae_renorm(su2)"
-               << " ifkr=" << ifkr
-               << " block1=" << block1
-               << " block2=" << block2
-               << " mpisize=" << size
-               << " mpirank=" << rank 
-               << std::endl;
-         }
-         // generation of renorm
-         std::map<std::string,int> counter;
-         auto rformulae = gen_formulae_renorm_su2(qops.oplist,
-               qops1.oplist,qops2.oplist,block1,block2,
-               cindex1,cindex2,qops.krest,ifkr,ifhermi,
-               int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
-         // reorder if necessary
-         if(sort_formulae){
-            std::map<std::string,int> dims = {{block1,qops1.qket.get_dimAll()},
-               {block2,qops2.qket.get_dimAll()}};
-            rformulae.sort(dims);
-         }
-         if(ifsave){
-            std::cout << "\nSUMMARY: superblock=" << superblock << std::endl;
-            rformulae.display("total");
-            qops1.print("qops1",2);
-            qops2.print("qops2",2);
-            qops.print("qops",2);
-            std::cout.rdbuf(backup); // restore cout's original streambuf
-            file.close();
-         }
-         if(rank == 0 and debug){
-            auto t1 = tools::get_time();
-            int size = rformulae.size();
-            tools::timing("symbolic_formulae_renorm_su2 with size="+std::to_string(size), t0, t1);
-         }
-         return rformulae;
       }
 
 } // ctns
