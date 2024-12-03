@@ -165,12 +165,11 @@ namespace ctns{
          }
 
          // cross terms
-         int kc1 = ifkr? 2*cindex1.size() : cindex1.size();
-         int kA1 = kc1*(kc1-1)/2;
-         int kB1 = kc1*kc1;
-         int kc2 = ifkr? 2*cindex2.size() : cindex2.size();
-         int kA2 = kc2*(kc2-1)/2;
-         int kB2 = kc2*kc2;
+         int kc1 = ifkr? 2*cindex1.size() : cindex1.size(), kA1 = kc1*(kc1-1)/2, kB1 = kc1*kc1;
+         int kc2 = ifkr? 2*cindex2.size() : cindex2.size(), kA2 = kc2*(kc2-1)/2, kB2 = kc2*kc2;
+         if(debug_compxwf){
+            std::cout << "opS[" << block1 << block2 << "](" << p << ")" << std::endl;
+         }
          
          // 3. <pq1||s2r2> aq[1]^+ar[2]as[2]	(see eq109 in R_CTNS.pdf) 
          int formula3 = get_formula_opS3(oplist2, kc1, kA2);
@@ -207,7 +206,7 @@ namespace ctns{
          }
          if(debug_compxwf){
             size3 = formulae.size()-size3;
-            std::cout << "formula3=" << formula3 << " size=" << size3 << std::endl;
+            std::cout << " formula3=" << formula3 << " size=" << size3 << std::endl;
          }
 
          // 4. <pq2||s1r2> aq[2]^+ar[2]as[1] (see eq110 in R_CTNS.pdf)
@@ -246,7 +245,7 @@ namespace ctns{
          }
          if(debug_compxwf){
             size4 = formulae.size()-size4;
-            std::cout << "formula4=" << formula4 << " size=" << size << std::endl;
+            std::cout << " formula4=" << formula4 << " size=" << size4 << std::endl;
          }
 
          // 5. <pq2||s1r1> aq[2]^+ar[1]as[1] (see eq111 in R_CTNS.pdf)
@@ -285,7 +284,7 @@ namespace ctns{
          }
          if(debug_compxwf){
             size5 = formulae.size()-size5;
-            std::cout << "formula5=" << formula5 << " size=" << size5 << std::endl;
+            std::cout << " formula5=" << formula5 << " size=" << size5 << std::endl;
          }
 
          // 6. <pq1||s1r2> aq[1]^+ar[2]as[1] (see eq112 in R_CTNS.pdf) 
@@ -324,7 +323,7 @@ namespace ctns{
          }
          if(debug_compxwf){
             size6 = formulae.size()-size6;
-            std::cout << "formula6=" << formula6 << " size=" << size6 << std::endl;
+            std::cout << " formula6=" << formula6 << " size=" << size6 << std::endl;
          }
          return formulae;
       }
@@ -548,7 +547,7 @@ namespace ctns{
          }
          if(debug_compxwf){
             tsize = formulae.size()-tsize;
-            std::cout << "formula(two-index)=" << formula << " size=" << tsize 
+            std::cout << " formula(two-index)=" << formula << " size=" << tsize 
                << " ifdistc=" << ifdistc << " block1=" << block1 << " block2=" << block2
                << std::endl;
          }

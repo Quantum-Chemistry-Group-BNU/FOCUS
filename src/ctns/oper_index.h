@@ -40,7 +40,8 @@ namespace ctns{
    // --- distribution of p or (p,q) for MPI ---
    inline int distribute1(const bool ifkr, const int size, const int index){
       // only SpA is kept for ifkr=true
-      return ifkr? (index/2)%size : index%size; 
+      int rank = (ifkr? (index/2)%size : (index)%size);
+      return size-1-rank; 
    }
 
    // note that: key is currently not used.
@@ -58,8 +59,14 @@ namespace ctns{
       //rank = (m*(m+1)/2+n)%size;
       if(m == n){
          rank = distribute1(ifkr, size, m); // better distribution of diagonal terms
+         rank = size-1-rank;
       }else{
+         if(ifkr){
+            m = m/2;
+            n = n/2;
+         }
          rank = (m*(m-1)/2+n)%size;
+         if(key == 'A' or key == 'P') rank = size-1-rank;
       }
       return rank;
    }

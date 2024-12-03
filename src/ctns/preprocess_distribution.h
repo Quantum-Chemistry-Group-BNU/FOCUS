@@ -128,15 +128,33 @@ namespace ctns{
             std::string rblock = "cr";
             auto coplist = "CSHABPQ"; 
             std::string loplist, roplist;
-            if(p0.first == 1){
-               loplist = coplist; // at the left boundary 
+            if(ndots == 2){
+               if(p0.first == 1){
+                  loplist = coplist; // at the left boundary 
+               }else{
+                  loplist = oper_renorm_oplist(lblock, ifmps, nsite, p0, ifab2pq, ndots);
+               }
+               if(p1.first == nsite-2){
+                  roplist = coplist; // at the right boundary
+               }else{
+                  roplist = oper_renorm_oplist(rblock, ifmps, nsite, p1, ifab2pq, ndots);
+               }
             }else{
-               loplist = oper_renorm_oplist(lblock, ifmps, nsite, p0, ifab2pq, ndots);
-            }
-            if(p1.first == nsite-2){
-               roplist = coplist; // at the right boundary
-            }else{
-               roplist = oper_renorm_oplist(rblock, ifmps, nsite, p1, ifab2pq, ndots);
+               if(forward){ 
+                  if(p0.first == 1){
+                     loplist = coplist;
+                  }else{
+                     loplist = oper_renorm_oplist(lblock, ifmps, nsite, p0, ifab2pq, ndots);
+                  }
+                  roplist = oper_renorm_oplist(rblock, ifmps, nsite, p0, ifab2pq, ndots);
+               }else{
+                  if(p1.first == nsite-2){
+                     roplist = coplist;
+                  }else{
+                     roplist = oper_renorm_oplist(rblock, ifmps, nsite, p1, ifab2pq, ndots);
+                  }
+                  loplist = oper_renorm_oplist(lblock, ifmps, nsite, p1, ifab2pq, ndots);
+               }
             }
             std::vector<int> cindex_l, cindex_r, cindex_c1, cindex_c2, cindex_c;
             int csize_l, csize_r;
@@ -168,7 +186,7 @@ namespace ctns{
                   csize_r = sr;
                }
             }
-            bool ifNC = determine_NCorCN_Ham(loplist, roplist, csize_left, csize_right);
+            bool ifNC = determine_NCorCN_Ham(loplist, roplist, csize_l, csize_r);
             auto key1 = ifNC? "AP" : "PA";
             auto key2 = ifNC? "BQ" : "QB";
             std::string strdots = (ndots==2)? "twodot" : "onedot";
@@ -424,7 +442,7 @@ namespace ctns{
             } // rank
             analyze_distribution(rsizes,"renorm");
             analyze_distribution2(rcounters,{"C","S","H","A","B","P","Q"});
-
+         
          } // ibond
 
          auto t1 = tools::get_time();

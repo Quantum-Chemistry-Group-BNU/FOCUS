@@ -4,6 +4,7 @@
 #include "../qtensor/qtensor.h"
 #include "sweep_twodot_sigma.h"
 #include "symbolic_formulae_twodot.h"
+#include "symbolic_formulae_twodot2.h"
 #include "sweep_onedot_sigma.h"
 #include "symbolic_formulae_onedot.h"
 #include "symbolic_kernel_sigma.h"

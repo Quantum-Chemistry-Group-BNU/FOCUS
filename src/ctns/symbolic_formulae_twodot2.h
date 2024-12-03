@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_FORMULAE_TWODOT_H
-#define SYMBOLIC_FORMULAE_TWODOT_H
+#ifndef SYMBOLIC_FORMULAE_TWODOT2_H
+#define SYMBOLIC_FORMULAE_TWODOT2_H
 
 #include "../core/tools.h"
 #include "oper_dict.h"
@@ -10,62 +10,99 @@
 
 namespace ctns{
 
+   // bipartite form (with factorization)
    template <typename Tm>
-      symbolic_task<Tm> gen_formulae_twodot(const std::string oplist_l,
-            const std::string oplist_r,
-            const std::string oplist_c1,
-            const std::string oplist_c2,
-            const std::vector<int>& cindex_l,
-            const std::vector<int>& cindex_r,
-            const std::vector<int>& cindex_c1,
-            const std::vector<int>& cindex_c2,
-            const int isym,
-            const bool ifkr,
+      bipart_task<Tm> symbolic_formulae_twodot2(const opersu2_dictmap<Tm>& qops_dict,
             const integral::two_body<Tm>& int2e,
             const int& size,
             const int& rank,
+            const std::string fname,
+            const bool sort_formulae,
             const bool ifdist1,
             const bool ifdistc,
-            const bool ifsave,
-            std::map<std::string,int>& counter){
+            const bool debug=false){
+         std::cout << "error: no implementation of symbolic_formulae_twodot2 for su2!" << std::endl;
+         exit(1);
+      }
+   template <typename Tm>
+      bipart_task<Tm> symbolic_formulae_twodot2(const oper_dictmap<Tm>& qops_dict,
+            const integral::two_body<Tm>& int2e,
+            const int& size,
+            const int& rank,
+            const std::string fname,
+            const bool sort_formulae,
+            const bool ifdist1,
+            const bool ifdistc,
+            const bool debug=false){
+         auto t0 = tools::get_time();
          const int print_level = 1;
+         const auto& lqops = qops_dict.at("l");
+         const auto& rqops = qops_dict.at("r");
+         const auto& c1qops = qops_dict.at("c1");
+         const auto& c2qops = qops_dict.at("c2");
+         const auto& cindex_l = lqops.cindex;
+         const auto& cindex_r = rqops.cindex;
+         const auto& cindex_c1 = c1qops.cindex;
+         const auto& cindex_c2 = c2qops.cindex;
+         const int isym = lqops.isym;
+         const bool ifkr = lqops.ifkr;
          const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
          const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = determine_NCorCN_Ham(oplist_l, oplist_r, csize_lc1, csize_c2r);
+         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
          const bool ifhermi = true;
+         std::streambuf *psbuf, *backup;
+         std::ofstream file;
+         bool ifsave = !fname.empty();
+         if(ifsave){
+            if(rank == 0 and debug){
+               std::cout << "ctns::symbolic_formulae_twodot2"
+                  << " mpisize=" << size
+                  << " fname=" << fname 
+                  << std::endl;
+            }
+            // http://www.cplusplus.com/reference/ios/ios/rdbuf/
+            file.open(fname);
+            backup = std::cout.rdbuf(); // back up cout's streambuf
+            psbuf = file.rdbuf(); // get file's streambuf
+            std::cout.rdbuf(psbuf); // assign streambuf to cout
+            std::cout << "ctns::symbolic_formulae_twodot2"
+               << " isym=" << isym
+               << " ifkr=" << ifkr
+               << " ifNC=" << ifNC
+               << " mpisize=" << size
+               << " mpirank=" << rank 
+               << std::endl;
+         }
 
-         symbolic_task<Tm> formulae;
+         bipart_task<Tm> formulae;
          size_t idx = 0;
+         std::map<std::string,int> counter;
 
          // Local terms:
          // H[lc1]
-         auto Hlc1 = symbolic_compxwf_opH<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1, 
+         auto Hlc1 = symbolic_compxwf_opH<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1, 
                int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
-         counter["H1"] = Hlc1.size();
+         counter["H1"] = (Hlc1.size()>0)? 1 : 0;
          if(Hlc1.size() > 0){
-            auto op2 = symbolic_prod<Tm>(symbolic_oper("c2",'I',0),symbolic_oper("r",'I',0));
-            symbolic_task<Tm> Ic2r;
-            Ic2r.append(op2);
-            auto Hlc1_Ic2r = Hlc1.outer_product(Ic2r);
-            formulae.join(Hlc1_Ic2r);
+            auto Hlc1_Ic2r = bipart_oper('l',Hlc1,"Hlc1_Ic2r");
+            assert(Hlc1_Ic2r.parity == 0);
+            formulae.push_back(Hlc1_Ic2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++; 
-               Hlc1.display("Hlc1_Ic2r", print_level);
+               Hlc1_Ic2r.display(print_level);
             }
          }
          // H[c2r]
-         auto Hc2r = symbolic_compxwf_opH<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r, 
+         auto Hc2r = symbolic_compxwf_opH<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r, 
                int2e, isym, ifkr, int2e.sorb, size, rank, ifdist1, ifdistc);
-         counter["H2"] = Hc2r.size();
+         counter["H2"] = (Hc2r.size()>0)? 1 : 0;
          if(Hc2r.size() > 0){
-            auto op1 = symbolic_prod<Tm>(symbolic_oper("l",'I',0),symbolic_oper("c1",'I',0));
-            symbolic_task<Tm> Ilc1;
-            Ilc1.append(op1);
-            auto Ilc1_Hc2r = Ilc1.outer_product(Hc2r);
-            formulae.join(Ilc1_Hc2r);
+            auto Ilc1_Hc2r = bipart_oper('r',Hc2r,"Ilc1_Hc2r");
+            assert(Ilc1_Hc2r.parity == 0);
+            formulae.push_back(Ilc1_Hc2r);
             if(ifsave){ 
                std::cout << "idx=" << idx++;
-               Hc2r.display("Ilc1_Hc2r", print_level);
+               Ilc1_Hc2r.display(print_level);
             }
          }
 
@@ -78,15 +115,16 @@ namespace ctns{
             int iformula = pr.second;
             // p1^L1C1+*Sp1^C2R & -p1^L1C1*Sp1^C2R+
             auto Clc1 = symbolic_normxwf_opC<Tm>("l", "c1", index, iformula);
-            auto Sc2r = symbolic_compxwf_opS<Tm>(oplist_c2, oplist_r, "c2", "r", cindex_c2, cindex_r,
+            auto Sc2r = symbolic_compxwf_opS<Tm>(c2qops.oplist, rqops.oplist, "c2", "r", cindex_c2, cindex_r,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Sc2r.size() == 0) continue;
-            auto Clc1_Sc2r = Clc1.outer_product(Sc2r);
-            formulae.join(Clc1_Sc2r);
-            counter["CS"] += Clc1_Sc2r.size();
+            auto Clc1_Sc2r = bipart_oper(Clc1,Sc2r,"Clc1_Sc2r["+std::to_string(index)+"]");
+            assert(Clc1_Sc2r.parity == 0);
+            formulae.push_back(Clc1_Sc2r);
+            counter["CS"] += 1;
             if(ifsave){ 
                std::cout << "idx=" << idx++;
-               Clc1_Sc2r.display("Clc1_Sc2r["+std::to_string(index)+"]", print_level);
+               Clc1_Sc2r.display(print_level);
             }
          }
          // 4. sum_q2 q2^+[C2R]*Sq2^[LC1] + h.c. = -Sq2^[LC1]*q2^+[C2R] + h.c.
@@ -96,23 +134,23 @@ namespace ctns{
             int index = pr.first;
             int iformula = pr.second;
             // q2^C2R+*Sq2^LC1 = -Sq2^LC1*q2^C2R+ & Sq2^LC1+*q2^C2R
-            auto Slc1 = symbolic_compxwf_opS<Tm>(oplist_l, oplist_c1, "l", "c1", cindex_l, cindex_c1,
+            auto Slc1 = symbolic_compxwf_opS<Tm>(lqops.oplist, c1qops.oplist, "l", "c1", cindex_l, cindex_c1,
                   int2e, index, isym, ifkr, size, rank, ifdist1, ifdistc);
             if(Slc1.size() == 0) continue;
             auto Cc2r = symbolic_normxwf_opC<Tm>("c2", "r", index, iformula);
             Cc2r.scale(-1.0);
-            auto Slc1_Cc2r = Slc1.outer_product(Cc2r);
-            formulae.join(Slc1_Cc2r);
-            counter["SC"] += Slc1_Cc2r.size();
+            auto Slc1_Cc2r = bipart_oper(Slc1,Cc2r,"Slc1_Cc2r["+std::to_string(index)+"]");
+            assert(Slc1_Cc2r.parity == 0);
+            formulae.push_back(Slc1_Cc2r);
+            counter["SC"] += 1;
             if(ifsave){ 
                std::cout << "idx=" << idx++;
-               Slc1_Cc2r.display("Slc1_Cc2r["+std::to_string(index)+"]", print_level);
+               Slc1_Cc2r.display(print_level);
             }
          }
-         
+
          // Two-index terms:
          if(ifNC){
-        
             // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
             counter["AP"] = 0;
             auto ainfo = oper_combine_opA(cindex_l, cindex_c1, ifkr);
@@ -127,12 +165,13 @@ namespace ctns{
                         int2e, index, isym, ifkr);
                   const double wt = ifkr? wfacAP(index) : 1.0;
                   Pc2r.scale(wt);
-                  auto Alc1_Pc2r = Alc1.outer_product(Pc2r);
-                  formulae.join(Alc1_Pc2r);
-                  counter["AP"] += Alc1_Pc2r.size();
+                  auto Alc1_Pc2r = bipart_oper(Alc1,Pc2r,"Alc1_Pc2r["+std::to_string(index)+"]");
+                  assert(Alc1_Pc2r.parity == 0);
+                  formulae.push_back(Alc1_Pc2r);
+                  counter["AP"] += 1;
                   if(ifsave){ 
                      std::cout << "idx=" << idx++;
-                     Alc1_Pc2r.display("Alc1_Pc2r["+std::to_string(index)+"]", print_level);
+                     Alc1_Pc2r.display(print_level);
                   }
                } // iproc
             }
@@ -150,18 +189,17 @@ namespace ctns{
                   // Bpq*Qpq + Bpq^+*Qpq^+
                   const double wt = ifkr? wfacBQ(index) : wfac(index);
                   Qc2r.scale(wt);
-                  auto Blc1_Qc2r = Blc1.outer_product(Qc2r);
-                  formulae.join(Blc1_Qc2r);
-                  counter["BQ"] += Blc1_Qc2r.size();
+                  auto Blc1_Qc2r = bipart_oper(Blc1,Qc2r,"Blc1_Qc2r["+std::to_string(index)+"]");
+                  assert(Blc1_Qc2r.parity == 0);
+                  formulae.push_back(Blc1_Qc2r);
+                  counter["BQ"] += 1;
                   if(ifsave){
                      std::cout << "idx=" << idx++;
-                     Blc1_Qc2r.display("Blc1_Qc2r["+std::to_string(index)+"]", print_level);
+                     Blc1_Qc2r.display(print_level);
                   }
                } // iproc
             }
-
          }else{
-            
             // 5. Apq^LC1*Ppq^C2R + h.c. or Ars^C2R*Prs^LC1 + h.c.
             counter["PA"] = 0;
             auto ainfo = oper_combine_opA(cindex_c2, cindex_r, ifkr);
@@ -176,12 +214,13 @@ namespace ctns{
                   auto Ac2r = symbolic_normxwf_opA<Tm>("c2", "r", index, iformula, ifkr);
                   const double wt = ifkr? wfacAP(index) : 1.0;
                   Plc1.scale(wt);
-                  auto Plc1_Ac2r = Plc1.outer_product(Ac2r);
-                  formulae.join(Plc1_Ac2r);
-                  counter["PA"] += Plc1_Ac2r.size();
+                  auto Plc1_Ac2r = bipart_oper(Plc1,Ac2r,"Plc1_Ac2r["+std::to_string(index)+"]");
+                  assert(Plc1_Ac2r.parity == 0);
+                  formulae.push_back(Plc1_Ac2r);
+                  counter["PA"] += 1;
                   if(ifsave){
                      std::cout << "idx=" << idx++;
-                     Plc1_Ac2r.display("Plc1_Ac2r["+std::to_string(index)+"]", print_level);
+                     Plc1_Ac2r.display(print_level);
                   }
                } // iproc
             }
@@ -199,90 +238,27 @@ namespace ctns{
                   // Bpq*Qpq + Bpq^+*Qpq^+
                   const double wt = ifkr? wfacBQ(index) : wfac(index);
                   Qlc1.scale(wt);
-                  auto Qlc1_Bc2r = Qlc1.outer_product(Bc2r);
-                  formulae.join(Qlc1_Bc2r);
-                  counter["QB"] += Qlc1_Bc2r.size();
+                  auto Qlc1_Bc2r = bipart_oper(Qlc1,Bc2r,"Qlc1_Bc2r["+std::to_string(index)+"]");
+                  assert(Qlc1_Bc2r.parity == 0);
+                  formulae.push_back(Qlc1_Bc2r);
+                  counter["QB"] += 1;
                   if(ifsave){
                      std::cout << "idx=" << idx++;
-                     Qlc1_Bc2r.display("Qlc1_Bc2r["+std::to_string(index)+"]", print_level);
+                     Qlc1_Bc2r.display(print_level);
                   }
                } // iproc
             }
-
          } // ifNC
-         return formulae;
-      }
 
-   // primitive form (without factorization)
-   template <bool ifab, typename Tm>
-      symbolic_task<Tm> symbolic_formulae_twodot(const qoper_dictmap<ifab,Tm>& qops_dict,
-            const integral::two_body<Tm>& int2e,
-            const int& size,
-            const int& rank,
-            const std::string fname,
-            const bool sort_formulae,
-            const bool ifdist1,
-            const bool ifdistc,
-            const bool debug=false){
-         auto t0 = tools::get_time();
-         const auto& lqops = qops_dict.at("l");
-         const auto& rqops = qops_dict.at("r");
-         const auto& c1qops = qops_dict.at("c1");
-         const auto& c2qops = qops_dict.at("c2");
-         const auto& cindex_l = lqops.cindex;
-         const auto& cindex_r = rqops.cindex;
-         const auto& cindex_c1 = c1qops.cindex;
-         const auto& cindex_c2 = c2qops.cindex;
-         const size_t csize_lc1 = cindex_l.size() + cindex_c1.size();
-         const size_t csize_c2r = cindex_c2.size() + cindex_r.size();
-         const bool ifNC = determine_NCorCN_Ham(lqops.oplist, rqops.oplist, csize_lc1, csize_c2r);
-         const int isym = lqops.isym;
-         const bool ifkr = lqops.ifkr; 
-         std::streambuf *psbuf, *backup;
-         std::ofstream file;
-         bool ifsave = !fname.empty();
-         if(ifsave){
-            if(rank == 0 and debug){
-               std::cout << "ctns::symbolic_formulae_twodot"
-                  << " ifab=" << ifab
-                  << " mpisize=" << size
-                  << " fname=" << fname 
-                  << std::endl;
-            }
-            // http://www.cplusplus.com/reference/ios/ios/rdbuf/
-            file.open(fname);
-            backup = std::cout.rdbuf(); // back up cout's streambuf
-            psbuf = file.rdbuf(); // get file's streambuf
-            std::cout.rdbuf(psbuf); // assign streambuf to cout
-            std::cout << "ctns::symbolic_formulae_twodot"
-               << " isym=" << isym
-               << " ifkr=" << ifkr
-               << " mpisize=" << size
-               << " mpirank=" << rank 
-               << std::endl;
-         }
-         // generation of Hx
-         std::map<std::string,int> counter;
-         symbolic_task<Tm> formulae;
-         if(ifab){
-            formulae = gen_formulae_twodot(lqops.oplist,rqops.oplist,c1qops.oplist,c2qops.oplist,
-                  cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
-                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
-         }else{
-            formulae = gen_formulae_twodot_su2(lqops.oplist,rqops.oplist,c1qops.oplist,c2qops.oplist,
-                  cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
-                  int2e,size,rank,ifdist1,ifdistc,ifsave,counter);
-         }
-         // reorder if necessary
          if(sort_formulae){
             std::map<std::string,int> dims = {{"l",lqops.qket.get_dimAll()},
                {"r",rqops.qket.get_dimAll()},
                {"c1",c1qops.qket.get_dimAll()},
                {"c2",c2qops.qket.get_dimAll()}};
-            formulae.sort(dims);
+            sort(formulae, dims);
          }
          if(ifsave){
-            std::cout << "\nSUMMARY[twodot] ifNC=" << ifNC << " size=" << formulae.size()
+            std::cout << "\nSUMMARY[twodot2] ifNC=" << ifNC << " size=" << idx
                << " H1:" << counter["H1"] << " H2:" << counter["H2"];
             if(ifNC){
                std::cout << " CS:" << counter["CS"] << " SC:" << counter["SC"]
@@ -293,14 +269,14 @@ namespace ctns{
                   << " PA:" << counter["PA"] << " QB:" << counter["QB"]
                   << std::endl;
             }
-            formulae.display("total");
+            display(formulae, "total");
             std::cout.rdbuf(backup); // restore cout's original streambuf
             file.close();
          }
          if(rank == 0 and debug){
             auto t1 = tools::get_time();
             int size = formulae.size();
-            tools::timing("symbolic_formulae_twodot with size="+std::to_string(size), t0, t1);
+            tools::timing("symbolic_formulae_twodot2 with size="+std::to_string(size), t0, t1);
          }
          return formulae;
       }
