@@ -93,6 +93,11 @@
    - stochastic evaluation following Sandeep Sharma's work
    - more rigorous scheme akin to p-DMRG?
 
+ * Better Hxbatch algorithm 
+   - implementation with minimal operation count?
+   - eliminate common terms for subleading terms?
+   - more balanced partition of {A,B} - global data structure to storage the distribution pattern?
+
 ### TODOs: DMRG + Quantum Computing ###
 
  * Disentangle transformation:

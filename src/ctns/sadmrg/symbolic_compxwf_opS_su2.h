@@ -410,7 +410,6 @@ namespace ctns{
                int r1 = sr.second, kr = r1/2, spin_r1 = r1%2;
                int ts = (spin_s1!=spin_r1)? 0 : 2;
                auto op1 = symbolic_oper(block1,'A',isr).H();
-               // sum_q <pq2||s1r1> aq[2]^+
                if(ts == 0){
                   double fac = -1.0/std::sqrt(2.0);
                   top1s.sum(fac*get_xint2e_su2(int2e,ts,kp,kq,ks,kr), op1);
