@@ -346,18 +346,24 @@ namespace ctns{
                      batchsize, gpumem_batch);
                if(rank==0 && schd.ctns.verbose>0){
                   std::cout << "rank=" << rank
+                     << " GPUmem(GB): avail=" << GPUmem.available(rank)/std::pow(1024.0,3)
+                     << " blksize=" << blksize
+                     << " blksize0=" << blksize0 
+                     << " batchsize=" << batchsize 
+                     << " batch[tot]=" << tools::sizeGB<Tm>(batchsize*blocksize)
+                     << std::endl;
+               }
+               dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);
+               if(rank==0 && schd.ctns.verbose>0){
+                  std::cout << "rank=" << rank
                      << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                      << " (oper,site,rinter,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                      << "," << gpumem_site/std::pow(1024.0,3) 
                      << "," << gpumem_rinter/std::pow(1024.0,3) 
                      << "," << gpumem_batch/std::pow(1024.0,3)
-                     << " blksize=" << blksize
-                     << " blksize0=" << blksize0 
-                     << " batchsize=" << batchsize 
                      << std::endl;
                }
-               dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);
-
+ 
                // generate Rmmtasks given batchsize
                const int batchblas = 2; // GPU
                this->init_Rmmtask(ifSingle, batchblas, schd.ctns.batchrenorm, fmmtask, rank, schd.ctns.verbose);
