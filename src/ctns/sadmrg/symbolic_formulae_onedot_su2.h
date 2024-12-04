@@ -36,7 +36,7 @@ namespace ctns{
          size_t idx = 0;
 
          if(ifNC){
-            
+
             // partition = l|cr
             // 1. H^l*Icr 
             counter["H1"] = 0;
@@ -72,19 +72,13 @@ namespace ctns{
             // 3. p1^l+*Sp1^cr + h.c.
             counter["CS"] = 0;
             for(const auto& index : cindex_l){
-               auto Cl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
-               auto Scr = symbolic_compxwf_opS_su2<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r,
+               auto Cl_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'C',index)));
+               auto Scr_task = symbolic_compxwf_opS_su2<Tm>(oplist_c, oplist_r, "c", "r", cindex_c, cindex_r,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
-               if(Scr.size() == 0) continue;
-               auto Cl_Scr = Cl.outer_product(Scr);
-               Cl_Scr.scale(std::sqrt(2.0));
-               Cl_Scr.append_ispins(std::make_tuple(1,1,0));
-               formulae.join(Cl_Scr);
-               counter["CS"] += Cl_Scr.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Cl_Scr.display("Cl_Scr["+std::to_string(index)+"]", print_level);
-               }
+               if(Scr_task.size() == 0) continue;
+               double fac = std::sqrt(2.0);
+               symbolic_Hops1ops2_su2(Cl_task, Scr_task, "CS", 1, fac, ifsave, print_level, 
+                     idx, counter, formulae, "Cl_Scr["+std::to_string(index)+"]");
             }
             // 4. q2^cr+*Sq2^l + h.c. = -Sq2^l*q2^cr + h.c.
             counter["SC"] = 0;
@@ -94,17 +88,11 @@ namespace ctns{
                int iproc = distribute1(ifkr,size,index);
                if(!ifdist1 or iproc==rank){ 
                   int iformula = pr.second;
-                  auto Sl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
-                  auto Ccr = symbolic_normxwf_opC_su2<Tm>("c", "r", index, iformula);
-                  auto Sl_Ccr = Sl.outer_product(Ccr);
-                  Sl_Ccr.scale(std::sqrt(2.0));
-                  Sl_Ccr.append_ispins(std::make_tuple(1,1,0));
-                  formulae.join(Sl_Ccr);
-                  counter["SC"] += Sl_Ccr.size();
-                  if(ifsave){ 
-                     std::cout << "idx=" << idx++;
-                     Sl_Ccr.display("Sl_Ccr["+std::to_string(index)+"]", print_level);
-                  }
+                  auto Sl_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'S',index)));
+                  auto Ccr_task = symbolic_normxwf_opC_su2<Tm>("c", "r", index, iformula);
+                  double fac = std::sqrt(2.0);
+                  symbolic_Hops1ops2_su2(Sl_task, Ccr_task, "SC", 1, fac, ifsave, print_level, 
+                        idx, counter, formulae, "Sl_Ccr["+std::to_string(index)+"]");
                }
             }
             // 5. Apq^l*Ppq^cr + h.c.
@@ -114,19 +102,11 @@ namespace ctns{
                int p = pq.first, kp = p/2, sp = p%2;
                int q = pq.second, kq = q/2, sq = q%2;
                int ts = (sp!=sq)? 0 : 2;
-               auto Al = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
-               auto Pcr = symbolic_compxwf_opP_su2<Tm>("c", "r", cindex_c, cindex_r,
-                     int2e, index);
-               auto Al_Pcr = Al.outer_product(Pcr);
+               auto Al_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'A',index)));
+               auto Pcr_task = symbolic_compxwf_opP_su2<Tm>("c", "r", cindex_c, cindex_r, int2e, index);
                double fac = (ts==0)? ((kp==kq)? -0.5 : -1.0) : std::sqrt(3.0);
-               Al_Pcr.scale(fac);
-               Al_Pcr.append_ispins(std::make_tuple(ts,ts,0));
-               formulae.join(Al_Pcr);
-               counter["AP"] += Al_Pcr.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Al_Pcr.display("Al_Pcr["+std::to_string(index)+"]", print_level);
-               }
+               symbolic_Hops1ops2_su2(Al_task, Pcr_task, "AP", ts, fac, ifsave, print_level,
+                     idx, counter, formulae, "Al_Pcr["+std::to_string(index)+"]");
             }
             // 6. Bps^l*Qps^cr (using Hermicity)
             counter["BQ"] = 0;
@@ -135,23 +115,15 @@ namespace ctns{
                int p = ps.first, kp = p/2, sp = p%2;
                int s = ps.second, ks = s/2, ss = s%2;
                int ts = (sp!=ss)? 2 : 0;
-               auto Bl = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
-               auto Qcr = symbolic_compxwf_opQ_su2<Tm>("c", "r", cindex_c, cindex_r,
-                     int2e, index);
-               auto Bl_Qcr = Bl.outer_product(Qcr);
+               auto Bl_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("l",'B',index)));
+               auto Qcr_task = symbolic_compxwf_opQ_su2<Tm>("c", "r", cindex_c, cindex_r, int2e, index);
                double fac = ((kp==ks)? 0.5 : 1.0)*((ts==0)? 1.0 : -std::sqrt(3.0));
-               Bl_Qcr.scale(fac);
-               Bl_Qcr.append_ispins(std::make_tuple(ts,ts,0)); 
-               formulae.join(Bl_Qcr);
-               counter["BQ"] += Bl_Qcr.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Bl_Qcr.display("Bl_Qcr["+std::to_string(index)+"]", print_level);
-               }
+               symbolic_Hops1ops2_su2(Bl_task, Qcr_task, "BQ", ts, fac, ifsave, print_level,
+                     idx, counter, formulae, "Bl_Qcr["+std::to_string(index)+"]");
             }
 
          }else{
-            
+
             // partition = lc|r
             // 1. H^lc*Ir 
             auto Hlc = symbolic_compxwf_opH_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c, 
@@ -184,22 +156,16 @@ namespace ctns{
                }
             }
             // One-index terms:
-            // 3. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
+            // 4. q2^r+*Sq2^lc + h.c. = -Sq2^lc*q2^r + h.c.
             counter["SC"] = 0;
             for(const auto& index : cindex_r){
-               auto Slc = symbolic_compxwf_opS_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c,
+               auto Slc_task = symbolic_compxwf_opS_su2<Tm>(oplist_l, oplist_c, "l", "c", cindex_l, cindex_c,
                      int2e, index, ifkr, size, rank, ifdist1, ifdistc);
-               if(Slc.size() == 0) continue;
-               auto Cr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
-               auto Slc_Cr = Slc.outer_product(Cr);
-               Slc_Cr.scale(std::sqrt(2.0));
-               Slc_Cr.append_ispins(std::make_tuple(1,1,0));
-               formulae.join(Slc_Cr);
-               counter["SC"] += Slc_Cr.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Slc_Cr.display("Slc_Cr["+std::to_string(index)+"]", print_level);
-               }
+               if(Slc_task.size() == 0) continue;
+               auto Cr_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'C',index)));
+               double fac = std::sqrt(2.0);
+               symbolic_Hops1ops2_su2(Slc_task, Cr_task, "SC", 1, fac, ifsave, print_level,
+                     idx, counter, formulae, "Slc_Cr["+std::to_string(index)+"]");
             }
             // 4. p1^lc+*Sp1^r + h.c.
             counter["CS"] = 0;
@@ -209,17 +175,11 @@ namespace ctns{
                int iproc = distribute1(ifkr,size,index);
                if(!ifdist1 or iproc==rank){ 
                   int iformula = pr.second;
-                  auto Clc = symbolic_normxwf_opC_su2<Tm>("l", "c", index, iformula);
-                  auto Sr = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'S',index)));
-                  auto Clc_Sr = Clc.outer_product(Sr);
-                  Clc_Sr.scale(std::sqrt(2.0));
-                  Clc_Sr.append_ispins(std::make_tuple(1,1,0));
-                  formulae.join(Clc_Sr);
-                  counter["CS"] += Clc_Sr.size();
-                  if(ifsave){ 
-                     std::cout << "idx=" << idx++;
-                     Clc_Sr.display("Clc_Sr["+std::to_string(index)+"]", print_level);
-                  }
+                  auto Clc_task = symbolic_normxwf_opC_su2<Tm>("l", "c", index, iformula);
+                  auto Sr_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'S',index)));
+                  double fac = std::sqrt(2.0);
+                  symbolic_Hops1ops2_su2(Clc_task, Sr_task, "CS", 1, fac, ifsave, print_level,
+                        idx, counter, formulae, "Clc_Sr["+std::to_string(index)+"]");
                }
             }
             // 5. Ars^r*Prs^lc + h.c.
@@ -229,19 +189,11 @@ namespace ctns{
                int p = pq.first, kp = p/2, sp = p%2;
                int q = pq.second, kq = q/2, sq = q%2;
                int ts = (sp!=sq)? 0 : 2; 
-               auto Plc = symbolic_compxwf_opP_su2<Tm>("l", "c", cindex_l, cindex_c,
-                     int2e, index);
-               auto Ar = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
-               auto Plc_Ar = Plc.outer_product(Ar);
+               auto Plc_task = symbolic_compxwf_opP_su2<Tm>("l", "c", cindex_l, cindex_c, int2e, index);
+               auto Ar_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'A',index)));
                double fac = (ts==0)? ((kp==kq)? -0.5 : -1.0) : std::sqrt(3.0);
-               Plc_Ar.scale(fac);
-               Plc_Ar.append_ispins(std::make_tuple(ts,ts,0));
-               formulae.join(Plc_Ar);
-               counter["PA"] += Plc_Ar.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Plc_Ar.display("Plc_Ar["+std::to_string(index)+"]", print_level);
-               }
+               symbolic_Hops1ops2_su2(Plc_task, Ar_task, "PA", ts, fac, ifsave, print_level,
+                     idx, counter, formulae, "Plc_Ar["+std::to_string(index)+"]");
             }
             // 6. Qqr^lc*Bqr^r (using Hermicity)
             counter["QB"] = 0;
@@ -250,19 +202,11 @@ namespace ctns{
                int p = ps.first, kp = p/2, sp = p%2;
                int s = ps.second, ks = s/2, ss = s%2;
                int ts = (sp!=ss)? 2 : 0;
-               auto Qlc = symbolic_compxwf_opQ_su2<Tm>("l", "c", cindex_l, cindex_c,
-                     int2e, index);
-               auto Br = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
-               auto Qlc_Br = Qlc.outer_product(Br);
+               auto Qlc_task = symbolic_compxwf_opQ_su2<Tm>("l", "c", cindex_l, cindex_c, int2e, index);
+               auto Br_task = symbolic_task<Tm>(symbolic_prod<Tm>(symbolic_oper("r",'B',index)));
                double fac = ((kp==ks)? 0.5 : 1.0)*((ts==0)? 1.0 : -std::sqrt(3.0));
-               Qlc_Br.scale(fac);
-               Qlc_Br.append_ispins(std::make_tuple(ts,ts,0));
-               formulae.join(Qlc_Br);
-               counter["QB"] += Qlc_Br.size();
-               if(ifsave){ 
-                  std::cout << "idx=" << idx++;
-                  Qlc_Br.display("Qlc_Br["+std::to_string(index)+"]", print_level);
-               }
+               symbolic_Hops1ops2_su2(Qlc_task, Br_task, "QB", ts, fac, ifsave, print_level,
+                     idx, counter, formulae, "Qlc_Br["+std::to_string(index)+"]");
             }
 
          } // ifNC

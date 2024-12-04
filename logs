@@ -598,6 +598,7 @@
             - nonsu2 case [DONE@2024/11/19]
             - su2 case [DONE@2024/11/20]
          - gpu version: [DONE@2024/11/20]
+   - improve performance:
       - compare the performance with and without ifab2pq: minimize the no. of formula is needed! [DONE@2024/11/24]
         note: thers is still room for further optimize the cost by classifying the resulting formulae and factorizing,
         this will probably lead to a factor to 2 (?) acceleration [to be explored in future].
@@ -613,4 +614,10 @@
             - oper_index.h [classify opA,B,P,Q by symmetry, 3 cases for opA, 4 cases for opB]
          - revise symbolic_compxwf_opS [DONE@2024/11/24]
          - check the correctness of onedot algorithm and add fe2s2[cpu/gpu] examples
-
+      - better scalability: [DONE@2024/12/04]
+         - revise symbolic_formulae_twodot_su2.h
+         - revise symbolic_formulae_twodot.h
+      - better management of cpu&gpu memory usage
+      - use gpu/nccl to perform communication?
+      - adjust the switch position via a function?
+ 
