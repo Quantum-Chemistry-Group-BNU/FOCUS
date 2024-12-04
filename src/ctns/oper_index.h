@@ -66,7 +66,7 @@ namespace ctns{
             n = n/2;
          }
          rank = (m*(m-1)/2+n)%size;
-         if(key == 'A' or key == 'P') rank = size-1-rank;
+         if(key == 'A' or key == 'P' or key == 'M') rank = size-1-rank;
       }
       return rank;
    }
