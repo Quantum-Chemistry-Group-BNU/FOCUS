@@ -620,4 +620,17 @@
       - better management of cpu&gpu memory usage
       - use gpu/nccl to perform communication?
       - adjust the switch position via a function?
+
+ * alg_renorm=4 占用内存过多
+
+ * decimation for su2 is not parallelized:
+   - using MPI
+   - using GPU
+      - cuSolver: svd
+      - cuSOlver: eig
+     
+ * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
+   - jinan: a100-40G
+   - wuhan: a100-40G
+   - xiyun: a800-80G
  

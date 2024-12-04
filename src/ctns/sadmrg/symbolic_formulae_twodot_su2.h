@@ -35,7 +35,7 @@ namespace ctns{
 
    // ZL@2024/12/04 introduced for better scalability for ifab2pq=true
    template <typename Tm>
-      void symbolic_Clc1_Sc2r_fromAB(const std::string oplist_l,
+      void symbolic_Clc1_Sc2r_fromAB_su2(const std::string oplist_l,
             const std::string oplist_r,
             const std::string oplist_c1,
             const std::string oplist_c2,
@@ -279,7 +279,7 @@ namespace ctns{
       }
 
    template <typename Tm>
-      void symbolic_Slc1_Cc2r_fromAB(const std::string oplist_l,
+      void symbolic_Slc1_Cc2r_fromAB_su2(const std::string oplist_l,
             const std::string oplist_r,
             const std::string oplist_c1,
             const std::string oplist_c2,
@@ -381,9 +381,9 @@ namespace ctns{
                   // op_c2r
                   symbolic_sum<Tm> top_r;
                   for(const auto& p : cindex_r){
-                     auto op1 = symbolic_oper("r",'C',p);
+                     auto op_r = symbolic_oper("r",'C',p);
                      double fac = (ts==0)? 1.0/std::sqrt(2.0) : -std::sqrt(3.0/2.0);
-                     top_r.sum(fac*get_vint2e_su2(int2e,ts,p/2,kq2,s1/2,kr2), op1);
+                     top_r.sum(fac*get_vint2e_su2(int2e,ts,p/2,kq2,s1/2,kr2), op_r);
                   }
                   auto Cc2r = symbolic_prod(symbolic_oper("c2",'I',0),top_r);
                   Cc2r.ispins.push_back(std::make_tuple(0,1,1));
@@ -402,9 +402,9 @@ namespace ctns{
                   // op_c2r
                   symbolic_sum<Tm> top_r;
                   for(const auto& p : cindex_r){
-                     auto op1 = symbolic_oper("r",'C',p);
+                     auto op_r = symbolic_oper("r",'C',p);
                      double fac = (ts==0)? 1.0/std::sqrt(2.0) : +std::sqrt(3.0/2.0);
-                     top_r.sum(fac*get_vint2e_su2(int2e,ts,p/2,kr2,s1/2,kq2), op1);
+                     top_r.sum(fac*get_vint2e_su2(int2e,ts,p/2,kr2,s1/2,kq2), op_r);
                   }
                   auto Cc2r = symbolic_prod(symbolic_oper("c2",'I',0),top_r);
                   Cc2r.ispins.push_back(std::make_tuple(0,1,1));
@@ -596,7 +596,7 @@ namespace ctns{
             // right block only contains A,B operators
             assert(ifexistQ(oplist_r,'A') and ifexistQ(oplist_r,'B'));
             assert(csize_lc1 >= csize_c2r and ifdist1 and ifdistc);
-            symbolic_Clc1_Sc2r_fromAB(oplist_l,oplist_r,oplist_c1,oplist_c2,
+            symbolic_Clc1_Sc2r_fromAB_su2(oplist_l,oplist_r,oplist_c1,oplist_c2,
                   cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,print_level,
                   idx,counter,formulae);
@@ -623,7 +623,7 @@ namespace ctns{
             // left block only contains A,B operators
             assert(ifexistQ(oplist_l,'A') and ifexistQ(oplist_l,'B'));
             assert(csize_lc1 < csize_c2r and ifdist1 and ifdistc);
-            symbolic_Slc1_Cc2r_fromAB(oplist_l,oplist_r,oplist_c1,oplist_c2,
+            symbolic_Slc1_Cc2r_fromAB_su2(oplist_l,oplist_r,oplist_c1,oplist_c2,
                   cindex_l,cindex_r,cindex_c1,cindex_c2,isym,ifkr,
                   int2e,size,rank,ifdist1,ifdistc,ifsave,print_level,
                   idx,counter,formulae);

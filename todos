@@ -1,16 +1,4 @@
 
- * Code optimization
-
-   - alg_renorm=4 占用内存过多
-
-   - decimation for su2 is not parallelized:
-      - using MPI
-      - using GPU
-         - cuSolver: svd
-         - cuSOlver: eig
-      
-   - Reach D>20000 with more GPUs? what is the bottleneck now?
-
 ### 2025 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
@@ -112,7 +100,7 @@
    - GPU memory is a problem
 
  * Real space parallelization (=> More GPU/DCU) [!!!]
-   - No really useful for pratical applications except for large-scale benchmark?
+   - No really useful for pratical applications except for very large-scale benchmark?
 
  * Support Mixed CPU-GPU implementation?
    - mmtasks revise [also avoid copy for magma?]
@@ -127,10 +115,10 @@
 
  * Applications:
     - Small system like C2+/O2? [checked against FCI results]
-    - entropy as a complexity measure?
     - Fe2S2 [CAS(30e,20o)] - parallelized
     - SOC within this active space
     - G-tensor/GIAO for Ferric-Ferrous dimer
+    - entropy as a complexity measure?
     - classical help for quantum computing? better biased measurement?
  
  * VMPS+GPU? (simply dense matrix multiplication?)
