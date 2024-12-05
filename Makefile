@@ -1,5 +1,5 @@
 
-machine = mac #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,9 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
+USE_MAGMA = no #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -111,14 +112,6 @@ else ifeq ($(strip $(machine)), wuhan)
 else ifeq ($(strip $(machine)), scv7260)
    MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
    BOOST =/data/home/scv7260/run/xiangchunyang/boost_1_80_0_install
-   LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
-   ifeq ($(strip $(USE_MPI)), yes)   
-      LFLAGS += -lboost_mpi-mt-x64
-   endif
-else ifeq ($(strip $(machine)), DCU_419)
-   MATHLIB = /public/software/compiler/intel/oneapi/mkl/latest/lib/intel64
-   BOOST = /public/home/ictapp_j/xiangchunyang/boost-1.80.0-install
-   FLAGS += -D__HIP_PLATFORM_HCC__ -DHAVE_HIP -w
    LFLAGS = -L${BOOST}/lib -lboost_timer-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_iostreams-mt-x64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-x64
@@ -236,52 +229,56 @@ LFLAGS += ${MATH}
 
 # GPU
 ifeq ($(strip $(USE_GPU)), yes)
-ifeq ($(strip $(machine)), DCU_419)
-   HIP_DIR=/public/software/compiler/rocm/rocm-3.3.0/hip
-   MAGMA_DIR=/public/software/mathlib/magma/magma-rocm_3.3_develop
-   FLAGS += -DGPU -DUSE_HIP -I${MAGMA_DIR}/include -I${HIP_DIR}/include 
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma  -L${HIP_DIR}/lib -lhip_hcc -lhiprtc
-else ifeq ($(strip $(machine)), scy0799)
-   CUDA_DIR=/data/apps/cuda/11.2
-   MAGMA_DIR=/data01/home/scy0799/run/xiangchunyang/project/magma-2.6.1-install/
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include 
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
-else ifeq ($(strip $(machine)), scv7260)
-   CUDA_DIR=/data/apps/cuda/11.4
-   MAGMA_DIR=/data/home/scv7260/run/xiangchunyang/magma_2_6_1_install
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
-else ifeq ($(strip $(machine)), wuhan)
+
+ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
-   MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lcublas
+   FLAGS += -DGPU -I${CUDA_DIR}/include
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lcublas
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /home/HPCBase/libs/nccl/2.16.5-cuda11.4
       FLAGS += -DNCCL -I${NCCL_DIR}/include	
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
+
 else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch2
-   MAGMA_DIR = ../magma/magma-2.6.1
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib -lcudart -lrt -lcublas
+   FLAGS += -DGPU -I${CUDA_DIR}/include
+   LFLAGS += -L${CUDA_DIR}/lib -lcudart -lrt -lcublas
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR = ../magma/magma-2.6.1
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /home/dell/public-soft/nccl/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include	
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
+
 else ifeq ($(strip $(machine)), dell)
    CUDA_DIR= /usr/local/cuda
-   MAGMA_DIR = ../magma/magma-2.6.1
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
-
+   FLAGS += -DGPU -I${CUDA_DIR}/include
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR = ../magma/magma-2.6.1
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif
+ 
 else ifeq ($(strip $(machine)), jinan)
    CUDA_DIR= ${CUDADIR}
-   MAGMA_DIR = ../magma-2.6.1
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -ldl
+   FLAGS += -DGPU -I${CUDA_DIR}/include
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -ldl
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR = ../magma-2.6.1
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif 
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /yeesuanAI03/lzd/nccl-master/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include
@@ -290,9 +287,13 @@ else ifeq ($(strip $(machine)), jinan)
 
 else ifeq ($(strip $(machine)), jiageng)
    CUDA_DIR= ${CUDADIR}
-   MAGMA_DIR = /public/home/bnulizdtest/magma
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   FLAGS += -DGPU -I${CUDA_DIR}/include
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR = /public/home/bnulizdtest/magma
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif 
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /public/home/bnulizdtest/nccl/build
       FLAGS += -DNCCL -I${NCCL_DIR}/include
@@ -301,27 +302,21 @@ else ifeq ($(strip $(machine)), jiageng)
 
 else ifeq ($(strip $(machine)), a800_xiyun)
    CUDA_DIR= ${CUDA_ROOT}
-   MAGMA_DIR = /storage/FOCUS/extlibs/magma-2.8.0
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include -DGEMMGROUPED
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   FLAGS += -DGPU -I${CUDA_DIR}/include -DGEMMGROUPED
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   ifeq ($(strip $(USE_MAGMA)), yes)
+      MAGMA_DIR = /storage/FOCUS/extlibs/magma-2.8.0
+      FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
+      LFLAGS += -L${MAGMA_DIR}/lib -lmagma
+   endif 
    ifeq ($(strip $(USE_NCCL)), yes)
       NCCL_DIR = /root/nccl_apps/nccl220
       FLAGS += -DNCCL -I${NCCL_DIR}/include
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
 
-else ifeq ($(strip $(machine)), a800)
-   CUDA_DIR= ${CUDA_ROOT}
-   MAGMA_DIR = /GLOBALFS/bnu_pp_1/FOCUS/extlibs/magma-2.8.0
-   FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include # -DGEMMGROUPED only for cuda12.4 
-   LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
-   ifeq ($(strip $(USE_NCCL)), yes)
-      NCCL_DIR = ${NCCL_ROOT}
-      FLAGS += -DNCCL -I${NCCL_DIR}/include
-      LFLAGS += -L${NCCL_DIR}/lib -lnccl
-   endif
-
 endif
+
 FLAGS += -I./src/ctns/gpu_kernel
 LFLAGS += -L./src/ctns/gpu_kernel -lctnsGPU
 endif

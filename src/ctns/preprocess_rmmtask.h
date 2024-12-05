@@ -104,7 +104,7 @@ namespace ctns{
                         size_t size = collectc[k][j].second;
                         Tm* ptr = workspace+j*offset; 
                         for(int i=1; i<dimc; i++){
-                           linalg::xaxpy_magma(size, alpha, ptr+i*size, ptr);
+                           linalg::xaxpy_gpu(size, alpha, ptr+i*size, ptr);
                         }
                      }
 #endif

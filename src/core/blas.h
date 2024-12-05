@@ -4,11 +4,19 @@
 #include <vector>
 #include <complex>
 
+// This is consistent with magma_int_t in magma_types.h
 #ifdef MKL_ILP64
    #define MKL_INT long long int
 #else
    #define MKL_INT int
 #endif
+/*
+#if defined(MAGMA_ILP64) || defined(MKL_ILP64)
+typedef long long int magma_int_t;  // MKL uses long long int, not int64_t
+#else
+typedef int magma_int_t;
+#endif
+*/
 
 extern "C" {
    // conj:

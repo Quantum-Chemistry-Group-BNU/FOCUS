@@ -37,6 +37,4 @@ alg_hvec 18
 alg_hinter 2
 alg_renorm 18
 alg_rinter 2
-batchhvec 2 2 2
-batchrenorm 2 2 2
 $end

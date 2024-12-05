@@ -148,11 +148,13 @@ double test_xgemv_batch_gpu(const int M, const int N, const int nbatch, const in
    gsta[1] = nbatch;
    auto t0 = tools::get_time();
    if(iop == 0){
+#ifdef MAGMA
       linalg::xgemv_batch_gpu_magma(transa_array[0], m_array.get(), n_array.get(), 
             alpha_array.get(), A_array.data(), m_array.get(),
             X_array.data(), incx_array.get(), beta_array.get(), 
             Y_array.data(), incy_array.get(),
             group_count);
+#endif
    }else{
       linalg::xgemv_batch_gpu_grouped(transa_array[0], m_array.get(), n_array.get(), 
             alpha_array.get(), A_array.data(), m_array.get(),
@@ -211,12 +213,14 @@ double test_xgemm_batch_gpu(const int M, const int N, const int K, const int nba
    gsta[1] = nbatch;
    auto t0 = tools::get_time();
    if(iop == 0){
+#ifdef MAGMA
       linalg::xgemm_batch_gpu_magma(transa_array[0], transb_array[0],
             m_array.get(), n_array.get(), k_array.get(), 
             alpha_array.get(), A_array.data(), m_array.get(),
             B_array.data(), k_array.get(), beta_array.get(), 
             C_array.data(), m_array.get(),
             group_count);
+#endif
    }else{
       // group_count=1; this is not precise the same as magma
       linalg::xgemm_batch_gpu_grouped(transa_array[0], transb_array[0],
@@ -291,6 +295,7 @@ int main(int argc, char *argv[]){
    const bool ifmagma = false;
    const int nrepeat = 3;
 
+#ifdef MAGMA
    if(ifmagma){
       std::cout << "\n=== GEMV_BATCH_GPU: magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
@@ -306,6 +311,7 @@ int main(int argc, char *argv[]){
          }
       }
    }
+#endif
 
    std::cout << "\n=== GEMV_BATCH_GPU: cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
@@ -321,6 +327,7 @@ int main(int argc, char *argv[]){
       }
    }
 
+#ifdef MAGMA
    if(ifmagma){
       std::cout << "\n=== GEMM_BATCH (N,N,1): magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
@@ -337,6 +344,7 @@ int main(int argc, char *argv[]){
          }
       }
    }
+#endif
 
    std::cout << "\n=== GEMM_BATCH (N,N,1): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  
@@ -353,6 +361,7 @@ int main(int argc, char *argv[]){
       } 
    }
 
+#ifdef MAGMA
    if(ifmagma){
       std::cout << "\n=== GEMM_BATCH (N,N,N): magma ===" << std::endl;
       for(int i=1; i<=imax; i+=1){  
@@ -369,6 +378,7 @@ int main(int argc, char *argv[]){
          }
       }
    }
+#endif
 
    std::cout << "\n=== GEMM_BATCH (N,N,N): cublas ===" << std::endl;
    for(int i=1; i<=imax; i+=1){  

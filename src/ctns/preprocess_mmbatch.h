@@ -65,14 +65,14 @@ namespace ctns{
                }else if(batchgemm == 1){
                   this->xgemm_batch_cpu(ptrs);   
 #ifdef GPU 
+#ifdef MAGMA
                }else if(batchgemm == 2){
                   this->xgemm_batch_gpu_magma(ptrs);
-#ifndef USE_HIP
+#endif
                }else if(batchgemm == 3){
                   this->xgemm_batch_gpu_grouped(ptrs);
                }else if(batchgemm == 4){
                   this->xgemm_batch_gpu_stream(ptrs);
-#endif
 #endif 
                }else{
                   std::cout << "error: no such option in MMbatch::kernel batchgemm=" << batchgemm << std::endl;
@@ -82,11 +82,11 @@ namespace ctns{
             void xgemm_omp(Tm** ptrs);
             void xgemm_batch_cpu(Tm** ptrs);
 #ifdef GPU
+#ifdef MAGMA
             void xgemm_batch_gpu_magma(Tm** ptrs);
-#ifndef USE_HIP
+#endif
             void xgemm_batch_gpu_grouped(Tm** ptrs);
             void xgemm_batch_gpu_stream(Tm** ptrs);
-#endif
 #endif
          public:
             size_t size = 0;
@@ -180,6 +180,8 @@ namespace ctns{
       }
 
 #ifdef GPU
+
+#ifdef MAGMA
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu_magma(Tm** ptrs){
          // initialization 
@@ -194,8 +196,8 @@ namespace ctns{
                   Cptr.data(), M.data(), size);
          }
       }
+#endif
 
-#ifndef USE_HIP
    template <typename Tm>
       void MMbatch<Tm>::xgemm_batch_gpu_grouped(Tm** ptrs){
          // initialization 
@@ -225,8 +227,8 @@ namespace ctns{
                   Cptr.data(), M.data(), size, gsta);
          }
       }
-#endif
-#endif
+
+#endif // GPU
 
 } // ctns
 

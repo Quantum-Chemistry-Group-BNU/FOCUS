@@ -3,21 +3,22 @@
 #ifndef GPU_ENV_H
 #define GPU_ENV_H
 
-#include <magma_v2.h>
 #include "gpu_mem.h"
 #include "gpu_nccl.h"
 
+extern gpu_mem GPUmem; 
+
+#ifdef MAGMA
+#include <magma_v2.h>
 const int MAX_GPUS = 16; // MAX GPU PER NODE
 extern const int MAX_GPUS;
+extern magma_queue_t magma_queue;
+#endif
 
-#ifndef USE_HIP
+// global variables for CUBLAS
 #define NSTREAMS 100
 extern cudaStream_t stream[NSTREAMS];
 extern cublasHandle_t handle_cublas;
-#endif
-
-extern magma_queue_t magma_queue;
-extern gpu_mem GPUmem; 
 
 #ifdef NCCL
 extern nccl_communicator nccl_comm;

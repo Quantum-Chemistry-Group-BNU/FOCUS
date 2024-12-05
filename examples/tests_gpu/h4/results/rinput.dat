@@ -34,7 +34,5 @@ alg_hvec 19
 alg_hinter 2
 alg_renorm 19
 alg_rinter 2
-batchhvec 2 2 2
-batchrenorm 2 2 2
 save_formulae
 $end

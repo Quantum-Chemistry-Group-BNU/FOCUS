@@ -30,14 +30,14 @@
    } while(0)
 
 #define NCCLCHECK(cmd) \
-do {                         \
-ncclResult_t r = cmd;                             \
-if (r!= ncclSuccess) {                            \
-printf("Failed, NCCL error %s:%d '%s'\n",             \
-__FILE__,__LINE__,ncclGetErrorString(r));   \
-exit(EXIT_FAILURE);                             \
-}                                                 \
-} while(0)
+   do {                         \
+      ncclResult_t r = cmd;                             \
+      if (r!= ncclSuccess) {                            \
+         printf("Failed, NCCL error %s:%d '%s'\n",             \
+               __FILE__,__LINE__,ncclGetErrorString(r));   \
+         exit(EXIT_FAILURE);                             \
+      }                                                 \
+   } while(0)
 
 // adapted from
 // https://docs.nvidia.com/deeplearning/nccl/archives/nccl_21210/user-guide/docs/examples.html#example-2-one-device-per-process-or-thread
@@ -51,6 +51,7 @@ struct nccl_communicator{
          MPICHECK(MPI_Bcast((void *)&id, sizeof(id), MPI_BYTE, 0, MPI_COMM_WORLD));
          CUDACHECK(cudaStreamCreate(&s));
          //initializing NCCL
+         std::cout << "nccl init: rank=" << myRank << " size=" << nRanks << std::endl;
          NCCLCHECK(ncclCommInitRank(&comm, nRanks, id, myRank));
       }
       template <typename Tm>

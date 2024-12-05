@@ -100,7 +100,7 @@ namespace ctns{
                         size_t offin = copyxblk[k][j].second;
                         if(size == 0) continue;
                         Tm* ptr = workspace+j*offset;
-                        linalg::xcopy_magma(size, x+offin, ptr);
+                        linalg::xcopy_gpu(size, x+offin, ptr);
                      } // j
 #endif
                   }else{

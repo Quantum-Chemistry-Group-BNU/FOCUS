@@ -5,40 +5,66 @@
 
 #include <vector>
 #include <complex>
-
 #include "gpu_env.h"
 
 // wrapper for BLAS
 namespace linalg{
 
-   // copy
-   inline void xcopy_magma(const magma_int_t N, const double* X, double* Y){
-      const magma_int_t INCX = 1, INCY = 1;
-      magma_dcopy(N, X, INCX, Y, INCY, magma_queue);
+   // dcopy
+   inline void xcopy_gpu(const MKL_INT N, const double* X, double* Y, const int iop=0){
+      if(iop == 0){
+         assert(N <= INT_MAX);
+         CUBLAS_CHECK(cublasDcopy(handle_cublas, N, X, 1, Y, 1));
+#ifdef MAGMA
+      }else{
+         magma_dcopy(N, X, 1, Y, 1, magma_queue);
+#endif
+      }
    }
-   inline void xcopy_magma(const magma_int_t N, const std::complex<double>* X, std::complex<double>* Y){
-      const magma_int_t INCX = 1, INCY = 1;
-      magma_zcopy(N, (magmaDoubleComplex *)X, INCX, (magmaDoubleComplex *)Y, INCY, magma_queue);
+   // zcopy
+   inline void xcopy_gpu(const MKL_INT N, const std::complex<double>* X, std::complex<double>* Y, const int iop=0){
+      if(iop == 0){
+         assert(N <= INT_MAX);
+         CUBLAS_CHECK(cublasZcopy(handle_cublas, N, (cuDoubleComplex *)X, 1, (cuDoubleComplex *)Y, 1));
+#ifdef MAGMA
+      }else{
+         magma_zcopy(N, (magmaDoubleComplex *)X, 1, (magmaDoubleComplex *)Y, 1, magma_queue);
+#endif
+      }
    }
 
-   // axpy
-   inline void xaxpy_magma(const magma_int_t N, const double alpha, 
-         const double* X, double* Y){
-      const magma_int_t INCX = 1, INCY = 1;
-      magma_daxpy(N, alpha, X, INCX, Y, INCY, magma_queue);
+   // daxpy
+   inline void xaxpy_gpu(const MKL_INT N, const double alpha, 
+         const double* X, double* Y, const int iop=0){
+      if(iop == 0){
+         assert(N <= INT_MAX);
+         CUBLAS_CHECK(cublasDaxpy(handle_cublas, N, &alpha, X, 1, Y, 1));
+#ifdef MAGMA
+      }else{
+         magma_daxpy(N, alpha, X, 1, Y, 1, magma_queue);
+#endif
+      }
    }
-   inline void xaxpy_magma(const magma_int_t N, const std::complex<double> alpha, 
-         const std::complex<double>* X, std::complex<double>* Y){
-      const magma_int_t INCX = 1, INCY = 1;
-      magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
-      magma_zaxpy(N, alpha1, (magmaDoubleComplex *)X, INCX, (magmaDoubleComplex *)Y, INCY, magma_queue);
+   // zaxpy
+   inline void xaxpy_gpu(const MKL_INT N, const std::complex<double> alpha, 
+         const std::complex<double>* X, std::complex<double>* Y, const int iop=0){
+      if(iop == 0){
+         assert(N <= INT_MAX);
+         CUBLAS_CHECK(cublasZaxpy(handle_cublas, N, (cuDoubleComplex *)&alpha, (cuDoubleComplex *)X, 1, (cuDoubleComplex *)Y, 1));
+#ifdef MAGMA
+      }else{
+         magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
+         magma_zaxpy(N, alpha1, (magmaDoubleComplex *)X, 1, (magmaDoubleComplex *)Y, 1, magma_queue);
+#endif
+      }
    }
 
+/*
    // y = alpha*A*x + beta*y
-   inline void xgemv_magma(const char* TRANSA, const magma_int_t M, const magma_int_t N,
-         const double alpha, const double* A, const magma_int_t LDA,
-         const double* X, const magma_int_t INCX,
-         const double beta, double* Y, const magma_int_t INCY){
+   inline void xgemv_magma(const char* TRANSA, const MKL_INT M, const MKL_INT N,
+         const double alpha, const double* A, const MKL_INT LDA,
+         const double* X, const MKL_INT INCX,
+         const double beta, double* Y, const MKL_INT INCY){
       magma_trans_t transA =  MagmaNoTrans;
       if(TRANSA[0]=='T'){
          transA = MagmaTrans;
@@ -52,10 +78,10 @@ namespace linalg{
             dev_X, INCX, beta, Y, INCY, magma_queue);
       GPUmem.deallocate(dev_X, size);
    }
-   inline void xgemv_magma(const char* TRANSA, const magma_int_t M, const magma_int_t N,
-         const std::complex<double> alpha, const std::complex<double>* A, const magma_int_t LDA,
-         const std::complex<double>* X, const magma_int_t INCX,
-         const std::complex<double> beta, std::complex<double>* Y, const magma_int_t INCY){
+   inline void xgemv_magma(const char* TRANSA, const MKL_INT M, const MKL_INT N,
+         const std::complex<double> alpha, const std::complex<double>* A, const MKL_INT LDA,
+         const std::complex<double>* X, const MKL_INT INCX,
+         const std::complex<double> beta, std::complex<double>* Y, const MKL_INT INCY){
       magma_trans_t transA =  MagmaNoTrans;
       if(TRANSA[0] == 'T'){
          transA = MagmaTrans;
@@ -71,6 +97,8 @@ namespace linalg{
             (magmaDoubleComplex *)dev_X, INCX, beta1, (magmaDoubleComplex *)Y, INCY, magma_queue);
       GPUmem.deallocate(dev_X, size);
    }
+*/
+
 } // linalg
 
 #endif

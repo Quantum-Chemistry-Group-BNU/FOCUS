@@ -3,13 +3,14 @@
 #include "gpu_env.h"
 #include "../core/tools.h"
 
-magma_queue_t magma_queue = 0;
 gpu_mem GPUmem = {};
 
-#ifndef USE_HIP
+#ifdef MAGMA
+magma_queue_t magma_queue = 0;
+#endif
+
 cudaStream_t stream[NSTREAMS];
 cublasHandle_t handle_cublas;
-#endif
 
 #ifdef NCCL
 nccl_communicator nccl_comm;
@@ -17,6 +18,8 @@ nccl_communicator nccl_comm;
 
 void gpu_init(const int rank){
    if(rank == 0) std::cout << "\ngpu_init" << std::endl;
+
+#ifdef MAGMA
    magma_queue = 0;
    magma_device_t device_id = -1;
 
@@ -33,48 +36,50 @@ void gpu_init(const int rank){
    magma_getdevice(&device_id);
 
    magma_queue_create(device_id, &magma_queue);
+   
+   std::cout << "rank=" << rank << " num_gpus=" << num_gpus
+      << " device_id=" << device_id << " magma_queue=" <<magma_queue
+      << std::endl;
+#endif
 
-#ifndef USE_HIP
+   CUDA_CHECK(cudaSetDevice(rank)); // important for nccl to work
+
    int cudaToolkitVersion;
-   cudaRuntimeGetVersion(&cudaToolkitVersion);
+   CUDA_CHECK(cudaRuntimeGetVersion(&cudaToolkitVersion));
    for(int i=0; i<NSTREAMS; i++){
-      cudaStreamCreate(&stream[i]);
+      CUDA_CHECK(cudaStreamCreate(&stream[i]));
    }
-   cublasCreate(&handle_cublas);
+   CUBLAS_CHECK(cublasCreate(&handle_cublas));
    int cublasVersion;
-   cublasGetVersion(handle_cublas, &cublasVersion);
+   CUBLAS_CHECK(cublasGetVersion(handle_cublas, &cublasVersion));
    if(rank == 0){
       std::cout << "CUDA Runtime version: " << cudaToolkitVersion << std::endl;
       std::cout << "CUBLAS version: " << cublasVersion << std::endl;
    }
-#endif
 
 #ifdef NCCL
    nccl_comm.init();
 #endif
-
-   std::cout << "rank=" << rank << " num_gpus=" << num_gpus
-      << " device_id=" << device_id << " magma_queue=" <<magma_queue
-      << std::endl;
 }
 
 void gpu_finalize(){
 
-#ifndef USE_HIP
+   GPUmem.finalize();
+
+#ifdef MAGMA
+   magma_queue_destroy(magma_queue);
+   magma_finalize();
+#endif
+
    for(int i=0; i<NSTREAMS; i++){
       cudaStreamDestroy(stream[i]);
    }
    cublasDestroy(handle_cublas);
-#endif
 
 #ifdef NCCL
    nccl_comm.finalize();
 #endif
 
-   GPUmem.finalize();
-
-   magma_queue_destroy(magma_queue);
-   magma_finalize();
 }
 
 #endif

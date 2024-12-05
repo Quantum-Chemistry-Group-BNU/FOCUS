@@ -169,8 +169,8 @@ namespace input{
          bool save_formulae = false;
          bool sort_formulae = false;
          bool save_mmtask = false;
-         std::tuple<int,int,int> batchhvec = {-1,-1,-1};
-         std::tuple<int,int,int> batchrenorm = {-1,-1,-1};
+         std::tuple<int,int,int> batchhvec = {4,4,4};
+         std::tuple<int,int,int> batchrenorm = {4,4,4};
          double batchmem = 10; // GB
          // dvdson
          int cisolver = 1;
