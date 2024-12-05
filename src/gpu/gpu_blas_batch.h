@@ -261,7 +261,7 @@ namespace linalg{
 
          for(int j=0; j<jlen; j++){
             size_t jdx = off+j;
-            CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[j])); 
+            CUBLAS_CHECK(cublasSetStream(handle_cublas, custream[j])); 
 
             int ista = gsta[jdx];
             int nbatch = gsta[jdx+1]-ista;
@@ -285,7 +285,7 @@ namespace linalg{
          } // j
 
          for(int j=0; j<jlen; j++){
-            CUDA_CHECK(cudaStreamSynchronize(stream[j]));
+            CUDA_CHECK(cudaStreamSynchronize(custream[j]));
          }
       } // k
 
@@ -731,7 +731,7 @@ namespace linalg{
 
          for(int j=0; j<jlen; j++){
             size_t jdx = off+j;
-            CUBLAS_CHECK(cublasSetStream(handle_cublas, stream[j])); 
+            CUBLAS_CHECK(cublasSetStream(handle_cublas, custream[j])); 
 
             int ista = gsta[jdx];
             int nbatch = gsta[jdx+1]-ista;
@@ -759,7 +759,7 @@ namespace linalg{
          } // j
 
          for(int j=0; j<jlen; j++){
-            CUDA_CHECK(cudaStreamSynchronize(stream[j]));
+            CUDA_CHECK(cudaStreamSynchronize(custream[j]));
          }
       } // k
 

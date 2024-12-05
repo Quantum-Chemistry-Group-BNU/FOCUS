@@ -89,9 +89,9 @@ bool is_in_vector(const std::vector<Tm>& v, const Km key){
 
 // type information
 template <typename Tm>
-inline bool is_complex(){ return false; }
+constexpr bool is_complex(){ return false; }
 template <>
-inline bool is_complex<std::complex<double>>(){ return true; }
+constexpr bool is_complex<std::complex<double>>(){ return true; }
 
 // memory in MB/GB
 template <typename Tm>

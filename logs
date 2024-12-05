@@ -625,13 +625,12 @@
       - adjust the switch position via a function?
 
  * decimation for su2 is not parallelized:
+   - using GPU:
+      - cuSOlver: eig - cusolverDnXsyevd
+      - cuSolver: svd - cusolverDnXgesvdp
+      - benchmark_lapack.x 
+   - using MPI?
 
-   - using MPI
-
-   - using GPU
-      - cuSolver: svd
-      - cuSOlver: eig
-     
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - jinan: a100-40G,64G/GPU: cpu memory issue?
 

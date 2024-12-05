@@ -248,7 +248,7 @@ ifeq ($(strip $(machine)), wuhan)
 else ifeq ($(strip $(machine)), dell2)
    CUDA_DIR= /home/dell/anaconda3/envs/pytorch2
    FLAGS += -DGPU -I${CUDA_DIR}/include
-   LFLAGS += -L${CUDA_DIR}/lib -lcudart -lrt -lcublas
+   LFLAGS += -L${CUDA_DIR}/lib -lcudart -lrt -lcublas -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR = ../magma/magma-2.6.1
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
@@ -430,7 +430,7 @@ core: $(LIB_DIR)/libcore.a \
 	$(BIN_DIR)/tests_core.x \
 	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
 	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
-	$(BIN_DIR)/benchmark_nccl.x 
+	$(BIN_DIR)/benchmark_nccl.x $(BIN_DIR)/benchmark_lapack.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -480,6 +480,7 @@ depend:
 	echo " USE_ILP64 = " $(USE_ILP64); \
 	echo " USE_GPU = " $(USE_GPU); \
 	echo " USE_NCCL = " $(USE_NCCL); \
+	echo " USE_MAGMA = " $(USE_MAGMA); \
 	echo " CXX = " $(CXX); \
 	echo " CC = " $(CC); \
 	set -e; \
@@ -544,6 +545,10 @@ $(BIN_DIR)/benchmark_mpi.x: $(OBJ_DIR)/benchmark_mpi.o $(LIB_DIR)/libcore.a
 $(BIN_DIR)/benchmark_nccl.x: $(OBJ_DIR)/benchmark_nccl.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_nccl.o -L$(LIB_DIR) -lcore $(LFLAGS) 
+
+$(BIN_DIR)/benchmark_lapack.x: $(OBJ_DIR)/benchmark_lapack.o $(LIB_DIR)/libcore.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_lapack.o -L$(LIB_DIR) -lcore $(LFLAGS)
 
 # CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a

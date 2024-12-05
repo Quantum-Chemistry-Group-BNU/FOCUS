@@ -9,7 +9,7 @@ gpu_mem GPUmem = {};
 magma_queue_t magma_queue = 0;
 #endif
 
-cudaStream_t stream[NSTREAMS];
+cudaStream_t custream[NSTREAMS];
 cublasHandle_t handle_cublas;
 
 #ifdef NCCL
@@ -49,7 +49,7 @@ void gpu_init(const int rank){
    int cudaToolkitVersion;
    CUDA_CHECK(cudaRuntimeGetVersion(&cudaToolkitVersion));
    for(int i=0; i<NSTREAMS; i++){
-      CUDA_CHECK(cudaStreamCreate(&stream[i]));
+      CUDA_CHECK(cudaStreamCreate(&custream[i]));
    }
    CUBLAS_CHECK(cublasCreate(&handle_cublas));
    int cublasVersion;
@@ -74,7 +74,7 @@ void gpu_finalize(){
 #endif
 
    for(int i=0; i<NSTREAMS; i++){
-      cudaStreamDestroy(stream[i]);
+      cudaStreamDestroy(custream[i]);
    }
    cublasDestroy(handle_cublas);
 

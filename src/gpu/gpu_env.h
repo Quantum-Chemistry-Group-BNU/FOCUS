@@ -17,7 +17,7 @@ extern magma_queue_t magma_queue;
 
 // global variables for CUBLAS
 #define NSTREAMS 100
-extern cudaStream_t stream[NSTREAMS];
+extern cudaStream_t custream[NSTREAMS];
 extern cublasHandle_t handle_cublas;
 
 #ifdef NCCL
