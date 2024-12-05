@@ -34,7 +34,7 @@ namespace ctns{
          this->print_part(msg+": renrm", dt5, dt, dtacc);
          this->print_part(msg+": save " , dt6, dt, dtacc);
 
-         double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9;
+         double tdvdsn = dtb0 + dtb1 + dtb2 + dtb3 + dtb4 + dtb5 + dtb6 + dtb7 + dtb8 + dtb9 + dtb10;
          std::cout << "Detailed decomposition of T(dvdsn) = " 
             << std::scientific << std::setprecision(3) << dt2 << " S"
             << "  T(sum) = " << tdvdsn << " S  per = " << tdvdsn/(dt2+eps)*100
@@ -46,10 +46,11 @@ namespace ctns{
          this->print_part(msg+": preprocess_hformulae_Hxlist ", dtb3, tdvdsn, dtacc);
          this->print_part(msg+": hmmtasks init               ", dtb4, tdvdsn, dtacc);
          this->print_part(msg+": initial guess for dvdson    ", dtb5, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [Hx_batchGPU] ", dtb6, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [comm(gpu)]   ", dtb7, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [comm(cpu)]   ", dtb8, tdvdsn, dtacc);
-         this->print_part(msg+": dvdson solver [rest part]   ", dtb9, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson [Hx_batchGPU]        ", dtb6, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson [cpu-gpu]            ", dtb7, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson [nccl]               ", dtb8, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson [mpi]                ", dtb9, tdvdsn, dtacc);
+         this->print_part(msg+": dvdson [rest part(linalg)]  ", dtb10, tdvdsn, dtacc);
 
          double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtf13 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
@@ -70,7 +71,7 @@ namespace ctns{
          this->print_part(msg+": reduction of opS & opH [nccl]", dtf9, trenrm, dtacc);  // t10-t9
          this->print_part(msg+": qops memcpy gpu2cpu          ", dtf10, trenrm, dtacc); // t11-t10
          this->print_part(msg+": deallocate cpu and gpu memory", dtf11, trenrm, dtacc); // t12-t11
-         this->print_part(msg+": reduction of opS & opH [comm]", dtf12, trenrm, dtacc); // t13-t12
+         this->print_part(msg+": reduction of opS & opH [mpi] ", dtf12, trenrm, dtacc); // t13-t12
          this->print_part(msg+": conversion from opAB to opPQ ", dtf13, trenrm, dtacc); // t14-t13
          this->print_part(msg+": after oper_renorm            ", dtfb, trenrm, dtacc);
       }
@@ -136,6 +137,7 @@ namespace ctns{
          dtb7 += timer.dtb7; 
          dtb8 += timer.dtb8; 
          dtb9 += timer.dtb9; 
+         dtb10 += timer.dtb10; 
 
          // decomposition of dt5 into different parts
          dtfa += timer.dtfa; 
@@ -175,7 +177,7 @@ namespace ctns{
       Tm tb3; 
       Tm tb4; 
       Tm tb5; 
-      double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0;
+      double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
       Tm tf0;
       Tm tf1; // qops init
       Tm tf2; // qops_dict memcpy cpu2gpu   

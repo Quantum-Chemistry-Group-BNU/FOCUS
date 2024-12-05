@@ -136,7 +136,7 @@ namespace ctns{
                std::cout << "qops.to_cpu: size(tot)=" << qops.size()
                   << ":" << tools::sizeMB<Tm>(qops.size()) << "MB" 
                   << ":" << tools::sizeGB<Tm>(qops.size()) << "GB"
-                  << " t[to_cpu]=" << dt << "S"
+                  << " T(to_cpu)=" << dt << "S"
                   << " speed=" << tools::sizeGB<Tm>(qops.size())/dt << "GB/S"
                   << std::endl;
             } 

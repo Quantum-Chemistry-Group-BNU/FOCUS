@@ -170,6 +170,7 @@ namespace ctns{
          batch_timing sigma;
          batch_timing renorm;
          // nccl in preprocess_sigma_batchGPU [cpu2gpu,gpu2cpu,reduce]
+         double tcpugpu=0.0;
          double tcommgpu=0.0;
    };
 

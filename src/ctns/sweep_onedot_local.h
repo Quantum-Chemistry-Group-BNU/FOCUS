@@ -81,10 +81,11 @@ namespace ctns{
 
          }
          nmvp = solver.nmvp;
-         timing.dtb6 = solver.t_cal - oper_timer.tcommgpu; 
-         timing.dtb7 = oper_timer.tcommgpu;
-         timing.dtb8 = solver.t_comm;
-         timing.dtb9 = solver.t_rest;
+         timing.dtb6 = solver.t_cal - oper_timer.tcpugpu - oper_timer.tcommgpu; 
+         timing.dtb7 = oper_timer.tcpugpu;
+         timing.dtb8 = oper_timer.tcommgpu;
+         timing.dtb9 = solver.t_comm;
+         timing.dtb10 = solver.t_rest;
       }
 
    template <>
@@ -137,10 +138,11 @@ namespace ctns{
          // solve
          solver.solve_iter(eopt.data(), vsol.data(), v0.data());
          nmvp = solver.nmvp;
-         timing.dtb6 = solver.t_cal - oper_timer.tcommgpu; 
-         timing.dtb7 = oper_timer.tcommgpu;
-         timing.dtb8 = solver.t_comm;
-         timing.dtb9 = solver.t_rest;
+         timing.dtb6 = solver.t_cal - oper_timer.tcpugpu - oper_timer.tcommgpu; 
+         timing.dtb7 = oper_timer.tcpugpu;
+         timing.dtb8 = oper_timer.tcommgpu;
+         timing.dtb9 = solver.t_comm;
+         timing.dtb10 = solver.t_rest;
       }
 
 } // ctns

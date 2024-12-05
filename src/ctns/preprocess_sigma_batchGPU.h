@@ -15,14 +15,14 @@
 namespace ctns{
 
    template <typename Tm>
-      void analyze_tcommgpu(const size_t ndim, 
+      void analyze_tgpu_Hx(const size_t ndim, 
             const double time_comm1, 
             const double time_comm2){
          double sizeGB = tools::sizeGB<Tm>(ndim);
-         std::cout << " ndim=" << ndim << ":" << sizeGB << "GB" 
-            << " t[comm(intra)]=" << time_comm1
-            << " speed=" << 2*sizeGB/time_comm1 << "GB/S" 
-            << " t[comm(inter)]=" << time_comm2
+         std::cout << " analyze_tgpu[Hx]: ndim=" << ndim << ":" << sizeGB << "GB" 
+            << " T(cpu-gpu)=" << time_comm1
+            << " speed=" << 2*sizeGB/time_comm1 << "GB/S" // 2 for back and forth 
+            << " T(nccl)=" << time_comm2
             << " speed=" << 2*sizeGB/time_comm2 << "GB/S"
             << std::endl;
       }
@@ -139,12 +139,13 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchGPU: t[comm,gemm,reduction,tot]="
+            std::cout << "preprocess_Hx_batchGPU: T(gpu,nccl,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction
                << "," << tools::get_duration(t1-t0) 
                << std::endl;
-            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2); 
-            oper_timer.tcommgpu += time_comm1+time_comm2;
+            analyze_tgpu_Hx<Tm>(ndim,time_comm1,time_comm2); 
+            oper_timer.tcpugpu += time_comm1;
+            oper_timer.tcommgpu += time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -268,12 +269,13 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchDirectGPU: T(comm,inter,gemm,reduction,tot)="
+            std::cout << "preprocess_Hx_batchDirectGPU: T(gpu,inter,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
                << "," << tools::get_duration(t1-t0)
                << std::endl;
-            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
-            oper_timer.tcommgpu += time_comm1+time_comm2;
+            analyze_tgpu_Hx<Tm>(ndim,time_comm1,time_comm2);
+            oper_timer.tcpugpu += time_comm1;
+            oper_timer.tcommgpu += time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -386,12 +388,13 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchGPUSingle: t[comm,gemm,reduction,tot]="
+            std::cout << "preprocess_Hx_batchGPUSingle: T(gpu,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_gemm << "," << time_reduction 
                << "," << tools::get_duration(t1-t0)
                << std::endl;
-            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
-            oper_timer.tcommgpu += time_comm1+time_comm2;
+            analyze_tgpu_Hx<Tm>(ndim,time_comm1,time_comm2);
+            oper_timer.tcpugpu += time_comm1;
+            oper_timer.tcommgpu += time_comm2;
             oper_timer.sigma.analysis();
          }
       }
@@ -511,12 +514,13 @@ namespace ctns{
          // timing
          if(rank==0){
             auto t1 = tools::get_time();
-            std::cout << "preprocess_Hx_batchDirectGPUSingle: T(comm,inter,gemm,reduction,tot)="
+            std::cout << "preprocess_Hx_batchDirectGPUSingle: T(gpu,inter,gemm,reduction,tot)="
                << time_comm1+time_comm2 << "," << time_inter << "," << time_gemm << "," << time_reduction
                << "," << tools::get_duration(t1-t0)
                << std::endl;
-            analyze_tcommgpu<Tm>(ndim,time_comm1,time_comm2);
-            oper_timer.tcommgpu += time_comm1+time_comm2;
+            analyze_tgpu_Hx<Tm>(ndim,time_comm1,time_comm2);
+            oper_timer.tcpugpu += time_comm1;
+            oper_timer.tcommgpu += time_comm2;
             oper_timer.sigma.analysis();
          }
       }

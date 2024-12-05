@@ -75,7 +75,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_Hx_batch: t[gemm,reduction]="
+            std::cout << "preprocess_Hx_batch: T(gemm,reduction)="
                << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.sigma.analysis();
@@ -220,7 +220,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_Hx_batchSingle: t[gemm,reduction]="
+            std::cout << "preprocess_Hx_batchSingle: T(gemm,reduction)="
                << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.sigma.analysis();

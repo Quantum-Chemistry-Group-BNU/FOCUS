@@ -407,8 +407,8 @@ namespace ctns{
          auto t2a = tools::get_time();
          if(debug){
             std::cout << "batchgemv=" << batchgemv 
-               << " t(sort)=" <<tools::get_duration(t1a-t0a) 
-               << " t(init)=" <<tools::get_duration(t2a-t1a) 
+               << " T(sort)=" <<tools::get_duration(t1a-t0a) 
+               << " T(init)=" <<tools::get_duration(t2a-t1a) 
                << std::endl;
          }
          Tm* ptrs[6];

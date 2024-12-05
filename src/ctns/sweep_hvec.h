@@ -278,7 +278,7 @@ namespace ctns{
             timing.tb4 = tools::get_time();
             timing.tb5 = tools::get_time();
 
-            worktot = maxthreads*(blksize*2+ndim);
+            worktot = maxthreads*blksize*2;
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "preprocess for Hx: ndim=" << ndim << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"

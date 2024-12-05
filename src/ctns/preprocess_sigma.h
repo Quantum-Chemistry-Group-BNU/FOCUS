@@ -54,26 +54,21 @@ namespace ctns{
          // openmp version
 #pragma omp parallel
          {
-            Tm* yi = new Tm[ndim];
-            memset(yi, 0, ndim*sizeof(ndim));
-
             Tm* work = new Tm[blksize*2];
 #pragma omp for schedule(dynamic) nowait
             for(int i=0; i<Hxlst.size(); i++){
                auto& Hxblk = Hxlst[i];
                bool ifcal = Hxblk.kernel(x, opaddr, work);
-               if(ifcal){
-                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, yi+Hxblk.offout);
-               }else{
-                  linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, yi+Hxblk.offout);
+#pragma omp critical
+               {
+                  if(ifcal){
+                     linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
+                  }else{
+                     linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, y+Hxblk.offout);
+                  }
                }
             } // i
             delete[] work;
-
-#pragma omp critical
-            linalg::xaxpy(ndim, 1.0, yi, y);
-
-            delete[] yi;
          }
 
 #endif

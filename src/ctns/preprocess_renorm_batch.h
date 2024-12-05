@@ -70,7 +70,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batch: t[gemm,reduction]="
+            std::cout << "preprocess_renorm_batch: T(gemm,reduction)="
                << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.renorm.analysis();
@@ -205,7 +205,7 @@ namespace ctns{
 
          // timing
          if(rank == 0){
-            std::cout << "preprocess_renorm_batchSingle: t[gemm,reduction]="
+            std::cout << "preprocess_renorm_batchSingle: T(gemm,reduction)="
                << time_gemm << "," << time_reduction 
                << std::endl;
             oper_timer.renorm.analysis();

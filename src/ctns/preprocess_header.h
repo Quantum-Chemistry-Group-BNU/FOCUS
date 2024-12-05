@@ -69,7 +69,7 @@ namespace ctns{
             exit(1);
          }
          batchsize = std::min(batchsize, maxbatch);
-         cpumem_batch = batchsize*blocksize; // no sizeof(Tm) here for compatability
+         cpumem_batch = batchsize*blocksize; // no sizeof(Tm) here for compatability in sweep_hvec
       }
 
 } // ctns
