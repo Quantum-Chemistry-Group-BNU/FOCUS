@@ -125,7 +125,7 @@ namespace ctns{
 #endif
                   auto t0 = tools::get_time();
                   // only perform calculation if opP is exist on the current process
-                  if(qops2.numop('P') > 0){
+                  if(qops2.num_ops('P') > 0){
                      const auto& pmap = qops2.indexmap('P');
                      const auto& amap = qops_tmp.indexmap('M');
                      for(const auto& pr : amap){
@@ -306,7 +306,7 @@ namespace ctns{
 #endif
                      auto t0 = tools::get_time();
                      // only perform calculation if opQ is exist on the current process
-                     if(qops2.numop('Q') > 0){
+                     if(qops2.num_ops('Q') > 0){
                         const auto& qmap = qops2.indexmap('Q');
                         const auto& bmap = qops_tmp.indexmap('B');
                         for(const auto& pr : bmap){
@@ -396,7 +396,7 @@ namespace ctns{
                      }
 #endif
                      auto t0 = tools::get_time();
-                     if(qops2.numop('Q') > 0){
+                     if(qops2.num_ops('Q') > 0){
                         const auto& qmap = qops2.indexmap('Q');
                         const auto& bmap = qops_tmp.indexmap('N');
                         for(const auto& pr : bmap){

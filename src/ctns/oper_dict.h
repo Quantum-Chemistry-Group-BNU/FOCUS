@@ -92,6 +92,7 @@ namespace ctns{
                   _offset = std::move(st._offset);
                   _opdict = std::move(st._opdict);
                   _indexmap = std::move(st._indexmap);
+                  _sizes = std::move(st._sizes);
                   _size = st._size;
                   _opsize = st._opsize;
                   delete[] _data;
@@ -132,21 +133,29 @@ namespace ctns{
             qoper_map<ifab,Tm>& operator()(const char key){
                return _opdict[key];      
             }
-            // return qindexmap for certain type of op
-            const qindexmap& indexmap(const char key) const{
-               assert(this->numop(key) > 0);
-               return _indexmap.at(key);
-            }
             // check existence
             bool ifexist(const char key) const{
                return _opdict.find(key) != _opdict.end();
             }
-            size_t numop(const char key) const{
+            // no. of operators for certain type
+            size_t num_ops(const char key) const{
                if(!this->ifexist(key)){
                   return 0;
                }else{
                   return _opdict.at(key).size();
                }
+            }
+            size_t size_ops(const char key) const{
+               if(!this->ifexist(key)){
+                  return 0;
+               }else{
+                  return _sizes.at(key);
+               }
+            }
+            // return qindexmap for certain type of op
+            const qindexmap& indexmap(const char key) const{
+               assert(this->num_ops(key) > 0);
+               return _indexmap.at(key);
             }
             // helpers
             size_t size() const{ return _size; };
@@ -167,7 +176,8 @@ namespace ctns{
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
             std::map<char,qoper_map<ifab,Tm>> _opdict;
-            std::map<char,qindexmap> _indexmap; // should be put into move?
+            std::map<char,qindexmap> _indexmap; 
+            std::map<char,size_t> _sizes;
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
@@ -209,6 +219,13 @@ namespace ctns{
             << ":" << tools::sizeMB<Tm>(_size) << "MB" 
             << ":" << tools::sizeGB<Tm>(_size) << "GB" 
             << std::endl;
+         // display the sizes of each class of operators
+         std::cout << "        per(mem): " << std::defaultfloat << std::setprecision(3);
+         for(const auto& key : opseq){
+            if(exist[key] == 0) continue;
+            std::cout << key << ":" << double(_sizes.at(key))/_size*100 << " ";
+         }
+         std::cout << std::endl;
          // print each operator
          if(level > 0){
             std::cout << " sorb=" << sorb << " isym=" << isym << " ifkr=" << ifkr 
@@ -335,10 +352,9 @@ namespace ctns{
          }
          // count the size
          _size = 0;
-         std::map<char,size_t> sizes;
          // loop over different types of operators
          for(const auto& key : oplist){
-            sizes[key] = 0;
+            _sizes[key] = 0;
             _opdict[key] = qoper_map<ifab,Tm>(); // initialize an empty dictionary
             if(debug) std::cout << " allocate_memory for op" << key << ":";
             // loop over indices
@@ -351,13 +367,13 @@ namespace ctns{
                size_t sz = _opdict[key][idx].size();
                _offset[std::make_pair(key,idx)] = _size;
                _size += sz;
-               sizes[key] += sz;
+               _sizes[key] += sz;
                _opsize = std::max(_opsize, sz);
             }
             if(debug){
                std::cout << " nop=" << op_index.size()
-                  << " size=" << sizes[key] 
-                  << " sizeMB=" << tools::sizeMB<Tm>(sizes[key]) 
+                  << " size=" << _sizes[key] 
+                  << " sizeMB=" << tools::sizeMB<Tm>(_sizes[key]) 
                   << std::endl;
             }
          }
