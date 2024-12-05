@@ -42,7 +42,9 @@ void gpu_init(const int rank){
       << std::endl;
 #endif
 
-   CUDA_CHECK(cudaSetDevice(rank)); // important for nccl to work
+   int deviceCount;
+   CUDA_CHECK(cudaGetDeviceCount(&deviceCount));
+   CUDA_CHECK(cudaSetDevice(rank % deviceCount)); // important for nccl to work
 
    int cudaToolkitVersion;
    CUDA_CHECK(cudaRuntimeGetVersion(&cudaToolkitVersion));
