@@ -630,7 +630,11 @@
       - cuSOlver: eig
      
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
-   - jinan: a100-40G
-   - wuhan: a100-40G
-   - xiyun: a800-80G
- 
+   - jinan: a100-40G,64G/GPU: cpu memory issue?
+      qops.to_cpu: size(tot)=1778498763:1.4e+04MB:1.3e+01GB t[to_cpu]=1.0e+01S speed=1.3e+00GB/S
+      check ||H-H.dagger||=1.179e-10 coord=(35,0) rank=0
+      ctns::oper_ab2pq coord=(35,0) superblock=lc ab2pq=1 alg_ab2pq=1 alg_renorm=19
+      avaraan2l5iqu-0:88971:89047 [4] NCCL INFO [Service thread] Connection closed by localRank 3
+   - wuhan: a100-40G,64G/GPU
+   - xiyun: a800-80G,256G/GPU
+
