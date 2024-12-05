@@ -1,5 +1,5 @@
 
-machine = lenovo #mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = jinan #mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
 USE_OPENMP = yes
@@ -16,6 +16,11 @@ ifeq ($(strip $(machine)), lenovo)
    CXX = g++ #icpc 
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
    MATHLIB = ${MKLROOT}
+
+else ifeq ($(strip $(machine)), jinan)
+   CXX = g++
+   FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
+   MATHLIB = ${MKLROOT}/lib
 
 else ifeq ($(strip $(machine)), dell)
    CXX = icpc 
