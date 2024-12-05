@@ -345,12 +345,19 @@ namespace ctns{
                preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 0, rank, 
                      batchsize, gpumem_batch);
                if(rank==0 && schd.ctns.verbose>0){
+                  size_t used = GPUmem.used();
+                  size_t avail = GPUmem.available(rank);
+                  size_t total = used + avail;
+               std::cout << "used=" << used << " avail=" << avail
+                  << " total=" << total << std::endl;
                   std::cout << "rank=" << rank
-                     << " GPUmem(GB): avail=" << GPUmem.available(rank)/std::pow(1024.0,3)
+                     << " GPUmem(GB): used=" << used/std::pow(1024.0,3)
+                     << " avail=" << avail/std::pow(1024.0,3)
+                     << " total=" << total/std::pow(1204.0,3)
+                     << " batch[need]=" << gpumem_batch/std::pow(1024.0,3)
                      << " blksize=" << blksize
                      << " blksize0=" << blksize0 
                      << " batchsize=" << batchsize 
-                     << " batch[tot]=" << tools::sizeGB<Tm>(batchsize*blocksize)
                      << std::endl;
                }
                dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);

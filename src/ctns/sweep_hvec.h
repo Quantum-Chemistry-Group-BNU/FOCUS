@@ -419,10 +419,27 @@ namespace ctns{
 
             // Determine batchsize dynamically
             gpumem_dvdson = sizeof(Tm)*2*ndim;
+            size_t blocksize = 2*blksize+blksize0+1;
             if(blksize > 0){
-               size_t blocksize = 2*blksize+blksize0+1;
                preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, gpumem_dvdson, rank,
                      batchsize, gpumem_batch);
+            }
+            if(rank==0 && schd.ctns.verbose>0){
+               size_t used = GPUmem.used();
+               size_t avail = GPUmem.available(rank);
+               size_t total = used + avail;
+               std::cout << "used=" << used << " avail=" << avail
+                  << " total=" << total << std::endl;
+               std::cout << "rank=" << rank
+                  << " GPUmem(GB): used=" << used/std::pow(1024.0,3)
+                  << " avail=" << avail/std::pow(1024.0,3) 
+                  << " total=" << total/std::pow(1024.0,3) 
+                  << " dvdson[need]=" << gpumem_dvdson/std::pow(1024.0,3)
+                  << " batch[need]=" << gpumem_batch/std::pow(1024.0,3)
+                  << " blksize=" << blksize
+                  << " blksize0=" << blksize0
+                  << " batchsize=" << batchsize 
+                  << std::endl;
             }
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(rank==0 && schd.ctns.verbose>0){
@@ -432,9 +449,6 @@ namespace ctns{
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << "," << gpumem_dvdson/std::pow(1024.0,3)
                   << "," << gpumem_batch/std::pow(1024.0,3)
-                  << " blksize=" << blksize
-                  << " blksize0=" << blksize0
-                  << " batchsize=" << batchsize 
                   << std::endl;
             }
 
