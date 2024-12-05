@@ -621,8 +621,6 @@
       - use gpu/nccl to perform communication?
       - adjust the switch position via a function?
 
- * alg_renorm=4 占用内存过多
-
  * decimation for su2 is not parallelized:
    - using MPI
    - using GPU

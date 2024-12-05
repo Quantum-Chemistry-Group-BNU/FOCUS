@@ -32,40 +32,27 @@ namespace ctns{
          // init
          memset(y, 0, ndim*sizeof(Tm));
 
-#ifndef _OPENMP
-
-         // serial version
-         Tm* work = new Tm[blksize*2];
-         for(int i=0; i<Rlst.size(); i++){
-            auto& Rblk = Rlst[i];
-            bool ifcal = Rblk.kernel(xbra, xket, opaddr, work);
-            if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
-         } // i
-         delete[] work;
-
-#else
-
-         // openmp version
-         #pragma omp parallel
+#ifdef _OPENMP
+#pragma omp parallel
          {
-            Tm* yi = new Tm[ndim];
-            memset(yi, 0, ndim*sizeof(ndim));
+#endif
 
             Tm* work = new Tm[blksize*2];
-            #pragma omp for schedule(dynamic) nowait
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic) nowait
+#endif
             for(int i=0; i<Rlst.size(); i++){
                auto& Rblk = Rlst[i];
                bool ifcal = Rblk.kernel(xbra, xket, opaddr, work);
-               if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, yi+Rblk.offrop);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+               if(ifcal) linalg::xaxpy(Rblk.size, Rblk.coeff, work, y+Rblk.offrop);
             } // i
             delete[] work;
 
-            #pragma omp critical
-            linalg::xaxpy(ndim, 1.0, yi, y);
-
-            delete[] yi;
+#ifdef _OPENMP
          }
-
 #endif
       }
 

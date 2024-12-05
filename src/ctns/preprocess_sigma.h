@@ -34,32 +34,21 @@ namespace ctns{
          memset(y, 0, ndim*sizeof(Tm));
 
          // compute Y[I] = \sum_J H[I,J] X[J]
-#ifndef _OPENMP
-
-         // serial version
-         Tm* work = new Tm[blksize*2];
-         for(int i=0; i<Hxlst.size(); i++){
-            auto& Hxblk = Hxlst[i];
-            bool ifcal = Hxblk.kernel(x, opaddr, work);
-            if(ifcal){
-               linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
-            }else{
-               linalg::xaxpy(Hxblk.size, Hxblk.coeff, x+Hxblk.offin, y+Hxblk.offout);
-            }
-         } // i
-         delete[] work;
-
-#else
-
-         // openmp version
+#ifdef _OPENMP
 #pragma omp parallel
          {
+#endif
+
             Tm* work = new Tm[blksize*2];
+#ifdef _OPENMP
 #pragma omp for schedule(dynamic) nowait
+#endif
             for(int i=0; i<Hxlst.size(); i++){
                auto& Hxblk = Hxlst[i];
                bool ifcal = Hxblk.kernel(x, opaddr, work);
+#ifdef _OPENMP
 #pragma omp critical
+#endif
                {
                   if(ifcal){
                      linalg::xaxpy(Hxblk.size, Hxblk.coeff, work, y+Hxblk.offout);
@@ -69,8 +58,9 @@ namespace ctns{
                }
             } // i
             delete[] work;
-         }
 
+#ifdef _OPENMP
+         }
 #endif
 
          // add const term
@@ -143,7 +133,6 @@ namespace ctns{
          // add const term
          if(rank == 0) linalg::xaxpy(ndim, scale, x, y);
       }
-
 
 } // ctns
 

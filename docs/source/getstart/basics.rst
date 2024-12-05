@@ -129,7 +129,7 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
       * =1:  dynamic allocation of memory
       * =2:  preallocation of workspace: ``worktot = maxthreads*(opsize + 3*wfsize)``
       * =3:  (factorized) + preallocation of workspace: ``worktot = maxthreads*(opsize + 4*wfsize)``
-      * =4:  preallocation of workspace + hintermediates [Hxlst]: ``worktot = maxthreads*(blksize*2 + ndim)`` [local]
+      * =4:  preallocation of workspace + hintermediates [Hxlst]: ``worktot = maxthreads*(blksize*2)`` [local]
       * =5:  preallocation of workspace + hintermediates [Hxlst2]: ``worktot = maxthreads*(blksize*3)`` [local]
       * Batched contractions: preallocation of workspace + Hxlst + Hmmtasks
          * =6: hintermediates [CPU]: ``worktot = batchsize*(blksize*2)``

@@ -204,7 +204,7 @@ namespace ctns{
             timing.tf7 = tools::get_time();
             timing.tf8 = tools::get_time();
 
-            worktot = maxthreads*(blksize*2+qops._size);
+            worktot = maxthreads*blksize*2;
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "preprocess for renorm: size=" << qops._size << " blksize=" << blksize 
                   << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
