@@ -428,8 +428,6 @@ namespace ctns{
                size_t used = GPUmem.used();
                size_t avail = GPUmem.available(rank);
                size_t total = used + avail;
-               std::cout << "used=" << used << " avail=" << avail
-                  << " total=" << total << std::endl;
                std::cout << "rank=" << rank
                   << " GPUmem(GB): used=" << used/std::pow(1024.0,3)
                   << " avail=" << avail/std::pow(1024.0,3) 
