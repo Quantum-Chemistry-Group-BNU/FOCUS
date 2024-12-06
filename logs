@@ -628,7 +628,11 @@
    - using GPU:
       - cuSOlver: eig - cusolverDnXsyevd
       - cuSolver: svd - cusolverDnXgesvdp
-      - benchmark_lapack.x 
+      - benchmark_lapack.x [DONE@2024/12/05]
+      - decimation on gpu
+      - integration with sadmrg [DONE@2024/12/06]
+      - integration with ctns
+ 
    - using MPI?
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?

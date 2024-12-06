@@ -7,9 +7,6 @@
 
 namespace kramers{
 
-   const double thresh_Uortho = 1.e-8;
-   extern const double thresh_Uortho;
-
    // used in initial guess part 
    template <typename Tm>
       class blockMatrix{
@@ -314,7 +311,8 @@ namespace kramers{
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
             const double rdm_svd,
-            const bool debug_basis=false){
+            const bool debug_basis=false,
+            const double thresh_Uortho=1.e-8){
          int nroots = clr.size();
          int diml = clr[0].rows();
          int dimr = clr[0].cols();
@@ -364,7 +362,8 @@ namespace kramers{
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
             const double rdm_svd,
-            const bool debug_basis=false){
+            const bool debug_basis=false,
+            const double thresh_Uortho=1.e-8){
          const double thresh_kept = 1.e-16;
          assert(tools::is_complex<Tm>());
          int nroots = clr.size();

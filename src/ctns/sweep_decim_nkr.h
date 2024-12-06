@@ -34,7 +34,7 @@ namespace ctns{
          size = icomb.world.size();
 #endif   
          int nqr = qrow.size();
-         
+
          // 1. preprocess wfs2 to find contributing blocks
          std::vector<std::pair<int,int>> brbc(nqr);
          std::vector<double> decim_cost(nqr);
@@ -75,7 +75,7 @@ namespace ctns{
             decim_cost.resize(nqr_eff);
             index = tools::sort_index(decim_cost, 1);
          } // rank-0
-         
+
          // 2. from {brbc,decim_cost,index} to contruct local_brbc
          if(alg_decim==0 || (alg_decim>0 && size==1)){
             if(rank == 0) local_brbc[rank] = std::move(brbc);
@@ -134,18 +134,18 @@ namespace ctns{
          }else{
             //--- algorithm 1: gather: there is problem in boost::mpi ---
             /*
-            std::vector<std::vector<std::pair<int,decim_item<Tm>>>> full_results;
-            boost::mpi::gather(icomb.world, local_results, full_results, 0);
+               std::vector<std::vector<std::pair<int,decim_item<Tm>>>> full_results;
+               boost::mpi::gather(icomb.world, local_results, full_results, 0);
             // reconstruct results
             if(rank == 0){
-               assert(full_results.size() == size);
-               for(int i=0; i<full_results.size(); i++){
-                  for(int j=0; j<full_results[i].size(); j++){
-                     int br = full_results[i][j].first;
-                     if(br == -1) continue;
-                     results[br] = std::move(full_results[i][j].second);
-                  }
-               }
+            assert(full_results.size() == size);
+            for(int i=0; i<full_results.size(); i++){
+            for(int j=0; j<full_results[i].size(); j++){
+            int br = full_results[i][j].first;
+            if(br == -1) continue;
+            results[br] = std::move(full_results[i][j].second);
+            }
+            }
             }
             */
             //--- algorithm 2: isend & irecv: should work for rdim<16000 --- 
@@ -217,9 +217,10 @@ namespace ctns{
          std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
          int nroots = wfs2.size();
          if(alg_decim == 0){
-            // MPI + OpenMP + serial SVD
+
+            // OpenMP + serial SVD (only at rank-0)
 #ifdef _OPENMP
-            #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
 #endif
             for(int ibr=0; ibr<local_size; ibr++){
                int br = local_brbc[rank][ibr].first;
@@ -245,8 +246,13 @@ namespace ctns{
                   local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
                }
             } // br
-         }else{
-            // MPI + parallel SVD
+
+         }else if(alg_decim == 1){
+
+            // MPI + openmp
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
             for(int ibr=0; ibr<local_size; ibr++){
                int br = local_brbc[rank][ibr].first;
                int bc = local_brbc[rank][ibr].second;
@@ -271,6 +277,12 @@ namespace ctns{
                   local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
                }
             } // br
+
+         }else{
+
+            std::cout << "error: no such option for decimation_genbasis(nkr): alg_decim=" << alg_decim << std::endl;
+            exit(1);
+
          } // alg_decim
          auto t2 = tools::get_time();
          if(debug and rank == 0){
@@ -294,7 +306,7 @@ namespace ctns{
                << std::endl;
          }
       }
-   
+
 } // ctns
 
 #endif

@@ -116,7 +116,7 @@ namespace linalg{
    // singular value decomposition: 
    template <typename Tm>
       void svd_solver_gpu(const matrix<Tm>& A, std::vector<double>& S, 
-            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT iop=3){
+            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT iop=13){
 
          using data_type = typename std::conditional<tools::is_complex<Tm>(), cuDoubleComplex, double>::type;
 
@@ -156,7 +156,7 @@ namespace linalg{
          size_t workspaceInBytesOnDevice = 0;
          size_t workspaceInBytesOnHost = 0;
          int info = 0;
-         
+
          /* step 1: create cusolver handle, bind a stream */
          CUSOLVER_CHECK(cusolverDnCreate(&cusolverH));
          CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
@@ -236,58 +236,56 @@ namespace linalg{
          VT = V.H();
       }
 
-   /*
    // Input: a vector of matrices {c[l,r]}
    // Output: the reduced basis U[r,alpha] for the right space
    template <typename Tm> 
-   void get_renorm_states_nkr_gpu(const std::vector<matrix<Tm>>& clr,
-   std::vector<double>& sigs2,
-   matrix<Tm>& U,
-   const double rdm_svd,
-   const bool debug_basis=false,
-   const double thresh_Uortho=1.e-8){
-   int nroots = clr.size();
-   int diml = clr[0].rows();
-   int dimr = clr[0].cols();
-   if(dimr <= static_cast<int>(rdm_svd*diml)){ 
+      void get_renorm_states_nkr_gpu(const std::vector<matrix<Tm>>& clr,
+            std::vector<double>& sigs2,
+            matrix<Tm>& U,
+            const double rdm_svd,
+            const bool debug_basis=false,
+            const double thresh_Uortho=1.e-8){
+         int nroots = clr.size();
+         int diml = clr[0].rows();
+         int dimr = clr[0].cols();
+         if(dimr <= static_cast<int>(rdm_svd*diml)){ 
 
-   if(debug_basis){ 
-   std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
-   }
-   matrix<Tm> rhor(dimr,dimr);
-   for(int iroot=0; iroot<nroots; iroot++){
-   rhor += xgemm("T","N",clr[iroot],clr[iroot].conj());
-   } // iroot
-   rhor *= 1.0/nroots;   
-   sigs2.resize(dimr);
-   eig_solver_gpu(rhor, sigs2, U, 1);
+            if(debug_basis){ 
+               std::cout << " RDM-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+            }
+            matrix<Tm> rhor(dimr,dimr);
+            for(int iroot=0; iroot<nroots; iroot++){
+               rhor += xgemm("T","N",clr[iroot],clr[iroot].conj());
+            } // iroot
+            rhor *= 1.0/nroots;   
+            sigs2.resize(dimr);
+            eig_solver_gpu(rhor, sigs2, U, 1);
 
-   }else{
+         }else{
 
-   if(debug_basis){ 
-   std::cout << " SVD-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
-   }
-   matrix<Tm> vrl(dimr,diml*nroots);
-   for(int iroot=0; iroot<nroots; iroot++){
-   auto crl = clr[iroot].T();
-   xcopy(dimr*diml, crl.data(), vrl.col(iroot*diml));
-   } // iroot
-   vrl *= 1.0/std::sqrt(nroots);
-   matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-   svd_solver_gpu(vrl, sigs2, U, vt);
-   std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
-   [](const double& x){ return x*x; });
+            if(debug_basis){ 
+               std::cout << " SVD-based decimation: dim(l,r)=" << diml << "," << dimr << std::endl;
+            }
+            matrix<Tm> vrl(dimr,diml*nroots);
+            for(int iroot=0; iroot<nroots; iroot++){
+               auto crl = clr[iroot].T();
+               xcopy(dimr*diml, crl.data(), vrl.col(iroot*diml));
+            } // iroot
+            vrl *= 1.0/std::sqrt(nroots);
+            matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
+            svd_solver_gpu(vrl, sigs2, U, vt);
+            std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
+                  [](const double& x){ return x*x; });
 
-   }
-   if(debug_basis){ 
-   std::cout << " sigs2[final]: ";
-   for(const auto sig2 : sigs2) std::cout << sig2 << " ";
-   std::cout << std::endl;                               
-//U.print("U"); 
-}
-check_orthogonality(U, thresh_Uortho); // orthonormality is essential for variational calculations
-}
-*/
+         }
+         if(debug_basis){ 
+            std::cout << " sigs2[final]: ";
+            for(const auto sig2 : sigs2) std::cout << sig2 << " ";
+            std::cout << std::endl;                               
+            //U.print("U"); 
+         }
+         check_orthogonality(U, thresh_Uortho); // orthonormality is essential for variational calculations
+      }
 
 } // linalg
 

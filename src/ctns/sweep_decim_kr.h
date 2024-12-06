@@ -28,45 +28,56 @@ namespace ctns{
 
          int nroots = wfs2.size();
          int nqr = qrow.size();
+         if(alg_decim == 0){
+
+            if(rank == 0){
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-         for(int br=0; br<nqr; br++){
-            const auto& qr = qrow.get_sym(br);
-            const int rdim = qrow.get_dim(br);
-            if(debug_decimation){ 
-               if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
-               std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
-            }
-            // search for matched block 
-            std::vector<double> sigs2;
-            linalg::matrix<Tm> U;
-            int matched = 0;
-            for(int bc=0; bc<qcol.size(); bc++){
-               if(wfs2[0](br,bc).empty()) continue;
-               const auto& qc = qcol.get_sym(bc);     
-               if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-               matched += 1;
-               if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
-               // mapping product basis to kramers paired basis
-               std::vector<int> pos_new;
-               std::vector<double> phases;
-               mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
-               assert(pos_new.size() == rdim);
-               // compute KRS-adapted renormalized basis
-               std::vector<linalg::matrix<Tm>> blks(nroots);
-               for(int iroot=0; iroot<nroots; iroot++){
-                  blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
-               }
-               kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, debug_decimation);
-               // convert back to the original product basis
-               U = U.reorder_row(pos_new,1);
-            } // qc
+               for(int br=0; br<nqr; br++){
+                  const auto& qr = qrow.get_sym(br);
+                  const int rdim = qrow.get_dim(br);
+                  if(debug_decimation){ 
+                     if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
+                     std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+                  }
+                  // search for matched block 
+                  std::vector<double> sigs2;
+                  linalg::matrix<Tm> U;
+                  int matched = 0;
+                  for(int bc=0; bc<qcol.size(); bc++){
+                     if(wfs2[0](br,bc).empty()) continue;
+                     const auto& qc = qcol.get_sym(bc);     
+                     if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
+                     matched += 1;
+                     if(matched > 1) tools::exit("multiple matched qc is not supported!"); 
+                     // mapping product basis to kramers paired basis
+                     std::vector<int> pos_new;
+                     std::vector<double> phases;
+                     mapping2krbasis(qr, qs1, qs2, dpt, pos_new, phases);
+                     assert(pos_new.size() == rdim);
+                     // compute KRS-adapted renormalized basis
+                     std::vector<linalg::matrix<Tm>> blks(nroots);
+                     for(int iroot=0; iroot<nroots; iroot++){
+                        blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
+                     }
+                     kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, debug_decimation);
+                     // convert back to the original product basis
+                     U = U.reorder_row(pos_new,1);
+                  } // qc
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-            results[br] = std::make_pair(sigs2, U);
-         } // br
+                  results[br] = std::make_pair(sigs2, U);
+               } // br
+            } // rank-0
+
+         }else{
+
+            std::cout << "error: no such option for decimation_genbasis(kr): alg_decim=" << alg_decim << std::endl;
+            exit(1);
+
+         } // alg_decim       
          
          if(debug and rank == 0){
             auto t1 = tools::get_time();
