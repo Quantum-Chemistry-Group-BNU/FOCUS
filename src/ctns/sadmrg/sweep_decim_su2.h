@@ -7,6 +7,12 @@
 #endif
 
 namespace ctns{
+                  
+   const int thrdgpu_eig = 150;
+   extern const int thrdgpu_eig;
+
+   const int thrdgpu_svd = 350*350;
+   extern const int thrdgpu_svd;
 
    // SU2 case
    template <typename Qm, typename Tm>
@@ -115,12 +121,10 @@ namespace ctns{
                   brbc[nqr_eff] = std::make_pair(br,matched_bc);
                   drdc[nqr_eff] = std::make_pair(rdim,cdim);
                   // partition the task
-                  const int thrdgpu_eig = 200;
-                  const int thrdgpu_svd = 500*500; 
                   if(rdim == cdim){
-                     idx_cpugpu[rdim < thrdgpu_eig].push_back(nqr_eff);
+                     idx_cpugpu[rdim>thrdgpu_eig].push_back(nqr_eff);
                   }else{
-                     idx_cpugpu[rdim*cdim < thrdgpu_svd].push_back(nqr_eff);
+                     idx_cpugpu[rdim*cdim>thrdgpu_svd].push_back(nqr_eff);
                   }
                   nqr_eff += 1;
                } // br

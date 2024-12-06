@@ -89,8 +89,8 @@ int main(){
    cout << tools::line_separator << endl;
 
    const int cycle = 3;
-   std::vector<int> rows({200,400,500,300,1000,2000});
-   std::vector<int> cols({100,200,200,1000,2000,2000});
+   std::vector<int> rows({100,200,300,400,500,1000,1600,2000});
+   std::vector<int> cols({100,250,350,400,300, 300, 100,2000});
 
    cout << "\n=== svd ===" << endl;
    for(int i=0; i<rows.size(); i++){
@@ -114,7 +114,6 @@ int main(){
 #endif
       }
    }
-   exit(1);
 
    cout << "\n=== eig ===" << endl;
    for(int i=0; i<rows.size(); i++){
