@@ -1,7 +1,7 @@
 #ifndef SWEEP_DECIM_KR_H
 #define SWEEP_DECIM_KR_H
 
-#include "sweep_decim_nkr.h"
+#include "sweep_decim_util.h"
 
 namespace ctns{
 

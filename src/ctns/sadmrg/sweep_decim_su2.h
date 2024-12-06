@@ -1,18 +1,9 @@
 #ifndef SWEEP_DECIM_SU2_H
 #define SWEEP_DECIM_SU2_H
 
-#include "../sweep_decim_nkr.h"
-#ifdef GPU
-#include "../../gpu/gpu_linalg.h"
-#endif
+#include "../sweep_decim_util.h"
 
 namespace ctns{
-                  
-   const int thrdgpu_eig = 150;
-   extern const int thrdgpu_eig;
-
-   const int thrdgpu_svd = 350*350;
-   extern const int thrdgpu_svd;
 
    // SU2 case
    template <typename Qm, typename Tm>
@@ -31,187 +22,172 @@ namespace ctns{
 #ifndef SERIAL
          rank = icomb.world.rank();
          size = icomb.world.size();
-#endif   
+#endif  
+         // determine local_brbc for each rank 
          auto t0 = tools::get_time();
+         std::vector<std::vector<brbctype>> local_brbc(size);
+         decimation_divide(icomb, qrow, qcol, alg_decim, wfs2, local_brbc);
+         auto t1 = tools::get_time();
+         if(debug and rank == 0){
+            std::cout << "timing for divide=" << tools::get_duration(t1-t0) << std::endl;
+         }
 
-         double tcpu=0.0, tgpu=0.0;
+         // start decimation
+         int local_size = local_brbc[rank].size();
+         std::vector<std::pair<int,decim_item<Tm>>> local_results(local_size);
+         double tcpu = 0.0, tgpu = 0.0;
          int nroots = wfs2.size();
-         int nqr = qrow.size();
-         if(alg_decim == 0){
+         if(alg_decim == 0 || alg_decim == 1){
 
-            // raw: openmpi version without MPI
-            if(rank == 0){
-               auto ti = tools::get_time();
+            // OpenMP or MPI + OpenMP
+            auto ti = tools::get_time();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-               for(int br=0; br<nqr; br++){
-                  const auto& qr = qrow.get_sym(br);
-                  const int rdim = qrow.get_dim(br);
-                  if(debug_decimation){ 
-                     if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
-                     std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
+            for(int ibr=0; ibr<local_size; ibr++){
+               const auto& brbc = local_brbc[rank][ibr];
+               const auto& br = std::get<0>(brbc); 
+               const auto& cdim = std::get<1>(brbc);
+               const auto& matched_bc = std::get<2>(brbc);
+               int rdim = qrow.get_dim(br);
+               // merge matrix into large blocks
+               std::vector<linalg::matrix<Tm>> blks(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  linalg::matrix<Tm> clr(rdim,cdim);
+                  int off = 0;
+                  for(const auto& bc : matched_bc){
+                     const auto blk = wfs2[iroot](br,bc);
+                     linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
+                     off += blk.size();
                   }
-                  // 1. search for matched block 
-                  std::vector<int> matched_bc;
-                  int dim = 0; 
-                  for(int bc=0; bc<qcol.size(); bc++){
-                     if(wfs2[0](br,bc).empty()) continue;
-                     const auto& qc = qcol.get_sym(bc);     
-                     const int cdim = qcol.get_dim(bc);
-                     if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-                     matched_bc.push_back(bc);
-                     dim += cdim;
-                  } // qc
-                  if(dim == 0) continue;
-                  // 2. merge matrix into large blocks
-                  std::vector<linalg::matrix<Tm>> blks(nroots);
-                  // compute KRS-adapted renormalized basis
-                  for(int iroot=0; iroot<nroots; iroot++){
-                     linalg::matrix<Tm> clr(rdim,dim);
-                     int off = 0;
-                     for(const auto& bc : matched_bc){
-                        const auto blk = wfs2[iroot](br,bc);
-                        linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
-                        off += blk.size();
-                     }
-                     blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
-                  }
-                  // 3. decimation
-                  std::vector<double> sigs2;
-                  linalg::matrix<Tm> U;
-                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+               }
+               // decimation
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-                  results[br] = std::make_pair(sigs2, U);
-               } // br
-               auto tf = tools::get_time();
-               tcpu = tools::get_duration(tf-ti);
-            }
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            } // br
+            auto tf = tools::get_time();
+            tcpu = tools::get_duration(tf-ti);
 
 #ifdef GPU
-         }else if(alg_decim == 2){
+         }else if(alg_decim == 2 || alg_decim == 3){
 
             // mixed cpu-gpu version using cusolver
+            std::vector<std::vector<int>> ibr_cpugpu(2);
+            for(int ibr=0; ibr<local_size; ibr++){
+               const auto& brbc = local_brbc[rank][ibr];
+               const auto& br = std::get<0>(brbc); 
+               const auto& cdim = std::get<1>(brbc);
+               int rdim = qrow.get_dim(br);
+               // partition the task
+               if(rdim == cdim){
+                  ibr_cpugpu[rdim>thrdgpu_eig].push_back(ibr);
+               }else{
+                  ibr_cpugpu[rdim*cdim>thrdgpu_svd].push_back(ibr);
+               }
+            } // ibr
             if(rank == 0){
-               std::vector<std::pair<int,std::vector<int>>> brbc(nqr);
-               std::vector<std::pair<int,int>> drdc(nqr);
-               std::vector<std::vector<int>> idx_cpugpu(2);
-               int nqr_eff = 0;
-               for(int br=0; br<nqr; br++){
-                  const auto& qr = qrow.get_sym(br);
-                  const int rdim = qrow.get_dim(br);
-                  if(debug_decimation){ 
-                     if(br == 0) std::cout << "decimation for each symmetry sector:" << std::endl;
-                     std::cout << ">br=" << br << " qr=" << qr << " rdim=" << rdim << std::endl;
-                  }
-                  // 1. search for matched block 
-                  std::vector<int> matched_bc;
-                  int cdim = 0; 
-                  for(int bc=0; bc<qcol.size(); bc++){
-                     if(wfs2[0](br,bc).empty()) continue;
-                     const auto& qc = qcol.get_sym(bc);     
-                     const int dim = qcol.get_dim(bc);
-                     if(debug_decimation) std::cout << " find matched qc =" << qc << std::endl;
-                     matched_bc.push_back(bc);
-                     cdim += dim;
-                  } // bc
-                  if(cdim == 0) continue;
-                  brbc[nqr_eff] = std::make_pair(br,matched_bc);
-                  drdc[nqr_eff] = std::make_pair(rdim,cdim);
-                  // partition the task
-                  if(rdim == cdim){
-                     idx_cpugpu[rdim>thrdgpu_eig].push_back(nqr_eff);
-                  }else{
-                     idx_cpugpu[rdim*cdim>thrdgpu_svd].push_back(nqr_eff);
-                  }
-                  nqr_eff += 1;
-               } // br
-               brbc.resize(nqr_eff);
-               drdc.resize(nqr_eff);
-               tools::print_vector(idx_cpugpu[0],"idx_cpu");
-               tools::print_vector(idx_cpugpu[1],"idx_gpu");
+               tools::print_vector(ibr_cpugpu[0],"ibr_cpu");
+               tools::print_vector(ibr_cpugpu[1],"ibr_gpu");
+            }
 
-               // decimation on cpu and gpu
-               auto ta = tools::get_time(); 
-               // cpu
+            // decimation on cpu and gpu
+            auto ta = tools::get_time(); 
+            // cpu
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-               for(int i=0; i<idx_cpugpu[0].size(); i++){
-                  int idx = idx_cpugpu[0][i];
-                  const auto& br = brbc[idx].first;
-                  const auto& matched_bc = brbc[idx].second;
-                  const auto& rdim = drdc[idx].first;
-                  const auto& cdim = drdc[idx].second;
-                  // 2. merge matrix into large blocks
-                  std::vector<linalg::matrix<Tm>> blks(nroots);
-                  // compute KRS-adapted renormalized basis
-                  for(int iroot=0; iroot<nroots; iroot++){
-                     linalg::matrix<Tm> clr(rdim,cdim);
-                     int off = 0;
-                     for(const auto& bc : matched_bc){
-                        const auto blk = wfs2[iroot](br,bc);
-                        linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
-                        off += blk.size();
-                     }
-                     blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+            for(int i=0; i<ibr_cpugpu[0].size(); i++){
+               int ibr = ibr_cpugpu[0][i];
+               const auto& brbc = local_brbc[rank][ibr];
+               const auto& br = std::get<0>(brbc);
+               const auto& cdim = std::get<1>(brbc);
+               const auto& matched_bc = std::get<2>(brbc);
+               int rdim = qrow.get_dim(br);
+               // merge matrix into large blocks
+               std::vector<linalg::matrix<Tm>> blks(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  linalg::matrix<Tm> clr(rdim,cdim);
+                  int off = 0;
+                  for(const auto& bc : matched_bc){
+                     const auto blk = wfs2[iroot](br,bc);
+                     linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
+                     off += blk.size();
                   }
-                  // 3. decimation
-                  std::vector<double> sigs2;
-                  linalg::matrix<Tm> U;
-                  kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+                  blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+               }
+               // decimation
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
-                  results[br] = std::make_pair(sigs2, U);
-               } // i
-               auto tb = tools::get_time(); 
-               tcpu = tools::get_duration(tb-ta);
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            } // br
+            auto tb = tools::get_time(); 
+            tcpu = tools::get_duration(tb-ta);
 
-               // gpu
-               for(int i=0; i<idx_cpugpu[1].size(); i++){
-                  int idx = idx_cpugpu[1][i];
-                  const auto& br = brbc[idx].first;
-                  const auto& matched_bc = brbc[idx].second;
-                  const auto& rdim = drdc[idx].first;
-                  const auto& cdim = drdc[idx].second;
-                  // 2. merge matrix into large blocks
-                  std::vector<linalg::matrix<Tm>> blks(nroots);
-                  // compute KRS-adapted renormalized basis
-                  for(int iroot=0; iroot<nroots; iroot++){
-                     linalg::matrix<Tm> clr(rdim,cdim);
-                     int off = 0;
-                     for(const auto& bc : matched_bc){
-                        const auto blk = wfs2[iroot](br,bc);
-                        linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
-                        off += blk.size();
-                     }
-                     blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+            // gpu
+            for(int i=0; i<ibr_cpugpu[1].size(); i++){
+               int ibr = ibr_cpugpu[1][i];
+               const auto& brbc = local_brbc[rank][ibr];
+               const auto& br = std::get<0>(brbc);
+               const auto& cdim = std::get<1>(brbc);
+               const auto& matched_bc = std::get<2>(brbc);
+               int rdim = qrow.get_dim(br);
+               // merge matrix into large blocks
+               std::vector<linalg::matrix<Tm>> blks(nroots);
+               for(int iroot=0; iroot<nroots; iroot++){
+                  linalg::matrix<Tm> clr(rdim,cdim);
+                  int off = 0;
+                  for(const auto& bc : matched_bc){
+                     const auto blk = wfs2[iroot](br,bc);
+                     linalg::xcopy(blk.size(), blk.data(), clr.data()+off);
+                     off += blk.size();
                   }
-                  // 3. decimation
-                  std::vector<double> sigs2;
-                  linalg::matrix<Tm> U;
-                  linalg::get_renorm_states_nkr_gpu(blks, sigs2, U, rdm_svd, debug_decimation);
-                  results[br] = std::make_pair(sigs2, U);
-               } // i
-               auto tc = tools::get_time();
-               tgpu = tools::get_duration(tc-tb);
-            } // rank-0
+                  blks[iroot] = clr.T(); // to be used in get_renorm_states_nkr 
+               }
+               // decimation
+               std::vector<double> sigs2;
+               linalg::matrix<Tm> U;
+               linalg::get_renorm_states_nkr_gpu(blks, sigs2, U, rdm_svd, debug_decimation);
+               local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
+            } // i
+            auto tc = tools::get_time();
+            tgpu = tools::get_duration(tc-tb);
 
 #endif 
          }else{
             std::cout << "error: no such option for decimation_genbasis(su2): alg_decim=" << alg_decim << std::endl;
             exit(1);  
          } // alg_decim
+         auto t2 = tools::get_time();
+         if(debug and rank == 0){
+            std::cout << "timing for compute=" << tools::get_duration(t2-t1) << std::endl;
+         }
+
+         // collect local_results to results in rank-0
+         decimation_collect(icomb, alg_decim, local_brbc, local_results, results, size, rank);
+         auto t3 = tools::get_time();
+         if(debug and rank == 0){
+            std::cout << "timing for collect=" << tools::get_duration(t3-t2) << std::endl;
+         }
 
          if(debug and rank == 0){
-            auto t1 = tools::get_time();
-            double total = tools::get_duration(t1-t0);
-            double trest = total - tcpu - tgpu;
-            std::cout << "----- TMING FOR decimation_genbasis(su2): " << total << " S"
-               << " T(cpu/gpu/rest)=" << tcpu << "," << tgpu << "," << trest << " -----"
+            double tcompute = tools::get_duration(t2-t1);
+            double trest = tcompute - tcpu - tgpu; 
+            std::cout << "----- TMING FOR decimation_genbasis(su2): " 
+               << tools::get_duration(t3-t0) << " S"
+               << " T(divide/compute[cpu/gpu/rest]/collect)="
+               << tools::get_duration(t1-t0) << ","
+               << tcpu << "," << tgpu << "," << trest << ","
+               << tools::get_duration(t3-t2) << " -----" 
                << std::endl;
          }
       }

@@ -140,5 +140,35 @@ int main(){
       }
    }
 
+#ifdef GPU
+   // large tests
+   rows = {1000,2000,3000,4000,5000,6000,10000};
+   const double rdm_svd = 1.8;
+
+   cout << "\n=== svd[large] ===" << endl;
+   for(int i=0; i<rows.size(); i++){
+      int cols = rows[i]/1.8;
+      std::cout << "\ni=" << i << " rows,cols=" << rows[i] << "," << cols << std::endl;
+      std::cout << "double:" << std::endl;
+      for(int k=0; k<cycle; k++){
+         using Tm = double;
+         auto mat = linalg::random_matrix<Tm>(rows[i],cols);
+         test_svd_gpu<Tm>(mat);
+      }
+   }
+
+   cout << "\n=== eig[large] ===" << endl;
+   for(int i=0; i<rows.size(); i++){
+      std::cout << "\ni=" << i << " rows=" << rows[i] << std::endl;
+      std::cout << "double:" << std::endl;
+      for(int k=0; k<cycle; k++){
+         using Tm = double;
+         auto mat = linalg::random_matrix<Tm>(rows[i],rows[i]);
+         mat = (mat + mat.H())*0.5;
+         test_eig_gpu<Tm>(mat);
+      }
+   }
+#endif
+
    return 0;
 }
