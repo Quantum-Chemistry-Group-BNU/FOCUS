@@ -233,7 +233,7 @@ ifeq ($(strip $(USE_GPU)), yes)
 ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
    FLAGS += -DGPU -I${CUDA_DIR}/include
-   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lcublas
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lcublas -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
@@ -263,7 +263,7 @@ else ifeq ($(strip $(machine)), dell2)
 else ifeq ($(strip $(machine)), dell)
    CUDA_DIR= /usr/local/cuda
    FLAGS += -DGPU -I${CUDA_DIR}/include
-   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR = ../magma/magma-2.6.1
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
@@ -273,7 +273,7 @@ else ifeq ($(strip $(machine)), dell)
 else ifeq ($(strip $(machine)), jinan)
    CUDA_DIR= ${CUDADIR}
    FLAGS += -DGPU -I${CUDA_DIR}/include
-   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -ldl
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -ldl -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR = ../magma-2.6.1
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
@@ -288,7 +288,7 @@ else ifeq ($(strip $(machine)), jinan)
 else ifeq ($(strip $(machine)), jiageng)
    CUDA_DIR= ${CUDADIR}
    FLAGS += -DGPU -I${CUDA_DIR}/include
-   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR = /public/home/bnulizdtest/magma
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
@@ -303,7 +303,7 @@ else ifeq ($(strip $(machine)), jiageng)
 else ifeq ($(strip $(machine)), a800_xiyun)
    CUDA_DIR= ${CUDA_ROOT}
    FLAGS += -DGPU -I${CUDA_DIR}/include -DGEMMGROUPED
-   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas
+   LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lrt -lcublas -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
       MAGMA_DIR = /storage/FOCUS/extlibs/magma-2.8.0
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
