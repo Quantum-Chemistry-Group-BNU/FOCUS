@@ -11,7 +11,7 @@ namespace ctns{
 
    // Hij = <CTNS[i]|H|CTNS[j]> [full construction]
    template <typename Qm, typename Tm>
-      linalg::matrix<Tm> get_Hmat(const comb<Qm,Tm>& icomb, 
+      linalg::matrix<Tm> get_Hmat(comb<Qm,Tm>& icomb, // icomb may be modified ifoutcore=true 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const double ecore,

@@ -10,6 +10,7 @@
 #include "oper_dot.h"
 #include "oper_renorm.h"
 #include "sadmrg/oper_dot_su2.h"
+#include "ctns_outcore.h"
 
 namespace ctns{
 
@@ -132,7 +133,7 @@ namespace ctns{
 
    // build right environment operators
    template <typename Qm, typename Tm>
-      void oper_env_right(const comb<Qm,Tm>& icomb, 
+      void oper_env_right(comb<Qm,Tm>& icomb, // icomb may be modified ifoutcore=true 
             const integral::two_body<Tm>& int2e,
             const integral::one_body<Tm>& int1e,
             const input::schedule& schd,
@@ -148,7 +149,10 @@ namespace ctns{
             std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Qm>() << std::endl;
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
-         
+        
+         // 0. outcore
+         if(schd.ctns.ifoutcore) rcanon_save_sites(icomb, scratch);
+
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
          oper_init_dotCR(icomb, int2e, int1e, scratch, iomode);
@@ -185,6 +189,9 @@ namespace ctns{
                timing.tc = timing.ta;
                timing.td = timing.ta;
                timing.te = timing.ta;
+               
+               // ZL@2024/12/08
+               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch);
 
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, pcoord, "r");
@@ -201,6 +208,9 @@ namespace ctns{
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
                timing.tf = tools::get_time();
+               
+               // ZL@2024/12/08
+               if(schd.ctns.ifoutcore) rcanon_clear_site(icomb, idx);
 
                // c. save operators to disk
                qops_pool.join_and_erase(fneed);
@@ -216,6 +226,9 @@ namespace ctns{
             }
          } // idx
          qops_pool.finalize();
+         
+         // 3. outcore
+         if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch);
 
          auto t1 = tools::get_time();
          if(debug){

@@ -26,54 +26,6 @@ namespace ctns{
          return fneed_next;
       }
 
-   // save for restart: only rank-0 save and load, later broadcast
-   template <typename Qm, typename Tm>
-      void sweep_save(const comb<Qm,Tm>& icomb,
-            const input::schedule& schd,
-            const std::string scratch,
-            const sweep_data& sweeps,
-            const int isweep,
-            const int ibond){
-         // local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
-         rcanon_save(sweeps.opt_result[isweep][ibond], fresult);
-         // updated site
-         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond);
-         const auto& dbond = sweeps.seq[ibond];
-         const auto p = dbond.get_current();
-         const auto& pdx = icomb.topo.rindex.at(p); 
-         rcanon_save(icomb.sites[pdx], fsite);
-         // generated cpsi
-         if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
-            rcanon_save(icomb.cpsi, fcpsi);
-         }
-      }
-
-   template <typename Qm, typename Tm>
-      void sweep_load(comb<Qm,Tm>& icomb,
-            const input::schedule& schd,
-            const std::string scratch,
-            sweep_data& sweeps,
-            const int isweep,
-            const int ibond){
-         // load local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
-         rcanon_load(sweeps.opt_result[isweep][ibond], fresult);
-         sweeps.opt_result[isweep][ibond].print();
-         // load site
-         std::string fsite = scratch+"/site_ibond"+std::to_string(ibond);
-         const auto& dbond = sweeps.seq[ibond];
-         const auto p = dbond.get_current();
-         const auto& pdx = icomb.topo.rindex.at(p);
-         rcanon_load(icomb.sites[pdx], fsite);
-         // load cpsi
-         if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
-            rcanon_load(icomb.cpsi, fcpsi);
-         }
-      }
-
 } // ctns
 
 #endif

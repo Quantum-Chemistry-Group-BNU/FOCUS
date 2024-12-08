@@ -91,12 +91,12 @@ namespace input{
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file 
-                  & restart_sweep & restart_bond & timestamp
+                  & restart_sweep 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_ab2pq & notrunc 
-                  & ifab2pq & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
+                  & ifoutcore & ifab2pq & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
                   & rcanon_file & rcanon2_file
@@ -135,8 +135,6 @@ namespace input{
          std::string schmidt_file = "svalues"; 
          // restart
          int restart_sweep = 0;
-         int restart_bond = 0;
-         bool timestamp = false; 
          // conversion of sci 
          std::vector<int> ciroots;
          int maxdets = 10000;
@@ -163,6 +161,7 @@ namespace input{
          int alg_decim = 1;
          int alg_ab2pq = 1;
          bool notrunc = false;
+         bool ifoutcore = false; // whether to keep comb in memory for get_Ham & sweep
          bool ifab2pq = false; // switch from NC to CN partition for MPS
          bool ifdist1 = false;
          bool ifdistc = false;

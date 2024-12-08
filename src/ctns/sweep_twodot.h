@@ -219,9 +219,6 @@ namespace ctns{
          // 4. save on disk 
          qops_pool.cleanup_sweep(fneed, fneed_next, frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
         
-         // save for restart
-         if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
-
          timing.t1 = tools::get_time();
          if(debug){
             get_sys_status();

@@ -1,19 +1,4 @@
 
- * Reduce CPU memory usage:
-	- mps [outcore - during MPS sweep] to save CPU memory?
-	- accelerate AB2PQ:
-		- mintoring CPU usage by measuring RSS more frequently!
-      - save CPU and GPU memory?
-      - use gpu/nccl to perform communication?
-      - adjust the switch position via a function?
-   - estimate minimal condition for D=20000 in our implementation: 
-      - two qops [40-60GB] in GPU memory at the same time?
-      - three qops in memory if use async_fetch? 
-         => no need for this? can be released!
-      - dvdson ~ 10-20GB for D=10000-20000
-      - mps ~ 10-20GB for D=10000-20000
-      - large-scale test on jiageng?
-
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - jinan: a100-40G,64G/GPU: cpu memory issue?
 

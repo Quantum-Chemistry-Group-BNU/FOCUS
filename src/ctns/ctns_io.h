@@ -64,29 +64,6 @@ namespace ctns{
          ifs.close();
       }
 
-   // for site & cpsi
-   template <typename Tm>
-      void rcanon_save(const Tm& site,
-            const std::string fname,
-            const bool debug=true){
-         if(debug) std::cout << "ctns::rcanon_save fname=" << fname << std::endl;
-         std::ofstream ofs(fname+".info", std::ios::binary);
-         boost::archive::binary_oarchive save(ofs);
-         save << site;
-         ofs.close();
-      }
-
-   template <typename Tm>
-      void rcanon_load(Tm& site,
-            const std::string fname,
-            const bool debug=true){
-         if(debug) std::cout << "ctns:rcanon_load fname=" << fname << std::endl;
-         std::ifstream ifs(fname+".info", std::ios::binary);
-         boost::archive::binary_iarchive load(ifs);
-         load >> site;
-         ifs.close();
-      }
-
    // load CTNS
    template <typename Qm, typename Tm>
       void comb_load(comb<Qm,Tm>& icomb, // no const!

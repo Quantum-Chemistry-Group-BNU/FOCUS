@@ -629,3 +629,22 @@
    - using MPI: 
       - add sweep_decim_util.h for partition and collect results
 
+ * Reduce CPU memory usage:
+	- outcore option for comb to save CPU memory?
+      - during oper_env [DONE@2024/12/08]
+      - during sweep
+
+	- accelerate AB2PQ:
+		- mintoring CPU usage by measuring RSS more frequently!
+      - save CPU and GPU memory?
+      - use gpu/nccl to perform communication?
+      - adjust the switch position via a function?
+
+   - estimate minimal condition for D=20000 in our implementation: 
+      - two qops [40-60GB] in GPU memory at the same time?
+      - three qops in memory if use async_fetch? 
+         => no need for this? can be released!
+      - dvdson ~ 10-20GB for D=10000-20000
+      - mps ~ 10-20GB for D=10000-20000
+      - large-scale test on jiageng?
+
