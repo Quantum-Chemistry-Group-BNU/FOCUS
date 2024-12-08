@@ -151,7 +151,7 @@ namespace ctns{
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
         
          // 0. outcore
-         if(schd.ctns.ifoutcore) rcanon_save_sites(icomb, scratch);
+         if(schd.ctns.ifoutcore) rcanon_save_sites(icomb, scratch, debug);
 
          // 1. construct for dot [cop] & boundary operators [lop/rop]
          auto t0 = tools::get_time();
@@ -191,7 +191,7 @@ namespace ctns{
                timing.te = timing.ta;
                
                // ZL@2024/12/08
-               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch);
+               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch, debug);
 
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, pcoord, "r");
@@ -228,7 +228,7 @@ namespace ctns{
          qops_pool.finalize();
          
          // 3. outcore
-         if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch);
+         if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
 
          auto t1 = tools::get_time();
          if(debug){

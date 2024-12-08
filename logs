@@ -632,7 +632,7 @@
  * Reduce CPU memory usage:
 	- outcore option for comb to save CPU memory?
       - during oper_env [DONE@2024/12/08]
-      - during sweep
+      - during sweep [DONE@2024/12/08]
 
 	- accelerate AB2PQ:
 		- mintoring CPU usage by measuring RSS more frequently!

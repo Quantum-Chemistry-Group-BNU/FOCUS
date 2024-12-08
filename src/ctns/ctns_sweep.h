@@ -6,6 +6,7 @@
 #include "sweep_twodot.h"
 #include "sweep_init.h"
 #include "sweep_final.h"
+#include "ctns_outcore.h"
 
 namespace ctns{
 
@@ -42,6 +43,13 @@ namespace ctns{
             exit(1);
          }
 
+         // 0. outcore
+         const int rdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
+         const int rdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
+         if(schd.ctns.ifoutcore){
+            rcanon_save_sites(icomb, scratch, debug);
+         }
+
          // build operators on the left dot
          oper_init_dotL(icomb, int2e, int1e, schd, scratch);
 
@@ -62,14 +70,25 @@ namespace ctns{
             }
             const auto& dots = sweeps.ctrls[isweep].dots;
             oper_timer.sweep_start(dots);
+            
             // initialize
-            if(schd.ctns.guess) sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
+            if(schd.ctns.guess){
+               if(schd.ctns.ifoutcore){
+                  rcanon_load_site(icomb, rdx1, scratch, debug); 
+                  rcanon_load_site(icomb, rdx0, scratch, debug); 
+               }
+               sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
+               if(schd.ctns.ifoutcore){
+                  rcanon_save_site(icomb, rdx0, scratch, debug); 
+               }
+            }
+            
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
                const auto& dbond = sweeps.seq[ibond];
-               auto tp0 = icomb.topo.get_type(dbond.p0);
-               auto tp1 = icomb.topo.get_type(dbond.p1);
+               const auto tp0 = icomb.topo.get_type(dbond.p0);
+               const auto tp1 = icomb.topo.get_type(dbond.p1);
                if(debug){
                   std::cout << "\nisweep=" << isweep 
                      << " ibond=" << ibond << "/seqsize=" << sweeps.seqsize
@@ -77,13 +96,25 @@ namespace ctns{
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
                }
+               const int pdx0 = icomb.topo.rindex.at(dbond.p0);
+               const int pdx1 = icomb.topo.rindex.at(dbond.p1);
+               // for guess 
+               if(schd.ctns.ifoutcore){
+                  rcanon_load_site(icomb, pdx0, scratch, debug); 
+                  rcanon_load_site(icomb, pdx1, scratch, debug); 
+               }
                // optimization
                if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
                   sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond); 
                }else{
                   sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
-                        qops_pool, sweeps, isweep, ibond); 
+                        qops_pool, sweeps, isweep, ibond);
+               }
+               // save updated sites
+               if(schd.ctns.ifoutcore){
+                  rcanon_save_site(icomb, pdx0, scratch, debug);
+                  rcanon_save_site(icomb, pdx1, scratch, debug);
                }
                // timing 
                if(debug){
@@ -102,12 +133,26 @@ namespace ctns{
                sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
                sweeps.summary(isweep, size);
             }
+           
+            // finalize: load all sites, as they will be save and checked in sweep_final 
+            if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
             // generate right rcanonical form and save checkpoint file
             sweep_final(icomb, schd, scratch, isweep, rcfprefix);
             // compute Hmat 
             oper_final(icomb, int2e, int1e, ecore, schd, scratch, qops_pool, isweep);
+            // save updated sites, which will be used in sweep_init in the next sweep
+            if(schd.ctns.ifoutcore and isweep != schd.ctns.maxsweep-1){  
+               rcanon_save_site(icomb, rdx1, scratch, debug); 
+               rcanon_save_site(icomb, rdx0, scratch, debug); 
+            }
+
          } // isweep
          qops_pool.finalize();
+
+         // no need to load to memory again to output final icomb, because
+         // in the last step, rcanon_load_sites has already been called,
+         // such that all the sites are in memory.
+         //if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
 
          if(debug){
             auto t1 = tools::get_time();
