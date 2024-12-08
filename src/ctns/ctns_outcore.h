@@ -66,7 +66,9 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             double dt = tools::get_duration(t1-t0);
-            std::cout << " size=" << sz << std::setprecision(2) 
+            std::cout << " size=" << sz << ":" 
+               << std::setprecision(2) << tools::sizeGB<Tm>(sz) << "GB" 
+               << " T(load)=" << dt << "S"
                << " speed=" << tools::sizeGB<Tm>(sz)/dt << "GB/S"
                << std::endl; 
          }
@@ -89,7 +91,9 @@ namespace ctns{
             auto t1 = tools::get_time();
             size_t sz = icomb.sites[idx].size();
             double dt = tools::get_duration(t1-t0);
-            std::cout << " size=" << sz << std::setprecision(2) 
+            std::cout << " size=" << sz << ":" 
+               << std::setprecision(2) << tools::sizeGB<Tm>(sz) << "GB" 
+               << " T(load)=" << dt << "S"
                << " speed=" << tools::sizeGB<Tm>(sz)/dt << "GB/S"
                << std::endl; 
          }
