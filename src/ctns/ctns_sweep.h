@@ -44,8 +44,8 @@ namespace ctns{
          }
 
          // 0. outcore
-         const int rdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
          const int rdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
+         const int rdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
          if(schd.ctns.ifoutcore){
             rcanon_save_sites(icomb, scratch, debug);
          }
@@ -74,8 +74,8 @@ namespace ctns{
             // initialize
             if(schd.ctns.guess){
                if(schd.ctns.ifoutcore){
-                  rcanon_load_site(icomb, rdx1, scratch, debug); 
                   rcanon_load_site(icomb, rdx0, scratch, debug); 
+                  rcanon_load_site(icomb, rdx1, scratch, debug); 
                }
                sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
                if(schd.ctns.ifoutcore){
@@ -96,12 +96,11 @@ namespace ctns{
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
                }
-               const int pdx0 = icomb.topo.rindex.at(dbond.p0);
-               const int pdx1 = icomb.topo.rindex.at(dbond.p1);
+               const int pdx = icomb.topo.rindex.at(dbond.get_current());
+               const int ndx = icomb.topo.rindex.at(dbond.get_next());
                // for guess 
                if(schd.ctns.ifoutcore){
-                  rcanon_load_site(icomb, pdx0, scratch, debug); 
-                  rcanon_load_site(icomb, pdx1, scratch, debug); 
+                  rcanon_load_site(icomb, ndx, scratch, debug); 
                }
                // optimization
                if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
@@ -113,8 +112,7 @@ namespace ctns{
                }
                // save updated sites
                if(schd.ctns.ifoutcore){
-                  rcanon_save_site(icomb, pdx0, scratch, debug);
-                  rcanon_save_site(icomb, pdx1, scratch, debug);
+                  rcanon_save_site(icomb, pdx, scratch, debug);
                }
                // timing 
                if(debug){
@@ -133,7 +131,7 @@ namespace ctns{
                sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
                sweeps.summary(isweep, size);
             }
-           
+          
             // finalize: load all sites, as they will be save and checked in sweep_final 
             if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
             // generate right rcanonical form and save checkpoint file
@@ -145,7 +143,6 @@ namespace ctns{
                rcanon_save_site(icomb, rdx1, scratch, debug); 
                rcanon_save_site(icomb, rdx0, scratch, debug); 
             }
-
          } // isweep
          qops_pool.finalize();
 
