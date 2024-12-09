@@ -24,6 +24,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       struct qtensor4{
          private:
+            /*
             friend class boost::serialization::access;	   
             template <class Archive>
                void save(Archive & ar, const unsigned int version) const{
@@ -45,6 +46,7 @@ namespace ctns{
                   }
                }
             BOOST_SERIALIZATION_SPLIT_MEMBER()
+            */
                // memory allocation
                void allocate(){
                   _data = new Tm[info._size];

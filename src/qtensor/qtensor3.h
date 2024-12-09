@@ -28,6 +28,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       struct qtensor3{
          private:
+            // used in ctns_io and bcast cpsi
             friend class boost::serialization::access;	   
             template <class Archive>
                void save(Archive & ar, const unsigned int version) const{
@@ -181,6 +182,25 @@ namespace ctns{
             void dump(std::ofstream& ofs) const{
                info.dump(ofs);
                ofs.write((char*)(_data), sizeof(Tm)*info._size);
+            }
+            // ZL@20241209 save and load into binary format
+            void save_site(const std::string fname) const{
+               assert(own==true);
+               std::ofstream ofs(fname, std::ios::binary);
+               boost::archive::binary_oarchive save(ofs);
+               save << info;
+               ofs.write(reinterpret_cast<const char*>(_data), info._size*sizeof(Tm));
+               ofs.close();
+            }
+            void load_site(const std::string fname){
+               assert(own==true);
+               delete[] _data;
+               std::ifstream ifs(fname, std::ios::binary);
+               boost::archive::binary_iarchive load(ifs);
+               load >> info;
+               this->allocate();
+               ifs.read(reinterpret_cast<char*>(_data), info._size*sizeof(Tm));
+               ifs.close();
             }
 
             // --- SPECIFIC FUNCTIONS : abelian case ---
@@ -399,12 +419,15 @@ namespace mpi_wrapper{
          boost::mpi::broadcast(comm, qt3.info, root);
          int rank = comm.rank();
          if(rank != root && qt3.own) qt3._data = new Tm[qt3.info._size];
+         broadcast(comm, qt3._data, qt3.info._size, root);
+         /*
          size_t chunksize = get_chunksize<Tm>();
          size_t size = qt3.info._size; 
          for(size_t offset=0; offset<size; offset+=chunksize){
             size_t len = std::min(chunksize, size-offset);
             boost::mpi::broadcast(comm, qt3._data+offset, len, root); 
          }
+         */
       }
 
 } // mpi_wrapper

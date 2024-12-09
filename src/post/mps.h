@@ -165,7 +165,7 @@ namespace mpi_wrapper{
          int rank = comm.rank();
          if(rank != root) imps.sites.resize(imps.nphysical); // reserve space
          for(int i=0; i<imps.nphysical; i++){
-            boost::mpi::broadcast(comm, imps.sites[i], root);
+            mpi_wrapper::broadcast(comm, imps.sites[i], root);
          }
          boost::mpi::broadcast(comm, imps.rwfuns, root);
       }

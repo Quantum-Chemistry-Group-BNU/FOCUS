@@ -158,7 +158,7 @@ namespace input{
          int alg_rinter = 0;
          int alg_rcoper = 0;
          int alg_rdm = 1;
-         int alg_decim = 1;
+         int alg_decim = 0;
          int alg_ab2pq = 1;
          bool notrunc = false;
          bool ifoutcore = false; // whether to keep comb in memory for get_Ham & sweep

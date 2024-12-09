@@ -109,7 +109,7 @@ void RDM(const input::schedule& schd){
             rdm1tmp = ctns::rdm1_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdm1tmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdm1tmp, 0);
 #endif
          aux.rdm = rdm1tmp; 
       } // debug
@@ -143,7 +143,7 @@ void RDM(const input::schedule& schd){
             rdm2tmp = ctns::rdm2_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdm2tmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdm2tmp, 0);
 #endif
          aux.rdm = rdm2tmp;
       }      
@@ -205,7 +205,7 @@ void RDM(const input::schedule& schd){
             rdmtmp = ctns::tdm1p0h_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
          aux.rdm = rdmtmp;
       }      
@@ -303,7 +303,7 @@ void RDM(const input::schedule& schd){
             rdmtmp = ctns::tdm2p0h_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
          aux.rdm = rdmtmp;
       }      
@@ -417,7 +417,7 @@ void RDM(const input::schedule& schd){
             rdmtmp = ctns::tdm2p1h_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
          aux.rdm = rdmtmp;
       }      
@@ -518,7 +518,7 @@ void RDM(const input::schedule& schd){
             rdmtmp = ctns::tdm3p2h_simple(icomb, icomb2, iroot, jroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
          aux.rdm = rdmtmp;
       }      
@@ -553,7 +553,7 @@ void RDM(const input::schedule& schd){
             rdmtmp = ctns::tdm3p2h_simple(icomb2, icomb, jroot, iroot);
          }
 #ifndef SERIAL
-         if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+         if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
          rdmtmp = rdmtmp.H(); // <I|O|J> = (<J|O^+|I>)^*
          aux.rdm = rdmtmp;
@@ -598,7 +598,7 @@ void RDM(const input::schedule& schd){
                rdmtmp = ctns::tdm3p2h_simple(icomb, icomb2_i, iroot, jroot);
             }
 #ifndef SERIAL
-            if(schd.ctns.debug_rdm and size > 1) boost::mpi::broadcast(icomb.world, rdmtmp, 0);
+            if(schd.ctns.debug_rdm and size > 1) mpi_wrapper::broadcast(icomb.world, rdmtmp, 0);
 #endif
             aux.rdm = rdmtmp;
          }

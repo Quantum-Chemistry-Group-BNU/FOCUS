@@ -83,7 +83,7 @@ namespace ctns{
 #ifndef SERIAL
             if(size > 1){
                mpi_wrapper::broadcast(schd.world, icomb_new, 0);
-               boost::mpi::broadcast(schd.world, int1e_new, 0);
+               mpi_wrapper::broadcast(schd.world, int1e_new, 0);
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
@@ -142,7 +142,7 @@ namespace ctns{
             }
 #ifndef SERIAL
             if(size > 1){
-               boost::mpi::broadcast(schd.world, int1e_new, 0);
+               mpi_wrapper::broadcast(schd.world, int1e_new, 0);
                mpi_wrapper::broadcast(schd.world, int2e_new, 0);
             }
 #endif
@@ -192,7 +192,7 @@ namespace ctns{
 #ifndef SERIAL
                if(size > 1){
                   mpi_wrapper::broadcast(schd.world, icomb_new, 0);
-                  boost::mpi::broadcast(schd.world, int1e_new, 0);
+                  mpi_wrapper::broadcast(schd.world, int1e_new, 0);
                   mpi_wrapper::broadcast(schd.world, int2e_new, 0);
                }
 #endif

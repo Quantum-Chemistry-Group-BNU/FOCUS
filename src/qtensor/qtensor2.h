@@ -29,6 +29,7 @@ namespace ctns{
    template <bool ifab, typename Tm>
       struct qtensor2{
          private:
+            // used in ctns_io and bcast of rwfuns
             friend class boost::serialization::access;	   
             template <class Archive>
                void save(Archive & ar, const unsigned int version) const{
@@ -420,12 +421,15 @@ namespace mpi_wrapper{
          boost::mpi::broadcast(comm, qt2.info, root);
          int rank = comm.rank();
          if(rank != root && qt2.own) qt2._data = new Tm[qt2.info._size];
+         broadcast(comm, qt2._data, qt2.info._size, root);
+         /*
          size_t chunksize = get_chunksize<Tm>();
          size_t size = qt2.info._size; 
          for(size_t offset=0; offset<size; offset+=chunksize){
             size_t len = std::min(chunksize, size-offset);
             boost::mpi::broadcast(comm, qt2._data+offset, len, root); 
          }
+         */
       }
 
 } // mpi_wrapper

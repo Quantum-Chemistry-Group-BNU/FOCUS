@@ -138,8 +138,8 @@ namespace ctns{
          if(size > 1){
             const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
             const auto& pdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
-            boost::mpi::broadcast(icomb.world, icomb.sites[pdx1], 0);
-            boost::mpi::broadcast(icomb.world, icomb.sites[pdx0], 0);
+            mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx1], 0);
+            mpi_wrapper::broadcast(icomb.world, icomb.sites[pdx0], 0);
             boost::mpi::broadcast(icomb.world, icomb.rwfuns, 0);
          } 
 #endif

@@ -231,6 +231,14 @@ namespace mpi_wrapper{
          broadcast(comm, int2e.data.data(), int2e.data.size(), root);
       }
 
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, integral::one_body<Tm>& int1e, int root){
+         int rank = comm.rank();
+         boost::mpi::broadcast(comm, int1e.sorb, root);
+         if(rank != root) int1e.init_mem();
+         broadcast(comm, int1e.data.data(), int1e.data.size(), root);
+      }
+
 } // mpi_wrapper
 
 #endif

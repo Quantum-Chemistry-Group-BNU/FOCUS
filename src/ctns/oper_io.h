@@ -37,7 +37,7 @@ namespace ctns{
          std::cout << "ctns::oper_remove fname=" << fname << std::endl;
       }
       io::remove_file(fname+".info", debug_oper_io && debug);
-      io::remove_file(fname+".op", debug_oper_io && debug);
+      io::remove_file(fname+".data", debug_oper_io && debug);
    }
 
    template <bool ifab, typename Tm>
@@ -63,12 +63,12 @@ namespace ctns{
 
          // save data on disk
          if(iomode == 0){
-            std::ofstream ofs2(fname+".op", std::ios::binary);
+            std::ofstream ofs2(fname+".data", std::ios::binary);
             ofs2.write(reinterpret_cast<const char*>(qops._data), qops._size*sizeof(Tm));
             ofs2.close();
 #ifdef LZ4 
          }else if(iomode == 1){
-            std::ofstream ofs2(fname+".op", std::ios::binary);
+            std::ofstream ofs2(fname+".data", std::ios::binary);
             boost::iostreams::filtering_ostream out;
             out.push( ext::bio::lz4_compressor() );
             out.push(ofs2);
@@ -78,7 +78,7 @@ namespace ctns{
 #endif
 #ifdef ZSTD
          }else if(iomode == 2){
-            std::ofstream ofs2(fname+".op", std::ios::binary);
+            std::ofstream ofs2(fname+".data", std::ios::binary);
             boost::iostreams::filtering_ostream out;
             boost::iostreams::zstd_params params(boost::iostreams::zstd::best_speed);
             out.push( boost::iostreams::zstd_compressor(params) );
@@ -134,12 +134,12 @@ namespace ctns{
 
          // read data
          if(iomode == 0){
-            std::ifstream ifs2(fname+".op", std::ios::binary);
+            std::ifstream ifs2(fname+".data", std::ios::binary);
             ifs2.read(reinterpret_cast<char*>(qops._data), qops._size*sizeof(Tm));
             ifs2.close();
 #ifdef LZ4 
          }else if(iomode == 1){
-            std::ifstream ifs2(fname+".op", std::ios::binary);
+            std::ifstream ifs2(fname+".data", std::ios::binary);
             boost::iostreams::filtering_istream in;
             in.push( ext::bio::lz4_decompressor() );
             in.push(ifs2);
@@ -149,7 +149,7 @@ namespace ctns{
 #endif
 #ifdef ZSTD
          }else if(iomode == 2){
-            std::ifstream ifs2(fname+".op", std::ios::binary);
+            std::ifstream ifs2(fname+".data", std::ios::binary);
             boost::iostreams::filtering_istream in;
             boost::iostreams::zstd_params params(boost::iostreams::zstd::best_speed);
             in.push( boost::iostreams::zstd_decompressor(params) );

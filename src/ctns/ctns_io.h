@@ -13,8 +13,10 @@ namespace ctns{
       void rcanon_save(const comb<Qm,Tm>& icomb,
             const std::string fname,
             const bool debug=true){
-         if(debug) std::cout << "\nctns::rcanon_save fname=" << fname << std::endl;
-
+         if(debug){
+            std::cout << "\nctns::rcanon_save fname=" << fname;
+         }
+         auto t0 = tools::get_time();
          std::ofstream ofs(fname+".info", std::ios::binary);
          boost::archive::binary_oarchive save(ofs);
          // save sites 
@@ -23,6 +25,11 @@ namespace ctns{
          }
          save << icomb.rwfuns;
          ofs.close();
+         if(debug){
+            auto t1 = tools::get_time();
+            double dt = tools::get_duration(t1-t0);
+            std::cout << std::setprecision(2) << " T(save)=" << dt << "S" << std::endl; 
+         }
       }
 
    // ZL@20221207 binary format for easier loading in python 
@@ -49,7 +56,10 @@ namespace ctns{
       void rcanon_load(comb<Qm,Tm>& icomb, // no const!
             const std::string fname,
             const bool debug=true){
-         if(debug) std::cout << "\nctns:rcanon_load fname=" << fname << std::endl;
+         if(debug){
+            std::cout << "\nctns:rcanon_load fname=" << fname;
+         }
+         auto t0 = tools::get_time();
 
          io::file_existQ(fname+".info"); // check existance first
 
@@ -62,6 +72,12 @@ namespace ctns{
          }
          load >> icomb.rwfuns;
          ifs.close();
+
+         if(debug){
+            auto t1 = tools::get_time();
+            double dt = tools::get_duration(t1-t0);
+            std::cout << std::setprecision(2) << " T(load)=" << dt << "S" << std::endl;
+         } 
       }
 
    // load CTNS

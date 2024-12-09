@@ -12,6 +12,7 @@
 #include "tools.h"
 #include "serialization.h"
 #include "blas.h"
+#include "mpi_wrapper.h"
 
 namespace linalg{
 
@@ -605,5 +606,23 @@ namespace linalg{
       }
 
 } // linalg
+
+#ifndef SERIAL
+
+namespace mpi_wrapper{
+
+   // in case matrix is very large
+   template <typename Tm>
+      void broadcast(const boost::mpi::communicator & comm, linalg::matrix<Tm>& mat, int root){
+         int rank = comm.rank();
+         boost::mpi::broadcast(comm, mat._rows, root);
+         boost::mpi::broadcast(comm, mat._cols, root);
+         if(rank != root) mat.resize(mat._rows, mat._cols);
+         broadcast(comm, mat.data(), mat.size(), root);
+      }
+
+}
+
+#endif
 
 #endif

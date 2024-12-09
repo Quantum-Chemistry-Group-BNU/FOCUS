@@ -144,7 +144,7 @@ namespace ctns{
 #ifndef SERIAL
          if(size > 1){
             boost::mpi::broadcast(schd.world, ecore, 0);
-            boost::mpi::broadcast(schd.world, int1e, 0);
+            mpi_wrapper::broadcast(schd.world, int1e, 0);
             mpi_wrapper::broadcast(schd.world, int2e, 0);
          }
 #endif

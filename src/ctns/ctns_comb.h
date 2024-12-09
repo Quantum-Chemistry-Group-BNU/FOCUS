@@ -165,7 +165,7 @@ namespace mpi_wrapper{
          // sites could be packed in future following: 
          // https://gist.github.com/hsidky/2f0e075095026d2ebda1
          for(int i=0; i<icomb.topo.ntotal; i++){
-            boost::mpi::broadcast(comm, icomb.sites[i], root);
+            mpi_wrapper::broadcast(comm, icomb.sites[i], root);
          }
          boost::mpi::broadcast(comm, icomb.rwfuns, root);
       }

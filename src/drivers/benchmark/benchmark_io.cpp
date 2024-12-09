@@ -31,14 +31,14 @@ void test_print2(){
 
 void test_save(const std::vector<double>& data, const int rank, const int data_count){
     // save
-    std::ofstream ofs2("data_"+std::to_string(rank)+".op", std::ios::binary);
+    std::ofstream ofs2("data_"+std::to_string(rank)+".data", std::ios::binary);
     ofs2.write(reinterpret_cast<const char*>(data.data()), data_count*sizeof(double));
     ofs2.close();
 }
 
 void test_load(std::vector<double>& data, const int rank, const int data_count){
     // save
-    std::ifstream ifs2("data_"+std::to_string(rank)+".op", std::ios::binary);
+    std::ifstream ifs2("data_"+std::to_string(rank)+".data", std::ios::binary);
     ifs2.read(reinterpret_cast<char*>(data.data()), data_count*sizeof(double));
     ifs2.close();
 }

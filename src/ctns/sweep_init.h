@@ -53,7 +53,7 @@ namespace ctns{
 #ifndef SERIAL
          if(size > 1){
             boost::mpi::broadcast(icomb.world, icomb.cpsi, 0);
-            boost::mpi::broadcast(icomb.world, icomb.sites[rdx0], 0);
+            mpi_wrapper::broadcast(icomb.world, icomb.sites[rdx0], 0);
          }
 #endif
       }
@@ -99,7 +99,7 @@ namespace ctns{
          if(size > 1){
             boost::mpi::broadcast(icomb.world, icomb.cpsi, 0);
             boost::mpi::broadcast(icomb.world, icomb.rwfuns, 0);
-            boost::mpi::broadcast(icomb.world, icomb.sites[rdx0], 0);
+            mpi_wrapper::broadcast(icomb.world, icomb.sites[rdx0], 0);
          }
 #endif
       }

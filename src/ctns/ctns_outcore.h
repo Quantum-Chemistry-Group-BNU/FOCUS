@@ -18,16 +18,19 @@ namespace ctns{
             const std::string scratch,
             const bool debug){
          if(debug){
-            std::cout << "ctns::rcanon_save_sites scratch=" << scratch << std::endl;
+            std::cout << "ctns::rcanon_save_sites scratch=" << scratch;
          }
+         auto t0 = tools::get_time();
          // save sites
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            std::ofstream ofs(scratch+"/site"+std::to_string(idx)+".info", std::ios::binary);
-            boost::archive::binary_oarchive save(ofs);
-            save << icomb.sites[idx];;
-            ofs.close();
-            // clear
+            auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+            icomb.sites[idx].save_site(fname);
             rcanon_clear_site(icomb, idx);
+         }
+         if(debug){
+            auto t1 = tools::get_time();
+            double dt = tools::get_duration(t1-t0);
+            std::cout << std::setprecision(2) << " T(save)=" << dt << "S" << std::endl; 
          }
       }
    template <typename Qm, typename Tm>
@@ -35,15 +38,19 @@ namespace ctns{
             const std::string scratch,
             const bool debug){
          if(debug){
-            std::cout << "ctns::rcanon_load_sites scratch=" << scratch << std::endl;
+            std::cout << "ctns::rcanon_load_sites scratch=" << scratch;
          }
+         auto t0 = tools::get_time();
          // load sites
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            std::ifstream ifs(scratch+"/site"+std::to_string(idx)+".info", std::ios::binary);
-            boost::archive::binary_iarchive load(ifs);
-            load >> icomb.sites[idx];;
-            ifs.close();
+            auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+            icomb.sites[idx].load_site(fname);
          }
+         if(debug){
+            auto t1 = tools::get_time();
+            double dt = tools::get_duration(t1-t0);
+            std::cout << std::setprecision(2) << " T(load)=" << dt << "S" << std::endl;
+         } 
       }
 
    template <typename Qm, typename Tm>
@@ -57,10 +64,8 @@ namespace ctns{
          auto t0 = tools::get_time();
          size_t sz = icomb.sites[idx].size();
          // save site
-         std::ofstream ofs(scratch+"/site"+std::to_string(idx)+".info", std::ios::binary);
-         boost::archive::binary_oarchive save(ofs);
-         save << icomb.sites[idx];;
-         ofs.close();
+         auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+         icomb.sites[idx].save_site(fname);
          // clear
          rcanon_clear_site(icomb, idx);
          if(debug){
@@ -83,10 +88,8 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
          // load site
-         std::ifstream ifs(scratch+"/site"+std::to_string(idx)+".info", std::ios::binary);
-         boost::archive::binary_iarchive load(ifs);
-         load >> icomb.sites[idx];;
-         ifs.close();
+         auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+         icomb.sites[idx].load_site(fname);
          if(debug){
             auto t1 = tools::get_time();
             size_t sz = icomb.sites[idx].size();
