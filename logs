@@ -633,9 +633,10 @@
 	- outcore option for comb to save CPU memory?
       - during oper_env [DONE@2024/12/08]
       - during sweep [DONE@2024/12/08]
+  
+   - mintoring CPU usage more frequently!
 
 	- accelerate AB2PQ:
-		- mintoring CPU usage by measuring RSS more frequently!
       - save CPU and GPU memory?
       - use gpu/nccl to perform communication?
       - adjust the switch position via a function?

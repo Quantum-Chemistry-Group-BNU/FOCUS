@@ -77,6 +77,7 @@ namespace ctns{
             + qops_dict.at("c1").size()
             + qops_dict.at("c2").size();
          if(debug && schd.ctns.verbose>0){
+            get_sys_status();
             std::cout << "qops info: rank=" << rank << std::endl;
             qops_dict.at("l").print("lqops");
             qops_dict.at("r").print("rqops");
