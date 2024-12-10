@@ -1,5 +1,5 @@
 
-machine = mac #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = no #yes
-USE_NCCL = no #yes
+USE_GPU = yes
+USE_NCCL = yes
 USE_TCMALLOC = yes
 USE_MAGMA = no #yes
 # compression
@@ -49,6 +49,10 @@ else ifeq ($(strip $(machine)), dell2)
    GSLDIR = /usr/local
    NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/install-lzd/lib64
    NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/install-lzd/include
+   ifeq ($(strip $(USE_TCMALLOC)), yes)  
+      FLAGS += -DTCMALLOC -I/usr/local/include/gperftools
+      LFLAGS += -L/usr/local/lib -ltcmalloc
+   endif
 
 else ifeq ($(strip $(machine)), jinan)
    MATHLIB = ${MKLROOT}/lib

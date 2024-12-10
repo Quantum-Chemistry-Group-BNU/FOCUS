@@ -19,7 +19,7 @@ Requirements
 Libraries
 **********
 
-1. openmpi (optional, if use mpi)
+openmpi (optional, if use mpi)
 ---------------------------------
 
 Download `openmpi <https://www.open-mpi.org/software/ompi/v5.0/>`_, and build MPI libraries for 64-bit integers:
@@ -43,7 +43,7 @@ Add path:
    export PATH="XXX/openmpi/install64/bin:$PATH"
    export LD_LIBRARY_PATH="XXX/openmpi/install64/lib:$LD_LIBRARY_PATH"
 
-2. boost (required)
+boost (required)
 -------------------
 
 Download `boost <https://www.boost.org/users/download/>`_.
@@ -71,7 +71,7 @@ After this, one can find include and lib in the directory specified by prefix. A
    export LD_LIBRARY_PATH="XXX/boost/install/lib:$LD_LIBRARY_PATH"
 
 
-3. FOCUS/extlibs/magma (optional, if use gpu)
+FOCUS/extlibs/magma (optional, if use gpu)
 ---------------------------------------------
 
 Copy a makefile template from ``make.inc-examples`` (e.g., ``make.inc.mkl-gcc-ilp64``) to ``make.inc`` and edit, then make
@@ -88,7 +88,7 @@ Add to path.
 
    export LD_LIBRARY_PATH="XXX/magma-2.6.1/lib:$LD_LIBRARY_PATH"
 
-4. FOCUS/extlibs/nccl (optional, if use nccl)
+FOCUS/extlibs/nccl (optional, if use nccl)
 ---------------------------------------------
 
 Edit ``makefiles/common.mk``, then make
@@ -103,7 +103,18 @@ Add to path
 
    export LD_LIBRARY_PATH="XXX/nccl/build/lib:$LD_LIBRARY_PATH"
 
-5. FOCUS/extlibs/gsl (required, for SA-DMRG)
+FOCUS/extlibs/gperftools (optional, if use tcmalloc)
+----------------------------------------------------
+
+`gperftools <https://github.com/gperftools/gperftools>`_ for using tcmalloc to monitor memory usage
+
+.. code-block::
+   ./autogen.sh
+   ./configure prefix=XXX
+   make -j
+   make install
+
+FOCUS/extlibs/gsl (required, for SA-DMRG)
 --------------------------------------------
 
 `GNU Scientific Library (GSL) <https://www.gnu.org/software/gsl>`_
@@ -116,7 +127,7 @@ Add to path
 
 Add to path
 
-6. FOCUS/extlibs/nlopt (required, for OO-DMRG)
+FOCUS/extlibs/nlopt (required, for OO-DMRG)
 ----------------------------------------------
 
 `NLopt <https://nlopt.readthedocs.io/en/latest/>`_ for nonlinear optimization.
@@ -131,7 +142,7 @@ Add to path
 
 For more information, see `installation guide <https://nlopt.readthedocs.io/en/latest/NLopt_Installation/>`_.
 
-7. FOCUS/extlibs/zquatev (required, for KA-DMRG)
+FOCUS/extlibs/zquatev (required, for KA-DMRG)
 ------------------------------------------------
 
 The library `zquatev <https://github.com/sunqm/zquatev>`_ is used for diagonalizing quaternion matrix, used in Kramers-adapted DMRG.
@@ -142,12 +153,12 @@ Edit ``Makefile`` and make.
 Install FOCUS
 **************
 
-1. FOCUS/src/ctns/gpu_kernel (optional, if use gpu)
+FOCUS/src/ctns/gpu_kernel (optional, if use gpu)
 ---------------------------------------------------
 
 Edit ``Makefile`` and make.
 
-2. FOCUS
+FOCUS
 ---------
 
 Edit ``Makefile`` and make.
