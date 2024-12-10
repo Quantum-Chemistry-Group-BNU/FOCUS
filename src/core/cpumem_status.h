@@ -117,7 +117,7 @@ void get_cpumem_status(const int rank, const int level=0, const std::string msg=
       char buffer[2048];  // Make sure the buffer is large enough for the stats
       int buffer_length = sizeof(buffer);
       MallocExtension::instance()->GetStats(buffer, buffer_length);
-      std::cout << "Memory usage stats:\n" << buffer << std::endl;
+      std::cout << "memory usage stats:\n" << buffer << std::endl;
    }
 #endif
 }

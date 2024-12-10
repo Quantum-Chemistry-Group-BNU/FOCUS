@@ -630,16 +630,12 @@
       - add sweep_decim_util.h for partition and collect results
 
  * Reduce CPU memory usage:
-	- outcore option for comb to save CPU memory?
+   - mintoring CPU usage using tcmalloc [DONE@2024/12/10]
+	
+   - outcore option for comb to save CPU memory?
       - during oper_env [DONE@2024/12/08]
       - during sweep [DONE@2024/12/08]
-  
-   - mintoring CPU usage more frequently!
-
-	- accelerate AB2PQ:
-      - save CPU and GPU memory?
-      - use gpu/nccl to perform communication?
-      - adjust the switch position via a function?
+      - test for fe8s7 with d=10000
 
    - estimate minimal condition for D=20000 in our implementation: 
       - two qops [40-60GB] in GPU memory at the same time?
@@ -648,4 +644,9 @@
       - dvdson ~ 10-20GB for D=10000-20000
       - mps ~ 10-20GB for D=10000-20000
       - large-scale test on jiageng?
+
+	- accelerate AB2PQ:
+      - save CPU and GPU memory?
+      - use gpu/nccl to perform communication?
+      - adjust the switch position via a function?
 

@@ -119,10 +119,10 @@ namespace ctns{
 #endif
                // timing 
                if(debug){
-                  get_cpumem_status(rank);
                   const auto& timing = sweeps.opt_timing[isweep][ibond];
                   sweeps.timing_sweep[isweep].accumulate(timing, "sweep opt", schd.ctns.verbose>0);
                   timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
+                  get_cpumem_status(rank, schd.ctns.verbose>1);
                }
                // stop just for debug [done it for rank-0]
                if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
