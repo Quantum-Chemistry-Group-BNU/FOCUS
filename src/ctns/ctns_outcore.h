@@ -2,6 +2,7 @@
 #define CTNS_OUTCORE_H
 
 #include "../core/serialization.h"
+#include "../core/cpumem_status.h"
 
 namespace ctns{
 
@@ -27,6 +28,9 @@ namespace ctns{
             icomb.sites[idx].save_site(fname);
             rcanon_clear_site(icomb, idx);
          }
+#ifdef TCMALLOC
+         release_freecpumem();
+#endif
          if(debug){
             auto t1 = tools::get_time();
             double dt = tools::get_duration(t1-t0);

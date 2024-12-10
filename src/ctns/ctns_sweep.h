@@ -27,7 +27,7 @@ namespace ctns{
          const bool debug = (rank==0); 
          if(debug){ 
             std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
-            get_sys_status();
+            get_cpumem_status(rank);
          }
          auto t0 = tools::get_time();
 
@@ -94,7 +94,7 @@ namespace ctns{
                      << " dots=" << dots << " dbond=" << dbond
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
-                  get_sys_status();
+                  get_cpumem_status(rank);
                }
                const int pdx = icomb.topo.rindex.at(dbond.get_current());
                const int ndx = icomb.topo.rindex.at(dbond.get_next());
@@ -114,12 +114,15 @@ namespace ctns{
                if(schd.ctns.ifoutcore){
                   rcanon_save_site(icomb, pdx, scratch, debug);
                }
+#ifdef TCMALLOC
+   	         release_freecpumem();
+#endif
                // timing 
                if(debug){
+                  get_cpumem_status(rank);
                   const auto& timing = sweeps.opt_timing[isweep][ibond];
                   sweeps.timing_sweep[isweep].accumulate(timing, "sweep opt", schd.ctns.verbose>0);
                   timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
-                  get_sys_status();
                }
                // stop just for debug [done it for rank-0]
                if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
@@ -131,7 +134,7 @@ namespace ctns{
                sweeps.t_gemm[isweep]  = oper_timer.sigma.t_gemm_tot  + oper_timer.renorm.t_gemm_tot;
                sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
                sweeps.summary(isweep, size);
-               get_sys_status();
+               get_cpumem_status(rank, schd.ctns.verbose>1);
             }
           
             // finalize: load all sites, as they will be save and checked in sweep_final 
@@ -145,6 +148,10 @@ namespace ctns{
                rcanon_save_site(icomb, rdx1, scratch, debug); 
                rcanon_save_site(icomb, rdx0, scratch, debug); 
             }
+            if(debug){
+               auto tl = tools::get_time();
+               tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
+            }
          } // isweep
          qops_pool.finalize();
 
@@ -156,7 +163,7 @@ namespace ctns{
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::sweep_opt", t0, t1);
-            get_sys_status();
+            get_cpumem_status(rank, schd.ctns.verbose>1);
          }
          return sweeps;
       }

@@ -1,5 +1,5 @@
 
-machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,9 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
+USE_TCMALLOC = yes
 USE_MAGMA = no #yes
 # compression
 USE_LZ4 = no
@@ -59,6 +60,10 @@ else ifeq ($(strip $(machine)), jinan)
    GSLDIR = /usr/local
    NLOPTDIR_LIB = /usr/local/lib
    NLOPTDIR_INCLUDE = /usr/local/include
+   ifeq ($(strip $(USE_TCMALLOC)), yes)  
+      FLAGS += -DTCMALLOC -I/usr/include/google
+      LFLAGS += -L/usr/lib/x86_64-linux-gnu -ltcmalloc
+   endif
 
 else ifeq ($(strip $(machine)), jiageng)
    MATHLIB = ./mkl2022 #/public/software/intel/oneapi2021/mkl/latest #/public/software/anaconda/anaconda3-2022.5/lib
@@ -127,6 +132,11 @@ else ifeq ($(strip $(machine)), mac)
    GSLDIR = /usr/local
    NLOPTDIR_LIB = /usr/local/lib
    NLOPTDIR_INCLUDE = /usr/local/include
+   ifeq ($(strip $(USE_TCMALLOC)), yes) 
+      FLAGS += -DTCMALLOC -I/usr/local/include/gperftools
+      LFLAGS += -L/usr/local/lib -ltcmalloc
+   endif
+
 else ifeq ($(strip $(machine)), archlinux)
    MATHLIB = /opt/intel/oneapi/mkl/2023.1.0/lib/intel64
    BOOST = /usr

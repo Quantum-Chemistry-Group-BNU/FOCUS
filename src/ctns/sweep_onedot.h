@@ -3,7 +3,6 @@
 
 #include "../core/tools.h"
 #include "../core/linalg.h"
-#include "ctns_sys.h"
 #include "sweep_util.h"
 #include "sweep_onedot_diag.h"
 #include "sadmrg/sweep_onedot_diag_su2.h"
@@ -52,8 +51,8 @@ namespace ctns{
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
-            get_sys_status();
             icomb.display_size();
+            get_cpumem_status(rank);
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
@@ -83,6 +82,7 @@ namespace ctns{
                << ":" << tools::sizeMB<Tm>(opertot) << "MB"
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
+            get_cpumem_status(rank);
          }
 
          // 1.5 look ahead for the next dbond
@@ -98,6 +98,7 @@ namespace ctns{
             }
             qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
+            if(debug) get_cpumem_status(rank);
          }
          timing.ta = tools::get_time();
 
@@ -210,7 +211,7 @@ namespace ctns{
          if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
-            get_sys_status();
+            get_cpumem_status(rank);
          }
          timing.tc = tools::get_time();
 
@@ -218,10 +219,6 @@ namespace ctns{
          onedot_renorm(icomb, int2e, int1e, schd, scratch, 
                vsol, wf, qops_pool, fneed, fneed_next, frop,
                sweeps, isweep, ibond);
-         if(debug){
-            get_sys_status();
-            icomb.display_size();
-         }
          timing.tf = tools::get_time();
 
          // 4. cleanup operators
@@ -229,7 +226,7 @@ namespace ctns{
 
          timing.t1 = tools::get_time();
          if(debug){
-            get_sys_status();
+            get_cpumem_status(rank);
             timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }

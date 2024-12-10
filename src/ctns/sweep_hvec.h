@@ -495,6 +495,10 @@ namespace ctns{
    // finalize
    template <typename Qm, typename Tm, typename QInfo, typename QTm>
       void HVec_wrapper<Qm,Tm,QInfo,QTm>::finalize(){
+         Hxlst.clear();
+         Hxlst2.clear();
+         Hmmtask.clear();
+         Hmmtasks.clear();
          if(alg_hvec==2 || alg_hvec==3 || 
                alg_hvec==6 || alg_hvec==7 ||
                alg_hvec==8 || alg_hvec==9){

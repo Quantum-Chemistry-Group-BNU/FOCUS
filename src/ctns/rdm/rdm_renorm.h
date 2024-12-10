@@ -108,7 +108,6 @@ namespace ctns{
          qops.init();
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
-            get_sys_status();
          }
       
          // 1. kernel for renormalization

@@ -147,7 +147,7 @@ namespace ctns{
          const bool debug = (rank==0);
          if(debug){ 
             std::cout << "\nctns::oper_env_right qkind=" << qkind::get_name<Qm>() << std::endl;
-            get_sys_status();
+            get_cpumem_status(rank);
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
         
@@ -172,7 +172,7 @@ namespace ctns{
                timing.t0 = tools::get_time();
                if(debug){
                   std::cout << "\nidx=" << idx << " coord=" << pcoord << std::endl;
-                  get_sys_status();
+                  get_cpumem_status(rank);
                }
                
                // a. get operators from memory / disk
@@ -223,7 +223,11 @@ namespace ctns{
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
 
+#ifdef TCMALLOC
+   	         release_freecpumem();
+#endif
                if(debug){ 
+                  get_cpumem_status(rank);
                   timing.analysis("local oper_env", schd.ctns.verbose>0);
                   timing_sweep.accumulate(timing, "sweep oper_env", schd.ctns.verbose>0);
                }
@@ -234,15 +238,15 @@ namespace ctns{
          // 3. outcore
          if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
 
-         auto t1 = tools::get_time();
          if(debug){
+            auto t1 = tools::get_time();
             tools::timing("ctns::oper_env_right", t0, t1);
             std::cout << "T[ctns::oper_env_right](init/load/comp/save/tot)="
                << t_init << "," << t_load << "," 
                << t_comp << "," << t_save << ","
                << (t_init + t_load + t_comp + t_save)
                << std::endl;
-            get_sys_status();
+            get_cpumem_status(rank, schd.ctns.verbose>1);
          }
       }
 

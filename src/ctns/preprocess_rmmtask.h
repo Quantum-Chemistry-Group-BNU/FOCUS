@@ -19,6 +19,13 @@ namespace ctns{
    template <typename Tm>
       struct RMMtask{
          public:
+	    void clear(){
+		mmbatch2.clear();
+		collectc.clear();
+		collectc.clear();
+		mvbatch.clear();
+		imvbatch.clear();
+	    }
             void init(Rlist<Tm>& Rlst, 
                   const int _batchblas,
                   const std::tuple<int,int,int>& _batchrenorm,

@@ -5,13 +5,13 @@
 #include <omp.h>
 #endif
 #include <type_traits>
-#include "ctns_sys.h"
 #include "sweep_data.h"
 #include "oper_timer.h"
 #include "oper_rbasis.h"
 #include "oper_reduce.h"
 #include "oper_ab2pq.h"
 #include "sweep_renorm.h"
+#include "../core/cpumem_status.h"
 
 namespace ctns{
 
@@ -106,7 +106,7 @@ namespace ctns{
          qops.init();
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
-            get_sys_status();
+            get_cpumem_status(rank);
          }
 
          // 1. kernel for renormalization
@@ -276,6 +276,7 @@ namespace ctns{
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " rank=" << rank << " -----"
                << std::endl;
+            get_cpumem_status(rank);
          }
       }
 

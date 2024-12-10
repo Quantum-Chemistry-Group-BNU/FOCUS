@@ -368,7 +368,7 @@ namespace ctns{
                      << "," << gpumem_batch/std::pow(1024.0,3)
                      << std::endl;
                }
- 
+
                // generate Rmmtasks given batchsize
                const int batchblas = 2; // GPU
                this->init_Rmmtask(ifSingle, batchblas, schd.ctns.batchrenorm, fmmtask, rank, schd.ctns.verbose);
@@ -409,7 +409,7 @@ namespace ctns{
             } // blksize>0
             timing.tf9 = tools::get_time();
 #endif // GPU
-       
+
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
@@ -419,6 +419,10 @@ namespace ctns{
    // finalize
    template <typename Qm, typename Tm, typename QTm>
       void Renorm_wrapper<Qm,Tm,QTm>::finalize(){
+         Rlst.clear();
+         Rlst2.clear();
+         Rmmtask.clear();
+         Rmmtasks.clear();
          if(alg_renorm==6 || alg_renorm==7 ||
                alg_renorm==8 || alg_renorm==9){
             delete[] workspace;

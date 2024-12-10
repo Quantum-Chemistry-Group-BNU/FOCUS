@@ -15,6 +15,13 @@ namespace ctns{
    template <typename Tm>
       struct HMMtask{
          public:
+	    void clear(){
+	       mmbatch2.clear();
+   	       copyxblk.clear();
+               coefflst.clear();
+               mvbatch.clear();
+	       imvbatch.clear();	       
+	    }
             void init(Hxlist<Tm>& Hxlst,
                   const int _alg_hcoper,
                   const int _batchblas,
