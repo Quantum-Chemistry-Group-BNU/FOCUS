@@ -349,7 +349,8 @@ namespace ctns{
             }
 	    
 	    bool ifconverged(const int iter, const double edel, const double norm){
-	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<std::max(1.e-14,1.e-2*crit_v*crit_v)));
+	       //return (norm < crit_v) and (iter==1 or (iter>1 and edel<std::max(1.e-12,crit_v*crit_v)));
+	       return norm<crit_v;
 	    }
 
             // Davidson iterative algorithm for Hv=ve
@@ -415,7 +416,7 @@ namespace ctns{
 			double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                         eigs(i,iter) = tmpE[i];
                         rnorm(i,iter) = norm;
-                        rconv[i] = this->ifconverged(iter, norm, edel);
+                        rconv[i] = this->ifconverged(iter, edel, norm);
                      }
                      auto t1 = tools::get_time();
                      if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
@@ -504,7 +505,7 @@ namespace ctns{
             double* Diag;
             std::function<void(Tm*, const Tm*)> HVec;
             double crit_v = 1.e-5;  // used control parameter
-            int maxcycle = 50;
+            int maxcycle = 30;
             int nbuff = 4; // maximal additional vectors
             //--------------------
             // Kramers projection

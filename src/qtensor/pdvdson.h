@@ -259,7 +259,8 @@ namespace ctns{
             }
 	
 	    bool ifconverged(const int iter, const double edel, const double norm){
-	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<std::max(1.e-14,1.e-2*crit_v*crit_v)));
+	       //return (norm < crit_v) and (iter==1 or (iter>1 and edel<std::max(1.e-12,crit_v*crit_v)));
+	       return norm<crit_v;
 	    }
 
             // Davidson iterative algorithm for Hv=ve 
@@ -429,7 +430,7 @@ namespace ctns{
             double* Diag;
             std::function<void(Tm*, const Tm*)> HVec;
             double crit_v = 1.e-5;  // used control parameter
-            int maxcycle = 50;
+            int maxcycle = 30;
             int nbuff = 4; // maximal additional vectors
             // settings
             int iprt = 0;

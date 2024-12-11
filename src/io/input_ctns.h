@@ -173,7 +173,7 @@ namespace input{
          double batchmem = 10; // GB
          // dvdson
          int cisolver = 1;
-         int maxcycle = 50;
+         int maxcycle = 30;
          int nbuff = 4; // should be greater than 2
          double damping = 1.e-10;
          bool precond = true;
