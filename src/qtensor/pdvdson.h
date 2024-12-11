@@ -259,7 +259,7 @@ namespace ctns{
             }
 	
 	    bool ifconverged(const int iter, const double edel, const double norm){
-	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<crit_v*crit_v));
+	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<std::max(1.e-14,1.e-2*crit_v*crit_v)));
 	    }
 
             // Davidson iterative algorithm for Hv=ve 
