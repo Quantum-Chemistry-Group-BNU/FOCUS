@@ -127,8 +127,9 @@ void get_cpumem_status(const int rank, const int level=0, const std::string msg=
 void mem_check(const bool ifgpu){
    double avail_cpu = getAvailableMemory();
    double total_cpu = getTotalMemory();
+   std::cout << "\nmem_check:" << std::endl;
    std::cout << std::scientific << std::setprecision(3);
-   std::cout << "mem_check CPUmem(GB): rank=0"
+   std::cout << "rank=0 CPUmem(GB):"
 	  << " avail=" << avail_cpu 
 	  << " total=" << total_cpu 
 	  << std::endl;
@@ -138,7 +139,7 @@ void mem_check(const bool ifgpu){
       CUDA_CHECK(cudaMemGetInfo(&avail, &total));
       double avail_gpu = avail / std::pow(1024.0,3);
       double total_gpu = total / std::pow(1024.0,3);
-      std::cout << "mem_check GPUmem(GB): rank=0"
+      std::cout << "rank=0 GPUmem(GB):"
 	     << " avail=" << avail_gpu 
 	     << " total=" << total_gpu 
 	     << std::endl;
@@ -159,20 +160,21 @@ void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
    boost::mpi::gather(world, avail_cpu, avail_cpus, 0);
    boost::mpi::gather(world, total_cpu, total_cpus, 0);
    if(rank == 0){
+      std::cout << "\nmem_check:" << std::endl;
       std::cout << std::scientific << std::setprecision(3);
       for(int i=0; i<size; i++){
-         std::cout << "memcheck CPUmem(GB): rank=" << i
+         std::cout << "rank=" << i << " CPUmem(GB):"
 		<< " avail=" << avail_cpus[i]
 	       	<< " total=" << total_cpus[i]
 	       	<< std::endl;
       }
       auto ptr = std::minmax_element(avail_cpus.begin(), avail_cpus.end());
       double diff = (*ptr.second-*ptr.first);
-      std::cout << "memcheck CPUmem(GB): min=" << *ptr.first
+      std::cout << "min=" << *ptr.first
 	      << " max=" << *ptr.second
 	      << " diff=" << diff
 	      << std::endl;
-      if(diff > 5.0) std::cout << "WARNING: diff(CPUmem) is greater than 5GB!" << std::endl;
+      if(diff > 10.0) std::cout << "WARNING: diff(CPUmem) is greater than 10GB!" << std::endl;
    }
 #ifdef GPU
    if(ifgpu){
@@ -185,14 +187,14 @@ void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
       boost::mpi::gather(world, total_gpu, total_gpus, 0);
       if(rank == 0){
          for(int i=0; i<size; i++){
-            std::cout << "memcheck GPUmem(GB): rank=" << i
+            std::cout << "rank=" << rank << " GPUmem(GB):"
            	<< " avail=" << avail_gpus[i]
                 << " total=" << total_gpus[i]
                 << std::endl;
          }
          auto ptr = std::minmax_element(avail_gpus.begin(), avail_gpus.end());
 	 double diff = (*ptr.second-*ptr.first);
-         std::cout << "memcheck GPUmem(GB): min=" << *ptr.first
+         std::cout << "min=" << *ptr.first
    	      << " max=" << *ptr.second
    	      << " diff=" << diff 
    	      << std::endl;
