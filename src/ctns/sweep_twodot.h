@@ -52,7 +52,6 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
             icomb.display_size();
-            get_cpumem_status(rank);
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();

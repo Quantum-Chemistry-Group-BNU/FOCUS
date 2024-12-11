@@ -131,6 +131,7 @@ namespace ctns{
             // 3. save & check
             rcanon_save(icomb, rcanon_file);
             rcanon_check(icomb, schd.ctns.thresh_ortho);
+	    icomb.display_size();
          }
 
          // however, the result needs to be broadcast, in case icomb will be used later
