@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include "core/mem_status.h"
 #include "core/perfcomm.h"
 #include "core/integral_io.h"
 #include "io/io.h"
@@ -301,13 +302,15 @@ int main(int argc, char *argv[]){
    if(rank > 0) schd.scratch += "_"+to_string(rank);
    io::create_scratch(schd.scratch, (rank == 0));
 
+   const bool ifgpu = schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10;
 #ifdef GPU
-   if(schd.ctns.alg_hvec>10 || schd.ctns.alg_renorm>10){
-      gpu_init(rank);
-   }
+   if(ifgpu) gpu_init(rank);
 #endif
 
-#ifndef SERIAL
+#ifdef SERIAL
+   mem_check(ifgpu);
+#else
+   mem_check(ifgpu, world);
    if(schd.perfcomm) perfcomm<double>(world, 1ULL<<schd.perfcomm);
 #endif
 

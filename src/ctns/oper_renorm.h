@@ -11,7 +11,7 @@
 #include "oper_reduce.h"
 #include "oper_ab2pq.h"
 #include "sweep_renorm.h"
-#include "../core/cpumem_status.h"
+#include "../core/mem_status.h"
 
 namespace ctns{
 
@@ -104,7 +104,7 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize
          qops.init();
-         if(debug){ 
+	 if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
             get_cpumem_status(rank);
          }

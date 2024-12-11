@@ -2,7 +2,7 @@
 #define CTNS_OUTCORE_H
 
 #include "../core/serialization.h"
-#include "../core/cpumem_status.h"
+#include "../core/mem_status.h"
 
 namespace ctns{
 
