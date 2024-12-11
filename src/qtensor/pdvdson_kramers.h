@@ -347,6 +347,10 @@ namespace ctns{
                   linalg::xcopy(ndim, rvec, tvec);
                }
             }
+	    
+	    bool ifconverged(const int iter, const double edel, const double norm){
+	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<crit_v*crit_v));
+	    }
 
             // Davidson iterative algorithm for Hv=ve
             void solve_iter(double* es, Tm* vs, Tm* vguess){
@@ -407,10 +411,11 @@ namespace ctns{
                      //------------------------------------------------------------------------
                      // compute norm of residual
                      for(int i=0; i<neig; i++){
-                        double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
+                        double edel = std::abs(tmpE[i]-eigs(i,iter-1));
+			double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                         eigs(i,iter) = tmpE[i];
                         rnorm(i,iter) = norm;
-                        rconv[i] = (norm < crit_v)? true : false;
+                        rconv[i] = this->ifconverged(iter, norm, edel);
                      }
                      auto t1 = tools::get_time();
                      if(iprt >= 0) print_iter(iter,nsub,eigs,rnorm,tools::get_duration(t1-ti));
@@ -499,7 +504,7 @@ namespace ctns{
             double* Diag;
             std::function<void(Tm*, const Tm*)> HVec;
             double crit_v = 1.e-5;  // used control parameter
-            int maxcycle = 30;
+            int maxcycle = 50;
             int nbuff = 4; // maximal additional vectors
             //--------------------
             // Kramers projection

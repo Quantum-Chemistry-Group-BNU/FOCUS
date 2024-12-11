@@ -5,7 +5,7 @@
 #include "ctns_topo.h"
 #include "init_rbasis.h"
 #include "init_phys.h" // get_qbond_vac
-
+#include "../core/mem_status.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif

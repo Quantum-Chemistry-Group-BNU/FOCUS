@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <malloc.h>  // For malloc_stats
 
-double getTotalMemory() {
+inline double getTotalMemory() {
    std::ifstream meminfo("/proc/meminfo");
    std::string line;
    long totalMemory = 0;
@@ -25,7 +25,7 @@ double getTotalMemory() {
    return totalMemory / std::pow(1024.0,2);  // Convert to GB
 }
 
-double getAvailableMemory() {
+inline double getAvailableMemory() {
    std::ifstream meminfo("/proc/meminfo");
    std::string line;
    long availableMemory = 0;
@@ -48,7 +48,7 @@ double getAvailableMemory() {
 #include <sys/sysctl.h>
 
 // Function to get Total Memory in bytes
-double getTotalMemory() {
+inline double getTotalMemory() {
    uint64_t totalMemory = 0;
    size_t length = sizeof(totalMemory);
    // sysctl to get the total physical memory (HW_MEMSIZE)
@@ -60,7 +60,7 @@ double getTotalMemory() {
    }
 }
 
-double getAvailableMemory() {
+inline double getAvailableMemory() {
    vm_statistics_data_t vmStats;
    mach_msg_type_number_t vmStatsCount = HOST_VM_INFO_COUNT;
    long availableMemory = 0;
@@ -80,13 +80,13 @@ double getAvailableMemory() {
 #include <tcmalloc.h>
 #include <malloc_extension.h>
 
-void release_freecpumem(){
+inline void release_freecpumem(){
    // Released free memory to the system
    MallocExtension::instance()->ReleaseFreeMemory();
 }
 #endif
 
-void get_cpumem_status(const int rank, const int level=0, const std::string msg=""){
+inline void get_cpumem_status(const int rank, const int level=0, const std::string msg=""){
 #ifdef TCMALLOC
    static double previous = 0.0;
    size_t total_allocated;
@@ -124,7 +124,7 @@ void get_cpumem_status(const int rank, const int level=0, const std::string msg=
 
 #ifdef SERIAL
 
-void mem_check(const bool ifgpu){
+inline void mem_check(const bool ifgpu){
    double avail_cpu = getAvailableMemory();
    double total_cpu = getTotalMemory();
    std::cout << "\nmem_check:" << std::endl;
@@ -149,9 +149,12 @@ void mem_check(const bool ifgpu){
 
 #else
 
-#include "perfcomm.h"
+#include <boost/mpi.hpp>
+#ifdef GPU
+#include "gpu/gpu_env.h"
+#endif
 
-void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
+inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
    int size = world.size();
    int rank = world.rank();
    double avail_cpu = getAvailableMemory();

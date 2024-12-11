@@ -257,6 +257,10 @@ namespace ctns{
                auto t1 = tools::get_time();
                t_precond += tools::get_duration(t1-t0);
             }
+	
+	    bool ifconverged(const int iter, const double edel, const double norm){
+	       return (norm < crit_v) and (iter==1 or (iter>1 and edel<crit_v*crit_v));
+	    }
 
             // Davidson iterative algorithm for Hv=ve 
             void solve_iter(double* es, Tm* vs, Tm* vguess=nullptr){
@@ -327,10 +331,11 @@ namespace ctns{
                      // compute norm of residual
                      auto t0r = tools::get_time();
                      for(int i=0; i<neig; i++){
-                        double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
+                        double edel = std::abs(tmpE[i]-eigs(i,iter-1));
+			double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                         eigs(i,iter) = tmpE[i];
                         rnorm(i,iter) = norm;
-                        rconv[i] = (norm < crit_v)? true : false;
+                        rconv[i] = this->ifconverged(iter, edel, norm);
                      }
                      auto t1 = tools::get_time();
                      t_xnrm2 += tools::get_duration(t1-t0r);
@@ -424,7 +429,7 @@ namespace ctns{
             double* Diag;
             std::function<void(Tm*, const Tm*)> HVec;
             double crit_v = 1.e-5;  // used control parameter
-            int maxcycle = 30;
+            int maxcycle = 50;
             int nbuff = 4; // maximal additional vectors
             // settings
             int iprt = 0;

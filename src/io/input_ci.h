@@ -48,7 +48,7 @@ namespace input{
          bool checkms = false;
          // dvdson
          int cisolver = 1;
-         int maxcycle = 100;
+         int maxcycle = 50;
          double crit_v = 1.e-4;
          // pt2
          bool ifpt2 = false;
