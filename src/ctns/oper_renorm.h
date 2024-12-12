@@ -272,7 +272,7 @@ namespace ctns{
          timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-            double t_tot = tools::get_duration(timing.tf13-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf14-timing.tf0); 
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " rank=" << rank << " -----"
                << std::endl;

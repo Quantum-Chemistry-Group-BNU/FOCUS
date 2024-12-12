@@ -249,12 +249,12 @@ namespace ctns{
 #ifndef SERIAL
                if(size > 1){
                   auto t0x = tools::get_time();
-                  mpi_wrapper::broadcast(icomb.world, qops_tmp.ptr_ops('A'), qops_tmp.size_ops('A'), iproc);
+                  mpi_wrapper::broadcast(icomb.world, qops_tmp.ptr_ops('M'), qops_tmp.size_ops('M'), iproc);
                   auto t1x = tools::get_time();
                   double tbcast = tools::get_duration(t1x-t0x);
                   tcomm += tbcast;
                   if(rank == 0){
-                     size_t data_size = qops_tmp.size_ops('A');
+                     size_t data_size = qops_tmp.size_ops('M');
                      std::cout << " iproc=" << iproc << " rank=" << rank 
                         << " size(opA)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                         << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
@@ -566,12 +566,21 @@ namespace ctns{
                qops_tmp.init();
                if(qops_tmp.size() == 0) continue; 
 
-               auto t0x = tools::get_time();
                if(iproc == rank){
-                  linalg::xcopy(qops.size_ops('B'), qops.ptr_ops('B'), qops_tmp.ptr_ops('B'));
+                  auto t0x = tools::get_time();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+                  for(int idx=0; idx<bindex_iproc.size(); idx++){
+                     auto iqr = bindex_iproc[idx];
+                     auto optmp = qops('B').at(iqr);
+                     auto& opBqr = qops_tmp('B')[iqr]; 
+                     assert(optmp.size() == opBqr.size()); 
+                     linalg::xcopy(optmp.size(), optmp.data(), opBqr.data());
+                  }
+                  auto t1x = tools::get_time();
+                  tadjt += tools::get_duration(t1x-t0x);
                }
-               auto t1x = tools::get_time();
-               tadjt += tools::get_duration(t1x-t0x);
 #ifndef SERIAL
                if(size > 1){
                   auto t0x = tools::get_time();

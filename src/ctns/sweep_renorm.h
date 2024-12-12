@@ -297,16 +297,19 @@ namespace ctns{
             }
             timing.tf3 = tools::get_time();
 
-            // bra
-            gpumem_site = sizeof(Tm)*site.size();
-            dev_site = (Tm*)GPUmem.allocate(gpumem_site);
-            GPUmem.to_gpu(dev_site, site._data, gpumem_site);
-            // ket
+            // copy bra and ket to GPU
             if(is_same){
+               gpumem_site = sizeof(Tm)*site.size();
+               dev_site = (Tm*)GPUmem.allocate(gpumem_site);
+               GPUmem.to_gpu(dev_site, site._data, gpumem_site);
                dev_site2 = dev_site;
             }else{
+               // ZL@2024/12/12 revised 
+               gpumem_site = sizeof(Tm)*site.size();
                size_t gpumem_site2 = sizeof(Tm)*site2.size();
-               dev_site2 = (Tm*)GPUmem.allocate(gpumem_site2);
+               dev_site = (Tm*)GPUmem.allocate(gpumem_site + gpumem_site2);
+               dev_site2 = dev_site + sizeof(Tm)*gpumem_site;
+               GPUmem.to_gpu(dev_site, site._data, gpumem_site);
                GPUmem.to_gpu(dev_site2, site2._data, gpumem_site2);
                gpumem_site += gpumem_site2;
             }
@@ -429,7 +432,7 @@ namespace ctns{
          }
 #ifdef GPU
          if(alg_renorm>10){
-            GPUmem.deallocate(dev_site, gpumem_site);
+            GPUmem.deallocate(dev_site, gpumem_site); // GPUmem is not a stack anymore
             if(blksize > 0) GPUmem.deallocate(dev_workspace, gpumem_batch);
          }
 #endif
