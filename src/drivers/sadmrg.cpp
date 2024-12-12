@@ -154,6 +154,7 @@ void SADMRG(const input::schedule& schd){
 
       assert(schd.sorb == 2*icomb.get_nphysical());
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+      icomb.display_size();
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)

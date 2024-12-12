@@ -41,7 +41,7 @@ void RDM(const input::schedule& schd){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
       assert(icomb.topo.ifmps);
       if(rank == 0){
-         icomb.display_shape();
+      	 ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
          icomb.display_size();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
       }
@@ -56,7 +56,7 @@ void RDM(const input::schedule& schd){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
       assert(icomb2.topo.ifmps); // must be MPS
       if(rank == 0){
-         icomb2.display_shape();
+      	 ctns::rcanon_check(icomb2, schd.ctns.thresh_ortho);
          icomb2.display_size();
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
       }
