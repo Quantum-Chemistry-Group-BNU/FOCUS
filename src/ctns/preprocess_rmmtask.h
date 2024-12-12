@@ -182,6 +182,9 @@ namespace ctns{
          coefflst.resize(nbatch);
          mvbatch.resize(nbatch);
          imvbatch.resize(nbatch);
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
@@ -280,6 +283,9 @@ namespace ctns{
                         return mm1 > mm2; 
                      });
                mmbatch2[k][i].init(mmlst2[i]);
+#ifdef _OPENMP
+#pragma omp critical
+#endif	
                cost += mmbatch2[k][i].cost; // accumulate MM cost
             } // i
 

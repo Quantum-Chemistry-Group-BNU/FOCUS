@@ -159,12 +159,15 @@ namespace ctns{
                << superblock << std::endl;
             exit(1);
          }
-         int bi[3];  // psi2[br',bc',bm']
-         int bo[3];  // sigma
-         int bi2[3]; // psi*[br,bc,bm]
          // loop over psi2[br',bc',bm']
-         for(int i=0; i<site2_info._nnzaddr.size(); i++){
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
+	 for(int i=0; i<site2_info._nnzaddr.size(); i++){
             int idx = site2_info._nnzaddr[i];
+            int bi[3];  // psi2[br',bc',bm']
+            int bo[3];  // sigma
+            int bi2[3]; // psi*[br,bc,bm]
             site2_info._addr_unpack(idx,bi[0],bi[1],bi[2]);
             Rblock<Tm> Rblk(terms,cterms,alg_rcoper);
             Rblk.icase = k3;
@@ -243,17 +246,22 @@ namespace ctns{
             Rblk.dimin2[k3] = rinfo->qrow.get_dim(bi2[k3]);
             Rblk.size = Rblk.dimin2[k3]*Rblk.dimout[k3];
             Rblk.setup();
-            blksize = std::max(blksize, Rblk.blksize);
-            cost += Rblk.cost;
             // Intermediates
             if(posInter != -1){
                Rblk.posInter = posInter;
                Rblk.lenInter = lenInter;
                Rblk.offInter = offInter;
                Rblk.ldaInter = ldaInter;
-               blksize0 = std::max(blksize0, Rblk.dimout[posInter]*Rblk.dimin[posInter]);
             }
-            Rlst2[bi2[k3]*rinfo->_cols+bo[k3]].push_back(Rblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	    {
+               Rlst2[bi2[k3]*rinfo->_cols+bo[k3]].push_back(Rblk);
+               blksize = std::max(blksize, Rblk.blksize);
+               if(posInter != -1) blksize0 = std::max(blksize0, Rblk.dimout[posInter]*Rblk.dimin[posInter]);
+               cost += Rblk.cost;
+	    }
          } // i
       }
 
@@ -296,13 +304,16 @@ namespace ctns{
             exit(1);
          }
          // loop over psi2[br',bc',bm']
-         int bi[3], ts12;
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int i=0; i<site2_info._nnzaddr.size(); i++){
             auto key = site2_info._nnzaddr[i];
+            int bi[3];
             bi[0] = std::get<0>(key);
             bi[1] = std::get<1>(key);
             bi[2] = std::get<2>(key);
-            ts12  = std::get<3>(key);
+            int ts12  = std::get<3>(key);
             const auto& bo1vec = (this->skip(k1))? std::vector<int>({bi[k1]}) : 
                (dagger[k1]^ifdagger? info[k1]->_br2bc[bi[k1]] : info[k1]->_bc2br[bi[k1]]);
             const auto& bo2vec = (this->skip(k2))? std::vector<int>({bi[k2]}) : 
@@ -404,17 +415,22 @@ namespace ctns{
                      Rblk.dimin2[2] = site_info.qmid.get_dim(bi2[2]);
                      Rblk.size = Rblk.dimin2[k3]*Rblk.dimout[k3];
                      Rblk.setup();
-                     blksize = std::max(blksize, Rblk.blksize);
-                     cost += Rblk.cost;
                      // Intermediates
                      if(posInter != -1){
                         Rblk.posInter = posInter;
                         Rblk.lenInter = lenInter;
                         Rblk.offInter = offInter;
                         Rblk.ldaInter = ldaInter;
-                        blksize0 = std::max(blksize0, Rblk.dimout[posInter]*Rblk.dimin[posInter]);
                      }
-                     Rlst2[bi2[k3]*rinfo->_cols+bo[k3]].push_back(Rblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+		     {
+                        Rlst2[bi2[k3]*rinfo->_cols+bo[k3]].push_back(Rblk);
+                        blksize = std::max(blksize, Rblk.blksize);
+                        if(posInter != -1) blksize0 = std::max(blksize0, Rblk.dimout[posInter]*Rblk.dimin[posInter]);
+                        cost += Rblk.cost;
+		     }
                   } // b3
                } // b2
             } // b1

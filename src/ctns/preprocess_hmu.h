@@ -157,9 +157,12 @@ namespace ctns{
             double& cost,
             const bool ifdagger) const{
          if(this->empty()) return;
-         int bo[3], bi[3];
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
+            int bo[3], bi[3];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2]);
             Hxblock<Tm> Hxblk(3,terms,cterms,alg_hcoper);
             Hxblk.offout = wf_info._offset[idx]-1;
@@ -214,17 +217,22 @@ namespace ctns{
             if(parity[1] && (pl+pc)%2==1) Hxblk.coeff *= -1.0; // Or: Or|lcr> = (-1)^{pl+pc}|lc>*Or|r>
             if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc
             Hxblk.setup();
-            blksize = std::max(blksize, Hxblk.blksize);
-            cost += Hxblk.cost;
             // Intermediates
             if(posInter != -1){
                Hxblk.posInter = posInter;
                Hxblk.lenInter = lenInter;
                Hxblk.offInter = offInter;
                Hxblk.ldaInter = ldaInter;
-               blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
             }
-            Hxlst2[i].push_back(Hxblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	    {
+               Hxlst2[i].push_back(Hxblk);
+	       blksize = std::max(blksize, Hxblk.blksize);
+               if(posInter != -1) blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+               cost += Hxblk.cost;
+	    }
          } // i
       }
 
@@ -241,17 +249,19 @@ namespace ctns{
             const bool ifdagger) const{
          if(this->empty()) return;
          // sigma[br',bc',bm']
-         int bo[3], tstot;
-         tstot = wf_info.sym.ts();
+         int tstot = wf_info.sym.ts();
          if(wf_info.couple == CRcouple){
             // l|cr: CRcouple
-            int tscrp;
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
             for(int i=0; i<wf_info._nnzaddr.size(); i++){
                auto key = wf_info._nnzaddr[i];
+	       int bo[3];
                bo[0] = std::get<0>(key); // br
                bo[1] = std::get<1>(key); // bc
                bo[2] = std::get<2>(key); // bm
-               tscrp = std::get<3>(key); // tscr
+               int tscrp = std::get<3>(key); // tscr
                size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],tscrp);
                assert(offout > 0);
                const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
@@ -345,17 +355,22 @@ namespace ctns{
                            Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
                            Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2];
                            Hxblk.setup();
-                           blksize = std::max(blksize, Hxblk.blksize);
-                           cost += Hxblk.cost;
                            // Intermediates
                            if(posInter != -1){
                               Hxblk.posInter = posInter;
                               Hxblk.lenInter = lenInter;
                               Hxblk.offInter = offInter;
                               Hxblk.ldaInter = ldaInter;
-                              blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
                            }
-                           Hxlst2[i].push_back(Hxblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+			   {
+                              Hxlst2[i].push_back(Hxblk);
+                              blksize = std::max(blksize, Hxblk.blksize);
+                              if(posInter != -1) blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+                              cost += Hxblk.cost;
+			   }
                         } // tscr
                      } // bi2
                   } // bi1
@@ -363,13 +378,16 @@ namespace ctns{
             } // i
          }else{
             // lc|r: LCcouple
-            int tslcp;
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
             for(int i=0; i<wf_info._nnzaddr.size(); i++){
                auto key = wf_info._nnzaddr[i];
+	       int bo[3];
                bo[0] = std::get<0>(key); // br
                bo[1] = std::get<1>(key); // bc
                bo[2] = std::get<2>(key); // bm
-               tslcp = std::get<3>(key); // tslc
+               int tslcp = std::get<3>(key); // tslc
                size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],tslcp);
                assert(offout > 0);
                const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
@@ -463,17 +481,22 @@ namespace ctns{
                            Hxblk.dimout[2] = wf_info.qmid.get_dim(bo[2]);
                            Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2];
                            Hxblk.setup();
-                           blksize = std::max(blksize, Hxblk.blksize);
-                           cost += Hxblk.cost;
                            // Intermediates
                            if(posInter != -1){
                               Hxblk.posInter = posInter;
                               Hxblk.lenInter = lenInter;
                               Hxblk.offInter = offInter;
                               Hxblk.ldaInter = ldaInter;
-                              blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
                            }
-                           Hxlst2[i].push_back(Hxblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+			   {
+			      Hxlst2[i].push_back(Hxblk);
+                              blksize = std::max(blksize, Hxblk.blksize);
+                              if(posInter != -1) blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+                              cost += Hxblk.cost;
+			   }
                         } // tslc
                      } // bi2
                   } // bi1
@@ -497,9 +520,12 @@ namespace ctns{
             double& cost,
             const bool ifdagger) const{
          if(this->empty()) return;
-         int bo[4], bi[4];
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             int idx = wf_info._nnzaddr[i];
+            int bo[4], bi[4];
             wf_info._addr_unpack(idx,bo[0],bo[1],bo[2],bo[3]);
             Hxblock<Tm> Hxblk(4,terms,cterms,alg_hcoper);
             Hxblk.offout = wf_info._offset[idx]-1;
@@ -558,17 +584,22 @@ namespace ctns{
             if(parity[3] && (pl+pc1)%2==1) Hxblk.coeff *= -1.0;  // Oc2
             if(parity[2] && pl%2==1) Hxblk.coeff *= -1.0; // Oc1
             Hxblk.setup();
-            blksize = std::max(blksize, Hxblk.blksize);
-            cost += Hxblk.cost;
             // Intermediates
             if(posInter != -1){
                Hxblk.posInter = posInter;
                Hxblk.lenInter = lenInter;
                Hxblk.offInter = offInter;
                Hxblk.ldaInter = ldaInter;
-               blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
             }
-            Hxlst2[i].push_back(Hxblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	    {
+	       Hxlst2[i].push_back(Hxblk);
+               blksize = std::max(blksize, Hxblk.blksize);
+               if(posInter != -1) blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+               cost += Hxblk.cost;
+	    }
          } // i
       }
 
@@ -588,16 +619,19 @@ namespace ctns{
             const bool ifdagger) const{
          if(this->empty()) return;
          // sigma[br',bc',bm',bv']
-         int bo[4], tslc1p, tsc2rp, tstot;
-         tstot = wf_info.sym.ts();
+         int tstot = wf_info.sym.ts();
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int i=0; i<wf_info._nnzaddr.size(); i++){
             auto key = wf_info._nnzaddr[i];
+            int bo[4];
             bo[0] = std::get<0>(key);
             bo[1] = std::get<1>(key);
             bo[2] = std::get<2>(key);
             bo[3] = std::get<3>(key);
-            tslc1p = std::get<4>(key);
-            tsc2rp = std::get<5>(key);
+            int tslc1p = std::get<4>(key);
+            int tsc2rp = std::get<5>(key);
             size_t offout = wf_info.get_offset(bo[0],bo[1],bo[2],bo[3],tslc1p,tsc2rp);
             assert(offout > 0);
             const auto& bi0vec = this->identity(0)? std::vector<int>({bo[0]}) :
@@ -709,17 +743,22 @@ namespace ctns{
                               Hxblk.dimout[3] = wf_info.qver.get_dim(bo[3]);
                               Hxblk.size = Hxblk.dimout[0]*Hxblk.dimout[1]*Hxblk.dimout[2]*Hxblk.dimout[3];
                               Hxblk.setup();
-                              blksize = std::max(blksize, Hxblk.blksize);
-                              cost += Hxblk.cost;
                               // Intermediates
                               if(posInter != -1){
                                  Hxblk.posInter = posInter;
                                  Hxblk.lenInter = lenInter;
                                  Hxblk.offInter = offInter;
                                  Hxblk.ldaInter = ldaInter;
-                                 blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
                               }
-                              Hxlst2[i].push_back(Hxblk);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+			      {
+                                 Hxlst2[i].push_back(Hxblk);
+                                 blksize = std::max(blksize, Hxblk.blksize);
+                                 if(posInter != -1) blksize0 = std::max(blksize0, Hxblk.dimout[posInter]*Hxblk.dimin[posInter]);
+                                 cost += Hxblk.cost;
+			      }
                            } // tsc2r
                         } // tslc1
                      } // b3

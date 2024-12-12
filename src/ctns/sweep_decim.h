@@ -7,7 +7,7 @@
 
 namespace ctns{
 
-   const double thresh_sig2 = 1.e-14;
+   const double thresh_sig2 = 1.e-12;
    extern const double thresh_sig2;
   
    const bool sort_by_dim = true; // sort the decimated symmetry sector by dimension

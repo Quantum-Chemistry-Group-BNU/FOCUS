@@ -71,6 +71,9 @@ namespace ctns{
          // 1. preprocess formulae to Rmu
          int rsize = rtasks.size();
          std::vector<std::vector<Rmu_ptr<ifab,Tm>>> Rmu(rsize);
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif	
          for(int k=0; k<rsize; k++){
             const auto& task = rtasks.op_tasks[k];
             const auto& key = std::get<0>(task);

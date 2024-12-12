@@ -64,6 +64,9 @@ namespace ctns{
          // 1. preprocess formulae to Hmu
          int hsize = H_formulae.size();
          std::vector<Hmu_ptr<ifab,Tm>> Hmu_vec(hsize);
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif
          for(int it=0; it<hsize; it++){
             Hmu_vec[it].init(ifDirect, it, H_formulae, qops_dict, hinter, oploc); 
          } // it
