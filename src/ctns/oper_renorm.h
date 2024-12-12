@@ -104,7 +104,7 @@ namespace ctns{
          qops.ifdist2 = true;
          // initialize
          qops.init();
-	 if(debug){ 
+         if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
             get_cpumem_status(rank);
          }
@@ -221,11 +221,11 @@ namespace ctns{
          {
             // 3. consistency check for Hamiltonian
             const auto& opH = qops('H').at(0);
-            
+
             //debug:
             //opH.to_matrix().print("lzd opH",10);
             //if(pcoord.first == 15) exit(1);
-            
+
             // NAN check
             for(int i=0; i<opH.size(); i++){
                double Hr = std::real(opH._data[i]);

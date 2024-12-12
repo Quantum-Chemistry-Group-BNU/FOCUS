@@ -106,6 +106,10 @@ namespace ctns{
          qops2.mpirank = rank;
          qops2.ifdist2 = true;
          qops2.init(true);
+         if(debug){
+            qops2.print("qops2", schd.ctns.verbose-1);
+            get_cpumem_status(rank);
+         }
          auto ta = tools::get_time();
 
          // 1. copy CSH

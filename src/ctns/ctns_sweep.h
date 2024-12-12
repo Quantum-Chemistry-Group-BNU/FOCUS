@@ -38,8 +38,7 @@ namespace ctns{
 
          // consistency check
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
-            std::cout << "error: ifdistc should be used only with MPS!" << std::endl;
-            exit(1);
+            tools::exit("error: ifdistc should be used only with MPS!");
          }
 
          // 0. outcore
@@ -124,8 +123,11 @@ namespace ctns{
                   timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
                   get_cpumem_status(rank, schd.ctns.verbose>1);
                }
-               // stop just for debug [done it for rank-0]
-               if(rank==0 && isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond) exit(1);
+               // stop just for debug
+               if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
+                  qops_pool.finalize(); 
+                  tools::exit("exit for debug sweep_opt");
+               }
             } // ibond
             if(debug){
                auto tf = tools::get_time();

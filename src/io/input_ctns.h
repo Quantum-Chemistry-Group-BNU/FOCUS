@@ -93,7 +93,7 @@ namespace input{
                   & task_schmidt & schmidt_file 
                   & restart_sweep 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
-                  & nroots & guess & dbranch & maxsweep & maxbond & ctrls & rcfprefix
+                  & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_ab2pq & notrunc 
                   & ifoutcore & ifab2pq & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
@@ -148,6 +148,7 @@ namespace input{
          int dbranch = 0;
          int maxsweep = 0;
          int maxbond = -1;
+         int maxidx = -1;
          std::vector<params_sweep> ctrls;
          std::string rcfprefix = ""; 
          // algorithm

@@ -160,6 +160,9 @@ namespace ctns{
                      linalg::xgemm("N", "N", opsize, cols, rows, alpha,
                            ptr_opM, opsize, coeff.data(), rows, beta,
                            ptr_opP, opsize);
+                     if(rank == 0){
+                        std::cout << "lzd: M,N,K=" << opsize << "," << cols << "," << rows << std::endl;
+                     }
                   } // amap
                   auto t1 = tools::get_time();
                   tcomp += tools::get_duration(t1-t0);
@@ -435,6 +438,9 @@ namespace ctns{
                         linalg::xgemm("N", "N", opsize, cols, rows, alpha,
                               ptr_opB, opsize, coeff.data(), rows, beta,
                               ptr_opQ, opsize);
+                        if(rank == 0){
+                           std::cout << "lzd: M,N,K=" << opsize << "," << cols << "," << rows << std::endl;
+                        }
                      } // bmap
                      auto t1 = tools::get_time();
                      tcomp += tools::get_duration(t1-t0);

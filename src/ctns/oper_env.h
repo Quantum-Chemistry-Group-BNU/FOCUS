@@ -231,6 +231,11 @@ namespace ctns{
                   timing.analysis("local oper_env", schd.ctns.verbose>0);
                   timing_sweep.accumulate(timing, "sweep oper_env", schd.ctns.verbose>0);
                }
+               // stop just for debug
+               if(idx==schd.ctns.maxidx){
+                  qops_pool.finalize();
+                  tools::exit("exit for debug oper_env");
+               }
             }
          } // idx
          qops_pool.finalize();

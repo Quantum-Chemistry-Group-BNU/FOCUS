@@ -207,6 +207,8 @@ void params_ctns::read(ifstream& istrm){
          maxsweep = stoi(line.substr(8));
       }else if(line.substr(0,7)=="maxbond"){
          maxbond = stoi(line.substr(7));
+      }else if(line.substr(0,6)=="maxidx"){
+         maxidx = stoi(line.substr(6));
       }else if(line.substr(0,7)=="oo_iprt"){
          ooparams.iprt = stoi(line.substr(7));
       }else if(line.substr(0,10)=="oo_maxiter"){
@@ -355,6 +357,7 @@ void params_ctns::print() const{
    cout << "dbranch = " << dbranch << endl;
    cout << "maxsweep = " << maxsweep << endl;
    cout << "maxbond = " << maxbond << endl;
+   cout << "maxidx = " << maxidx << endl;
    if(maxsweep > 0){
       cout << "schedule: isweep, dots, dcut, eps, noise" << endl;
       for(int i=0; i<maxsweep; i++){
