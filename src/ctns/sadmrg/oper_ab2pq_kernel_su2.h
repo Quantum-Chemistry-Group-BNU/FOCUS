@@ -225,20 +225,27 @@ namespace ctns{
                qops_tmp.krest = qops.krest;
                qops_tmp.qbra = qops.qbra;
                qops_tmp.qket = qops.qket;
-               qops_tmp.oplist = "AM";
+               qops_tmp.oplist = "M";
                qops_tmp.mpisize = size;
                qops_tmp.mpirank = iproc; // not rank
                qops_tmp.ifdist2 = true;
                qops_tmp.init();
                if(qops_tmp.size() == 0) continue;
 
-               // copy and broadcast opA
-               auto t0x = tools::get_time();
+               // convert opA to opA.H()
                if(iproc == rank){
-                  linalg::xcopy(qops.size_ops('A'), qops.ptr_ops('A'), qops_tmp.ptr_ops('A'));
+                  auto t0x = tools::get_time();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+                  for(int idx=0; idx<aindex_iproc.size(); idx++){
+                     auto isr = aindex_iproc[idx];
+                     HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
+                  }
+                  auto t1x = tools::get_time();
+                  tadjt += tools::get_duration(t1x-t0x);
                }
-               auto t1x = tools::get_time();
-               tadjt += tools::get_duration(t1x-t0x);
+               // broadcast opA.H()
 #ifndef SERIAL
                if(size > 1){
                   auto t0x = tools::get_time();
@@ -255,18 +262,6 @@ namespace ctns{
                   }
                }
 #endif
-
-               // convert opA to opA.H()
-               auto t0y = tools::get_time();
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-               for(int idx=0; idx<aindex_iproc.size(); idx++){
-                  auto isr = aindex_iproc[idx];
-                  HermitianConjugate(qops_tmp('A').at(isr), qops_tmp('M')[isr], true);
-               }
-               auto t1y = tools::get_time();
-               tadjt += tools::get_duration(t1y-t0y);
 
                // construct opP from opA, if opP is exist on the current process
                if(qops2.num_ops('P') == 0) continue;
