@@ -58,12 +58,11 @@ namespace ctns{
       }
 
    // return the adjoint tensor
-   template <bool ifab, typename Tm>
-      template <bool y, std::enable_if_t<!y,int>>
-      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H(const bool adjoint) const{
-         // symmetry of operator get changed in consistency with line changes
-         qsym sym(3,-info.sym.ne(),info.sym.ts());
-         qtensor2<ifab,Tm> qt2(sym, info.qcol, info.qrow, info.dir);
+   template <typename Tm>
+      void HermitianConjugate(const stensor2su2<Tm>& qt1,
+            stensor2su2<Tm>& qt2,
+            const bool adjoint){
+         assert(qt1.size() == qt2.size());
          int br, bc;
          for(int i=0; i<qt2.info._nnzaddr.size(); i++){
             auto key = qt2.info._nnzaddr[i];
@@ -71,21 +70,21 @@ namespace ctns{
             bc = std::get<1>(key);
             auto blk = qt2(br,bc);
             // conjugate transpose
-            const auto blkh = (*this)(bc,br);
+            const auto blkh = qt1(bc,br);
             for(int ic=0; ic<blk.dim1; ic++){
                for(int ir=0; ir<blk.dim0; ir++){
                   blk(ir,ic) = tools::conjugate(blkh(ic,ir));
                } // ir
             } // ic
-            //-----------------------------------------------------
-            // determine the prefactor for Adjoint tensor operator 
+              //-----------------------------------------------------
+              // determine the prefactor for Adjoint tensor operator 
             if(adjoint){
                // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
                auto symr = qt2.info.qrow.get_sym(br);
                auto symc = qt2.info.qcol.get_sym(bc);
                int tsr = symr.ts();
                int tsc = symc.ts();
-               int deltats = (info.sym.ts() + tsr - tsc);
+               int deltats = (qt2.info.sym.ts() + tsr - tsc);
                assert(deltats%2 == 0);
                Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
                fac *= std::sqrt((tsc+1.0)/(tsr+1.0));
@@ -93,6 +92,14 @@ namespace ctns{
             }
             //----------------------------------------------------
          } // i
+      }
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<!y,int>>
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H(const bool adjoint) const{
+         // symmetry of operator get changed in consistency with line changes
+         qsym sym(3,-info.sym.ne(),info.sym.ts());
+         qtensor2<ifab,Tm> qt2(sym, info.qcol, info.qrow, info.dir);
+         HermitianConjugate(*this, qt2, adjoint);
          return qt2; 
       }
 

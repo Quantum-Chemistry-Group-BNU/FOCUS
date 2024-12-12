@@ -93,6 +93,7 @@ namespace ctns{
                   _opdict = std::move(st._opdict);
                   _indexmap = std::move(st._indexmap);
                   _sizes = std::move(st._sizes);
+                  _opoff = std::move(st._opoff);
                   _size = st._size;
                   _opsize = st._opsize;
                   delete[] _data;
@@ -152,6 +153,13 @@ namespace ctns{
                   return _sizes.at(key);
                }
             }
+            Tm* ptr_ops(const char key) const{
+               if(this->num_ops(key) == 0){
+                  return nullptr;
+               }else{
+                  return _data + _opoff.at(key);
+               }
+            }
             // return qindexmap for certain type of op
             const qindexmap& indexmap(const char key) const{
                assert(this->num_ops(key) > 0);
@@ -178,6 +186,7 @@ namespace ctns{
             std::map<char,qoper_map<ifab,Tm>> _opdict;
             std::map<char,qindexmap> _indexmap; 
             std::map<char,size_t> _sizes;
+            std::map<char,size_t> _opoff;
             size_t _size = 0, _opsize = 0;
             Tm* _data = nullptr;
             Tm* _dev_data = nullptr;
@@ -359,6 +368,7 @@ namespace ctns{
             if(debug) std::cout << " allocate_memory for op" << key << ":";
             // loop over indices
             auto op_index = this->oper_index_op(key);
+            if(op_index.size() > 0) _opoff[key] = _size;
             for(int idx : op_index){
                auto sym_op = this->get_qsym_op(key,idx);
                // only compute size 

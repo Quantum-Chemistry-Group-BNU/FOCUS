@@ -58,24 +58,30 @@ namespace ctns{
    // ZL20200531: This is used in taking Hermitian conjugate of operators.
    // 	       If row/col is permuted while dir fixed, this effectively changes 
    // 	       the direction of lines in diagrams
-   template <bool ifab, typename Tm>
-      template <bool y, std::enable_if_t<y,int>>
-      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H() const{
-         // symmetry of operator get changed in consistency with line changes
-         qtensor2<ifab,Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
+   template <typename Tm>
+      void HermitianConjugate(const stensor2<Tm>& qt1,
+            stensor2<Tm>& qt2){ 
+         assert(qt1.size() == qt2.size());
          int br, bc;
          for(int i=0; i<qt2.info._nnzaddr.size(); i++){
             int idx = qt2.info._nnzaddr[i];
             qt2.info._addr_unpack(idx,br,bc);
             auto blk = qt2(br,bc);
             // conjugate transpose
-            const auto blkh = (*this)(bc,br);
+            const auto blkh = qt1(bc,br);
             for(int ic=0; ic<blk.dim1; ic++){
                for(int ir=0; ir<blk.dim0; ir++){
                   blk(ir,ic) = tools::conjugate(blkh(ic,ir));
                } // ir
             } // ic
          } // i
+      }
+   template <bool ifab, typename Tm>
+      template <bool y, std::enable_if_t<y,int>>
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H() const{
+         // symmetry of operator get changed in consistency with line changes
+         qtensor2<ifab,Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
+         HermitianConjugate(*this, qt2);
          return qt2; 
       }
 

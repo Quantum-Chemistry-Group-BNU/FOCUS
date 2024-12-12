@@ -95,7 +95,7 @@ namespace input{
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
-                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_ab2pq & notrunc 
+                  & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_a2p & alg_b2q & notrunc 
                   & ifoutcore & ifab2pq & ifdist1 & ifdistc & save_formulae & sort_formulae & save_mmtask 
                   & batchhvec & batchrenorm & batchmem
                   & cisolver & maxcycle & nbuff & damping & precond
@@ -160,7 +160,8 @@ namespace input{
          int alg_rcoper = 0;
          int alg_rdm = 1;
          int alg_decim = 0;
-         int alg_ab2pq = 1;
+         int alg_a2p = 1;
+         int alg_b2q = 1;
          bool notrunc = false;
          bool ifoutcore = false; // whether to keep comb in memory for get_Ham & sweep
          bool ifab2pq = false; // switch from NC to CN partition for MPS

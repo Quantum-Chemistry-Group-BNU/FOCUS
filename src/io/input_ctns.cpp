@@ -80,8 +80,10 @@ void params_ctns::read(ifstream& istrm){
          alg_rcoper = stoi(line.substr(10));
       }else if(line.substr(0,9)=="alg_decim"){
          alg_decim = stoi(line.substr(9));
-      }else if(line.substr(0,9)=="alg_ab2pq"){
-         alg_ab2pq = stoi(line.substr(9));
+      }else if(line.substr(0,7)=="alg_a2p"){
+         alg_a2p = stoi(line.substr(7));
+      }else if(line.substr(0,7)=="alg_b2q"){
+         alg_b2q = stoi(line.substr(7));
       }else if(line.substr(0,7)=="alg_rdm"){
          alg_rdm = stoi(line.substr(7));
       }else if(line.substr(0,9)=="alg_mrpt2"){
@@ -377,7 +379,8 @@ void params_ctns::print() const{
    cout << "alg_rcoper = " << alg_rcoper << endl;
    cout << "alg_rdm = " << alg_rdm << endl;
    cout << "alg_decim = " << alg_decim << endl;
-   cout << "alg_ab2pq = " << alg_ab2pq << endl;
+   cout << "alg_a2p = " << alg_a2p << endl;
+   cout << "alg_b2q = " << alg_b2q << endl;
    cout << "notrunc = " << notrunc << endl;
    cout << "ifoutcore = " << ifoutcore << endl;
    cout << "ifab2pq = " << ifab2pq << endl;

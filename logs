@@ -631,8 +631,7 @@
 
  * Reduce CPU memory usage:
    - mintoring CPU usage using tcmalloc [DONE@2024/12/10]
-	
-   - outcore option for comb to save CPU memory?
+   - outcore option for comb to save CPU memory? [DONE@2024/12/12]
       - during oper_env [DONE@2024/12/08]
       - during sweep [DONE@2024/12/08]
       - test for fe8s7 with d=10000
@@ -646,6 +645,7 @@
       - large-scale test on jiageng?
 
 	- accelerate AB2PQ:
+      - alg_a2b, alg_b2q = 2;
       - save CPU and GPU memory?
       - use gpu/nccl to perform communication?
       - adjust the switch position via a function?

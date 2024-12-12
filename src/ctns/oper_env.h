@@ -232,9 +232,10 @@ namespace ctns{
                   timing_sweep.accumulate(timing, "sweep oper_env", schd.ctns.verbose>0);
                }
                // stop just for debug
-               if(idx==schd.ctns.maxidx){
+               if(idx == schd.ctns.maxidx){
                   qops_pool.finalize();
-                  tools::exit("exit for debug oper_env");
+                  if(rank == 0) std::cout << "exit for debug oper_env" << std::endl;
+                  exit(1);
                }
             }
          } // idx

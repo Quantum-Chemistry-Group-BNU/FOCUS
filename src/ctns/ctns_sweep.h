@@ -124,9 +124,10 @@ namespace ctns{
                   get_cpumem_status(rank, schd.ctns.verbose>1);
                }
                // stop just for debug
-               if(isweep==schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
-                  qops_pool.finalize(); 
-                  tools::exit("exit for debug sweep_opt");
+               if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond){
+                  qops_pool.finalize();
+                  if(rank == 0) std::cout << "exit for debug sweep_opt" << std::endl;
+                  exit(1);
                }
             } // ibond
             if(debug){

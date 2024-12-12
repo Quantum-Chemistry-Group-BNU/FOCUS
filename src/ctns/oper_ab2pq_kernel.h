@@ -9,7 +9,7 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
-            const int alg_ab2pq){
+            const int alg_a2p){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -22,7 +22,7 @@ namespace ctns{
          if(ifkr){
             tools::exit("error: oper_a2p does not support ifkr=true!");
          }else{
-            if(alg_ab2pq == 0){
+            if(alg_a2p == 0){
 
                // loop over all A
                auto aindex = oper_index_opA(qops.cindex, qops.ifkr, qops.isym);
@@ -71,7 +71,7 @@ namespace ctns{
                   tcomp += tools::get_duration(t1-t0);
                } // isr
 
-            }else if(alg_ab2pq == 1){
+            }else if(alg_a2p == 1){
 
                // loop over rank
                for(int iproc=0; iproc<size; iproc++){
@@ -165,8 +165,12 @@ namespace ctns{
                   } // p
                } // iproc
 
-            } // alg_ab2pq
+            }else{
+               std::cout << "error: no such option for alg_a2p=" << alg_a2p << std::endl;
+               exit(1);
+            } // alg_a2p 
             auto t_end = tools::get_time();
+
             if(rank == 0){
                double t_tot = tools::get_duration(t_end-t_start);
                double trest = t_tot - tadjt - tcomm - tcomp;
@@ -183,7 +187,7 @@ namespace ctns{
             const integral::two_body<Tm>& int2e,
             const qoper_dict<Qm::ifabelian,Tm>& qops,
             qoper_dict<Qm::ifabelian,Tm>& qops2,
-            const int alg_ab2pq){
+            const int alg_b2q){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
@@ -197,7 +201,7 @@ namespace ctns{
             tools::exit("error: oper_a2p does not support ifkr=true!");
          }else{
             assert(qops.ifhermi);
-            if(alg_ab2pq == 0){
+            if(alg_b2q == 0){
 
                // loop over all B
                auto bindex = oper_index_opB(qops.cindex, qops.ifkr, qops.isym, qops.ifhermi);
@@ -252,7 +256,7 @@ namespace ctns{
                   tcomp += tools::get_duration(t1-t0);
                } // iqr
 
-            }else if(alg_ab2pq == 1){
+            }else if(alg_b2q == 1){
 
                // loop over rank
                for(int iproc=0; iproc<size; iproc++){
@@ -438,8 +442,12 @@ namespace ctns{
                   } // b
                } // iproc
 
-            } // alg_ab2pq
+            }else{
+               std::cout << "error: no such option for alg_b2q=" << alg_b2q << std::endl;
+               exit(1);
+            } // alg_b2q 
             auto t_end = tools::get_time();
+
             if(rank == 0){
                double t_tot = tools::get_duration(t_end-t_start);
                double trest = t_tot - tadjt - tcomm - tcomp;

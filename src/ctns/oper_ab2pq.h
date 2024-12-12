@@ -79,15 +79,15 @@ namespace ctns{
          bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
             (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
          if(!ab2pq) return;
-         const int alg_ab2pq = schd.ctns.alg_ab2pq;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
             std::cout << "ctns::oper_ab2pq coord=" << pcoord
                << " superblock=" << superblock
                << " ab2pq=" << ab2pq
-               << " alg_ab2pq=" << alg_ab2pq
                << " alg_renorm=" << alg_renorm
+               << " alg_a2p=" << schd.ctns.alg_a2p
+               << " alg_b2q=" << schd.ctns.alg_b2q
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -113,23 +113,18 @@ namespace ctns{
          auto ta = tools::get_time();
 
          // 1. copy CSH
-         for(const auto key : "CSH"){
-            size_t totsize = 0, offset = 0, idx = 0;
-            for(int p : qops.oper_index_op(key)){
-               totsize += qops(key).at(p).size();
-               if(idx == 0) offset = qops._offset.at(std::make_pair(key,p));
-               idx += 1; 
-            }
-            linalg::xcopy(totsize, qops._data+offset, qops2._data+offset);
+         std::string opseq = "CSH";
+         for(const auto& key : opseq){
+            linalg::xcopy(qops.size_ops(key), qops.ptr_ops(key), qops2.ptr_ops(key));
          }
          auto tb = tools::get_time();
 
          // 2. transform A to P
-         oper_a2p(icomb, int2e, qops, qops2, alg_ab2pq);
+         oper_a2p(icomb, int2e, qops, qops2, schd.ctns.alg_a2p);
          auto tc = tools::get_time();
 
          // 3. transform B to Q
-         oper_b2q(icomb, int2e, qops, qops2, alg_ab2pq);
+         oper_b2q(icomb, int2e, qops, qops2, schd.ctns.alg_b2q);
          auto td = tools::get_time();
 
          // 4. to gpu (if necessary)
