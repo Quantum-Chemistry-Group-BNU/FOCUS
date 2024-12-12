@@ -109,6 +109,7 @@ FOCUS/extlibs/gperftools (optional, if use tcmalloc)
 `gperftools <https://github.com/gperftools/gperftools>`_ for using tcmalloc to monitor memory usage
 
 .. code-block::
+
    ./autogen.sh
    ./configure prefix=XXX
    make -j
