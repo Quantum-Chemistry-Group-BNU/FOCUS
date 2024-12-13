@@ -211,6 +211,16 @@ namespace ctns{
                      cqops, rqops, qops_pool[frop], fname, timing, fmmtask);
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
+
+               qops_pool.clear_from_memory({fneed[0],fneed[1]}, {});
+               timing.tf14 = tools::get_time();
+               
+               if(schd.ctns.ifab2pq){
+                  const int nsite = icomb.get_nphysical();
+                  const bool ifmps = icomb.topo.ifmps;
+                  const bool ab2pq_current = get_ab2pq_current(superblock, ifmps, nsite, pcoord, schd.ctns.ifab2pq, 2);
+                  if(ab2pq_current) oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops_pool[frop]);
+               }
                timing.tf = tools::get_time();
                
                // ZL@2024/12/08

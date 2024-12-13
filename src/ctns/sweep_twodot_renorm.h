@@ -73,6 +73,7 @@ namespace ctns{
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
          }
+         std::string superblock2;
          if(superblock == "lc1"){
             icomb.sites[pdx] = rot.split_lc(wf.info.qrow, wf.info.qmid);
             //-------------------------------------------------------------------
@@ -84,8 +85,10 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
+            superblock2 = "lc";
             oper_renorm("lc", icomb, pcoord, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
+            qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -97,8 +100,10 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
+            superblock2 = "cr";
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing, fmmtask);
+            qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
          }else if(superblock == "lr"){
             assert(Qm::ifabelian);
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
@@ -111,8 +116,10 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
+            superblock2 = "lr";
             oper_renorm("lr", icomb, pcoord, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing, fmmtask); 
+            qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
          }else if(superblock == "c1c2"){
             assert(Qm::ifabelian);
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
@@ -125,9 +132,18 @@ namespace ctns{
             }
             //-------------------------------------------------------------------
             qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
+            superblock2 = "cr";
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
+            qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
          } // superblock      
+
+         if(schd.ctns.ifab2pq){
+            const int nsite = icomb.get_nphysical();
+            const bool ifmps = icomb.topo.ifmps;
+            const bool ab2pq_current = get_ab2pq_current(superblock2, ifmps, nsite, pcoord, schd.ctns.ifab2pq, 2);
+            if(ab2pq_current) oper_ab2pq(superblock2, icomb, pcoord, int2e, schd, qops);
+         }
       }
 
 } // ctns

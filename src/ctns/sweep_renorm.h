@@ -213,7 +213,6 @@ namespace ctns{
 
             // initialization of qops inside
             preprocess_renorm(qops._data, site._data, site2._data, size, rank, qops._size, blksize, Rlst, opaddr);
-            timing.tf9 = tools::get_time();
 
          }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 
@@ -278,7 +277,6 @@ namespace ctns{
                   }
                }
             } // blksize>0
-            timing.tf9 = tools::get_time();
 
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
@@ -410,13 +408,13 @@ namespace ctns{
                   }
                }
             } // blksize>0
-            timing.tf9 = tools::get_time();
 #endif // GPU
 
          }else{
             std::cout << "error: no such option for alg_renorm=" << alg_renorm << std::endl;
             exit(1);
          } // alg_renorm
+         timing.tf9 = tools::get_time();
       }
 
    // finalize

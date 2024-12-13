@@ -59,38 +59,48 @@ namespace ctns{
       return oplist;
    }
 
+   inline bool get_ab2pq_current(const std::string superblock,
+         const bool ifmps,
+         const int nsite,
+         const comb_coord& pcoord,
+         const bool ifab2pq,
+         const int ndots){
+      int psite = pcoord.first;
+      int pos = get_ab2pq_pos(nsite);
+      bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
+         (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
+      return ifab2pq and ifmps and ab2pq;
+   }
+
    template <typename Qm, typename Tm>
       void oper_ab2pq(const std::string superblock,
             const comb<Qm,Tm>& icomb,
             const comb_coord& pcoord,
             const integral::two_body<Tm>& int2e,
             const input::schedule& schd,
-            qoper_dict<Qm::ifabelian,Tm>& qops,
-            const int ndots=2){
+            qoper_dict<Qm::ifabelian,Tm>& qops){
          int size = 1, rank = 0;
 #ifndef SERIAL
          size = icomb.world.size();
          rank = icomb.world.rank();
 #endif
-         assert(icomb.topo.ifmps);
-         int nsite = icomb.get_nphysical();
-         int psite = pcoord.first;
-         int pos = get_ab2pq_pos(nsite);
-         bool ab2pq = (superblock=="cr" and psite==pos) or // determine switch point
-            (superblock=="lc" and psite==pos-ndots); // -2 for twodot case 
-         if(!ab2pq) return;
          const int alg_renorm = schd.ctns.alg_renorm;
+         const bool ifab2pq_gpu = schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and
+            schd.ctns.alg_a2p==3 and schd.ctns.alg_b2q==3; 
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
             std::cout << "ctns::oper_ab2pq coord=" << pcoord
                << " superblock=" << superblock
-               << " ab2pq=" << ab2pq
                << " alg_renorm=" << alg_renorm
                << " alg_a2p=" << schd.ctns.alg_a2p
                << " alg_b2q=" << schd.ctns.alg_b2q
                << std::endl;
          }
          auto t0 = tools::get_time();
+
+         double tinit = 0.0, tcopy = 0.0;
+         double ta2p = 0.0, tb2q = 0.0;
+         double tgpu = 0.0, tmove = 0.0;
 
          // 0. initialization: for simplicity, we perform the transformation on CPU
          qoper_dict<Qm::ifabelian,Tm> qops2;
@@ -111,48 +121,56 @@ namespace ctns{
             get_cpumem_status(rank);
          }
          auto ta = tools::get_time();
+         tinit = tools::get_duration(ta-t0);
 
-         // 1. copy CSH
-         std::string opseq = "CSH";
-         for(const auto& key : opseq){
-            linalg::xcopy(qops.size_ops(key), qops.ptr_ops(key), qops2.ptr_ops(key));
-         }
-         auto tb = tools::get_time();
+         if(!ifab2pq_gpu){
 
-         // 2. transform A to P
-         oper_a2p(icomb, int2e, qops, qops2, schd.ctns.alg_a2p);
-         auto tc = tools::get_time();
+            // 1. copy CSH
+            std::string opseq = "CSH";
+            for(const auto& key : opseq){
+               linalg::xcopy(qops.size_ops(key), qops.ptr_ops(key), qops2.ptr_ops(key));
+            }
+            auto tb = tools::get_time();
+            tcopy = tools::get_duration(tb-ta);
 
-         // 3. transform B to Q
-         oper_b2q(icomb, int2e, qops, qops2, schd.ctns.alg_b2q);
-         auto td = tools::get_time();
+            // 2. transform A to P
+            oper_a2p(icomb, int2e, qops, qops2, schd.ctns.alg_a2p);
+            auto tc = tools::get_time();
+            ta2p = tools::get_duration(tc-tb);
 
-         // 4. to gpu (if necessary)
+            // 3. transform B to Q
+            oper_b2q(icomb, int2e, qops, qops2, schd.ctns.alg_b2q);
+            auto td = tools::get_time();
+            tb2q = tools::get_duration(td-tc);
+
 #ifdef GPU
-         if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
-            // deallocate qops on GPU
-            qops.clear_gpu();
-            // allocate qops on GPU
-            qops2.allocate_gpu();
-            qops2.to_gpu();
-         }
+            // 4. to gpu (if necessary)
+            if(alg_renorm > 10){
+               qops.clear_gpu(); // deallocate qops on GPU
+               qops2.allocate_gpu(); // allocate qops on GPU
+               qops2.to_gpu();
+            }
 #endif
-         auto te = tools::get_time();
+            auto te = tools::get_time();
+            tgpu = tools::get_duration(te-td);
 
-         // 5. move
-         qops = std::move(qops2);
+            // 5. move
+            qops = std::move(qops2);
+            auto tf = tools::get_time();
+            tmove = tools::get_duration(tf-te);
+
+         }else{
+
+            std::cout << "not implemented yet!" << std::endl;
+            exit(1);
+
+         } // ifab2pq_gpu
 
          if(debug){
             auto t1 = tools::get_time();
-            double tinit = tools::get_duration(ta-t0);
-            double tcomm = tools::get_duration(tb-ta);
-            double tp = tools::get_duration(tc-tb);
-            double tq = tools::get_duration(td-tc);
-            double tgpu = tools::get_duration(te-td);
-            double tmove = tools::get_duration(t1-te);
             std::cout << "----- TIMING FOR oper_ab2pq : " << tools::get_duration(t1-t0) << " S"
                << " T(init/copyCSH/opP/opQ/to_gpu/move)=" << tinit << "," 
-               << tcomm << "," << tp << "," << tq << "," << tgpu << "," << tmove << " -----"
+               << tcopy << "," << ta2p << "," << tb2q << "," << tgpu << "," << tmove << " -----"
                << std::endl;
          }
       }

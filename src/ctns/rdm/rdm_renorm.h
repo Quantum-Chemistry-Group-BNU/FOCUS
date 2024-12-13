@@ -2,6 +2,7 @@
 #define RDM_RENORM_H
 
 #include "../sweep_renorm.h"
+#include "../../core/mem_status.h"
 
 namespace ctns{
 
@@ -108,6 +109,7 @@ namespace ctns{
          qops.init();
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
+            get_cpumem_status(rank);
          }
       
          // 1. kernel for renormalization
@@ -118,24 +120,26 @@ namespace ctns{
          const bool skipId = false;
          Renorm.kernel(superblock, is_same, skipId, icomb.topo.ifmps, site, site2,
                qops1, qops2, qops, int2e, schd, size, rank, maxthreads, timing, fname, fmmtask);
+         
+         Renorm.finalize();
          timing.tf10 = tools::get_time();
-
+         timing.tf11 = tools::get_time();
+         
 #ifdef GPU
          // send back to CPU
          if(alg_renorm>10) qops.to_cpu();
 #endif
-         timing.tf11 = tools::get_time();
-
-         Renorm.finalize();
          timing.tf12 = tools::get_time();
-
          timing.tf13 = tools::get_time();
+
+         timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-            double t_tot = tools::get_duration(timing.tf13-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf14-timing.tf0); 
             std::cout << "----- TIMING FOR rdm_renorm : " << t_tot << " S" 
                << " rank=" << rank << " -----"
                << std::endl;
+            get_cpumem_status(rank);
          }
       }
 
