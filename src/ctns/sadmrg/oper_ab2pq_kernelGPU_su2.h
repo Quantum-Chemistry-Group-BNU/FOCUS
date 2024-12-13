@@ -215,13 +215,13 @@ namespace ctns{
             for(int idx=0; idx<bindex_iproc.size(); idx++){
                auto iqr = bindex_iproc[idx];
                // copy opB from gpu to cpu
-               size_t opB_offset = qops._offset.at(std::make_pair('B',iqr));
-               const Tm* ptr_opB_gpu = qops._dev_data + opB_offset;
-               Tm* ptr_opB_cpu = qops._data + opB_offset;
-               size_t size = qops('B').at(iqr).size()*sizeof(Tm);
+               size_t opB_offset = qops_tmp._offset.at(std::make_pair('B',iqr));
+               const Tm* ptr_opB_gpu = qops_tmp._dev_data + opB_offset;
+               Tm* ptr_opB_cpu = qops_tmp._data + opB_offset;
+               size_t size = qops_tmp('B').at(iqr).size()*sizeof(Tm);
                CUDA_CHECK(cudaMemcpy(ptr_opB_cpu, ptr_opB_gpu, size, cudaMemcpyDeviceToHost));
                // HermitianConjugate on CPU 
-               HermitianConjugate(qops('B').at(iqr), qops_tmp('N')[iqr], true);
+               HermitianConjugate(qops_tmp('B').at(iqr), qops_tmp('N')[iqr], true);
                // copy opM from cpu to gpu 
                size_t opN_offset = qops_tmp._offset.at(std::make_pair('N',iqr));
                const Tm* ptr_opN_cpu = qops_tmp._data + opN_offset;
