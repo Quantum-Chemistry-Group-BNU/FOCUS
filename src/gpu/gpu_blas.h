@@ -59,6 +59,38 @@ namespace linalg{
       }
    }
 
+   inline void xgemm_gpu(const char* TRANSA, const char* TRANSB,
+         const MKL_INT M, const MKL_INT N, const MKL_INT K,
+         const double alpha, const double* A, const MKL_INT LDA, 
+         const double* B, const MKL_INT LDB,
+         const double beta, double* C, const MKL_INT LDC){
+      cublasOperation_t trans_a = (TRANSA[0]=='T' || TRANSA[0]=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
+      cublasOperation_t trans_b = (TRANSB[0]=='T' || TRANSB[0]=='C')? CUBLAS_OP_T : CUBLAS_OP_N;
+      CUBLAS_CHECK(cublasDgemm(handle_cublas, trans_a, trans_b,
+              M, N, K, &alpha, A, LDA, B, LDB, &beta, C, LDA)); 
+   }
+   inline void xgemm_gpu(const char* TRANSA, const char* TRANSB, 
+         const MKL_INT M, const MKL_INT N, const MKL_INT K,
+         const std::complex<double> alpha, const std::complex<double>* A, const MKL_INT LDA, 
+         const std::complex<double>* B, const MKL_INT LDB,
+         const std::complex<double> beta, std::complex<double>* C, const MKL_INT LDC){
+      cublasOperation_t trans_a = CUBLAS_OP_N;
+      if(TRANSA[0] == 'T'){
+         trans_a = CUBLAS_OP_T;
+      }else if(TRANSA[0] == 'C'){
+         trans_a = CUBLAS_OP_C;
+      }
+      cublasOperation_t trans_b = CUBLAS_OP_N;
+      if(TRANSB[0] == 'T'){
+         trans_b = CUBLAS_OP_T;
+      }else if(TRANSB[0] == 'C'){
+         trans_b = CUBLAS_OP_C;
+      }
+      CUBLAS_CHECK(cublasZgemm(handle_cublas, trans_a, trans_b,
+              M, N, K, (cuDoubleComplex *)&alpha, (cuDoubleComplex *)A, LDA, 
+              (cuDoubleComplex *)B, LDB, (cuDoubleComplex *)&beta, (cuDoubleComplex *)C, LDA)); 
+   }
+
 /*
    // y = alpha*A*x + beta*y
    inline void xgemv_magma(const char* TRANSA, const MKL_INT M, const MKL_INT N,

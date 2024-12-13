@@ -293,6 +293,9 @@ namespace ctns{
                tcomp += tools::get_duration(t1z-t0z);
             } // iproc
 
+         }else if(alg_a2p == 3){
+            std::cout << "error: alg_a2p=3 should be used with alg_renorm>10 and ifnccl=true!" << std::endl;
+            exit(1);  
          }else{
             std::cout << "error: no such option for alg_a2p=" << alg_a2p << std::endl;
             exit(1);
@@ -661,6 +664,9 @@ namespace ctns{
                tcomp += tools::get_duration(t1z-t0z);
             } // iproc
 
+         }else if(alg_b2q == 3){
+            std::cout << "error: alg_b2q=3 should be used with alg_renorm>10 and ifnccl=true!" << std::endl;
+            exit(1);  
          }else{
             std::cout << "error: no such option for alg_b2q=" << alg_b2q << std::endl;
             exit(1);

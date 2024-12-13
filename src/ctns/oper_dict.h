@@ -94,7 +94,6 @@ namespace ctns{
                   _indexmap = std::move(st._indexmap);
                   _sizes = std::move(st._sizes);
                   _opoff = std::move(st._opoff);
-                  _size = st._size;
                   _opsize = st._opsize;
                   delete[] _data;
                   _data = st._data;
@@ -104,6 +103,8 @@ namespace ctns{
 #endif
                   _dev_data = st._dev_data;
                   st._dev_data = nullptr;
+                  // put it after deallocate to make the deallocate correct!
+                  _size = st._size;
                }
                return *this;
             }
@@ -160,6 +161,15 @@ namespace ctns{
                   return _data + _opoff.at(key);
                }
             }
+#ifdef GPU
+            Tm* ptr_ops_gpu(const char key) const{
+               if(this->num_ops(key) == 0){
+                  return nullptr;
+               }else{
+                  return _dev_data + _opoff.at(key);
+               }
+            }
+#endif
             // return qindexmap for certain type of op
             const qindexmap& indexmap(const char key) const{
                assert(this->num_ops(key) > 0);

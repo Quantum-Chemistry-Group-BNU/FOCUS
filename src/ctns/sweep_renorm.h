@@ -283,7 +283,7 @@ namespace ctns{
 
             // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
 
-            // initialization of qops
+            // initialization of qops on gpu
             qops.allocate_gpu(true);
             size_t opertot = qops1.size() + qops2.size() + qops.size();
             size_t gpumem_oper = sizeof(Tm)*opertot;

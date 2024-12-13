@@ -3,6 +3,11 @@
 
 #include "oper_ab2pq_kernel.h"
 #include "sadmrg/oper_ab2pq_kernel_su2.h"
+#ifdef GPU
+#include "../gpu/gpu_blas.h"
+#include "oper_ab2pq_kernelGPU.h"
+#include "sadmrg/oper_ab2pq_kernelGPU_su2.h"
+#endif
 
 namespace ctns{
 
@@ -85,7 +90,7 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif
          const int alg_renorm = schd.ctns.alg_renorm;
-         const bool ifab2pq_gpu = schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and
+         const bool ifab2pq_gpunccl = schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and
             schd.ctns.alg_a2p==3 and schd.ctns.alg_b2q==3; 
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
@@ -94,13 +99,14 @@ namespace ctns{
                << " alg_renorm=" << alg_renorm
                << " alg_a2p=" << schd.ctns.alg_a2p
                << " alg_b2q=" << schd.ctns.alg_b2q
+               << " ifab2pq_gpunccl=" << ifab2pq_gpunccl
                << std::endl;
          }
          auto t0 = tools::get_time();
 
          double tinit = 0.0, tcopy = 0.0;
          double ta2p = 0.0, tb2q = 0.0;
-         double tgpu = 0.0, tmove = 0.0;
+         double t2gpu = 0.0, t2cpu = 0.0, tmove = 0.0;
 
          // 0. initialization: for simplicity, we perform the transformation on CPU
          qoper_dict<Qm::ifabelian,Tm> qops2;
@@ -115,15 +121,18 @@ namespace ctns{
          qops2.mpisize = size;
          qops2.mpirank = rank;
          qops2.ifdist2 = true;
-         qops2.init(true);
+         qops2.init();
          if(debug){
             qops2.print("qops2", schd.ctns.verbose-1);
             get_cpumem_status(rank);
          }
-         auto ta = tools::get_time();
-         tinit = tools::get_duration(ta-t0);
 
-         if(!ifab2pq_gpu){
+         if(!ifab2pq_gpunccl){
+         
+            // 0. initialization
+            memset(qops2._data, 0, qops2._size*sizeof(Tm));
+            auto ta = tools::get_time();
+            tinit = tools::get_duration(ta-t0);
 
             // 1. copy CSH
             std::string opseq = "CSH";
@@ -146,13 +155,12 @@ namespace ctns{
 #ifdef GPU
             // 4. to gpu (if necessary)
             if(alg_renorm > 10){
-               qops.clear_gpu(); // deallocate qops on GPU
                qops2.allocate_gpu(); // allocate qops on GPU
                qops2.to_gpu();
             }
 #endif
             auto te = tools::get_time();
-            tgpu = tools::get_duration(te-td);
+            t2gpu = tools::get_duration(te-td);
 
             // 5. move
             qops = std::move(qops2);
@@ -161,16 +169,49 @@ namespace ctns{
 
          }else{
 
-            std::cout << "not implemented yet!" << std::endl;
-            exit(1);
+#if defined(GPU) && defined(NCCL)
+            // 0. initialization of qops on gpu
+            qops2.allocate_gpu(true);
+            auto ta = tools::get_time();
+            tinit = tools::get_duration(ta-t0);
+           
+            // 1. copy CSH
+            std::string opseq = "CSH";
+            for(const auto& key : opseq){
+               linalg::xcopy_gpu(qops.size_ops(key), qops.ptr_ops_gpu(key), qops2.ptr_ops_gpu(key));
+            }
+            auto tb = tools::get_time();
+            tcopy = tools::get_duration(tb-ta);
 
-         } // ifab2pq_gpu
+            // 2. transform A to P
+            oper_a2pGPU(icomb, int2e, qops, qops2, schd.ctns.alg_a2p);
+            auto tc = tools::get_time();
+            ta2p = tools::get_duration(tc-tb);
+
+            // 3. transform B to Q
+            oper_b2qGPU(icomb, int2e, qops, qops2, schd.ctns.alg_b2q);
+            auto td = tools::get_time();
+            tb2q = tools::get_duration(td-tc);
+            
+            // 4. to cpu
+            qops2.to_cpu();
+            auto te = tools::get_time();
+            t2cpu = tools::get_duration(te-td);
+
+            // 5. move
+            qops = std::move(qops2);
+            auto tf = tools::get_time();
+            tmove = tools::get_duration(tf-te);
+#else
+            tools::exit("error: gpu-nccl version is not enabled!");
+#endif
+         } // ifab2pq_gpunccl
 
          if(debug){
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_ab2pq : " << tools::get_duration(t1-t0) << " S"
-               << " T(init/copyCSH/opP/opQ/to_gpu/move)=" << tinit << "," 
-               << tcopy << "," << ta2p << "," << tb2q << "," << tgpu << "," << tmove << " -----"
+               << " T(init/copyCSH/opP/opQ/to_gpu/to_cpu/move)=" << tinit << "," 
+               << tcopy << "," << ta2p << "," << tb2q << "," << t2gpu << "," << t2cpu << "," << tmove << " -----"
                << std::endl;
          }
       }

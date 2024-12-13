@@ -130,10 +130,10 @@ namespace ctns{
          timing.tf11 = tools::get_time();
 
          // check whether perform ab2pq transformation
-         bool ifab2pq_gpu = ab2pq_current and 
+         bool ifab2pq_gpunccl = ab2pq_current and 
             schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and 
             schd.ctns.alg_a2p==3 and schd.ctns.alg_b2q==3;
-         if(!ifab2pq_gpu){
+         if(!ifab2pq_gpunccl){
 
 #ifdef GPU
             // 3. send back to CPU
@@ -269,7 +269,7 @@ namespace ctns{
                }
             } // end of consistency check
 
-         } // ifab2pq_gpu
+         } // ifab2pq_gpunccl
 
          timing.tf13 = tools::get_time();
          if(debug){
