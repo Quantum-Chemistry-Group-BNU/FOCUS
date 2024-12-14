@@ -52,6 +52,7 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
             icomb.display_size();
+	    get_gpumem_status(rank);
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
@@ -82,6 +83,7 @@ namespace ctns{
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
 
          // 1.5 look ahead for the next dbond
@@ -97,7 +99,10 @@ namespace ctns{
             }
             qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
-            if(debug) get_cpumem_status(rank);
+            if(debug){
+	       get_cpumem_status(rank);
+	       get_gpumem_status(rank);
+	    }
          }
          timing.ta = tools::get_time();
 
@@ -211,6 +216,7 @@ namespace ctns{
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
          timing.tc = tools::get_time();
 
@@ -226,6 +232,7 @@ namespace ctns{
          timing.t1 = tools::get_time();
          if(debug){
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
             timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }

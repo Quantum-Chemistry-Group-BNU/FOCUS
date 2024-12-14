@@ -108,6 +108,7 @@ namespace ctns{
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
 
          // 1. kernel for renormalization

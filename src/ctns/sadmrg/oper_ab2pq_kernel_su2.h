@@ -326,7 +326,7 @@ namespace ctns{
 
          if(rank == 0){
             double t_tot = tools::get_duration(t_end-t_start);
-            double trest = t_tot - tadjt - tcomm - tcomp;
+            double trest = t_tot - tinit - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_a2p(su2) : " << t_tot << " S"
                << " T(init/adjt/bcast/comp/rest)=" << tinit << ","
 	       << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
@@ -597,7 +597,8 @@ namespace ctns{
 	       tinit += tools::get_duration(t1i-t0i);
 	       taccum += tools::get_duration(t1i-t0i);
 	       if(rank == 0){
-	          std::cout << "iproc=" << iproc << " init qops_tmp: t=" << tools::get_duration(t1i-t0i)
+	          std::cout << "iproc=" << iproc << std::endl;
+		  std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
 	              << " tinit=" << tinit << " taccum=" << taccum << std::endl;
 	       } 
 
@@ -650,6 +651,7 @@ namespace ctns{
                   auto iqr = bindex_iproc[idx];
                   HermitianConjugate(qops_tmp('B').at(iqr), qops_tmp('N')[iqr], true);
                }
+               icomb.world.barrier();
                auto t1y = tools::get_time();
                tadjt += tools::get_duration(t1y-t0y);
                taccum += tools::get_duration(t1y-t0y);
@@ -723,7 +725,7 @@ namespace ctns{
 
          if(rank == 0){
             double t_tot = tools::get_duration(t_end-t_start);
-            double trest = t_tot - tadjt - tcomm - tcomp;
+            double trest = t_tot - tinit - tcopy - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_b2q(su2) : " << t_tot << " S"
                << " T(init/copy/adjt/bcast/comp/rest)=" << tinit << "," << tcopy << ","
 	       << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  

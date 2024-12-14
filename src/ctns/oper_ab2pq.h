@@ -125,6 +125,7 @@ namespace ctns{
          if(debug){
             qops2.print("qops2", schd.ctns.verbose-1);
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
 
          if(!ifab2pq_gpunccl){
@@ -225,6 +226,8 @@ namespace ctns{
                << " T(init/copyCSH/opP/opQ/to_gpu/to_cpu/move)=" << tinit << "," 
                << tcopy << "," << ta2p << "," << tb2q << "," << t2gpu << "," << t2cpu << "," << tmove << " -----"
                << std::endl;
+	    get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
       }
 

@@ -28,6 +28,7 @@ namespace ctns{
          if(debug){ 
             std::cout << "\nctns::sweep_opt maxsweep=" << schd.ctns.maxsweep << std::endl;
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
          auto t0 = tools::get_time();
 
@@ -94,6 +95,7 @@ namespace ctns{
                      << std::endl;
                   std::cout << tools::line_separator << std::endl;
                   get_cpumem_status(rank);
+	    	  get_gpumem_status(rank);
                }
                const int pdx = icomb.topo.rindex.at(dbond.get_current());
                const int ndx = icomb.topo.rindex.at(dbond.get_next());
@@ -122,6 +124,7 @@ namespace ctns{
                   sweeps.timing_sweep[isweep].accumulate(timing, "sweep opt", schd.ctns.verbose>0);
                   timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
                   get_cpumem_status(rank, schd.ctns.verbose>1);
+	    	  get_gpumem_status(rank);
                }
                // stop just for debug
                if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond){
@@ -138,6 +141,7 @@ namespace ctns{
                sweeps.t_red[isweep]   = oper_timer.sigma.t_red_tot   + oper_timer.renorm.t_red_tot;
                sweeps.summary(isweep, size);
                get_cpumem_status(rank, schd.ctns.verbose>1);
+	       get_gpumem_status(rank);
             }
           
             // finalize: load all sites, as they will be save and checked in sweep_final 
@@ -168,6 +172,7 @@ namespace ctns{
             auto t1 = tools::get_time();
             tools::timing("ctns::sweep_opt", t0, t1);
             get_cpumem_status(rank, schd.ctns.verbose>1);
+	    get_gpumem_status(rank);
          }
          return sweeps;
       }

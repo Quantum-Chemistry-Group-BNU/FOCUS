@@ -20,7 +20,7 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif
          auto t_start = tools::get_time();
-         double tinit = 0.0, tadjt = 0.0, tcomm = 0.0, tcomp = 0.0;
+         double tinit = 0.0, tadjt = 0.0, tcomm = 0.0, tcomp = 0.0, taccum = 0.0;
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
          assert(ifkr);
@@ -31,6 +31,7 @@ namespace ctns{
          cudaStreamCreate(&stream);
 
          // loop over rank
+	 icomb.world.barrier();
          for(int iproc=0; iproc<size; iproc++){
             auto aindex_iproc = oper_index_opA_dist(qops.cindex, qops.ifkr, qops.isym, size, iproc, qops.sorb);
             if(aindex_iproc.size() == 0) continue;
@@ -55,10 +56,12 @@ namespace ctns{
 	    icomb.world.barrier();
 	    auto t1i = tools::get_time();
 	    tinit += tools::get_duration(t1i-t0i);
+	    taccum += tools::get_duration(t1i-t0i);
 	    if(rank == 0){
-	        std::cout << "iproc=" << iproc << " init qops_tmp: t=" << tools::get_duration(t1i-t0i)
-		   << " tinit=" << tinit << std::endl;
-	    }	
+	        std::cout << "iproc=" << iproc << std::endl;
+		std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
+		   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
+	    }
 
             // convert opA to opA.H()
             auto t0x = tools::get_time();
@@ -85,9 +88,10 @@ namespace ctns{
 	    icomb.world.barrier();
             auto t1x = tools::get_time();
             tadjt += tools::get_duration(t1x-t0x);
+	    taccum += tools::get_duration(t1x-t0x);
             if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
                     << " t=" <<  tools::get_duration(t1x-t0x)
-                    << " tadjt=" << tadjt << std::endl;
+                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
             
 #ifndef SERIAL
 	    // broadcast opA.H()
@@ -99,11 +103,13 @@ namespace ctns{
 	    auto t1b = tools::get_time();
             double tbcast = tools::get_duration(t1b-t0b);
             tcomm += tbcast;
+	    taccum += tbcast;
             if(rank == 0){
                size_t data_size = qops_tmp.size_ops('M');
                std::cout << "   bcast: size(opA)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                   << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-	          << " tcomm=" << tcomm << std::endl;
+	          << " tcomm=" << tcomm << " taccum=" << taccum
+		  << std::endl;
             }
 #endif
 
@@ -140,8 +146,9 @@ namespace ctns{
             } // amap
 	    auto t1z = tools::get_time();
             tcomp += tools::get_duration(t1z-t0z);
+            taccum += tools::get_duration(t1z-t0z);
 	    if(rank == 0) std::cout << "   compute opP from opA: t=" << tools::get_duration(t1z-t0z) 
-		    << " tcomp=" << tcomp << std::endl;
+		    << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
          } // iproc
 
          // Clean up
@@ -170,7 +177,7 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif
          auto t_start = tools::get_time();
-         double tinit = 0.0, tcopy = 0.0, tadjt = 0.0, tcomm = 0.0, tcomp = 0.0;
+         double tinit = 0.0, tcopy = 0.0, tadjt = 0.0, tcomm = 0.0, tcomp = 0.0, taccum = 0.0;
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
          assert(ifkr);
@@ -182,6 +189,7 @@ namespace ctns{
          cudaStreamCreate(&stream);
 
          // loop over rank
+         icomb.world.barrier();
          for(int iproc=0; iproc<size; iproc++){
             auto bindex_iproc = oper_index_opB_dist(qops.cindex, qops.ifkr, qops.isym, size, iproc, qops.sorb); 
             if(bindex_iproc.size() == 0) continue;
@@ -206,9 +214,11 @@ namespace ctns{
 	    icomb.world.barrier();
 	    auto t1i = tools::get_time();
 	    tinit += tools::get_duration(t1i-t0i);
+	    taccum += tools::get_duration(t1i-t0i);
 	    if(rank == 0){
-	       std::cout << "iproc=" << iproc << " init qops_tmp: t=" << tools::get_duration(t1i-t0i)
-		   << " tinit=" << tinit << std::endl;
+	       std::cout << "iproc=" << iproc << std::endl;
+	       std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
+		   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
 	    } 
 
             auto t0x = tools::get_time();
@@ -218,9 +228,10 @@ namespace ctns{
 	    icomb.world.barrier();
 	    auto t1x = tools::get_time();
 	    tcopy += tools::get_duration(t1x-t0x);
+	    taccum += tools::get_duration(t1x-t0x);
 	    if(rank == 0) std::cout << "   copy opB to qops_tmps:"
 	            << " t=" <<  tools::get_duration(t1x-t0x)
-	            << " tcopy=" << tcopy << std::endl;
+	            << " tcopy=" << tcopy << " taccum=" << taccum << std::endl;
 
 #ifndef SERIAL
             auto t0b = tools::get_time();
@@ -231,11 +242,12 @@ namespace ctns{
 	    auto t1b = tools::get_time();
             double tbcast = tools::get_duration(t1b-t0b);
             tcomm += tbcast;
+	    taccum += tbcast;
             if(rank == 0){
                size_t data_size = qops_tmp.size_ops('B');
                std::cout << "   bcast: size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                   << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-	          << " tcomm=" << tcomm
+	          << " tcomm=" << tcomm << " taccum=" << taccum
                   << std::endl;
             }
 #endif
@@ -259,11 +271,13 @@ namespace ctns{
             }
             // Wait for all asynchronous operations to finish
             cudaStreamSynchronize(stream);
+            icomb.world.barrier();
             auto t1y = tools::get_time();
             tadjt += tools::get_duration(t1y-t0y);
+            taccum += tools::get_duration(t1y-t0y);
             if(rank == 0) std::cout << "   from opB to opB.H(): size=" << bindex_iproc.size()
                     << " t=" <<  tools::get_duration(t1y-t0y)
-                    << " tadjt=" << tadjt << std::endl;
+                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
 		     
             // only perform calculation if opQ is exist on the current process
             if(qops2.num_ops('Q') == 0) continue; 
@@ -325,8 +339,9 @@ namespace ctns{
             } // nmap
             auto t1z = tools::get_time();
             tcomp += tools::get_duration(t1z-t0z);
+            taccum += tools::get_duration(t1z-t0z);
 	    if(rank == 0) std::cout << "   compute opQ from opB: t=" << tools::get_duration(t1z-t0z) 
-		    << " tcomp=" << tcomp << std::endl;
+		    << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
          } // iproc
 
          // Clean up
