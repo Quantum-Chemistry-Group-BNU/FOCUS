@@ -88,7 +88,6 @@ namespace ctns{
             superblock2 = "lc";
             oper_renorm("lc", icomb, pcoord, int2e, int1e, schd,
                   lqops, c1qops, qops, fname, timing, fmmtask);
-            qops_pool.clear_from_memory({fneed[0],fneed[2]}, fneed_next);
          }else if(superblock == "c2r"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qver, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -103,7 +102,6 @@ namespace ctns{
             superblock2 = "cr";
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c2qops, rqops, qops, fname, timing, fmmtask);
-            qops_pool.clear_from_memory({fneed[1],fneed[3]}, fneed_next);
          }else if(superblock == "lr"){
             assert(Qm::ifabelian);
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
@@ -119,7 +117,6 @@ namespace ctns{
             superblock2 = "lr";
             oper_renorm("lr", icomb, pcoord, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing, fmmtask); 
-            qops_pool.clear_from_memory({fneed[0],fneed[1]}, fneed_next);
          }else if(superblock == "c1c2"){
             assert(Qm::ifabelian);
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qver);
@@ -135,8 +132,14 @@ namespace ctns{
             superblock2 = "cr";
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
-            qops_pool.clear_from_memory({fneed[2],fneed[3]}, fneed_next);
          } // superblock      
+
+	 // erase fneed to save memory
+	 qops_pool.join_and_erase(fneed, fneed_next);
+	 if(debug){
+            get_cpumem_status(rank);
+	    get_gpumem_status(rank);
+	 }
 
          if(schd.ctns.ifab2pq){
             const int nsite = icomb.get_nphysical();

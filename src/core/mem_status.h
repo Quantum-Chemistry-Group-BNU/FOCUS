@@ -122,6 +122,24 @@ inline void get_cpumem_status(const int rank, const int level=0, const std::stri
 #endif
 }
 
+#ifdef GPU
+#include "gpu/gpu_env.h"
+#include "gpu/gpu_mem.h"
+#endif
+
+inline void get_gpumem_status(const int rank, const int level=0, const std::string msg=""){
+#ifdef GPU
+   size_t avail = GPUmem.available(rank);
+   size_t used = GPUmem.used();
+   std::cout << "rank=" << rank << " GPUmem(GB):"
+      << std::scientific << std::setprecision(2)
+      << " used=" << used/std::pow(1024.0,3)
+      << " avail=" << avail/std::pow(1024.0,3)
+      << " " << msg
+      << std::endl;
+#endif
+}
+
 #ifdef SERIAL
 
 inline void mem_check(const bool ifgpu){
@@ -150,9 +168,6 @@ inline void mem_check(const bool ifgpu){
 #else
 
 #include <boost/mpi.hpp>
-#ifdef GPU
-#include "gpu/gpu_env.h"
-#endif
 
 inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
    int size = world.size();
@@ -204,9 +219,9 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
 	 if(diff > 2.0) std::cout << "WARNING: diff(GPUmem) is greater than 2GB!" << std::endl;
       }
    }
-#endif 
+#endif // GPU
 }
 
-#endif
+#endif // SERIAL
 
 #endif

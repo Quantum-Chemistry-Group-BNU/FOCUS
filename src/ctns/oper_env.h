@@ -174,7 +174,10 @@ namespace ctns{
                   std::cout << "\nidx=" << idx << " coord=" << pcoord << std::endl;
                   get_cpumem_status(rank);
                }
-               
+
+               // ZL@2024/12/08
+               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch, debug);
+
                // a. get operators from memory / disk
                std::vector<std::string> fneed(2);
                fneed[0] = icomb.topo.get_fqop(pcoord, "c", scratch);
@@ -194,9 +197,6 @@ namespace ctns{
                timing.td = timing.ta;
                timing.te = timing.ta;
                
-               // ZL@2024/12/08
-               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch, debug);
-
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, pcoord, "r");
                std::string superblock = "cr";
@@ -212,9 +212,15 @@ namespace ctns{
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
 
-               qops_pool.clear_from_memory({fneed[0],fneed[1]}, {});
+	       // c. erase fneed to save memory
+               qops_pool.join_and_erase(fneed);
+	       if(debug){
+		  get_cpumem_status(rank);
+		  get_gpumem_status(rank);
+	       }
                timing.tf14 = tools::get_time();
-               
+
+	       // d. ab2pq if necessary	       
                if(schd.ctns.ifab2pq){
                   const int nsite = icomb.get_nphysical();
                   const bool ifmps = icomb.topo.ifmps;
@@ -223,18 +229,17 @@ namespace ctns{
                }
                timing.tf = tools::get_time();
                
-               // ZL@2024/12/08
-               if(schd.ctns.ifoutcore) rcanon_clear_site(icomb, idx);
-
-               // c. save operators to disk
-               qops_pool.join_and_erase(fneed);
+               // e. save operators to disk
                qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
 
+	       // ZL@2024/12/08
+               if(schd.ctns.ifoutcore) rcanon_clear_site(icomb, idx);
+
 #ifdef TCMALLOC
-   	         release_freecpumem();
+   	       release_freecpumem();
 #endif
                if(debug){ 
                   get_cpumem_status(rank);

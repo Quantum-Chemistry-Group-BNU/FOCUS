@@ -155,7 +155,11 @@ namespace ctns{
 #ifdef GPU
             // 4. to gpu (if necessary)
             if(alg_renorm > 10){
-               qops2.allocate_gpu(); // allocate qops on GPU
+	       if(debug) get_gpumem_status(rank, 0, "before qops.clear_gpu");
+	       qops.clear_gpu(); // deallocate qops on GPU
+	       if(debug) get_gpumem_status(rank, 0, "before qops2.allocate_gpu");
+	       qops2.allocate_gpu(); // allocate qops on GPU
+	       if(debug) get_gpumem_status(rank, 0, "after qops2.allocate_gpu");
                qops2.to_gpu();
             }
 #endif
@@ -163,7 +167,15 @@ namespace ctns{
             t2gpu = tools::get_duration(te-td);
 
             // 5. move
-            qops = std::move(qops2);
+	    if(debug){
+	       get_cpumem_status(rank, 0, "before move");
+	       get_gpumem_status(rank, 0, "before move");
+	    }
+	    qops = std::move(qops2);
+	    if(debug){
+	       get_cpumem_status(rank, 0, "after move");
+	       get_gpumem_status(rank, 0, "after move");
+	    }
             auto tf = tools::get_time();
             tmove = tools::get_duration(tf-te);
 

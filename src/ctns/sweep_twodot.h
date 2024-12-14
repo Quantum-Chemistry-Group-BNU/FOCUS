@@ -213,7 +213,7 @@ namespace ctns{
          timing.tf = tools::get_time();
 
          // 4. save on disk 
-         qops_pool.cleanup_sweep(fneed, fneed_next, frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
+         qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
         
          timing.t1 = tools::get_time();
          if(debug){

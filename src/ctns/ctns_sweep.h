@@ -154,6 +154,7 @@ namespace ctns{
             if(debug){
                auto tl = tools::get_time();
                tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
+	       std::cout << std::endl;
             }
          } // isweep
          qops_pool.finalize();

@@ -89,7 +89,6 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[1]}, fneed_next);
             oper_renorm("lc", icomb, pcoord, int2e, int1e, schd,
                   lqops, cqops, qops, fname, timing, fmmtask, 1);
-            qops_pool.clear_from_memory({fneed[0], fneed[2]}, fneed_next);
          }else if(superblock == "lr"){
             icomb.sites[pdx]= rot.split_lr(wf.info.qrow, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -103,7 +102,6 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[2]}, fneed_next);
             oper_renorm("lr", icomb, pcoord, int2e, int1e, schd,
                   lqops, rqops, qops, fname, timing, fmmtask, 1);
-            qops_pool.clear_from_memory({fneed[0], fneed[1]}, fneed_next);
          }else if(superblock == "cr"){
             icomb.sites[pdx] = rot.split_cr(wf.info.qmid, wf.info.qcol);
             //-------------------------------------------------------------------
@@ -117,8 +115,14 @@ namespace ctns{
             qops_pool.clear_from_memory({fneed[0]}, fneed_next);
             oper_renorm("cr", icomb, pcoord, int2e, int1e, schd,
                   cqops, rqops, qops, fname, timing, fmmtask, 1);
-            qops_pool.clear_from_memory({fneed[1], fneed[2]}, fneed_next);
          } // superblock
+
+	 // erase fneed to save memory
+	 qops_pool.join_and_erase(fneed, fneed_next);
+	 if(debug){
+            get_cpumem_status(rank);
+	    get_gpumem_status(rank);
+	 }
 
          if(schd.ctns.ifab2pq){
             const int nsite = icomb.get_nphysical();

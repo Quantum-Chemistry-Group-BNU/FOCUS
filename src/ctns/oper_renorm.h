@@ -279,6 +279,7 @@ namespace ctns{
                << " rank=" << rank << " -----"
                << std::endl;
             get_cpumem_status(rank);
+	    get_gpumem_status(rank);
          }
       }
 
