@@ -393,6 +393,7 @@ namespace ctns{
             size_t gpumem_oper = sizeof(Tm)*opertot;
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
+		  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
@@ -406,6 +407,7 @@ namespace ctns{
             size_t gpumem_hinter = sizeof(Tm)*hinter.size();
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
+		  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,hinter)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
@@ -429,6 +431,7 @@ namespace ctns{
                size_t avail = GPUmem.available(rank);
                size_t total = used + avail;
                std::cout << "rank=" << rank
+		  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << used/std::pow(1024.0,3)
                   << " avail=" << avail/std::pow(1024.0,3) 
                   << " total=" << total/std::pow(1024.0,3) 
@@ -442,6 +445,7 @@ namespace ctns{
             dev_workspace = (Tm*)GPUmem.allocate(gpumem_dvdson+gpumem_batch);
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
+		  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,hinter,dvdson,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_hinter/std::pow(1024.0,3) 

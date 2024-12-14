@@ -99,7 +99,7 @@ inline void get_cpumem_status(const int rank, const int level=0, const std::stri
 #endif
    std::cout << "rank=" << rank
       << " CPUmem(GB):"
-      << std::scientific << std::setprecision(2)
+      << std::scientific << std::setprecision(3)
 #ifdef TCMALLOC
       << " used=" << current
       << " pageheap_free=" << (pageheap_free_bytes/std::pow(1024.0,3))
@@ -132,7 +132,7 @@ inline void get_gpumem_status(const int rank, const int level=0, const std::stri
    size_t avail = GPUmem.available(rank);
    size_t used = GPUmem.used();
    std::cout << "rank=" << rank << " GPUmem(GB):"
-      << std::scientific << std::setprecision(2)
+      << std::scientific << std::setprecision(3)
       << " used=" << used/std::pow(1024.0,3)
       << " avail=" << avail/std::pow(1024.0,3)
       << " " << msg
@@ -146,7 +146,7 @@ inline void mem_check(const bool ifgpu){
    double avail_cpu = getAvailableMemory();
    double total_cpu = getTotalMemory();
    std::cout << "\nmem_check:" << std::endl;
-   std::cout << std::scientific << std::setprecision(2);
+   std::cout << std::scientific << std::setprecision(3);
    std::cout << "rank=0 CPUmem(GB):"
 	  << " avail=" << avail_cpu 
 	  << " total=" << total_cpu 
@@ -179,7 +179,7 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
    boost::mpi::gather(world, total_cpu, total_cpus, 0);
    if(rank == 0){
       std::cout << "\nmem_check:" << std::endl;
-      std::cout << std::scientific << std::setprecision(2);
+      std::cout << std::scientific << std::setprecision(3);
       for(int i=0; i<size; i++){
          std::cout << "rank=" << i << " CPUmem(GB):"
 		<< " avail=" << avail_cpus[i]
