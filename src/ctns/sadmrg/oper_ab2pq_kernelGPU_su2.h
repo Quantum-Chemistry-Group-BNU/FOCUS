@@ -63,6 +63,7 @@ namespace ctns{
 		   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
 	    }
 
+	    /*
             // convert opA to opA.H()
             auto t0x = tools::get_time();
 	    if(iproc == rank){
@@ -92,7 +93,46 @@ namespace ctns{
             if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
                     << " t=" <<  tools::get_duration(t1x-t0x)
                     << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-            
+            */
+
+	    // Algorithm-1:
+            auto t0x = tools::get_time();
+	    if(iproc == rank){
+	       auto t0a = tools::get_time();
+	       // copy opA from GPU to CPU
+	       size_t size = qops.size_ops('A')*sizeof(Tm);
+	       CUDA_CHECK(cudaMemcpy(qops.ptr_ops('A'), qops.ptr_ops_gpu('A'), size, cudaMemcpyDeviceToHost));
+	       auto t0b = tools::get_time();
+	       // opA to opA.H() on CPU
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+               for(int idx=0; idx<aindex_iproc.size(); idx++){
+                  auto isr = aindex_iproc[idx];
+                  HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
+               }
+	       auto t0c = tools::get_time();
+	       // copy opA.H() from CPU to GPU
+	       CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('M'), qops.ptr_ops('M'), size, cudaMemcpyHostToDevice));
+	       auto t0d = tools::get_time();
+	       if(rank==0) std::cout << "   D2H,toH,H2D,tot=" 
+		       << tools::get_duration(t0b-t0a) << ","
+		       << tools::get_duration(t0c-t0b) << ","
+		       << tools::get_duration(t0d-t0c) << ","
+		       << tools::get_duration(t0d-t0a) << std::endl;
+            }
+	    icomb.world.barrier();
+            auto t1x = tools::get_time();
+            tadjt += tools::get_duration(t1x-t0x);
+	    taccum += tools::get_duration(t1x-t0x);
+            if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
+                    << " t=" <<  tools::get_duration(t1x-t0x)
+                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
+	    
+	    // Algorithm-2:
+	    // copy opA from GPU to GPU
+	    // opA to opA.H() on GPU
+
 #ifndef SERIAL
 	    // broadcast opA.H()
             auto t0b = tools::get_time();
