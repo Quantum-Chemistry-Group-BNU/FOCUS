@@ -42,13 +42,6 @@ namespace ctns{
             tools::exit("error: ifdistc should be used only with MPS!");
          }
 
-         // 0. outcore
-         const int rdx0 = icomb.topo.rindex.at(std::make_pair(0,0));
-         const int rdx1 = icomb.topo.rindex.at(std::make_pair(1,0));
-         if(schd.ctns.ifoutcore){
-            rcanon_save_sites(icomb, scratch, debug);
-         }
-
          // build operators on the left dot
          oper_init_dotL(icomb, int2e, int1e, schd, scratch);
 
@@ -70,18 +63,16 @@ namespace ctns{
             const auto& dots = sweeps.ctrls[isweep].dots;
             oper_timer.sweep_start(dots);
             
-            // initialize
+            // initialize: assume comb is in memory initially
             if(schd.ctns.guess){
-               if(schd.ctns.ifoutcore){
-                  rcanon_load_site(icomb, rdx0, scratch, debug); 
-                  rcanon_load_site(icomb, rdx1, scratch, debug); 
-               }
                sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
-               if(schd.ctns.ifoutcore){
-                  rcanon_save_site(icomb, rdx0, scratch, debug); 
-               }
             }
-            
+
+            // outcore: save comb to disk to save memory
+            if(schd.ctns.ifoutcore){
+               rcanon_save_sites(icomb, scratch, debug);
+            }
+
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
@@ -116,7 +107,7 @@ namespace ctns{
                   rcanon_save_site(icomb, pdx, scratch, debug);
                }
 #ifdef TCMALLOC
-   	         release_freecpumem();
+   	       release_freecpumem();
 #endif
                // timing 
                if(debug){
@@ -144,18 +135,16 @@ namespace ctns{
 	       get_gpumem_status(rank);
             }
           
-            // finalize: load all sites, as they will be save and checked in sweep_final 
-            if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
+            // finalize: load all sites to memory, as they will be save and checked in sweep_final 
+            if(schd.ctns.ifoutcore){
+	       rcanon_load_sites(icomb, scratch, debug);
+	    }
             // generate right rcanonical form and save checkpoint file
             sweep_final(icomb, schd, scratch, isweep, rcfprefix);
-            // compute Hmat 
+            // compute Hmat for checking purpose 
             oper_final(icomb, int2e, int1e, ecore, schd, scratch, qops_pool, isweep);
-            // save updated sites, which will be used in sweep_init in the next sweep
-            if(schd.ctns.ifoutcore and isweep != schd.ctns.maxsweep-1){  
-               rcanon_save_site(icomb, rdx1, scratch, debug); 
-               rcanon_save_site(icomb, rdx0, scratch, debug); 
-            }
-            if(debug){
+            
+	    if(debug){
                auto tl = tools::get_time();
                tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
 	       std::cout << std::endl;
