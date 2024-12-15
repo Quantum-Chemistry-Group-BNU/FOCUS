@@ -129,6 +129,7 @@ namespace ctns{
          }
 #endif
          timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
 
          // check whether perform ab2pq transformation
          bool ifab2pq_gpunccl = ab2pq_current and 

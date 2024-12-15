@@ -140,6 +140,7 @@ namespace ctns{
             get_cpumem_status(rank);
 	    get_gpumem_status(rank);
 	 }
+         timing.tf14 = tools::get_time();
 
          if(schd.ctns.ifab2pq){
             const int nsite = icomb.get_nphysical();
