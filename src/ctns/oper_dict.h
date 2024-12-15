@@ -57,8 +57,20 @@ namespace ctns{
 #ifdef GPU
             void allocate_gpu(const bool ifmemset=false){
                assert(!this->avail_gpu());
-               _dev_data = (Tm*)GPUmem.allocate(_size*sizeof(Tm));
-               if(ifmemset) GPUmem.memset(_dev_data, _size*sizeof(Tm));
+	       //--- ZL@2024/12/15 memory check --- 
+	       size_t avail, total;
+	       CUDA_CHECK(cudaMemGetInfo(&avail, &total));
+	       size_t size_bytes = _size*sizeof(Tm);
+	       if(size_bytes > avail){
+		  std::cout << "error: required size is larger than avail for allocate_gpu:"
+			  << " _size=" << _size << " size_bytes=" << size_bytes
+			  << " avail=" << avail << " total=" << total
+			  << std::endl;
+		  exit(1);
+	       }
+	       //--- end of gpu memory check ---
+               _dev_data = (Tm*)GPUmem.allocate(size_bytes);
+               if(ifmemset) GPUmem.memset(_dev_data, size_bytes);
             }
             void to_gpu(){
                assert(_dev_data != nullptr && _data != nullptr);

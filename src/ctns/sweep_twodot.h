@@ -99,12 +99,16 @@ namespace ctns{
             if(alg_hvec>10 && alg_renorm>10){
                const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
                qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
+               if(debug){
+   	          get_cpumem_status(rank, 0, "after clear_from_cpumem");
+   	          get_gpumem_status(rank, 0, "after clear_from_cpumem");
+   	       }
             }
             qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
             if(debug){
-	       get_cpumem_status(rank);
-	       get_gpumem_status(rank);
+	       get_cpumem_status(rank, 0, "after fetch_to_cpumem");
+	       get_gpumem_status(rank, 0, "after fetch_to_cpumem");
 	    }
          }
          timing.ta = tools::get_time();
