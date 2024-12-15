@@ -124,8 +124,7 @@ namespace ctns{
          qops2.init();
          if(debug){
             qops2.print("qops2", schd.ctns.verbose-1);
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
          }
 
          if(!ifab2pq_gpunccl){
@@ -156,11 +155,11 @@ namespace ctns{
 #ifdef GPU
             // 4. to gpu (if necessary)
             if(alg_renorm > 10){
-	       if(debug) get_gpumem_status(rank, 0, "before qops.clear_gpu");
+	       if(debug) get_mem_status(rank, 0, "before qops.clear_gpu");
 	       qops.clear_gpu(); // deallocate qops on GPU
-	       if(debug) get_gpumem_status(rank, 0, "before qops2.allocate_gpu");
+	       if(debug) get_mem_status(rank, 0, "before qops2.allocate_gpu");
 	       qops2.allocate_gpu(); // allocate qops on GPU
-	       if(debug) get_gpumem_status(rank, 0, "after qops2.allocate_gpu");
+	       if(debug) get_mem_status(rank, 0, "after qops2.allocate_gpu");
                qops2.to_gpu();
             }
 #endif
@@ -168,15 +167,9 @@ namespace ctns{
             t2gpu = tools::get_duration(te-td);
 
             // 5. move
-	    if(debug){
-	       get_cpumem_status(rank, 0, "before move");
-	       get_gpumem_status(rank, 0, "before move");
-	    }
+	    if(debug) get_mem_status(rank, 0, "before move");
 	    qops = std::move(qops2);
-	    if(debug){
-	       get_cpumem_status(rank, 0, "after move");
-	       get_gpumem_status(rank, 0, "after move");
-	    }
+	    if(debug) get_mem_status(rank, 0, "after move");
             auto tf = tools::get_time();
             tmove = tools::get_duration(tf-te);
 
@@ -226,8 +219,7 @@ namespace ctns{
                << " T(init/copyCSH/opP/opQ/to_gpu/to_cpu/move)=" << tinit << "," 
                << tcopy << "," << ta2p << "," << tb2q << "," << t2gpu << "," << t2cpu << "," << tmove << " -----"
                << std::endl;
-	    get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+	    get_mem_status(rank);
          }
       }
 

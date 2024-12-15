@@ -136,10 +136,7 @@ namespace ctns{
 
 	 // erase fneed to save memory
 	 qops_pool.join_and_erase(fneed, fneed_next);
-	 if(debug){
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
-	 }
+	 if(debug) get_mem_status(rank);
          timing.tf14 = tools::get_time();
 
          if(schd.ctns.ifab2pq){

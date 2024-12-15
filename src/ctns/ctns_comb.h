@@ -74,7 +74,7 @@ namespace ctns{
                   << tools::sizeMB<Tm>(sz) << "MB:"
                   << tools::sizeGB<Tm>(sz) << "GB"
                   << std::endl;
-               get_cpumem_status(0);
+               get_mem_status(0);
                return sz;
             }
             // helpers

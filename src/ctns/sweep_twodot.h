@@ -52,7 +52,6 @@ namespace ctns{
                << " maxthreads=" << maxthreads 
                << std::endl;
             icomb.display_size();
-	    get_gpumem_status(rank);
          }
          auto& timing = sweeps.opt_timing[isweep][ibond];
          timing.t0 = tools::get_time();
@@ -85,8 +84,7 @@ namespace ctns{
                << ":" << tools::sizeMB<Tm>(opertot) << "MB"
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
          }
 
          // 1.5 look ahead for the next dbond
@@ -94,22 +92,12 @@ namespace ctns{
          auto frop = fbond.first;
          auto fdel = fbond.second;
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         // prefetch files for the next bond
-         if(schd.ctns.async_fetch){
-            if(alg_hvec>10 && alg_renorm>10){
-               const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
-               qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
-               if(debug){
-   	          get_cpumem_status(rank, 0, "after clear_from_cpumem");
-   	          get_gpumem_status(rank, 0, "after clear_from_cpumem");
-   	       }
-            }
-            qops_pool[frop]; // just declare a space for frop
-            qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
+         if(alg_hvec>10 && alg_renorm>10){
+            const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
+            qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
             if(debug){
-	       get_cpumem_status(rank, 0, "after fetch_to_cpumem");
-	       get_gpumem_status(rank, 0, "after fetch_to_cpumem");
-	    }
+   	       get_mem_status(rank, 0, "after clear_from_cpumem");
+   	    }
          }
          timing.ta = tools::get_time();
 
@@ -211,10 +199,30 @@ namespace ctns{
          if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
          }
          timing.tc = tools::get_time();
+
+         // 2.3 prefetch files for the next bond
+         // join save thread and set frop_prev = empty, such that
+	 // unused cpu memory can be fully released
+	 qops_pool.join_save();
+         if(schd.ctns.async_fetch){
+            // remove used cpu mem of fneed fully, which makes sure
+	    // that only 2 (rather than 3) qops are in cpumem!
+            if(alg_hvec>10 && alg_renorm>10){
+               const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
+               qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
+               if(debug){
+   	          get_mem_status(rank, 0, "after clear_from_cpumem");
+   	       }
+            }
+	    qops_pool[frop]; // just declare a space for frop
+            qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
+            if(debug){
+	       get_mem_status(rank, 0, "after fetch_to_cpumem");
+	    }
+         }
 
          // 3. decimation & renormalize operators
          twodot_renorm(icomb, int2e, int1e, schd, scratch, 
@@ -227,8 +235,7 @@ namespace ctns{
         
          timing.t1 = tools::get_time();
          if(debug){
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
             timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }

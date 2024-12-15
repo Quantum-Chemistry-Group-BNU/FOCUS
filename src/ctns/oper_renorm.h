@@ -107,8 +107,7 @@ namespace ctns{
          qops.init();
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
          }
 
          // 1. kernel for renormalization
@@ -280,8 +279,7 @@ namespace ctns{
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " rank=" << rank << " -----"
                << std::endl;
-            get_cpumem_status(rank);
-	    get_gpumem_status(rank);
+            get_mem_status(rank);
          }
       }
 

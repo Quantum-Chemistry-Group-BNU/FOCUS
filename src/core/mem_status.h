@@ -140,6 +140,11 @@ inline void get_gpumem_status(const int rank, const int level=0, const std::stri
 #endif
 }
 
+inline void get_mem_status(const int rank, const int level=0, const std::string msg=""){
+   get_cpumem_status(rank, level, msg);
+   get_gpumem_status(rank, level, msg);
+}
+
 #ifdef SERIAL
 
 inline void mem_check(const bool ifgpu){
@@ -163,6 +168,7 @@ inline void mem_check(const bool ifgpu){
 	     << std::endl;
    }
 #endif 
+   get_mem_status(0);
 }
 
 #else
@@ -220,6 +226,7 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
       }
    }
 #endif // GPU
+   get_mem_status(0);
 }
 
 #endif // SERIAL

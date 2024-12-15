@@ -71,6 +71,8 @@ namespace ctns{
             // fetch from disk to cpu/gpu memory
             void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu);
             void fetch_to_cpumem(const std::vector<std::string> fneed_next, const bool async_fetch=false);
+            // join thread for save
+	    void join_save();
             // join and erase from cpu & gpu memory
             void join_and_erase(const std::vector<std::string> fneed, 
                   const std::vector<std::string> fneed_next={});
@@ -191,6 +193,25 @@ namespace ctns{
          }
       }
 
+   // only join thread for save
+   template <bool ifab, typename Tm>
+      void qoper_pool<ifab,Tm>::join_save(){
+         auto t0 = tools::get_time();
+         if(debug){
+            std::cout << "ctns::qoper_pool::join_save frop_prev=" << frop_prev << std::endl;
+         }
+
+         if(thread_save.joinable()) thread_save.join();
+	 frop_prev.clear(); // ZL@2024/12/15: added here
+         
+	 if(debug){
+	    auto t1 = tools::get_time();
+            std::cout << "----- TIMING FOR qoper_pool::join_save : "
+               << tools::get_duration(t1-t0) << " -----"
+               << std::endl;
+         }
+      }
+
    // release unnecessary qops in the next point
    template <bool ifab, typename Tm>
       void qoper_pool<ifab,Tm>::join_and_erase(const std::vector<std::string> frelease,
@@ -224,8 +245,8 @@ namespace ctns{
          auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
          if(result == fneed_next.end()){
             qstore.erase(frop_prev); // NOTE: frop_prev is only erased here, saving is finished after join_all!
-	    frop_prev.clear(); // ZL@2024/12/14: added here
          }
+	 frop_prev.clear(); // ZL@2024/12/15: added here
          
 	 if(debug){
             this->display("out");
