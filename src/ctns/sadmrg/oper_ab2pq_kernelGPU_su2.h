@@ -4,8 +4,77 @@
 #define OPER_AB2PQ_KERNELGPU_SU2_H
 
 #include "oper_ab2pq_kernel_su2.h"
+#include "../gpu_kernel/batched_Hermitian_Conjugate.h"
 
 namespace ctns{
+
+   template <bool ifab, typename Tm>
+      void batchedHermitianConjugateGPU(const qoper_dict<ifab,Tm>& qops1,
+            const char type1,
+            qoper_dict<ifab,Tm>& qops2,
+            const char type2,
+            const bool adjoint){
+         // count the number of task
+         size_t nblks = 0;
+         for(const auto& pr : qops2(type2)){
+            const auto& index = pr.first;
+            const auto& qt2 = pr.second;
+            nblks += qt2.info._nnzaddr.size();
+         }
+         // setup tasks
+         std::vector<size_t> offs(nblks*2);
+         std::vector<int> dims(nblks*2);
+         std::vector<Tm> facs(nblks);
+         size_t iblk = 0;
+         for(const auto& pr : qops2(type2)){
+            const auto& index = pr.first;
+            const auto& qt2 = pr.second;
+            const auto& qt1 = qops1(type1).at(index);
+            for(int i=0; i<qt2.info._nnzaddr.size(); i++){
+               auto key = qt2.info._nnzaddr[i];
+               int br = std::get<0>(key);
+               int bc = std::get<1>(key);
+               size_t loff2 = qt2.info.get_offset(br,bc);
+               assert(loff2 == 0);
+               size_t goff2 = qops2._offset.at(std::make_pair(type2,index)) + loff2-1;
+               size_t loff1 = qt1.info.get_offset(bc,br);
+               size_t goff1 = qops1._offset.at(std::make_pair(type1,index)) + loff1-1;
+               offs[2*iblk] = goff2;
+               offs[2*iblk+1] = goff1;
+               auto blk = qt2(br,bc);
+               dims[2*iblk] = blk.dim0;
+               dims[2*iblk+1] = blk.dim1;
+               if(!adjoint){
+                  facs[iblk] = 1.0;
+               }else{
+                  // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
+                  auto symr = qt2.info.qrow.get_sym(br);
+                  auto symc = qt2.info.qcol.get_sym(bc);
+                  int tsr = symr.ts();
+                  int tsc = symc.ts();
+                  int deltats = (qt2.info.sym.ts() + tsr - tsc);
+                  assert(deltats%2 == 0);
+                  Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
+                  fac *= std::sqrt((tsc+1.0)/(tsr+1.0));
+                  facs[iblk] = fac;
+               }
+               iblk += 1;
+            }
+         }
+         // allocate memory
+         size_t* dev_offs = (size_t*)GPUmem.allocate(nblks*2*sizeof(size_t));
+         GPUmem.to_gpu(dev_offs, offs.data(), nblks*2*sizeof(size_t));
+         int* dev_dims = (int*)GPUmem.allocate(nblks*2*sizeof(int));
+         GPUmem.to_gpu(dev_dims, dims.data(), nblks*2*sizeof(int));
+         Tm* dev_facs = (Tm*)GPUmem.allocate(nblks*sizeof(Tm));
+         GPUmem.to_gpu(dev_facs, facs.data(), nblks*sizeof(Tm));
+         // invoke kernel
+         batched_Hermitian_Conjugate(nblks, dev_offs, dev_dims, dev_facs, qops1._dev_data, qops2._dev_data);
+         // deallocate
+         GPUmem.deallocate(dev_offs, nblks*2*sizeof(size_t));
+         GPUmem.deallocate(dev_dims, nblks*2*sizeof(int));
+         GPUmem.deallocate(dev_facs, nblks*sizeof(Tm));
+      }
 
    // su2 case
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
@@ -64,64 +133,43 @@ namespace ctns{
                   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
             }
 
-            /*
-            // convert opA to opA.H()
             auto t0x = tools::get_time();
             if(iproc == rank){
-            for(int idx=0; idx<aindex_iproc.size(); idx++){
-            auto isr = aindex_iproc[idx];
-            // copy opA from gpu to cpu
-            size_t opA_offset = qops._offset.at(std::make_pair('A',isr));
-            const Tm* ptr_opA_gpu = qops._dev_data + opA_offset;
-            Tm* ptr_opA_cpu = qops._data + opA_offset;
-            size_t size = qops('A').at(isr).size()*sizeof(Tm);
-            CUDA_CHECK(cudaMemcpy(ptr_opA_cpu, ptr_opA_gpu, size, cudaMemcpyDeviceToHost));
-            // HermitianConjugate on CPU 
-            HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
-            // copy opM from cpu to gpu 
-            size_t opM_offset = qops_tmp._offset.at(std::make_pair('M',isr));
-            const Tm* ptr_opM_cpu = qops_tmp._data + opM_offset;
-            Tm* ptr_opM_gpu = qops_tmp._dev_data + opM_offset;
-            CUDA_CHECK(cudaMemcpyAsync(ptr_opM_gpu, ptr_opM_cpu, size, cudaMemcpyHostToDevice, stream));
-            }
-            // Wait for all asynchronous operations to finish
-            cudaStreamSynchronize(stream);
-            }
-            icomb.world.barrier();
-            auto t1x = tools::get_time();
-            tadjt += tools::get_duration(t1x-t0x);
-            taccum += tools::get_duration(t1x-t0x);
-            if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
-            << " t=" <<  tools::get_duration(t1x-t0x)
-            << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-            */
 
-            // Algorithm-1:
-            auto t0x = tools::get_time();
-            if(iproc == rank){
-               auto t0a = tools::get_time();
-               // copy opA from GPU to CPU
-               size_t size = qops_tmp.size_ops('A')*sizeof(Tm);
-               CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops('A'), qops.ptr_ops_gpu('A'), size, cudaMemcpyDeviceToHost));
-               auto t0b = tools::get_time();
-               // opA to opA.H() on CPU
+               // Algorithm-1:
+               if(alg_a2p == 3){
+                  auto t0a = tools::get_time();
+                  // copy opA from GPU to CPU
+                  size_t size = qops_tmp.size_ops('A')*sizeof(Tm);
+                  CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops('A'), qops.ptr_ops_gpu('A'), size, cudaMemcpyDeviceToHost));
+                  auto t0b = tools::get_time();
+                  // opA to opA.H() on CPU
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-               for(int idx=0; idx<aindex_iproc.size(); idx++){
-                  auto isr = aindex_iproc[idx];
-                  HermitianConjugate(qops_tmp('A').at(isr), qops_tmp('M')[isr], true);
-               }
-               auto t0c = tools::get_time();
-               // copy opA.H() from CPU to GPU
-               CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('M'), qops_tmp.ptr_ops('M'), size, cudaMemcpyHostToDevice));
-               auto t0d = tools::get_time();
-               if(rank==iproc) std::cout << "   D2H,toH,H2D,tot=" 
-                  << tools::get_duration(t0b-t0a) << ","
-                     << tools::get_duration(t0c-t0b) << ","
-                     << tools::get_duration(t0d-t0c) << ","
-                     << tools::get_duration(t0d-t0a) << std::endl;
-            }
+                  for(int idx=0; idx<aindex_iproc.size(); idx++){
+                     auto isr = aindex_iproc[idx];
+                     HermitianConjugate(qops_tmp('A').at(isr), qops_tmp('M')[isr], true);
+                  }
+                  auto t0c = tools::get_time();
+                  // copy opA.H() from CPU to GPU
+                  CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('M'), qops_tmp.ptr_ops('M'), size, cudaMemcpyHostToDevice));
+                  auto t0d = tools::get_time();
+                  if(rank==iproc) std::cout << "   D2H,toH,H2D,tot=" 
+                     << tools::get_duration(t0b-t0a) << ","
+                        << tools::get_duration(t0c-t0b) << ","
+                        << tools::get_duration(t0d-t0c) << ","
+                        << tools::get_duration(t0d-t0a) << std::endl;
+                  // Algorithm-2:
+               }else if(alg_a2p == 4){
+                  // opA to opA.H() on GPU
+                  batchedHermitianConjugateGPU(qops, 'A', qops_tmp, 'M', true); 
+               }else{
+                  std::cout << "error: no such option in a2pGPU for alg_a2p =" << alg_a2p << std::endl;
+                  exit(1);
+               } // alg_a2p 
+
+            } // rank
             icomb.world.barrier();
             auto t1x = tools::get_time();
             tadjt += tools::get_duration(t1x-t0x);
@@ -129,10 +177,6 @@ namespace ctns{
             if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
                << " t=" <<  tools::get_duration(t1x-t0x)
                   << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-
-            // Algorithm-2:
-            // copy opA from GPU to GPU
-            // opA to opA.H() on GPU
 
 #ifndef SERIAL
             // broadcast opA.H()

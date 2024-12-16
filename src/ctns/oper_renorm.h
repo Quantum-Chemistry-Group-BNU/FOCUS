@@ -137,7 +137,7 @@ namespace ctns{
          // check whether perform ab2pq transformation
          bool ifab2pq_gpunccl = ab2pq_current and 
             schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and 
-            schd.ctns.alg_a2p==3 and schd.ctns.alg_b2q==3;
+            schd.ctns.alg_a2p>=3 and schd.ctns.alg_b2q>=3;
          if(!ifab2pq_gpunccl){
 
 #ifdef GPU

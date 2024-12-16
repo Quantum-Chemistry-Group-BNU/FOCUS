@@ -1,7 +1,7 @@
 #ifndef TWODOT_DIAGGPU_KERNEL_H
 #define TWODOT_DIAGGPU_KERNEL_H
 
-#include "diagGPU_kernel.h"
+#include "ctnsGPU.h"
 
 namespace ctns{
 

@@ -91,7 +91,7 @@ namespace ctns{
 #endif
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool ifab2pq_gpunccl = schd.ctns.alg_renorm>10 and schd.ctns.ifnccl and
-            schd.ctns.alg_a2p==3 and schd.ctns.alg_b2q==3; 
+            schd.ctns.alg_a2p>=3 and schd.ctns.alg_b2q>=3; 
          const bool debug = (rank == 0);
          if(debug and schd.ctns.verbose>0){
             std::cout << "ctns::oper_ab2pq coord=" << pcoord

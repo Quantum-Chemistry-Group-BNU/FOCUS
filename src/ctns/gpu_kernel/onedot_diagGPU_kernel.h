@@ -1,7 +1,7 @@
 #ifndef ONEDOT_DIAGGPU_KERNEL_H
 #define ONEDOT_DIAGGPU_KERNEL_H
 
-#include "diagGPU_kernel.h"
+#include "ctnsGPU.h"
 
 namespace ctns{
 
