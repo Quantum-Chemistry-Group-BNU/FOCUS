@@ -57,18 +57,18 @@ namespace ctns{
 #ifdef GPU
             void allocate_gpu(const bool ifmemset=false){
                assert(!this->avail_gpu());
-	       //--- ZL@2024/12/15 memory check --- 
-	       size_t avail, total;
-	       CUDA_CHECK(cudaMemGetInfo(&avail, &total));
-	       size_t size_bytes = _size*sizeof(Tm);
-	       if(size_bytes > avail){
-		  std::cout << "error: required size is larger than avail for allocate_gpu:"
-			  << " _size=" << _size << " size_bytes=" << size_bytes
-			  << " avail=" << avail << " total=" << total
-			  << std::endl;
-		  exit(1);
-	       }
-	       //--- end of gpu memory check ---
+               //--- ZL@2024/12/15 memory check --- 
+               size_t avail, total;
+               CUDA_CHECK(cudaMemGetInfo(&avail, &total));
+               size_t size_bytes = _size*sizeof(Tm);
+               if(size_bytes > avail){
+                  std::cout << "error: required size is larger than avail for allocate_gpu:"
+                     << " _size=" << _size << " size_bytes=" << size_bytes
+                     << " avail=" << avail << " total=" << total
+                     << std::endl;
+                  exit(1);
+               }
+               //--- end of gpu memory check ---
                _dev_data = (Tm*)GPUmem.allocate(size_bytes);
                if(ifmemset) GPUmem.memset(_dev_data, size_bytes);
             }
@@ -77,7 +77,11 @@ namespace ctns{
                GPUmem.to_gpu(_dev_data, _data, _size*sizeof(Tm));
             }
             void to_cpu(){
-               assert(_dev_data != nullptr && _data != nullptr);
+               assert(_dev_data != nullptr);
+               if(!this->avail_cpu()){
+                  this->allocate_cpu();
+                  this->setup_data(); // assign pointer for each operator
+               }
                GPUmem.to_cpu(_data, _dev_data, _size*sizeof(Tm));
             }
 #endif
@@ -217,7 +221,7 @@ namespace ctns{
       using oper_dict = qoper_dict<true,Tm>;
    template <typename Tm>
       using opersu2_dict = qoper_dict<false,Tm>;
-   
+
    template <bool ifab, typename Tm>
       using qoper_dictmap = std::map<std::string,const qoper_dict<ifab,Tm>&>; // for sigma2
    template <typename Tm>
@@ -321,7 +325,7 @@ namespace ctns{
             }else{
                index = std::move(index2);
             }
-         // ZL@20240905: just for dot operators
+            // ZL@20240905: just for dot operators
          }else if(key == 'F'){
             index = {cindex[0]};
          }else if(key == 'T'){
@@ -359,9 +363,9 @@ namespace ctns{
       }else if(key == 'Q'){
          auto pr = oper_unpack(idx);
          sym_op = get_qsym_opQ(isym, pr.first, pr.second);
-      //
-      // ZL@20240905: just for dot operators
-      //
+         //
+         // ZL@20240905: just for dot operators
+         //
       }else if(key == 'F'){
          sym_op = qsym(isym,0,0);
       }else if(key == 'T'){

@@ -31,12 +31,12 @@ namespace ctns{
          cudaStreamCreate(&stream);
 
          // loop over rank
-	 icomb.world.barrier();
+         icomb.world.barrier();
          for(int iproc=0; iproc<size; iproc++){
             auto aindex_iproc = oper_index_opA_dist(qops.cindex, qops.ifkr, qops.isym, size, iproc, qops.sorb);
             if(aindex_iproc.size() == 0) continue;
             // broadcast {opCrs} for given sym from iproc
-	    auto t0i = tools::get_time();
+            auto t0i = tools::get_time();
             qoper_dict<Qm::ifabelian,Tm> qops_tmp;
             qops_tmp.sorb = qops.sorb;
             qops_tmp.isym = qops.isym;
@@ -45,7 +45,7 @@ namespace ctns{
             qops_tmp.krest = qops.krest;
             qops_tmp.qbra = qops.qbra;
             qops_tmp.qket = qops.qket;
-            qops_tmp.oplist = "M";
+            qops_tmp.oplist = "AM";
             qops_tmp.mpisize = size;
             qops_tmp.mpirank = iproc; // not rank
             qops_tmp.ifdist2 = true;
@@ -53,104 +53,104 @@ namespace ctns{
             if(qops_tmp.size() == 0) continue;
             // allocate space
             qops_tmp.allocate_gpu();
-	    icomb.world.barrier();
-	    auto t1i = tools::get_time();
-	    tinit += tools::get_duration(t1i-t0i);
-	    taccum += tools::get_duration(t1i-t0i);
-	    if(rank == 0){
-	        std::cout << "iproc=" << iproc << std::endl;
-		qops_tmp.print("qops_tmp");
-		std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
-		   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
-	    }
+            icomb.world.barrier();
+            auto t1i = tools::get_time();
+            tinit += tools::get_duration(t1i-t0i);
+            taccum += tools::get_duration(t1i-t0i);
+            if(rank == 0){
+               std::cout << "iproc=" << iproc << std::endl;
+               qops_tmp.print("qops_tmp");
+               std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
+                  << " tinit=" << tinit << " taccum=" << taccum << std::endl;
+            }
 
-	    /*
+            /*
             // convert opA to opA.H()
             auto t0x = tools::get_time();
-	    if(iproc == rank){
-               for(int idx=0; idx<aindex_iproc.size(); idx++){
-                  auto isr = aindex_iproc[idx];
-                  // copy opA from gpu to cpu
-                  size_t opA_offset = qops._offset.at(std::make_pair('A',isr));
-                  const Tm* ptr_opA_gpu = qops._dev_data + opA_offset;
-                  Tm* ptr_opA_cpu = qops._data + opA_offset;
-                  size_t size = qops('A').at(isr).size()*sizeof(Tm);
-                  CUDA_CHECK(cudaMemcpy(ptr_opA_cpu, ptr_opA_gpu, size, cudaMemcpyDeviceToHost));
-                  // HermitianConjugate on CPU 
-                  HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
-                  // copy opM from cpu to gpu 
-                  size_t opM_offset = qops_tmp._offset.at(std::make_pair('M',isr));
-                  const Tm* ptr_opM_cpu = qops_tmp._data + opM_offset;
-                  Tm* ptr_opM_gpu = qops_tmp._dev_data + opM_offset;
-                  CUDA_CHECK(cudaMemcpyAsync(ptr_opM_gpu, ptr_opM_cpu, size, cudaMemcpyHostToDevice, stream));
-               }
-               // Wait for all asynchronous operations to finish
-               cudaStreamSynchronize(stream);
+            if(iproc == rank){
+            for(int idx=0; idx<aindex_iproc.size(); idx++){
+            auto isr = aindex_iproc[idx];
+            // copy opA from gpu to cpu
+            size_t opA_offset = qops._offset.at(std::make_pair('A',isr));
+            const Tm* ptr_opA_gpu = qops._dev_data + opA_offset;
+            Tm* ptr_opA_cpu = qops._data + opA_offset;
+            size_t size = qops('A').at(isr).size()*sizeof(Tm);
+            CUDA_CHECK(cudaMemcpy(ptr_opA_cpu, ptr_opA_gpu, size, cudaMemcpyDeviceToHost));
+            // HermitianConjugate on CPU 
+            HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
+            // copy opM from cpu to gpu 
+            size_t opM_offset = qops_tmp._offset.at(std::make_pair('M',isr));
+            const Tm* ptr_opM_cpu = qops_tmp._data + opM_offset;
+            Tm* ptr_opM_gpu = qops_tmp._dev_data + opM_offset;
+            CUDA_CHECK(cudaMemcpyAsync(ptr_opM_gpu, ptr_opM_cpu, size, cudaMemcpyHostToDevice, stream));
             }
-	    icomb.world.barrier();
+            // Wait for all asynchronous operations to finish
+            cudaStreamSynchronize(stream);
+            }
+            icomb.world.barrier();
             auto t1x = tools::get_time();
             tadjt += tools::get_duration(t1x-t0x);
-	    taccum += tools::get_duration(t1x-t0x);
+            taccum += tools::get_duration(t1x-t0x);
             if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
-                    << " t=" <<  tools::get_duration(t1x-t0x)
-                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
+            << " t=" <<  tools::get_duration(t1x-t0x)
+            << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
             */
 
-	    // Algorithm-1:
+            // Algorithm-1:
             auto t0x = tools::get_time();
-	    if(iproc == rank){
-	       auto t0a = tools::get_time();
-	       // copy opA from GPU to CPU
-	       size_t size = qops.size_ops('A')*sizeof(Tm);
-	       CUDA_CHECK(cudaMemcpy(qops.ptr_ops('A'), qops.ptr_ops_gpu('A'), size, cudaMemcpyDeviceToHost));
-	       auto t0b = tools::get_time();
-	       // opA to opA.H() on CPU
+            if(iproc == rank){
+               auto t0a = tools::get_time();
+               // copy opA from GPU to CPU
+               size_t size = qops_tmp.size_ops('A')*sizeof(Tm);
+               CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops('A'), qops.ptr_ops_gpu('A'), size, cudaMemcpyDeviceToHost));
+               auto t0b = tools::get_time();
+               // opA to opA.H() on CPU
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
                for(int idx=0; idx<aindex_iproc.size(); idx++){
                   auto isr = aindex_iproc[idx];
-                  HermitianConjugate(qops('A').at(isr), qops_tmp('M')[isr], true);
+                  HermitianConjugate(qops_tmp('A').at(isr), qops_tmp('M')[isr], true);
                }
-	       auto t0c = tools::get_time();
-	       // copy opA.H() from CPU to GPU
-	       CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('M'), qops_tmp.ptr_ops('M'), size, cudaMemcpyHostToDevice));
-	       auto t0d = tools::get_time();
-	       if(rank==iproc) std::cout << "   D2H,toH,H2D,tot=" 
-		       << tools::get_duration(t0b-t0a) << ","
-		       << tools::get_duration(t0c-t0b) << ","
-		       << tools::get_duration(t0d-t0c) << ","
-		       << tools::get_duration(t0d-t0a) << std::endl;
+               auto t0c = tools::get_time();
+               // copy opA.H() from CPU to GPU
+               CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('M'), qops_tmp.ptr_ops('M'), size, cudaMemcpyHostToDevice));
+               auto t0d = tools::get_time();
+               if(rank==iproc) std::cout << "   D2H,toH,H2D,tot=" 
+                  << tools::get_duration(t0b-t0a) << ","
+                     << tools::get_duration(t0c-t0b) << ","
+                     << tools::get_duration(t0d-t0c) << ","
+                     << tools::get_duration(t0d-t0a) << std::endl;
             }
-	    icomb.world.barrier();
+            icomb.world.barrier();
             auto t1x = tools::get_time();
             tadjt += tools::get_duration(t1x-t0x);
-	    taccum += tools::get_duration(t1x-t0x);
+            taccum += tools::get_duration(t1x-t0x);
             if(rank == 0) std::cout << "   from opA to opA.H(): size=" << aindex_iproc.size()
-                    << " t=" <<  tools::get_duration(t1x-t0x)
-                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-	    
-	    // Algorithm-2:
-	    // copy opA from GPU to GPU
-	    // opA to opA.H() on GPU
+               << " t=" <<  tools::get_duration(t1x-t0x)
+                  << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
+
+            // Algorithm-2:
+            // copy opA from GPU to GPU
+            // opA to opA.H() on GPU
 
 #ifndef SERIAL
-	    // broadcast opA.H()
+            // broadcast opA.H()
             auto t0b = tools::get_time();
             if(size > 1){
                nccl_comm.broadcast(qops_tmp.ptr_ops_gpu('M'), qops_tmp.size_ops('M'), iproc);
             }
             icomb.world.barrier();
-	    auto t1b = tools::get_time();
+            auto t1b = tools::get_time();
             double tbcast = tools::get_duration(t1b-t0b);
             tcomm += tbcast;
-	    taccum += tbcast;
+            taccum += tbcast;
             if(rank == 0){
                size_t data_size = qops_tmp.size_ops('M');
                std::cout << "   bcast: size(opA)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                   << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-	          << " tcomm=" << tcomm << " taccum=" << taccum
-		  << std::endl;
+                  << " tcomm=" << tcomm << " taccum=" << taccum
+                  << std::endl;
             }
 #endif
 
@@ -185,11 +185,11 @@ namespace ctns{
                      ptr_opP_gpu, opsize);
                GPUmem.deallocate(cmat_gpu, gpumem_cmat);
             } // amap
-	    auto t1z = tools::get_time();
+            auto t1z = tools::get_time();
             tcomp += tools::get_duration(t1z-t0z);
             taccum += tools::get_duration(t1z-t0z);
-	    if(rank == 0) std::cout << "   compute opP from opA: t=" << tools::get_duration(t1z-t0z) 
-		    << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
+            if(rank == 0) std::cout << "   compute opP from opA: t=" << tools::get_duration(t1z-t0z) 
+               << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
          } // iproc
 
          // Clean up
@@ -201,7 +201,7 @@ namespace ctns{
             double trest = t_tot - tinit - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_a2pGPU(su2) : " << t_tot << " S"
                << " T(init/adjt/bcast/comp/rest)=" << tinit << "," 
-	       << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
+               << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
                << std::endl;
          }
       }
@@ -224,7 +224,7 @@ namespace ctns{
          assert(ifkr);
          assert(qops.ifhermi);
          assert(alg_b2q == 3);
-        
+
          // Create a CUDA stream for asynchronous operations
          cudaStream_t stream;
          cudaStreamCreate(&stream);
@@ -235,8 +235,8 @@ namespace ctns{
             auto bindex_iproc = oper_index_opB_dist(qops.cindex, qops.ifkr, qops.isym, size, iproc, qops.sorb); 
             if(bindex_iproc.size() == 0) continue;
             // broadcast {opBqr} for given sym from iproc
-	    auto t0i = tools::get_time();
-	    qoper_dict<Qm::ifabelian,Tm> qops_tmp;
+            auto t0i = tools::get_time();
+            qoper_dict<Qm::ifabelian,Tm> qops_tmp;
             qops_tmp.sorb = qops.sorb;
             qops_tmp.isym = qops.isym;
             qops_tmp.ifkr = qops.ifkr;
@@ -252,28 +252,28 @@ namespace ctns{
             if(qops_tmp.size() == 0) continue; 
             // allocate space
             qops_tmp.allocate_gpu();
-	    icomb.world.barrier();
-	    auto t1i = tools::get_time();
-	    tinit += tools::get_duration(t1i-t0i);
-	    taccum += tools::get_duration(t1i-t0i);
-	    if(rank == 0){
-	       std::cout << "iproc=" << iproc << std::endl;
-	       qops_tmp.print("qops_tmp");
-	       std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
-		   << " tinit=" << tinit << " taccum=" << taccum << std::endl;
-	    } 
+            icomb.world.barrier();
+            auto t1i = tools::get_time();
+            tinit += tools::get_duration(t1i-t0i);
+            taccum += tools::get_duration(t1i-t0i);
+            if(rank == 0){
+               std::cout << "iproc=" << iproc << std::endl;
+               qops_tmp.print("qops_tmp");
+               std::cout << "   init qops_tmp: t=" << tools::get_duration(t1i-t0i)
+                  << " tinit=" << tinit << " taccum=" << taccum << std::endl;
+            } 
 
             auto t0x = tools::get_time();
-	    if(iproc == rank){
+            if(iproc == rank){
                linalg::xcopy_gpu(qops.size_ops('B'), qops.ptr_ops_gpu('B'), qops_tmp.ptr_ops_gpu('B'));
             }
-	    icomb.world.barrier();
-	    auto t1x = tools::get_time();
-	    tcopy += tools::get_duration(t1x-t0x);
-	    taccum += tools::get_duration(t1x-t0x);
-	    if(rank == 0) std::cout << "   copy opB to qops_tmps:"
-	            << " t=" <<  tools::get_duration(t1x-t0x)
-	            << " tcopy=" << tcopy << " taccum=" << taccum << std::endl;
+            icomb.world.barrier();
+            auto t1x = tools::get_time();
+            tcopy += tools::get_duration(t1x-t0x);
+            taccum += tools::get_duration(t1x-t0x);
+            if(rank == 0) std::cout << "   copy opB to qops_tmps:"
+               << " t=" <<  tools::get_duration(t1x-t0x)
+                  << " tcopy=" << tcopy << " taccum=" << taccum << std::endl;
 
 #ifndef SERIAL
             auto t0b = tools::get_time();
@@ -281,36 +281,36 @@ namespace ctns{
                nccl_comm.broadcast(qops_tmp.ptr_ops_gpu('B'), qops_tmp.size_ops('B'), iproc);
             }
             icomb.world.barrier();
-	    auto t1b = tools::get_time();
+            auto t1b = tools::get_time();
             double tbcast = tools::get_duration(t1b-t0b);
             tcomm += tbcast;
-	    taccum += tbcast;
+            taccum += tbcast;
             if(rank == 0){
                size_t data_size = qops_tmp.size_ops('B');
                std::cout << "   bcast: size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                   << " t(bcast)=" << tbcast << " speed=" << tools::sizeGB<Tm>(data_size)/tbcast << "GB/s"
-	          << " tcomm=" << tcomm << " taccum=" << taccum
+                  << " tcomm=" << tcomm << " taccum=" << taccum
                   << std::endl;
             }
 #endif
-	    /*
+            /*
             // convert opB to opB.H()
             auto t0y = tools::get_time();
             for(int idx=0; idx<bindex_iproc.size(); idx++){
-               auto iqr = bindex_iproc[idx];
-               // copy opB from gpu to cpu
-               size_t opB_offset = qops_tmp._offset.at(std::make_pair('B',iqr));
-               const Tm* ptr_opB_gpu = qops_tmp._dev_data + opB_offset;
-               Tm* ptr_opB_cpu = qops_tmp._data + opB_offset;
-               size_t size = qops_tmp('B').at(iqr).size()*sizeof(Tm);
-               CUDA_CHECK(cudaMemcpy(ptr_opB_cpu, ptr_opB_gpu, size, cudaMemcpyDeviceToHost));
-               // HermitianConjugate on CPU 
-               HermitianConjugate(qops_tmp('B').at(iqr), qops_tmp('N')[iqr], true);
-               // copy opM from cpu to gpu 
-               size_t opN_offset = qops_tmp._offset.at(std::make_pair('N',iqr));
-               const Tm* ptr_opN_cpu = qops_tmp._data + opN_offset;
-               Tm* ptr_opN_gpu = qops_tmp._dev_data + opN_offset;
-               CUDA_CHECK(cudaMemcpyAsync(ptr_opN_gpu, ptr_opN_cpu, size, cudaMemcpyHostToDevice, stream));
+            auto iqr = bindex_iproc[idx];
+            // copy opB from gpu to cpu
+            size_t opB_offset = qops_tmp._offset.at(std::make_pair('B',iqr));
+            const Tm* ptr_opB_gpu = qops_tmp._dev_data + opB_offset;
+            Tm* ptr_opB_cpu = qops_tmp._data + opB_offset;
+            size_t size = qops_tmp('B').at(iqr).size()*sizeof(Tm);
+            CUDA_CHECK(cudaMemcpy(ptr_opB_cpu, ptr_opB_gpu, size, cudaMemcpyDeviceToHost));
+            // HermitianConjugate on CPU 
+            HermitianConjugate(qops_tmp('B').at(iqr), qops_tmp('N')[iqr], true);
+            // copy opM from cpu to gpu 
+            size_t opN_offset = qops_tmp._offset.at(std::make_pair('N',iqr));
+            const Tm* ptr_opN_cpu = qops_tmp._data + opN_offset;
+            Tm* ptr_opN_gpu = qops_tmp._dev_data + opN_offset;
+            CUDA_CHECK(cudaMemcpyAsync(ptr_opN_gpu, ptr_opN_cpu, size, cudaMemcpyHostToDevice, stream));
             }
             // Wait for all asynchronous operations to finish
             cudaStreamSynchronize(stream);
@@ -319,18 +319,18 @@ namespace ctns{
             tadjt += tools::get_duration(t1y-t0y);
             taccum += tools::get_duration(t1y-t0y);
             if(rank == 0) std::cout << "   from opB to opB.H(): size=" << bindex_iproc.size()
-                    << " t=" <<  tools::get_duration(t1y-t0y)
-                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-	    */
-	    
-	    // Algorithm-1:
+            << " t=" <<  tools::get_duration(t1y-t0y)
+            << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
+            */
+
+            // Algorithm-1:
             auto t0y = tools::get_time();
-	    {
-	       auto t0a = tools::get_time();
+            {
+               auto t0a = tools::get_time();
                // copy opB from GPU to CPU
-	       size_t size = qops_tmp.size_ops('B')*sizeof(Tm);
+               size_t size = qops_tmp.size_ops('B')*sizeof(Tm);
                CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops('B'), qops_tmp.ptr_ops_gpu('B'), size, cudaMemcpyDeviceToHost));
-	       auto t0b = tools::get_time();
+               auto t0b = tools::get_time();
                // HermitianConjugate on CPU 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -339,24 +339,24 @@ namespace ctns{
                   auto iqr = bindex_iproc[idx];
                   HermitianConjugate(qops_tmp('B').at(iqr), qops_tmp('N')[iqr], true);
                }
-	       auto t0c = tools::get_time();
+               auto t0c = tools::get_time();
                // copy opM from cpu to gpu 
                CUDA_CHECK(cudaMemcpy(qops_tmp.ptr_ops_gpu('N'), qops_tmp.ptr_ops('N'), size, cudaMemcpyHostToDevice));
-	       auto t0d = tools::get_time();
-	       if(rank==0) std::cout << "   D2H,toH,H2D,tot=" 
-		       << tools::get_duration(t0b-t0a) << ","
-		       << tools::get_duration(t0c-t0b) << ","
-		       << tools::get_duration(t0d-t0c) << ","
-		       << tools::get_duration(t0d-t0a) << std::endl;
+               auto t0d = tools::get_time();
+               if(rank==0) std::cout << "   D2H,toH,H2D,tot=" 
+                  << tools::get_duration(t0b-t0a) << ","
+                     << tools::get_duration(t0c-t0b) << ","
+                     << tools::get_duration(t0d-t0c) << ","
+                     << tools::get_duration(t0d-t0a) << std::endl;
             }
             icomb.world.barrier();
             auto t1y = tools::get_time();
             tadjt += tools::get_duration(t1y-t0y);
             taccum += tools::get_duration(t1y-t0y);
             if(rank == 0) std::cout << "   from opB to opB.H(): size=" << bindex_iproc.size()
-                    << " t=" <<  tools::get_duration(t1y-t0y)
-                    << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
-     
+               << " t=" <<  tools::get_duration(t1y-t0y)
+                  << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
+
             // only perform calculation if opQ is exist on the current process
             if(qops2.num_ops('Q') == 0) continue; 
             auto t0z = tools::get_time();
@@ -418,20 +418,20 @@ namespace ctns{
             auto t1z = tools::get_time();
             tcomp += tools::get_duration(t1z-t0z);
             taccum += tools::get_duration(t1z-t0z);
-	    if(rank == 0) std::cout << "   compute opQ from opB: t=" << tools::get_duration(t1z-t0z) 
-		    << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
+            if(rank == 0) std::cout << "   compute opQ from opB: t=" << tools::get_duration(t1z-t0z) 
+               << " tcomp=" << tcomp << " taccum=" << taccum << std::endl;
          } // iproc
 
          // Clean up
          cudaStreamDestroy(stream);
-         
+
          auto t_end = tools::get_time();
          if(rank == 0){
             double t_tot = tools::get_duration(t_end-t_start);
             double trest = t_tot - tinit - tcopy - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_b2qGPU(su2) : " << t_tot << " S"
                << " T(init/copy/adjt/bcast/comp/rest)=" << tinit << "," << tcopy << ","
-	       << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
+               << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
                << std::endl;
          }
       }

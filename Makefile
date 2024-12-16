@@ -80,6 +80,10 @@ else ifeq ($(strip $(machine)), jiageng)
    GSLDIR = ./extlibs/gsl-install
    NLOPTDIR_LIB = ./extlibs/nlopt-2.7.1/build/lzdnlopt/lib64
    NLOPTDIR_INCLUDE = ./extlibs/nlopt-2.7.1/build/lzdnlopt/include
+   ifeq ($(strip $(USE_TCMALLOC)), yes)
+      FLAGS += -DTCMALLOC -I./extlibs/gperftools-master/lzdtcmalloc/include/gperftools
+      LFLAGS += -L./extlibs/gperftools-master/lzdtcmalloc/lib -ltcmalloc
+   endif
 
 else ifeq ($(strip $(machine)), a800_xiyun)
    MATHLIB = ${MKLROOT}

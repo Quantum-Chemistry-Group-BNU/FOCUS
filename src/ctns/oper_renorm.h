@@ -104,7 +104,11 @@ namespace ctns{
          qops.mpirank = rank;
          qops.ifdist2 = true;
          // initialize
-         qops.init();
+         if(alg_renorm > 10){
+            qops.setup_opdict();
+         }else{
+            qops.init();
+         }
          if(debug){ 
             qops.print("qops", schd.ctns.verbose-1);
             get_mem_status(rank);
