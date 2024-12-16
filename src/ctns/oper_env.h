@@ -150,7 +150,7 @@ namespace ctns{
             get_mem_status(rank);
          }
          double t_init = 0.0, t_load = 0.0, t_comp = 0.0, t_save = 0.0;
-        
+
          // 0. outcore
          if(schd.ctns.ifoutcore) rcanon_save_sites(icomb, scratch, debug);
 
@@ -172,7 +172,7 @@ namespace ctns{
                timing.t0 = tools::get_time();
                if(debug){
                   std::cout << "\nidx=" << idx << " coord=" << pcoord << std::endl;
-            	  icomb.display_size();
+                  icomb.display_size();
                }
 
                // ZL@2024/12/08
@@ -196,7 +196,7 @@ namespace ctns{
                timing.tc = timing.ta;
                timing.td = timing.ta;
                timing.te = timing.ta;
-               
+
                // b. perform renormalization for superblock {|cr>}
                std::string frop = oper_fname(scratch, pcoord, "r");
                std::string superblock = "cr";
@@ -212,12 +212,12 @@ namespace ctns{
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
 
-	       // c. erase fneed to save memory
+               // c. erase fneed to save memory
                qops_pool.join_and_erase(fneed);
-	       if(debug) get_mem_status(rank);
+               if(debug) get_mem_status(rank);
                timing.tf14 = tools::get_time();
 
-	       // d. ab2pq if necessary	       
+               // d. ab2pq if necessary	       
                if(schd.ctns.ifab2pq){
                   const int nsite = icomb.get_nphysical();
                   const bool ifmps = icomb.topo.ifmps;
@@ -225,18 +225,18 @@ namespace ctns{
                   if(ab2pq_current) oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops_pool[frop]);
                }
                timing.tf = tools::get_time();
-               
+
                // e. save operators to disk
                qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);
                timing.t1 = tools::get_time();
 
-	       // ZL@2024/12/08
+               // ZL@2024/12/08
                if(schd.ctns.ifoutcore) rcanon_clear_site(icomb, idx);
 
 #ifdef TCMALLOC
-   	       release_freecpumem();
+               release_freecpumem();
 #endif
                if(debug){ 
                   get_mem_status(rank);
@@ -252,7 +252,7 @@ namespace ctns{
             }
          } // idx
          qops_pool.finalize();
-         
+
          // 3. outcore
          if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
 

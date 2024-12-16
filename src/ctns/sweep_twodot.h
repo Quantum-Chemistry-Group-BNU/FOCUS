@@ -94,10 +94,10 @@ namespace ctns{
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
          if(alg_hvec>10 && alg_renorm>10){
             const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
-            qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
+            qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper, qops_pool.frop_prev);
             if(debug){
-   	       get_mem_status(rank, 0, "after clear_from_cpumem");
-   	    }
+               get_mem_status(rank, 0, "after clear_from_cpumem");
+            }
          }
          timing.ta = tools::get_time();
 
@@ -205,23 +205,23 @@ namespace ctns{
 
          // 2.3 prefetch files for the next bond
          // join save thread and set frop_prev = empty, such that
-	 // unused cpu memory can be fully released
-	 qops_pool.join_save();
+         // unused cpu memory can be fully released
+         qops_pool.join_save();
          if(schd.ctns.async_fetch){
             // remove used cpu mem of fneed fully, which makes sure
-	    // that only 2 (rather than 3) qops are in cpumem!
+            // that only 2 (rather than 3) qops are in cpumem!
             if(alg_hvec>10 && alg_renorm>10){
                const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
                qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
                if(debug){
-   	          get_mem_status(rank, 0, "after clear_from_cpumem");
-   	       }
+                  get_mem_status(rank, 0, "after clear_from_cpumem");
+               }
             }
-	    qops_pool[frop]; // just declare a space for frop
+            qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
             if(debug){
-	       get_mem_status(rank, 0, "after fetch_to_cpumem");
-	    }
+               get_mem_status(rank, 0, "after fetch_to_cpumem");
+            }
          }
 
          // 3. decimation & renormalize operators
@@ -232,7 +232,7 @@ namespace ctns{
 
          // 4. save on disk 
          qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
-        
+
          timing.t1 = tools::get_time();
          if(debug){
             get_mem_status(rank);

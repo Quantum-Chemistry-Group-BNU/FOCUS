@@ -72,7 +72,7 @@ namespace ctns{
             void fetch_to_memory(const std::vector<std::string> fneed, const bool ifgpu);
             void fetch_to_cpumem(const std::vector<std::string> fneed_next, const bool async_fetch=false);
             // join thread for save
-	    void join_save();
+            void join_save();
             // join and erase from cpu & gpu memory
             void join_and_erase(const std::vector<std::string> fneed, 
                   const std::vector<std::string> fneed_next={});
@@ -81,7 +81,8 @@ namespace ctns{
                   const std::vector<std::string> fneed_next); 
             void clear_from_cpumem(const std::vector<std::string> fneed,
                   const std::vector<std::string> fneed_next,
-                  const bool ifkeepcoper); 
+                  const bool ifkeepcoper,
+                  const std::string frop_beingsaved=""); 
             // save renormalized operator to file 
             void save_to_disk(const std::string frop, const bool async_save);
             // remove fdel [in the same bond as frop] from disk
@@ -103,6 +104,8 @@ namespace ctns{
                qstore.clear();
                frop_prev.clear();
             }
+         public:
+            std::string frop_prev;
          private:
             int iomode=0;
             bool debug=false;
@@ -110,7 +113,6 @@ namespace ctns{
             std::thread thread_fetch;  // prefetch qops for the next dbond
             std::thread thread_save;   // save renormalized operators
             std::thread thread_remove; // remove qops on the same bond with opposite direction
-            std::string frop_prev;
       };
 
    template <bool ifab, typename Tm>
@@ -202,10 +204,9 @@ namespace ctns{
          }
 
          if(thread_save.joinable()) thread_save.join();
-	 frop_prev.clear(); // ZL@2024/12/15: added here
-         
-	 if(debug){
-	    auto t1 = tools::get_time();
+
+         if(debug){
+            auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR qoper_pool::join_save : "
                << tools::get_duration(t1-t0) << " -----"
                << std::endl;
@@ -222,33 +223,40 @@ namespace ctns{
             for(const auto& fqop : frelease){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
-               bool iferase = (result == fneed_next.end()) && (fqop != frop_prev); 
+               bool iferase = (result == fneed_next.end()); // && (fqop != frop_prev); 
                std::cout << " erase: fqop=" << fqop << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
+            }
+            {
+               bool ifexist = this->exist(frop_prev);
+               auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
+               bool iferase = (result == fneed_next.end());
+               std::cout << " erase: frop_prev=" << frop_prev << " ifexist=" << ifexist << " iferase=" << iferase << std::endl;
             }
             this->display("in");
          }
 
+         /// in fact, only fetch and remove will be joined during sweep
          this->join_all();
          auto t1 = tools::get_time();
-         
-	 for(const auto& fqop : frelease){
-            if(fqop == frop_prev) continue;
+
+         for(const auto& fqop : frelease){
+            //if(fqop == frop_prev) continue;
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
             qstore.erase(fqop);
          }
          auto t2 = tools::get_time();
-         
-	 // if result is not used in the next dbond, then release it
+
+         // if result is not used in the next dbond, then release it
          // NOTE: check is neceesary at the returning point: [ -*=>=*-* and -*=<=*-* ],
          // because the previous left qops is needed in the next dbond!
          auto result = std::find(fneed_next.begin(), fneed_next.end(), frop_prev);
          if(result == fneed_next.end()){
             qstore.erase(frop_prev); // NOTE: frop_prev is only erased here, saving is finished after join_all!
          }
-	 frop_prev.clear(); // ZL@2024/12/15: added here
-         
-	 if(debug){
+         frop_prev.clear(); // ZL@2024/12/15: added here
+
+         if(debug){
             this->display("out");
             auto t3 = tools::get_time();
             std::cout << "----- TIMING FOR qoper_pool::join_and_erase : "
@@ -270,13 +278,13 @@ namespace ctns{
             for(const auto& fqop : fclear){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
-               bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
+               bool ifclear = (result == fneed_next.end()); // && (fqop != frop_prev); 
                std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
          }
          for(const auto& fqop : fclear){
-            if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
+            //if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
             qstore[fqop].clear();
@@ -295,14 +303,17 @@ namespace ctns{
    template <bool ifab, typename Tm>
       void qoper_pool<ifab,Tm>::clear_from_cpumem(const std::vector<std::string> fclear,
             const std::vector<std::string> fneed_next,
-            const bool ifkeepcoper){
+            const bool ifkeepcoper,
+            const std::string frop_beingsaved){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::qoper_pool::clear_from_cpumem: size=" << fclear.size() << std::endl; 
+            std::cout << "ctns::qoper_pool::clear_from_cpumem: size=" << fclear.size() 
+               << " frop_beingsaved=" << frop_beingsaved
+               << std::endl; 
             for(const auto& fqop : fclear){
                bool ifexist = this->exist(fqop);
                auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop); 
-               bool ifclear = (result == fneed_next.end()) && (fqop != frop_prev); 
+               bool ifclear = (result == fneed_next.end()) && (fqop != frop_beingsaved); 
                std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
@@ -310,7 +321,7 @@ namespace ctns{
          for(int i=0; i<fclear.size(); i++){
             if(ifkeepcoper && i >= 2) continue; // skip op[c2/c1]
             const auto& fqop = fclear[i];
-            if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
+            if(fqop == frop_beingsaved) continue; // DO NOT remove CPU space, since saving may not finish!
             auto result = std::find(fneed_next.begin(), fneed_next.end(), fqop);
             if(result != fneed_next.end()) continue;
             qstore[fqop].clear();
@@ -378,20 +389,20 @@ namespace ctns{
          auto t0 = tools::get_time();
          if(debug){
             std::cout << "ctns::qoper_pool::cleanup_sweep" << std::endl;
-	    std::cout << " frop=" << frop << std::endl;
-	    std::cout << " fdel=" << fdel << std::endl;
+            std::cout << " frop=" << frop << std::endl;
+            std::cout << " fdel=" << fdel << std::endl;
          }
-         
+
          this->save_to_disk(frop, async_save);
          auto t1 = tools::get_time();
-         
+
          // Remove fdel on the same bond as frop but with opposite direction:
          // NOTE: At the boundary case [ -*=>=*-* and -*=<=*-* ], removing 
          // in the later configuration should wait until the file from the 
          // former configuration has been saved! Therefore, oper_remove should 
          // come later than save, which contains the synchronization!
          this->remove_from_disk(fdel, async_remove);
-         
+
          if(debug){
             auto t2 = tools::get_time();
             std::cout << "----- TIMING FOR qoper_pool::cleanup_sweep: " 
@@ -402,7 +413,7 @@ namespace ctns{
                << std::endl;
          }
       }
- 
+
 } // ctns
 
 #endif
