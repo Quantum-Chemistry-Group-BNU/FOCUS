@@ -619,11 +619,11 @@
          - revise symbolic_formulae_twodot.h
       - accelerate AB2PQ kernel:
          - su2 case:
-            - optimized CPU version
-               - alg_a2b, alg_b2q = 2 [DONE@2024/12/12]
-               - save CPU and GPU memory?
-            - optimized GPU version 
-               - use gpu/nccl to perform communication? this is crucial
+            - optimized CPU version [DONE@2024/12/12]
+               - alg_a2b, alg_b2q = 2 
+            - optimized GPU version [DONE@2024/12/17]
+               - use gpu/nccl to perform communication? this is crucial!
+               - use gpu to perform hermtian conjugate to avoid copy data back to cpu
          - nonsu2 case:
 
  * Decimation for su2 is not parallelized: [DONE@2024/12/06]
