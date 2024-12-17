@@ -367,9 +367,10 @@ namespace ctns{
             << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
             */
 
-            // Algorithm-1:
             auto t0y = tools::get_time();
-            {
+            // Algorithm-1:
+            if(alg_b2q == 3){
+
                auto t0a = tools::get_time();
                // copy opB from GPU to CPU
                size_t size = qops_tmp.size_ops('B')*sizeof(Tm);
@@ -392,7 +393,13 @@ namespace ctns{
                      << tools::get_duration(t0c-t0b) << ","
                      << tools::get_duration(t0d-t0c) << ","
                      << tools::get_duration(t0d-t0a) << std::endl;
-            }
+	    }else if(alg_b2q == 4){
+	       // opB to opB.H() on GPU
+	       batchedHermitianConjugateGPU(qops, 'B', qops_tmp, 'N', true);
+	    }else{
+		std::cout << "error: no such option in b2qGPU for alg_b2q =" << alg_b2q << std::endl;
+		exit(1);
+            } // alg_b2q
             icomb.world.barrier();
             auto t1y = tools::get_time();
             tadjt += tools::get_duration(t1y-t0y);
