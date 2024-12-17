@@ -325,7 +325,7 @@ namespace ctns{
                   << " tadjt=" << tadjt << " taccum=" << taccum << std::endl;
 
 #ifndef SERIAL
-               // broadcast opA.H()
+               // broadcast opB.H()
                auto t0b = tools::get_time();
                if(size > 1){
                   nccl_comm.broadcast(dev_work, qops_tmp.size_ops('N'), iproc);
