@@ -35,7 +35,7 @@ namespace ctns{
                int br = std::get<0>(key);
                int bc = std::get<1>(key);
                size_t loff2 = qt2.info.get_offset(br,bc);
-               assert(loff2 == 0);
+               assert(loff2 > 0);
                size_t goff2 = qops2._offset.at(std::make_pair(type2,index)) + loff2-1;
                size_t loff1 = qt1.info.get_offset(bc,br);
                size_t goff1 = qops1._offset.at(std::make_pair(type1,index)) + loff1-1;
@@ -93,7 +93,7 @@ namespace ctns{
          const bool ifkr = Qm::ifkr;
          const int sorb = qops.sorb;
          assert(ifkr);
-         assert(alg_a2p == 3);
+         assert(alg_a2p >= 3);
 
          // Create a CUDA stream for asynchronous operations
          cudaStream_t stream;
@@ -267,7 +267,7 @@ namespace ctns{
          const int sorb = qops.sorb;
          assert(ifkr);
          assert(qops.ifhermi);
-         assert(alg_b2q == 3);
+         assert(alg_b2q >= 3);
 
          // Create a CUDA stream for asynchronous operations
          cudaStream_t stream;
