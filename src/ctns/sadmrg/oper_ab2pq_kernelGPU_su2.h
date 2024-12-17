@@ -163,7 +163,7 @@ namespace ctns{
                   // Algorithm-2:
                }else if(alg_a2p == 4){
                   // opA to opA.H() on GPU
-                  batchedHermitianConjugateGPU(qops, 'A', qops_tmp, 'M', true); 
+                  batchedHermitianConjugateGPU(qops_tmp, 'A', qops_tmp, 'M', true); 
                }else{
                   std::cout << "error: no such option in a2pGPU for alg_a2p =" << alg_a2p << std::endl;
                   exit(1);
