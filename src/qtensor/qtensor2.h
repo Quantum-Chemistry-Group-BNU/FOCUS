@@ -241,7 +241,7 @@ namespace ctns{
             //         i --<--*--<-- j => j --<--*'--<-- i
             //
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
-               qtensor2<ifab,Tm> H() const;
+               qtensor2<ifab,Tm> H(const bool adjoint=false) const;
             // ZL20210401: generate matrix representation for Kramers paired operators
             template <bool y=ifab, std::enable_if_t<y,int> = 0>
                qtensor2<ifab,Tm> K(const int nbar=0) const;

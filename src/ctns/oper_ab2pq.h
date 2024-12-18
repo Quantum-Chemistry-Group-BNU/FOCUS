@@ -2,11 +2,9 @@
 #define OPER_AB2PQ_H
 
 #include "oper_ab2pq_kernel.h"
-#include "sadmrg/oper_ab2pq_kernel_su2.h"
 #ifdef GPU
 #include "../gpu/gpu_blas.h"
 #include "oper_ab2pq_kernelGPU.h"
-#include "sadmrg/oper_ab2pq_kernelGPU_su2.h"
 #endif
 
 namespace ctns{

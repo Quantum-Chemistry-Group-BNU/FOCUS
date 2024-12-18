@@ -60,7 +60,8 @@ namespace ctns{
    // 	       the direction of lines in diagrams
    template <typename Tm>
       void HermitianConjugate(const stensor2<Tm>& qt1,
-            stensor2<Tm>& qt2){ 
+            stensor2<Tm>& qt2,
+            const bool adjoint){ 
          assert(qt1.size() == qt2.size());
          int br, bc;
          for(int i=0; i<qt2.info._nnzaddr.size(); i++){
@@ -76,12 +77,13 @@ namespace ctns{
             } // ic
          } // i
       }
+   // adjoint is not used, just for the same interface as stensor2su2
    template <bool ifab, typename Tm>
       template <bool y, std::enable_if_t<y,int>>
-      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H() const{
+      qtensor2<ifab,Tm> qtensor2<ifab,Tm>::H(const bool adjoint) const{
          // symmetry of operator get changed in consistency with line changes
          qtensor2<ifab,Tm> qt2(-info.sym, info.qcol, info.qrow, info.dir);
-         HermitianConjugate(*this, qt2);
+         HermitianConjugate(*this, qt2, adjoint);
          return qt2; 
       }
 

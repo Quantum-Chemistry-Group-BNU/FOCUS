@@ -35,8 +35,8 @@ namespace ctns{
             const auto& qt1 = qops1(type1).at(index);
             for(int i=0; i<qt2.info._nnzaddr.size(); i++){
                auto key = qt2.info._nnzaddr[i];
-               int br = std::get<0>(key);
-               int bc = std::get<1>(key);
+               int br, bc;
+               qt2.info._addr_unpack(key,br,bc); // works for both su2 and nonsu2
                size_t loff2 = qt2.info.get_offset(br,bc);
                assert(loff2 > 0);
                size_t goff2 = qops2._offset.at(std::make_pair(type2,index)) + loff2-1;

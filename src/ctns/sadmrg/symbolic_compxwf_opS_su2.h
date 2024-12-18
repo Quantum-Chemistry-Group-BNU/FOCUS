@@ -1,6 +1,8 @@
 #ifndef SYMBOLIC_COMPXWF_OPS_SU2_H
 #define SYMBOLIC_COMPXWF_OPS_SU2_H
 
+#include "../symbolic_task.h"
+
 namespace ctns{
 
    // integrals for Ppq

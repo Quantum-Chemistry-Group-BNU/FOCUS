@@ -32,6 +32,11 @@ namespace ctns{
                return ifnele && ifspin;
             }
          public:
+            // unified the interface with qinfo2
+            void _addr_unpack(const std::tuple<int,int>& key, int& br, int& bc) const{
+               br = std::get<0>(key);
+               bc = std::get<1>(key);
+            }
             // initialization
             void init(const qsym& _sym, const qbond& _qrow, const qbond& _qcol, 
                   const direction2 _dir={1,0}){
