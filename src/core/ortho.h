@@ -44,12 +44,21 @@ namespace linalg{
             Tm* rbas){
          const Tm one = 1.0, mone = -1.0, zero = 0.0;
          std::vector<Tm> vdr(neig*nres);
+         //// V^+r
+         //linalg::xgemm("C", "N", neig, nres, ndim,
+         //      one, vbas, ndim, rbas, ndim,
+         //      zero, vdr.data(), neig); 
+         //// R = R-V*(V^+r)
+         //linalg::xgemm("N", "N", ndim, nres, neig,
+         //      mone, vbas, ndim, vdr.data(), neig,
+         //      one, rbas, ndim); 
+
          // V^+r
-         linalg::xgemm("C", "N", neig, nres, ndim,
+         linalg::xgemm_small("C", "N", neig, nres, ndim,
                one, vbas, ndim, rbas, ndim,
                zero, vdr.data(), neig); 
          // R = R-V*(V^+r)
-         linalg::xgemm("N", "N", ndim, nres, neig,
+         linalg::xgemm_small("N", "N", ndim, nres, neig,
                mone, vbas, ndim, vdr.data(), neig,
                one, rbas, ndim); 
       }

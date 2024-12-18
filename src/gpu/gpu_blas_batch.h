@@ -177,6 +177,7 @@ namespace linalg{
          if(trans=='T' || trans=='C'){
             Trans = CUBLAS_OP_T;
          }
+#if 1
          // https://docs.nvidia.com/cuda/cublas/index.html
          CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
                   Trans, 
@@ -187,7 +188,21 @@ namespace linalg{
                   beta,
                   &dev_Y_array[ista], incy,
                   nbatch));
-         /*
+
+#else
+           
+//           for(int j=0; j<nbatch; j++){
+//              cublasDgemv(handle_cublas,
+//                    Trans, 
+//                    m, n, 
+//                    alpha,
+//                    A_array[ista+j], lda,
+//                    X_array[ista+j], incx,
+//                    beta,
+//                    Y_array[ista+j], incy);
+//           }
+#endif
+       /*
             for(int j=0; j<nbatch; j++){
             std::cout << "ista=" << ista << " j=" << j << " ista+j=" << ista+j 
             << " m,n,lda=" << m << "," << n << "," << lda 
@@ -272,6 +287,7 @@ namespace linalg{
             if(trans=='T' || trans=='C'){
                Trans = CUBLAS_OP_T;
             }
+#if 1
             // https://docs.nvidia.com/cuda/cublas/index.html
             CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
                      Trans, 
@@ -282,6 +298,22 @@ namespace linalg{
                      beta,
                      &dev_Y_array[ista], incy,
                      nbatch));
+#else
+           for(int jj=0; jj<nbatch; jj++){
+              cublasDgemv(handle_cublas,
+                    Trans, 
+                    m, n, 
+                    alpha,
+                    A_array[ista+jj], lda,
+                    X_array[ista+jj], incx,
+                    beta,
+                    Y_array[ista+jj], incy);
+           }
+#endif
+       
+
+
+
          } // j
 
          for(int j=0; j<jlen; j++){

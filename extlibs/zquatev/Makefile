@@ -1,9 +1,9 @@
 
-machine = jinan #mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
+machine = wuhan#jinan #mac # cluster#dell2 #scv7260 #scy0799 #scv7260 #DCU_419 #mac #lenovo
 
 USE_GCC = yes
 USE_OPENMP = yes
-USE_MKL = yes
+USE_MKL = no 
 USE_ILP64 = yes # by default
 
 INCLUDE = -I.
@@ -41,7 +41,7 @@ else ifeq ($(strip $(machine)), scv7260)
 else ifeq ($(strip $(machine)), wuhan)
    CXX = g++ 
    FLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
-   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   MATHLIB =/home/share/l6eub2ic/home/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
    #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/lib
 else ifeq ($(strip $(machine)), cluster)
    CXX = icpc 

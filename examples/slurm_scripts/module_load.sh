@@ -60,6 +60,9 @@ module load cuda/11.6
 # $ salloc -N 1 -n 1 --gres=gpu:1
 ########################################
 elif [ $platform == "wuhan" ]; then
+export PATH=/home/share/l6eub2ic/home/xiangchunyang/software/ctags-5.8-install/bin:$PATH
+export PATH=/home/share/l6eub2ic/home/xiangchunyang/software/cmake-3.26.3-install/bin:$PATH
+export PATH=/home/share/l6eub2ic/home/xiangchunyang/software/valgrind-3.21.0-install/bin:$PATH
 ##kblas hmpi
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-kblas64-lapack64/lib:$LD_LIBRARY_PATH
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_hmpi_64/lib:$LD_LIBRARY_PATH
@@ -67,19 +70,35 @@ elif [ $platform == "wuhan" ]; then
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-kblas64:$LD_LIBRARY_PATH
 
 ##openblas openmpi
-export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_openmpi_64/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/software/magma-2.7.1-install-openblas64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/software/boost_1.80.0_install_openmpi_64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic/blas_optimized_libs/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/gperftools-install/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/nlopt-2.7.1-install/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/gsl-2.7.1-install/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/blas_optimized_libs/lib:$LD_LIBRARY_PATH
 
 #export LD_LIBRARY_PATH=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64:$LD_LIBRARY_PATH
-export CUDADIR=/home/HPCBase/compilers/cuda/11.4.0
 source /home/HPCBase/tools/module-5.2.0/init/profile.sh
 module use /home/HPCBase/modulefiles/
 module purge
 #module load compilers/gcc/9.3.0
 module load compilers/kgcc/9.3.1
-module load compilers/cuda/11.4.0
-module load libs/nccl/2.16.5-cuda11.4 
+
+#export CUDADIR=/home/HPCBase/compilers/cuda/11.4.0
+#module load compilers/cuda/11.4.0
+#module load libs/nccl/2.16.5-cuda11.4 
+
+export CUDADIR=/home/HPCBase/compilers/cuda/11.7.0
+module load compilers/cuda/11.7.0
+export NCCLDIR=/home/share/l6eub2ic/home/xiangchunyang/software/nccl-2.14.3+cuda-11.7.0-install
+#module load libs/nccl/2.12.12-1_cuda11.6
+
+#export CUDADIR=/home/HPCBase/compilers/cuda/11.8.0
+#module load compilers/cuda/11.8.0
+#module load libs/nccl/2.16.5-1_cuda11.8
+
 
 ##kblas hmpi
 #module load mpi/hmpi/1.2.0_kgcc9.3.1
