@@ -563,16 +563,6 @@
 
 ### 2024 DMRG: code optimization ###
  
- * Benchmark: jiageng or a800_xiyun platform [DONE@2025/XX/XX]
-   - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
-   - Compilation on jiageng: need to use mkl for magma/zquatev, 
-                             but use mkl2022 for focus,
-                             otherwise, dgemv_batch does not exist!
-   - fe2s2
-   - fe4s4
-   - fe8s7
-   - femoco: 不同初始化策略，产生不同guess，然后筛选？
-
  * Implement the switch from AB2PQ in the middle of the MPS chain: [DONE@2024/11/21]
    - memcpy in renorm: [DONE@2024/11/16]
       - better understand the cost of gpu2cpu memcpy for renorm? 
@@ -623,8 +613,10 @@
                - alg_a2b, alg_b2q = 2 
             - optimized GPU version [DONE@2024/12/17]
                - use gpu/nccl to perform communication? this is crucial!
-               - use gpu to perform hermtian conjugate to avoid copy data back to cpu (need to optimize in future)
-         - nonsu2 case:
+               - use gpu to perform hermtian conjugate (gpu_kernel)to avoid 
+                 copy data back to cpu (need to optimize in future)
+         - nonsu2 case: [DONE@2024/12/18]
+            - unified interface
 
  * Decimation for su2 is not parallelized: [DONE@2024/12/06]
    - using GPU:
@@ -646,6 +638,11 @@
    - join_and_erase immediately after oper_renom: [DONE@2024/12/14]
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
+   - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
+   - compilation on jiageng: need to use mkl for magma/zquatev, 
+     but use mkl2022 for focus, otherwise, dgemv_batch does not exist!
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
+
    - jinan: a100-40G,64G/GPU: cpu memory issue?
    - wuhan: a100-40G,64G/GPU
    - xiyun: a800-80G,256G/GPU

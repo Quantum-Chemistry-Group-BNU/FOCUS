@@ -140,9 +140,9 @@ inline void get_gpumem_status(const int rank, const int level=0, const std::stri
 #endif
 }
 
-inline void get_mem_status(const int rank, const int level=0, const std::string msg=""){
+inline void get_mem_status(const int rank, const int level=0, const std::string msg="", const bool ifgpu=false){
    get_cpumem_status(rank, level, msg);
-   get_gpumem_status(rank, level, msg);
+   if(ifgpu) get_gpumem_status(rank, level, msg);
 }
 
 #ifdef SERIAL
@@ -150,7 +150,7 @@ inline void get_mem_status(const int rank, const int level=0, const std::string 
 inline void mem_check(const bool ifgpu){
    double avail_cpu = getAvailableMemory();
    double total_cpu = getTotalMemory();
-   std::cout << "\nmem_check:" << std::endl;
+   std::cout << "\nmem_check: ifgpu=" << ifgpu << std::endl;
    std::cout << std::scientific << std::setprecision(3);
    std::cout << "rank=0 CPUmem(GB):"
 	  << " avail=" << avail_cpu 
@@ -184,7 +184,7 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
    boost::mpi::gather(world, avail_cpu, avail_cpus, 0);
    boost::mpi::gather(world, total_cpu, total_cpus, 0);
    if(rank == 0){
-      std::cout << "\nmem_check:" << std::endl;
+      std::cout << "\nmem_check: ifgpu=" << ifgpu << std::endl;
       std::cout << std::scientific << std::setprecision(3);
       for(int i=0; i<size; i++){
          std::cout << "rank=" << i << " CPUmem(GB):"

@@ -647,7 +647,6 @@ namespace ctns{
                      const auto& symQ = pr.first;
                      const auto& bindex = pr.second;
                      if(qmap.find(symQ) == qmap.end()) continue;
-                     int ts = symQ.ts();
                      const auto& qindex = qmap.at(symQ);
                      size_t opsize = qops2('Q').at(qindex[0]).size();
                      if(opsize == 0) continue; 
@@ -675,7 +674,6 @@ namespace ctns{
                      const auto& symQ = pr.first;
                      const auto& bindex = pr.second;
                      if(qmap.find(symQ) == qmap.end()) continue;
-                     int ts = symQ.ts();
                      const auto& qindex = qmap.at(symQ);
                      size_t opsize = qops2('Q').at(qindex[0]).size();
                      if(opsize == 0) continue;

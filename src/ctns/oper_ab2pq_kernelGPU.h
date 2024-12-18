@@ -3,7 +3,6 @@
 #ifndef OPER_AB2PQ_KERNELGPU_H
 #define OPER_AB2PQ_KERNELGPU_H
 
-#include "oper_ab2pq_hcGPU.h"
 #include "oper_ab2pq_util.h"
 
 namespace ctns{
