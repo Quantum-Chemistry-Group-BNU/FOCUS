@@ -45,4 +45,7 @@ ifnccl
 #save_formulae
 batchhvec 4 4 4
 batchrenorm 4 4 4
+alg_a2p 3
+alg_b2q 3
+ifoutcore
 $end
