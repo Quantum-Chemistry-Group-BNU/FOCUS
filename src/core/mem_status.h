@@ -153,9 +153,9 @@ inline void mem_check(const bool ifgpu){
    std::cout << "\nmem_check: ifgpu=" << ifgpu << std::endl;
    std::cout << std::scientific << std::setprecision(3);
    std::cout << "rank=0 CPUmem(GB):"
-	  << " avail=" << avail_cpu 
-	  << " total=" << total_cpu 
-	  << std::endl;
+      << " avail=" << avail_cpu 
+      << " total=" << total_cpu 
+      << std::endl;
 #ifdef GPU
    if(ifgpu){
       size_t avail, total;
@@ -163,9 +163,9 @@ inline void mem_check(const bool ifgpu){
       double avail_gpu = avail / std::pow(1024.0,3);
       double total_gpu = total / std::pow(1024.0,3);
       std::cout << "rank=0 GPUmem(GB):"
-	     << " avail=" << avail_gpu 
-	     << " total=" << total_gpu 
-	     << std::endl;
+         << " avail=" << avail_gpu 
+         << " total=" << total_gpu 
+         << std::endl;
    }
 #endif 
    get_mem_status(0);
@@ -188,16 +188,16 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
       std::cout << std::scientific << std::setprecision(3);
       for(int i=0; i<size; i++){
          std::cout << "rank=" << i << " CPUmem(GB):"
-		<< " avail=" << avail_cpus[i]
-	       	<< " total=" << total_cpus[i]
-	       	<< std::endl;
+            << " avail=" << avail_cpus[i]
+            << " total=" << total_cpus[i]
+            << std::endl;
       }
       auto ptr = std::minmax_element(avail_cpus.begin(), avail_cpus.end());
       double diff = (*ptr.second-*ptr.first);
       std::cout << "min=" << *ptr.first
-	      << " max=" << *ptr.second
-	      << " diff=" << diff
-	      << std::endl;
+         << " max=" << *ptr.second
+         << " diff=" << diff
+         << std::endl;
       if(diff > 10.0) std::cout << "WARNING: diff(CPUmem) is greater than 10GB!" << std::endl;
    }
 #ifdef GPU
@@ -212,21 +212,21 @@ inline void mem_check(const bool ifgpu, const boost::mpi::communicator& world){
       if(rank == 0){
          for(int i=0; i<size; i++){
             std::cout << "rank=" << rank << " GPUmem(GB):"
-           	<< " avail=" << avail_gpus[i]
-                << " total=" << total_gpus[i]
-                << std::endl;
+               << " avail=" << avail_gpus[i]
+               << " total=" << total_gpus[i]
+               << std::endl;
          }
          auto ptr = std::minmax_element(avail_gpus.begin(), avail_gpus.end());
-	 double diff = (*ptr.second-*ptr.first);
+         double diff = (*ptr.second-*ptr.first);
          std::cout << "min=" << *ptr.first
-   	      << " max=" << *ptr.second
-   	      << " diff=" << diff 
-   	      << std::endl;
-	 if(diff > 2.0) std::cout << "WARNING: diff(GPUmem) is greater than 2GB!" << std::endl;
+            << " max=" << *ptr.second
+            << " diff=" << diff 
+            << std::endl;
+         if(diff > 2.0) std::cout << "WARNING: diff(GPUmem) is greater than 2GB!" << std::endl;
       }
    }
 #endif // GPU
-   get_mem_status(0);
+   if(rank == 0) get_mem_status(0);
 }
 
 #endif // SERIAL

@@ -104,7 +104,8 @@ namespace ctns{
                qops_tmp.mpirank = iproc; // not rank
                qops_tmp.ifdist2 = true;
                qops_tmp.init();
-               if(qops_tmp.size() == 0) continue;  
+               if(qops_tmp.size() == 0) continue;
+
                if(iproc == rank){
                   auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -128,7 +129,7 @@ namespace ctns{
                   auto t1 = tools::get_time();
                   double dtb = tools::get_duration(t1-t0);
                   tcomm += dtb;
-                  if(rank == 0){
+                  if(rank == iproc){
                      std::cout << " iproc=" << iproc << " rank=" << rank 
                         << " size(opA.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                         << " T(bcast)=" << dtb << " speed=" << tools::sizeGB<Tm>(data_size)/dtb << "GB/s"
@@ -179,7 +180,7 @@ namespace ctns{
                if(aindex_iproc.size() == 0) continue;
                // broadcast {opCrs} for given sym from iproc
                auto t0i = tools::get_time();
-               qoper_dict<Qm::ifabelian,Tm> qops_tmp;
+               qoper_dict<ifab,Tm> qops_tmp;
                qops_tmp.sorb = qops.sorb;
                qops_tmp.isym = qops.isym;
                qops_tmp.ifkr = qops.ifkr;
@@ -216,7 +217,7 @@ namespace ctns{
                auto t1h = tools::get_time();
                double dth = tools::get_duration(t1h-t0h); 
                tadjt += dth;
-               if(rank == 0) std::cout << "   from opA to opA.H(): dt=" <<  dth
+               if(rank == iproc) std::cout << "   from opA to opA.H(): dt=" <<  dth
                   << " tadjt=" << tadjt << std::endl;
 
 #ifndef SERIAL
@@ -228,7 +229,7 @@ namespace ctns{
                auto t1b = tools::get_time();
                double dtb = tools::get_duration(t1b-t0b);
                tcomm += dtb;
-               if(rank == 0){
+               if(rank == iproc){
                   size_t data_size = qops_tmp.size_ops('M');
                   std::cout << "   bcast: size(opM)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                      << " dt=" << dtb << " speed=" << tools::sizeGB<Tm>(data_size)/dtb << "GB/s"
@@ -270,7 +271,7 @@ namespace ctns{
                   auto t1c = tools::get_time();
                   double dtc = tools::get_duration(t1c-t0c);
                   tcomp += dtc;
-                  if(rank == 0) std::cout << "   compute opP from opA: dt=" << dtc
+                  if(rank == iproc) std::cout << "   compute opP from opA: dt=" << dtc
                      << " tcomp=" << tcomp << std::endl;
                }
             } // iproc
@@ -285,8 +286,8 @@ namespace ctns{
             double t_tot = tools::get_duration(t_end-t_start);
             double trest = t_tot - tinit - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_a2p : " << t_tot << " S"
-               << " T(init/adjt/bcast/comp/rest)=" << tinit << ","
-               << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
+               << " T(init/adjt+bcast/comp/rest)=" << tinit << ","
+               << tadjt+tcomm << "," << tcomp << "," << trest << " -----"  
                << std::endl;
          }
       }
@@ -404,6 +405,7 @@ namespace ctns{
                   qops_tmp.ifdist2 = true;
                   qops_tmp.init();
                   if(qops_tmp.size() == 0) continue;  
+                  
                   if(iproc == rank){
                      auto t0 = tools::get_time();
 #ifdef _OPENMP
@@ -427,7 +429,7 @@ namespace ctns{
                      auto t1 = tools::get_time();
                      double dtb = tools::get_duration(t1-t0);
                      tcomm += dtb;
-                     if(rank == 0){
+                     if(rank == iproc){
                         std::cout << " iproc=" << iproc << " rank=" << rank 
                            << " size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                            << " T(bcast)=" << dtb << " speed=" << tools::sizeGB<Tm>(data_size)/dtb << "GB/s"
@@ -485,7 +487,8 @@ namespace ctns{
                   qops_tmp.mpirank = iproc; // not rank
                   qops_tmp.ifdist2 = true;
                   qops_tmp.init();
-                  if(qops_tmp.size() == 0) continue;  
+                  if(qops_tmp.size() == 0) continue;
+
                   if(iproc == rank){
                      auto t0 = tools::get_time();
                      auto bindex = qops.oper_index_op('B');
@@ -510,7 +513,7 @@ namespace ctns{
                      auto t1 = tools::get_time();
                      double dtb = tools::get_duration(t1-t0);
                      tcomm += dtb;
-                     if(rank == 0){
+                     if(rank == iproc){
                         std::cout << " iproc=" << iproc << " rank=" << rank 
                            << " size(opB.H)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                            << " T(bcast)=" << dtb << " speed=" << tools::sizeGB<Tm>(data_size)/dtb << "GB/s"
@@ -553,7 +556,7 @@ namespace ctns{
                } // b
             } // iproc
 
-            // keep both BN such that only one bcast is need 
+         // keep both BN such that only one bcast is need 
          }else if(alg_b2q == 2){
 
             // loop over rank
@@ -562,7 +565,7 @@ namespace ctns{
                if(bindex_iproc.size() == 0) continue;
                // broadcast {opBqr} for given sym from iproc
                auto t0i = tools::get_time();
-               qoper_dict<Qm::ifabelian,Tm> qops_tmp;
+               qoper_dict<ifab,Tm> qops_tmp;
                qops_tmp.sorb = qops.sorb;
                qops_tmp.isym = qops.isym;
                qops_tmp.ifkr = qops.ifkr;
@@ -579,7 +582,7 @@ namespace ctns{
                auto t1i = tools::get_time();
                double dti = tools::get_duration(t1i-t0i);
                tinit += dti;
-               if(rank == 0){
+               if(rank == iproc){
                   std::cout << "iproc=" << iproc << std::endl;
                   qops_tmp.print("qops_tmp");
                   std::cout << "   init qops_tmp: dt=" << dti << " tinit=" << tinit << std::endl;
@@ -602,7 +605,7 @@ namespace ctns{
                auto t1c = tools::get_time();
                double dtc = tools::get_duration(t1c-t0c);
                tcopy += dtc;
-               if(rank == 0) std::cout << "   copy opB to qops_tmps: dt=" << dtc 
+               if(rank == iproc) std::cout << "   copy opB to qops_tmps: dt=" << dtc 
                   << " tcopy=" << tcopy << std::endl;
 
 #ifndef SERIAL
@@ -614,7 +617,7 @@ namespace ctns{
                auto t1b = tools::get_time();
                double dtb = tools::get_duration(t1b-t0b);
                tcomm += dtb;
-               if(rank == 0){
+               if(rank == iproc){
                   size_t data_size = qops_tmp.size_ops('B');
                   std::cout << "   bcast: size(opB)=" << data_size << ":" << tools::sizeGB<Tm>(data_size) << "GB" 
                      << " dt=" << dtb << " speed=" << tools::sizeGB<Tm>(data_size)/dtb << "GB/s"
@@ -634,7 +637,7 @@ namespace ctns{
                auto t1h = tools::get_time();
                double dth = tools::get_duration(t1h-t0h);
                tadjt += dth; 
-               if(rank == 0) std::cout << "   from opB to opB.H(): dt=" << dth
+               if(rank == iproc) std::cout << "   from opB to opB.H(): dt=" << dth
                   << " tadjt=" << tadjt << std::endl;
 
                // only perform calculation if opQ is exist on the current process
@@ -698,7 +701,7 @@ namespace ctns{
                   auto t1c = tools::get_time();
                   dtc = tools::get_duration(t1c-t0c);
                   tcomp += dtc;
-                  if(rank == 0) std::cout << "   compute opQ from opB: dt=" << dtc
+                  if(rank == iproc) std::cout << "   compute opQ from opB: dt=" << dtc
                      << " tcomp=" << tcomp << std::endl;
                }
             } // iproc
@@ -713,8 +716,8 @@ namespace ctns{
             double t_tot = tools::get_duration(t_end-t_start);
             double trest = t_tot - tinit - tcopy - tadjt - tcomm - tcomp;
             std::cout << "----- TIMING FOR oper_b2q : " << t_tot << " S"
-               << " T(init/copy/adjt/bcast/comp/rest)=" << tinit << "," << tcopy << ","
-               << tadjt << "," << tcomm << "," << tcomp << "," << trest << " -----"  
+               << " T(init/copy/adjt+bcast/comp/rest)=" << tinit << "," << tcopy << ","
+               << tadjt+tcomm << "," << tcomp << "," << trest << " -----"  
                << std::endl;
          }
       }

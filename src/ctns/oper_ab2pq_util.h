@@ -156,8 +156,8 @@ namespace ctns{
                offs[2*iblk+1] = goff1;
                dims[2*iblk] = qt2.info.qrow.get_dim(br);
                dims[2*iblk+1] = qt2.info.qcol.get_dim(bc);
-               if(!adjoint){
-                  facs[iblk] = 1.0;
+               if(!adjoint or ifab){
+                  facs[iblk] = 1.0; // no phase for abeilian case
                }else{
                   // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
                   int tsr = qt2.info.qrow.get_sym(br).ts();
