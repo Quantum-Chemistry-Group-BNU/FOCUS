@@ -623,7 +623,7 @@
                - alg_a2b, alg_b2q = 2 
             - optimized GPU version [DONE@2024/12/17]
                - use gpu/nccl to perform communication? this is crucial!
-               - use gpu to perform hermtian conjugate to avoid copy data back to cpu
+               - use gpu to perform hermtian conjugate to avoid copy data back to cpu (need to optimize in future)
          - nonsu2 case:
 
  * Decimation for su2 is not parallelized: [DONE@2024/12/06]
@@ -637,7 +637,7 @@
    - using MPI: 
       - add sweep_decim_util.h for partition and collect results
 
- * Reduce CPU memory usage:
+ * Reduce CPU memory usage: only 2 qops present in CPU and GPU (alg>10)
    - mintoring CPU usage using tcmalloc [DONE@2024/12/10]
    - outcore option for comb to save CPU memory? [DONE@2024/12/12]
       - during oper_env [DONE@2024/12/08]

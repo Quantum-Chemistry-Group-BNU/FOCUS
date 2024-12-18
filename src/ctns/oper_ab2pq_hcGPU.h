@@ -23,6 +23,7 @@ namespace ctns{
             const auto& qt2 = pr.second;
             nblks += qt2.info._nnzaddr.size();
          }
+         if(nblks == 0) return;
          // setup tasks
          std::vector<size_t> offs(nblks*2);
          std::vector<int> dims(nblks*2);
@@ -40,20 +41,18 @@ namespace ctns{
                assert(loff2 > 0);
                size_t goff2 = qops2._offset.at(std::make_pair(type2,index)) + loff2-1;
                size_t loff1 = qt1.info.get_offset(bc,br);
+               assert(loff1 > 0);
                size_t goff1 = qops1._offset.at(std::make_pair(type1,index)) + loff1-1;
                offs[2*iblk] = goff2;
                offs[2*iblk+1] = goff1;
-               auto blk = qt2(br,bc);
-               dims[2*iblk] = blk.dim0;
-               dims[2*iblk+1] = blk.dim1;
+               dims[2*iblk] = qt2.info.qrow.get_dim(br);
+               dims[2*iblk+1] = qt2.info.qcol.get_dim(bc);
                if(!adjoint){
                   facs[iblk] = 1.0;
                }else{
                   // <br||Tk_bar||bc> = (-1)^{k-jc+jr}sqrt{[jc]/[jr]}<bc||Tk||br>*
-                  auto symr = qt2.info.qrow.get_sym(br);
-                  auto symc = qt2.info.qcol.get_sym(bc);
-                  int tsr = symr.ts();
-                  int tsc = symc.ts();
+                  int tsr = qt2.info.qrow.get_sym(br).ts();
+                  int tsc = qt2.info.qcol.get_sym(bc).ts();
                   int deltats = (qt2.info.sym.ts() + tsr - tsc);
                   assert(deltats%2 == 0);
                   Tm fac = (deltats/2)%2==0? 1.0 : -1.0;
