@@ -53,8 +53,9 @@
 
 ### TODOs: initial guess & p-DMRG ###
 
- * Convert UHF product state to FOCUS guess? [DONE@2024/XX/XX]
+ * Convert UHF product state to FOCUS guess?
    - This may be operationally useful like BS-DFT.
+   - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
  * Perturbative noises: is it important?
 

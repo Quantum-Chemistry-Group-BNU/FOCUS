@@ -641,7 +641,6 @@
    - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
    - compilation on jiageng: need to use mkl for magma/zquatev, 
      but use mkl2022 for focus, otherwise, dgemv_batch does not exist!
-   - femoco: 不同初始化策略，产生不同guess，然后筛选？
 
    - jinan: a100-40G,64G/GPU: cpu memory issue?
    - wuhan: a100-40G,64G/GPU
@@ -649,9 +648,5 @@
 
    - estimate minimal condition for D=20000 in our implementation: 
       - two qops [40-60GB] in GPU memory at the same time?
-      - three qops in memory if use async_fetch? 
-         => no need for this? cpu ops can be released?
-      - dvdson ~ 10-20GB for D=10000-20000
-      - mps ~ 10-20GB for D=10000-20000
       - large-scale test on jiageng?
 
