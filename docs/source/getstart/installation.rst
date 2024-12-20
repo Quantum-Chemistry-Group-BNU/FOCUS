@@ -36,6 +36,18 @@ On some platforms, you need to specify more information:
 
    ./configure --prefix=/GLOBALFS/bnu_pp_1/openmpi/install64  --with-ucx=/APP/u22/ai_x86/mpi/ucx-1.15.0-gcc-11.4.0-cuda12.2-gdrcopy2.4 --with-cuda=/APP/u22/ai_x86/CUDA/12.2 --with-cuda-libdir=/APP/u22/ai_x86/CUDA/12.2/lib64/stubs --with-pmix=/usr/local/pmix4 --enable-mca-no-build=btl-uct --with-slurm FFLAGS="-m64 -fdefault-integer-8" FCFLAGS="-m64 -fdefault-integer-8" CFLAGS=-m64 CXXFLAGS=-m64 --enable-mpi-fortran=usempi
 
+Check the library is correctly installed:
+
+.. code-block::
+
+   ompi_info -a | grep 'Fort integer size'
+
+Results should be:
+
+.. code-block::
+
+          Fort integer size: 8
+
 Add path:
 
 .. code-block::
