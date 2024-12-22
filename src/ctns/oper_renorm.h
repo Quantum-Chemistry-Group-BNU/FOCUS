@@ -127,14 +127,18 @@ namespace ctns{
          Renorm.finalize();
          timing.tf10 = tools::get_time();
 
+         // 1.5 special kernel for opS
+
+         timing.tf11 = tools::get_time();
+
          // 2. reduction of opS and opH on GPU
 #ifndef SERIAL
          if(ifdist1 and size>1 and schd.ctns.ifnccl){
             reduce_opSH_gpu(ifdists, qops, alg_renorm, ifkr, size, rank);
          }
 #endif
-         timing.tf11 = tools::get_time();
          timing.tf12 = tools::get_time();
+         timing.tf13 = tools::get_time();
 
          // check whether perform ab2pq transformation
          bool ifab2pq_gpunccl = ab2pq_current and 
@@ -221,7 +225,7 @@ namespace ctns{
                delete[] data1;
                if(diff > thresh_opdiff) exit(1);
             } // debug
-            timing.tf12 = tools::get_time();
+            timing.tf13 = tools::get_time();
 
             // 4. reduction of opS and opH on CPU and send back to GPU 
 #ifndef SERIAL
@@ -278,10 +282,10 @@ namespace ctns{
 
          } // ifab2pq_gpunccl
 
-         timing.tf13 = tools::get_time();
+         timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();
-            double t_tot = tools::get_duration(timing.tf13-timing.tf0); 
+            double t_tot = tools::get_duration(timing.tf14-timing.tf0); 
             std::cout << "----- TIMING FOR oper_renorm : " << t_tot << " S" 
                << " rank=" << rank << " -----"
                << std::endl;

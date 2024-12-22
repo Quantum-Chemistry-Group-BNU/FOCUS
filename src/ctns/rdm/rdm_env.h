@@ -199,10 +199,12 @@ namespace ctns{
                      cqops, rqops, qops_pool[frop], fname, timing, fmmtask);
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
+               
+               qops_pool.join_and_erase(fneed);
+               timing.tf15 = tools::get_time();
                timing.tf = tools::get_time();
 
                // c. save operators to disk
-               qops_pool.join_and_erase(fneed);
                qops_pool.save_to_disk(frop, schd.ctns.async_save);
                auto te = tools::get_time();
                t_save += tools::get_duration(te-td);

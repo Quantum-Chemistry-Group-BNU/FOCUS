@@ -68,7 +68,7 @@ namespace ctns{
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
-            + "_ibond"+std::to_string(ibond) + ".txt";
+               + "_ibond"+std::to_string(ibond) + ".txt";
          std::string fmmtask;
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
@@ -134,10 +134,10 @@ namespace ctns{
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
          } // superblock      
 
-	 // erase fneed to save memory
-	 qops_pool.join_and_erase(fneed, fneed_next);
-	 if(debug) get_mem_status(rank);
-         timing.tf14 = tools::get_time();
+         // erase fneed to save memory
+         qops_pool.join_and_erase(fneed, fneed_next);
+         if(debug) get_mem_status(rank);
+         timing.tf15 = tools::get_time();
 
          if(schd.ctns.ifab2pq){
             const int nsite = icomb.get_nphysical();

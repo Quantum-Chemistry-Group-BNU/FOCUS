@@ -52,7 +52,8 @@ namespace ctns{
          this->print_part(msg+": dvdson [mpi]                ", dtb9, tdvdsn, dtacc);
          this->print_part(msg+": dvdson [rest part(linalg)]  ", dtb10, tdvdsn, dtacc);
 
-         double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtf13 + dtfb;
+         double trenrm = dtfa + dtf0 + dtf1 + dtf2 + dtf3 + dtf4 + dtf5 + dtf6 + dtf7 
+            + dtf8 + dtf9 + dtf10 + dtf11 + dtf12 + dtf13 + dtf14 + dtfb;
          std::cout << "Detailed decomposition of T(renrm) = " 
             << std::scientific << std::setprecision(3) << dt5 << " S"
             << "  T(sum) = " << trenrm << " S  per = " << trenrm/(dt5+eps)*100
@@ -69,10 +70,11 @@ namespace ctns{
          this->print_part(msg+": qops memset on cpu           ", dtf7, trenrm, dtacc);  // t8-t7
          this->print_part(msg+": preprocess_renorm_batchGPU   ", dtf8, trenrm, dtacc);  // t9-t8
          this->print_part(msg+": deallocate cpu and gpu memory", dtf9, trenrm, dtacc);  // t10-t9
-	 this->print_part(msg+": reduction of opS & opH [nccl]", dtf10, trenrm, dtacc); // t11-t10
-         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf11, trenrm, dtacc); // t12-t11
-	 this->print_part(msg+": reduction of opS & opH [mpi] ", dtf12, trenrm, dtacc); // t13-t12
-         this->print_part(msg+": qops_pool join and erase     ", dtf13, trenrm, dtacc); // t14-t13
+         this->print_part(msg+": construct opS [ifdists=true] ", dtf10, trenrm, dtacc); // t11-t10
+         this->print_part(msg+": reduction of opS & opH [nccl]", dtf11, trenrm, dtacc); // t12-t11
+         this->print_part(msg+": qops memcpy gpu2cpu          ", dtf12, trenrm, dtacc); // t13-t12
+         this->print_part(msg+": reduction of opS & opH [mpi] ", dtf13, trenrm, dtacc); // t14-t13
+         this->print_part(msg+": qops_pool join and erase     ", dtf14, trenrm, dtacc); // t15-t14 
          this->print_part(msg+": conversion from opAB to opPQ ", dtfb, trenrm, dtacc);
       }
       void analysis(const std::string msg,
@@ -110,7 +112,8 @@ namespace ctns{
          dtf11 = tools::get_duration(tf12-tf11); 
          dtf12 = tools::get_duration(tf13-tf12); 
          dtf13 = tools::get_duration(tf14-tf13);
-         dtfb = tools::get_duration(tf-tf14); 
+         dtf14 = tools::get_duration(tf15-tf14);
+         dtfb = tools::get_duration(tf-tf15); 
 
          if(debug) this->print(msg);
       }
@@ -155,6 +158,7 @@ namespace ctns{
          dtf11 += timer.dtf11;
          dtf12 += timer.dtf12;
          dtf13 += timer.dtf13;
+         dtf14 += timer.dtf14;
          dtfb += timer.dtfb; 
 
          if(debug) this->print(msg);
@@ -193,7 +197,8 @@ namespace ctns{
       Tm tf12; // deallocate gpu memory
       Tm tf13; // reduction 
       Tm tf14; // ab2pq
-      double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0, dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtf13=0, dtfb=0;
+      double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0;
+      double dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtf13=0, dtf14=0, dtfb=0;
    };
 
    // computed results at a given dot	
@@ -291,7 +296,7 @@ namespace ctns{
       int seqsize, nroots, maxsweep, restart_sweep;
       std::vector<directed_bond> seq; // sweep bond sequence 
       std::vector<input::params_sweep> ctrls; // control parameters
-      // energies
+                                              // energies
       std::vector<std::vector<dot_result>> opt_result; // (maxsweep,seqsize) 
       std::vector<dot_result> min_result;
       // timing

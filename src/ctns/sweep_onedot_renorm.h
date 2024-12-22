@@ -53,7 +53,7 @@ namespace ctns{
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
          timing.td = tools::get_time();
-         
+
          // 2. prepare guess for the next site
          if(rank == 0 && schd.ctns.guess){
             onedot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
@@ -71,7 +71,7 @@ namespace ctns{
          std::string fname;
          if(schd.ctns.save_formulae) fname = scratch+"/rformulae"
             + "_isweep"+std::to_string(isweep)
-            + "_ibond"+std::to_string(ibond) + ".txt";
+               + "_ibond"+std::to_string(ibond) + ".txt";
          std::string fmmtask;
          if(debug && schd.ctns.save_mmtask && isweep == schd.ctns.maxsweep-1 && ibond==schd.ctns.maxbond){
             fmmtask = "rmmtasks_isweep"+std::to_string(isweep) + "_ibond"+std::to_string(ibond);
@@ -117,9 +117,10 @@ namespace ctns{
                   cqops, rqops, qops, fname, timing, fmmtask, 1);
          } // superblock
 
-	 // erase fneed to save memory
-	 qops_pool.join_and_erase(fneed, fneed_next);
-	 if(debug) get_mem_status(rank);
+         // erase fneed to save memory
+         qops_pool.join_and_erase(fneed, fneed_next);
+         if(debug) get_mem_status(rank);
+         timing.tf15 = tools::get_time();
 
          if(schd.ctns.ifab2pq){
             const int nsite = icomb.get_nphysical();

@@ -124,14 +124,14 @@ namespace ctns{
          Renorm.finalize();
          timing.tf10 = tools::get_time();
          timing.tf11 = tools::get_time();
+         timing.tf12 = tools::get_time();
          
 #ifdef GPU
          // send back to CPU
          if(alg_renorm>10) qops.to_cpu();
 #endif
-         timing.tf12 = tools::get_time();
          timing.tf13 = tools::get_time();
-
+         
          timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();

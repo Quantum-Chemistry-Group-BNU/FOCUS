@@ -215,7 +215,7 @@ namespace ctns{
                // c. erase fneed to save memory
                qops_pool.join_and_erase(fneed);
                if(debug) get_mem_status(rank);
-               timing.tf14 = tools::get_time();
+               timing.tf15 = tools::get_time();
 
                // d. ab2pq if necessary	       
                if(schd.ctns.ifab2pq){
