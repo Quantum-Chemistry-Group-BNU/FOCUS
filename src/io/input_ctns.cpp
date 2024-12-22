@@ -97,9 +97,11 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,7)=="ifab2pq"){
          ifab2pq = true;
       }else if(line.substr(0,7)=="ifdist1"){
-         ifdist1 = true;	      
+         ifdist1 = true;
       }else if(line.substr(0,7)=="ifdistc"){
-         ifdistc = true;	      
+         ifdistc = true;
+      }else if(line.substr(0,7)=="ifdists"){
+         ifdists = true;
       }else if(line.substr(0,13)=="save_formulae"){
          save_formulae = true;
       }else if(line.substr(0,13)=="sort_formulae"){
@@ -386,6 +388,7 @@ void params_ctns::print() const{
    cout << "ifab2pq = " << ifab2pq << endl;
    cout << "ifdist1 = " << ifdist1 << endl;
    cout << "ifdistc = " << ifdistc << endl;
+   cout << "ifdists = " << ifdists << endl;
    cout << "save_formulae = " << save_formulae << endl;
    cout << "sort_formulae = " << sort_formulae << endl;
    cout << "save_mmtask = " << save_mmtask << endl;

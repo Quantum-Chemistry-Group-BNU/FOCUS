@@ -187,9 +187,12 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
 
 * ``ioasync``: =false (default: sequential)
    
-* ``ifdist1``: distributed C*S terms for Hx
+* ``ifdist1``: distributed computation of C*S terms for Hx
 
-* ``ifdistc``: whether to treat dot in dmrg specially 
+* ``ifdistc``: whether to treat dot in dmrg specially. This is possible because
+ dot operators are stored in all processes.
+
+* ``ifdists``: whether to store opS distributedly
 
 * ``ifab2pq``: switch from A,B to P,Q in renormalization
 

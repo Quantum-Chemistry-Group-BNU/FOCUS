@@ -636,17 +636,19 @@
       - during sweep [DONE@2024/12/08]
       - test for fe8s7 with d=10000
    - join_and_erase immediately after oper_renom: [DONE@2024/12/14]
+   - ifdists: distributed storage of opS
+
+
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
    - compilation on jiageng: need to use mkl for magma/zquatev, 
      but use mkl2022 for focus, otherwise, dgemv_batch does not exist!
-
-   - jinan: a100-40G,64G/GPU: cpu memory issue?
-   - wuhan: a100-40G,64G/GPU
-   - xiyun: a800-80G,256G/GPU
-
+   - platforms:
+      - jinan: a100-40G,64G/GPU: cpu memory issue?
+      - wuhan: a100-40G,64G/GPU
+      - xiyun: a800-80G,256G/GPU
    - estimate minimal condition for D=20000 in our implementation: 
       - two qops [40-60GB] in GPU memory at the same time?
-      - large-scale test on jiageng?
+      - large-scale test on jinan/wuhan/xiyun/jiageng?
 
