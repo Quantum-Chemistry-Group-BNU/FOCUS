@@ -30,7 +30,7 @@ namespace ctns{
                void serialize(Archive & ar, const unsigned int version){
                   ar & sorb & isym & ifkr & qbra & qket 
                      & cindex & krest & oplist 
-                     & mpisize & mpirank & ifdist2
+                     & mpisize & mpirank & ifdist2 & ifdists
                      & ifhermi;
                }
          public:
@@ -104,6 +104,7 @@ namespace ctns{
                   mpisize = st.mpisize;
                   mpirank = st.mpirank;
                   ifdist2 = st.ifdist2;
+                  ifdists = st.ifdists;
                   ifhermi = st.ifhermi;
                   _offset = std::move(st._offset);
                   _opdict = std::move(st._opdict);
@@ -206,6 +207,7 @@ namespace ctns{
             int mpisize = 1;
             int mpirank = 0;
             bool ifdist2 = false; // whether distribute two-index object
+            bool ifdists = false; // whether distribute opS
             bool ifhermi = true; // whether to use hermicity to reduce no. of B/N
             //private:
             std::map<std::pair<char,int>,size_t> _offset;
@@ -308,24 +310,25 @@ namespace ctns{
             index.push_back(0);
          }else if(key == 'S'){
             index = oper_index_opS(krest, ifkr);
+            // distribute opS
+            if(ifdists && mpisize > 1){
+               index = distribute1vec(ifkr, mpisize, index, mpirank);
+            }
          }else if(key == 'A' || key == 'B' || key == 'P' || key == 'Q' || key == 'M' || key == 'N'){
-            std::vector<int> index2;
             if(key == 'A' || key == 'M'){
-               index2 = oper_index_opA(cindex, ifkr, isym);
+               index = oper_index_opA(cindex, ifkr, isym);
             }else if(key == 'B' || key == 'N'){
-               index2 = oper_index_opB(cindex, ifkr, isym, ifhermi);
+               index = oper_index_opB(cindex, ifkr, isym, ifhermi);
             }else if(key == 'P'){
-               index2 = oper_index_opP(krest, ifkr, isym);
+               index = oper_index_opP(krest, ifkr, isym);
             }else if(key == 'Q'){
-               index2 = oper_index_opQ(krest, ifkr, isym);
+               index = oper_index_opQ(krest, ifkr, isym);
             }
             // distribute two index operators
             if(ifdist2 && mpisize > 1){
-               index = distribute2vec(key, ifkr, mpisize, index2, mpirank, sorb); 
-            }else{
-               index = std::move(index2);
+               index = distribute2vec(key, ifkr, mpisize, index, mpirank, sorb); 
             }
-            // ZL@20240905: just for dot operators
+         // ZL@20240905: just for dot operators
          }else if(key == 'F'){
             index = {cindex[0]};
          }else if(key == 'T'){

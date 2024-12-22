@@ -636,9 +636,11 @@
       - during sweep [DONE@2024/12/08]
       - test for fe8s7 with d=10000
    - join_and_erase immediately after oper_renom: [DONE@2024/12/14]
-   - ifdists: distributed storage of opS
-
-
+ 
+ * distributed storage of opS: useful for saving both CPU and GPU memory
+   - basic setup for ifdists [DONE@2024/12/22]
+   - special subroutine for computing and reduce for opS
+      - test for fe4s4
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 

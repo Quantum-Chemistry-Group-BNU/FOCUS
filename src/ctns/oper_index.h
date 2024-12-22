@@ -43,6 +43,17 @@ namespace ctns{
       int rank = (ifkr? (index/2)%size : (index)%size);
       return size-1-rank; 
    }
+   inline std::vector<int> distribute1vec(const bool ifkr, 
+         const int size, 
+         const std::vector<int>& index_full,
+         const int rank){
+      std::vector<int> index_dist;
+      for(int idx : index_full){
+         int iproc = distribute1(ifkr, size, idx);
+         if(iproc == rank) index_dist.push_back(idx);
+      }
+      return index_dist;
+   }
 
    // note that: key is currently not used.
    inline int distribute2(const char key, const bool ifkr, const int size, const int index, const int sorb){
@@ -70,7 +81,6 @@ namespace ctns{
       }
       return rank;
    }
-
    inline std::vector<int> distribute2vec(const char key,
          const bool ifkr, const int size, 
          const std::vector<int>& index_full,

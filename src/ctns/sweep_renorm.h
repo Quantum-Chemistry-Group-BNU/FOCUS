@@ -157,7 +157,7 @@ namespace ctns{
          if(alg_renorm > 0){
             rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
                   size, rank, fname, schd.ctns.sort_formulae, schd.ctns.ifdist1, 
-                  schd.ctns.ifdistc, schd.ctns.verbose>0);
+                  schd.ctns.ifdistc, schd.ctns.ifdists, schd.ctns.verbose>0);
          }
          timing.tf2 = tools::get_time();
 
@@ -289,7 +289,7 @@ namespace ctns{
             size_t gpumem_oper = sizeof(Tm)*opertot;
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-		  << std::scientific << std::setprecision(3)
+                  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
@@ -314,7 +314,7 @@ namespace ctns{
             }
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-		  << std::scientific << std::setprecision(3)
+                  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,site)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_site/std::pow(1024.0,3) 
@@ -330,7 +330,7 @@ namespace ctns{
             size_t gpumem_rinter = sizeof(Tm)*rinter.size();
             if(rank==0 && schd.ctns.verbose>0){
                std::cout << "rank=" << rank
-		  << std::scientific << std::setprecision(3)
+                  << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                   << " (oper,site,rinter)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_site/std::pow(1024.0,3) 
@@ -353,7 +353,7 @@ namespace ctns{
                   size_t avail = GPUmem.available(rank);
                   size_t total = used + avail;
                   std::cout << "rank=" << rank
-		     << std::scientific << std::setprecision(3)
+                     << std::scientific << std::setprecision(3)
                      << " GPUmem(GB): used=" << used/std::pow(1024.0,3)
                      << " avail=" << avail/std::pow(1024.0,3)
                      << " total=" << total/std::pow(1024.0,3)
@@ -366,7 +366,7 @@ namespace ctns{
                dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);
                if(rank==0 && schd.ctns.verbose>0){
                   std::cout << "rank=" << rank
-		     << std::scientific << std::setprecision(3)
+                     << std::scientific << std::setprecision(3)
                      << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
                      << " (oper,site,rinter,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                      << "," << gpumem_site/std::pow(1024.0,3) 
@@ -429,14 +429,13 @@ namespace ctns{
          Rlst2.clear();
          Rmmtask.clear();
          Rmmtasks.clear();
-         if(alg_renorm==6 || alg_renorm==7 ||
-               alg_renorm==8 || alg_renorm==9){
+         if(alg_renorm==6 || alg_renorm==7 || alg_renorm==8 || alg_renorm==9){
             delete[] workspace;
          }
 #ifdef GPU
          if(alg_renorm>10){
             GPUmem.deallocate(dev_site, gpumem_site); // GPUmem is not a stack anymore
-            if(blksize > 0) GPUmem.deallocate(dev_workspace, gpumem_batch);
+            if(blksize>0) GPUmem.deallocate(dev_workspace, gpumem_batch);
          }
 #endif
       }

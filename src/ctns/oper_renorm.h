@@ -52,6 +52,7 @@ namespace ctns{
          const int sorb = nsite*2;
          const bool ifdist1 = schd.ctns.ifdist1;
          const bool ifdistc = schd.ctns.ifdistc;
+         const bool ifdists = schd.ctns.ifdists;
          const int alg_renorm = schd.ctns.alg_renorm;
          const bool ifab = Qm::ifabelian;
          const int isym = Qm::isym;
@@ -103,6 +104,7 @@ namespace ctns{
          qops.mpisize = size;
          qops.mpirank = rank;
          qops.ifdist2 = true;
+         qops.ifdists = schd.ctns.ifdist1 and schd.ctns.ifdists;
          // initialize
          if(alg_renorm > 10){
             qops.setup_opdict();
@@ -128,7 +130,7 @@ namespace ctns{
          // 2. reduction of opS and opH on GPU
 #ifndef SERIAL
          if(ifdist1 and size>1 and schd.ctns.ifnccl){
-            reduce_opSH_gpu(qops, alg_renorm, ifkr, size, rank);
+            reduce_opSH_gpu(ifdists, qops, alg_renorm, ifkr, size, rank);
          }
 #endif
          timing.tf11 = tools::get_time();
@@ -182,7 +184,7 @@ namespace ctns{
                // alg_renorm=2: symbolic formulae + preallocation of workspace
                memset(qops._data, 0, qops._size*sizeof(Tm));
                auto rtasks = symbolic_formulae_renorm(superblock, int2e, qops1, qops2, qops, 
-                     size, rank, fname, schd.ctns.sort_formulae, ifdist1, ifdistc, schd.ctns.verbose>0);
+                     size, rank, fname, schd.ctns.sort_formulae, ifdist1, ifdistc, ifdists, schd.ctns.verbose>0);
                symbolic_kernel_renorm2(superblock, rtasks, site, qops1, qops2, qops, skipId, ifdist1, schd.ctns.verbose);
                std::cout << "\nqops[ref]: rank=" << rank << std::endl;
                for(auto& key : qops.oplist){
@@ -224,7 +226,7 @@ namespace ctns{
             // 4. reduction of opS and opH on CPU and send back to GPU 
 #ifndef SERIAL
             if(ifdist1 and size>1 and !schd.ctns.ifnccl){
-               reduce_opSH_cpu(qops, icomb, alg_renorm, size, rank);
+               reduce_opSH_cpu(ifdists, qops, icomb, alg_renorm, size, rank);
             } 
 #endif 
             // qops is available on CPU, consistency check

@@ -216,6 +216,7 @@ namespace ctns{
             const bool sort_formulae,
             const bool ifdist1,
             const bool ifdistc,
+            const bool ifdists,
             const bool debug=false){
          auto t0 = tools::get_time();
          const std::string block1 = superblock.substr(0,1);
@@ -255,12 +256,14 @@ namespace ctns{
          // generation of renorm
          std::map<std::string,int> counter;
          renorm_tasks<Tm> rformulae;
+         std::string oplist;
+         std::copy_if(qops.oplist.begin(), qops.oplist.end(), std::back_inserter(oplist), [](char ch) { return ch != 'S'; });
          if(ifab){
-            rformulae = gen_formulae_renorm(qops.oplist,qops1.oplist,qops2.oplist,
+            rformulae = gen_formulae_renorm(oplist,qops1.oplist,qops2.oplist,
                   block1,block2,cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
                   int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          }else{
-            rformulae = gen_formulae_renorm_su2(qops.oplist,qops1.oplist,qops2.oplist,
+            rformulae = gen_formulae_renorm_su2(oplist,qops1.oplist,qops2.oplist,
                   block1,block2,cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
                   int2e,qops.sorb,size,rank,ifdist1,ifdistc,ifsave,counter);
          }
