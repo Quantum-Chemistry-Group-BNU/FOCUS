@@ -639,8 +639,15 @@
  
  * distributed storage of opS: useful for saving both CPU and GPU memory
    - basic setup for ifdists [DONE@2024/12/22]
-   - special subroutine for computing and reduce for opS
-      - test for fe4s4
+   - special subroutine for computing and reduce for opS: oper_renorm_opS.h
+      - alg_renorm = 0 [DONE@2024/12/23]
+      - alg_renorm = 1 [DONE@2024/12/23]
+      - alg_renorm = 2 - not supported
+      - alg_renorm = 4 [DONE@2024/12/23]
+      - alg_renorm = 6,7,8,9
+      - alg_renorm = 16,17,18,19
+      - test for fe4s4 on jinan
+      - test for fe8s7 on jinan
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 

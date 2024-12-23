@@ -257,7 +257,11 @@ namespace ctns{
          std::map<std::string,int> counter;
          renorm_tasks<Tm> rformulae;
          std::string oplist;
-         std::copy_if(qops.oplist.begin(), qops.oplist.end(), std::back_inserter(oplist), [](char ch) { return ch != 'S'; });
+         if(size>1 and ifdists){
+            std::copy_if(qops.oplist.begin(), qops.oplist.end(), std::back_inserter(oplist), [](char ch) { return ch != 'S'; });
+         }else{
+            oplist = qops.oplist;
+         }
          if(ifab){
             rformulae = gen_formulae_renorm(oplist,qops1.oplist,qops2.oplist,
                   block1,block2,cindex1,cindex2,qops.krest,isym,ifkr,ifhermi,
