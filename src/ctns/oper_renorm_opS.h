@@ -2,6 +2,7 @@
 #define OPER_RENORM_OPS_H
 
 #include "symbolic_compxwf.h"
+#include "sadmrg/symbolic_compxwf_su2.h"
 #include "preprocess_rlist.h"
 #include "preprocess_rinter.h"
 #include "preprocess_rmu.h"
@@ -191,21 +192,7 @@ namespace ctns{
             const comb<Qm,Tm>& icomb,
             const integral::two_body<Tm>& int2e,
             const input::schedule& schd,
-            const stensor3su2<Tm>& site,
-            const qoper_dict<Qm::ifabelian,Tm>& qops1,
-            const qoper_dict<Qm::ifabelian,Tm>& qops2,
-            qoper_dict<Qm::ifabelian,Tm>& qops,
-            const int size,
-            const int rank){
-         std::cout << "error: no implementation of symbolic_kernel_renorm_opS for su2!" << std::endl;
-         exit(1);
-      }
-   template <typename Qm, typename Tm>
-      void preprocess_renorm_opS(const std::string superblock,
-            const comb<Qm,Tm>& icomb,
-            const integral::two_body<Tm>& int2e,
-            const input::schedule& schd,
-            const stensor3<Tm>& site,
+            const qtensor3<Qm::ifabelian,Tm>& site,
             const qoper_dict<Qm::ifabelian,Tm>& qops1,
             const qoper_dict<Qm::ifabelian,Tm>& qops2,
             qoper_dict<Qm::ifabelian,Tm>& qops,
@@ -219,7 +206,7 @@ namespace ctns{
          const bool skipId = true;
          const std::string block1 = superblock.substr(0,1);
          const std::string block2 = superblock.substr(1,2);
-         const oper_dictmap<Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
+         const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
          const std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
          Tm* opaddr[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
          if(superblock == "lc"){
@@ -236,11 +223,18 @@ namespace ctns{
          for(const auto& index : sindex){
             if(rank==0 and schd.ctns.verbose>2) std::cout << " opS: index=" << index << std::endl;
             auto sym_op = get_qsym_opS(Qm::isym, index); 
-            stensor2<Tm> op(sym_op, qops.qbra, qops.qket);
+            qtensor2<Qm::ifabelian,Tm> op(sym_op, qops.qbra, qops.qket);
             // generate formula for opS[p]
-            auto formula = symbolic_compxwf_opS<Tm>(qops1.oplist, qops2.oplist, 
+            symbolic_task<Tm> formula;
+            if(Qm::ifabelian){
+               formula = symbolic_compxwf_opS<Tm>(qops1.oplist, qops2.oplist, 
                   block1, block2, qops1.cindex, qops2.cindex,
                   int2e, index, Qm::isym, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+            }else{
+               formula = symbolic_compxwf_opS_su2<Tm>(qops1.oplist, qops2.oplist, 
+                  block1, block2, qops1.cindex, qops2.cindex,
+                  int2e, index, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+            }
             // opS can be empty for ifdist1=true
             if(formula.size() != 0){
                if(rank==0 && schd.ctns.verbose>0){
