@@ -10,6 +10,7 @@
 #include "oper_rbasis.h"
 #include "oper_reduce.h"
 #include "oper_ab2pq.h"
+#include "oper_renorm_opS.h"
 #include "sweep_renorm.h"
 #include "../core/mem_status.h"
 
@@ -104,7 +105,7 @@ namespace ctns{
          qops.mpisize = size;
          qops.mpirank = rank;
          qops.ifdist2 = true;
-         qops.ifdists = schd.ctns.ifdist1 and schd.ctns.ifdists;
+         qops.ifdists = ifdist1 and size>1 and ifdists;
          // initialize
          if(alg_renorm > 10){
             qops.setup_opdict();
@@ -128,7 +129,9 @@ namespace ctns{
          timing.tf10 = tools::get_time();
 
          // 1.5 special kernel for opS
-
+#ifndef SERIAL
+         if(ifdist1 and size>1 and ifdists) oper_renorm_opS(superblock, icomb, int2e, schd, site, qops1, qops2, qops); 
+#endif
          timing.tf11 = tools::get_time();
 
          // 2. reduction of opS and opH on GPU
@@ -239,7 +242,7 @@ namespace ctns{
                const auto& opH = qops('H').at(0);
 
                //debug:
-               //opH.to_matrix().print("lzd opH",10);
+               //opH.to_matrix().print("lzd opH_rank"+std::to_string(rank),10);
                //if(pcoord.first == 15) exit(1);
 
                // NAN check
@@ -281,6 +284,31 @@ namespace ctns{
             } // end of consistency check
 
          } // ifab2pq_gpunccl
+
+
+         icomb.world.barrier();
+         if(rank == 0){
+            for(const auto& pr : qops('S')){
+               const auto& index = pr.first;
+               const auto& opS = pr.second;
+               std::cout << "lzd rank=" << rank << " opS index=" << index
+                  << " norm=" << opS.normF()
+                  << std::endl;
+               //opS.to_matrix().print("opS_rank"+std::to_string(rank)+"_p"+std::to_string(index));
+            }
+         }
+         icomb.world.barrier();
+         if(rank == 1){
+            for(const auto& pr : qops('S')){
+               const auto& index = pr.first;
+               const auto& opS = pr.second;
+               std::cout << "lzd rank=" << rank << " opS index=" << index
+                  << " norm=" << opS.normF()
+                  << std::endl;
+               //opS.to_matrix().print("opS_rank"+std::to_string(rank)+"_p"+std::to_string(index));
+            }
+         }
+         icomb.world.barrier();
 
          timing.tf14 = tools::get_time();
          if(debug){

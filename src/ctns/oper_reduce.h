@@ -58,33 +58,24 @@ namespace ctns{
          if(!ifdists){
             // Sp[iproc] += \sum_i Sp[i]
             auto opS_index = qops.oper_index_op('S');
-            size_t opS_totsize = 0;
             for(int p : opS_index){
-               int iproc = distribute1(Qm::ifkr,size,p);
+               int iproc = distribute1(Qm::ifkr, size, p);
                auto& opS = qops('S')[p];
-               size_t opsize = opS.size();
-               opS_totsize += opsize;
-               size_t off = qops._offset[std::make_pair('S',p)];
-               mpi_wrapper::reduce(icomb.world, opS.data(), opsize, iproc);
+               mpi_wrapper::reduce(icomb.world, opS.data(), opS.size(), iproc);
                if(iproc != rank) opS.set_zero();
             }
          }
          // H[0] += \sum_i H[i]
          auto& opH = qops('H')[0];
-         size_t opsize = opH.size();
-         size_t off = qops._offset[std::make_pair('H',0)];
-         mpi_wrapper::reduce(icomb.world, opH.data(), opsize, 0);
+         mpi_wrapper::reduce(icomb.world, opH.data(), opH.size(), 0);
          if(rank != 0) opH.set_zero();
 #ifdef GPU
          // send the collected opS and opH backto GPU
          if(alg_renorm>10){
-            if(!ifdists and opS_index.size()>0){
-               int p0 = opS_index[0];
-               size_t off = qops._offset[std::make_pair('S',p0)];
-               Tm* ptr0 = qops('S')[p0].data();
-               GPUmem.to_gpu(qops._dev_data+off, ptr0, opS_totsize*sizeof(Tm));
+            if(!ifdists and qops.size_ops('S')>0){
+               GPUmem.to_gpu(qops.ptr_ops_gpu('S'), qops.ptr_ops('S'), qops.size_ops('S')*sizeof(Tm));
             }
-            GPUmem.to_gpu(qops._dev_data+off, opH.data(), opsize*sizeof(Tm));
+            GPUmem.to_gpu(qops.ptr_ops_gpu('H'), qops.ptr_ops('H'), qops.size_ops('H')*sizeof(Tm));
          }
 #endif
       }

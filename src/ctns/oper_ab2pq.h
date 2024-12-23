@@ -119,6 +119,7 @@ namespace ctns{
          qops2.mpisize = size;
          qops2.mpirank = rank;
          qops2.ifdist2 = true;
+         qops2.ifdists = schd.ctns.ifdist1 and size>1 and schd.ctns.ifdists;
          if(ifab2pq_gpunccl){
             qops2.setup_opdict();
          }else{

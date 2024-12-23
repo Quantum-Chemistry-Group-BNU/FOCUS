@@ -166,37 +166,15 @@ namespace ctns{
       public:
       using Tm = std::chrono::high_resolution_clock::time_point;
       const double eps = 1.e-20;
-      Tm t0;
-      Tm ta; // fetch
-      Tm tb; // hdiag
-      Tm tc; // dvdsn
-      Tm td; // decim
-      Tm te; // guess
-      Tm tf; // renrm
-      Tm t1; // save
+      // decomposition of dt[sweep] into different parts
+      Tm t0, ta, tb, tc, td, te, tf, t1;
       double dt=0, dt0=0, dt1=0, dt2=0, dt3=0, dt4=0, dt5=0, dt6=0;
-      // decomposition of dt2 into different parts
-      Tm tb1; 
-      Tm tb2; 
-      Tm tb3; 
-      Tm tb4; 
-      Tm tb5; 
+      // decomposition of dt[dvdson] into different parts
+      Tm tb1, tb2, tb3, tb4, tb5; 
       double dtb0=0, dtb1=0, dtb2=0, dtb3=0, dtb4=0, dtb5=0, dtb6=0, dtb7=0, dtb8=0, dtb9=0, dtb10=0;
-      Tm tf0;
-      Tm tf1; // qops init
-      Tm tf2; // qops_dict memcpy cpu2gpu   
-      Tm tf3; // symbolic_formulae_renorm        
-      Tm tf4; // rintermediate init           
-      Tm tf5; // rintermediates memcpy cpu2gpu
-      Tm tf6; // preprocess_formulae_Rlist2   
-      Tm tf7; // rmmtasks init                
-      Tm tf8; // qops memset
-      Tm tf9; // preprocess_renorm_batchGPU   
-      Tm tf10; // reduction [nccl] 
-      Tm tf11; // qops memcpy gpu2cpu
-      Tm tf12; // deallocate gpu memory
-      Tm tf13; // reduction 
-      Tm tf14; // ab2pq
+      // decomposition of dt[renorm] into different parts
+      Tm tf0, tf1, tf2, tf3, tf4, tf5, tf6, tf7;
+      Tm tf8, tf9, tf10, tf11, tf12, tf13, tf14, tf15;
       double dtfa=0, dtf0=0, dtf1=0, dtf2=0, dtf3=0, dtf4=0, dtf5=0, dtf6=0, dtf7=0;
       double dtf8=0, dtf9=0, dtf10=0, dtf11=0, dtf12=0, dtf13=0, dtf14=0, dtfb=0;
    };
