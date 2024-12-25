@@ -228,12 +228,12 @@ namespace ctns{
             symbolic_task<Tm> formula;
             if(Qm::ifabelian){
                formula = symbolic_compxwf_opS<Tm>(qops1.oplist, qops2.oplist, 
-                  block1, block2, qops1.cindex, qops2.cindex,
-                  int2e, index, Qm::isym, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+                     block1, block2, qops1.cindex, qops2.cindex,
+                     int2e, index, Qm::isym, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
             }else{
                formula = symbolic_compxwf_opS_su2<Tm>(qops1.oplist, qops2.oplist, 
-                  block1, block2, qops1.cindex, qops2.cindex,
-                  int2e, index, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+                     block1, block2, qops1.cindex, qops2.cindex,
+                     int2e, index, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
             }
             // opS can be empty for ifdist1=true
             if(formula.size() != 0){
@@ -263,6 +263,116 @@ namespace ctns{
                }
                // initialization of qops inside
                preprocess_renorm(op.data(), site._data, site._data, size, rank, op.size(), blksize, Rlst, opaddr);
+            }
+            // reduction of op
+            int iproc = distribute1(qops.ifkr, size, index);
+            mpi_wrapper::reduce(icomb.world, op.data(), op.size(), iproc);
+            if(iproc == rank){
+               auto& opS = qops('S')[index];
+               linalg::xcopy(op.size(), op.data(), opS.data());
+            }
+         }
+      }
+
+   // alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9
+   template <typename Qm, typename Tm>
+      void preprocess_renorm_batch_opS(const std::string superblock,
+            const comb<Qm,Tm>& icomb,
+            const integral::two_body<Tm>& int2e,
+            const input::schedule& schd,
+            const qtensor3<Qm::ifabelian,Tm>& site,
+            const qoper_dict<Qm::ifabelian,Tm>& qops1,
+            const qoper_dict<Qm::ifabelian,Tm>& qops2,
+            qoper_dict<Qm::ifabelian,Tm>& qops,
+            const int size,
+            const int rank){
+         const int alg_renorm = schd.ctns.alg_renorm;
+         const int alg_rinter = schd.ctns.alg_rinter;
+         const char key = 'S';
+         const bool skipId = true;
+         const std::string block1 = superblock.substr(0,1);
+         const std::string block2 = superblock.substr(1,2);
+         const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
+         const std::map<std::string,int> oploc = {{"l",0},{"r",1},{"c",2}};
+         Tm* opaddr[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
+         if(superblock == "lc"){
+            opaddr[0] = qops1._data;
+            opaddr[2] = qops2._data;
+         }else if(superblock == "cr"){
+            opaddr[2] = qops1._data;
+            opaddr[1] = qops2._data;
+         }else if(superblock == "lr"){
+            opaddr[0] = qops1._data;
+            opaddr[1] = qops2._data;
+         }
+         auto sindex = oper_index_opS(qops.krest, qops.ifkr);
+         for(const auto& index : sindex){
+            if(rank==0 and schd.ctns.verbose>2) std::cout << " opS: index=" << index << std::endl;
+            auto sym_op = get_qsym_opS(Qm::isym, index); 
+            qtensor2<Qm::ifabelian,Tm> op(sym_op, qops.qbra, qops.qket);
+            // generate formula for opS[p]
+            symbolic_task<Tm> formula;
+            if(Qm::ifabelian){
+               formula = symbolic_compxwf_opS<Tm>(qops1.oplist, qops2.oplist, 
+                     block1, block2, qops1.cindex, qops2.cindex,
+                     int2e, index, Qm::isym, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+            }else{
+               formula = symbolic_compxwf_opS_su2<Tm>(qops1.oplist, qops2.oplist, 
+                     block1, block2, qops1.cindex, qops2.cindex,
+                     int2e, index, Qm::ifkr, size, rank, schd.ctns.ifdist1, schd.ctns.ifdistc);
+            }
+            // opS can be empty for ifdist1=true
+            if(formula.size() != 0){
+               if(rank==0 && schd.ctns.verbose>0){
+                  formula.display("opS_rank"+std::to_string(rank)+"_index"+std::to_string(index));
+               }
+               renorm_tasks<Tm> rtasks;
+               rtasks.append(std::make_tuple('S', index, formula));
+               // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+               rintermediates<Qm::ifabelian,Tm> rinter;
+               const bool ifSingle = true;
+               const bool ifDirect = true;
+               const int batchgemv = 1;
+               rinter.init(ifDirect, alg_rinter, batchgemv, qops_dict, oploc, opaddr, rtasks, rank==0);
+               // GEMM list and GEMV list
+               Rlist<Tm> Rlst; 
+               size_t blksize=0, blksize0=0;
+               double cost=0.0;
+               preprocess_formulae_Rlist_opS(ifDirect, schd.ctns.alg_rcoper, superblock, 
+                     op, qops_dict, oploc, opaddr, rtasks, site, site, skipId, rinter,
+                     Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>0);
+               if(blksize > 0){
+                  // determine batchsize dynamically
+                  size_t blocksize = 2*blksize+blksize0;
+                  size_t maxbatch = Rlst.size();
+                  size_t batchsize, worktot;
+                  preprocess_cpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch,
+                        batchsize, worktot);
+                  if(rank==0 && schd.ctns.verbose>0){
+                     std::cout << "preprocess for renorm_opS: size=" << qops._size << " blksize=" << blksize 
+                        << " blksize0=" << blksize0 << " batchsize=" << batchsize
+                        << " worktot=" << worktot << ":" << tools::sizeMB<Tm>(worktot) << "MB"
+                        << ":" << tools::sizeGB<Tm>(worktot) << "GB" << std::endl; 
+                  }
+                  Tm* workspace = new Tm[worktot];
+                  // generate Rmmtasks
+                  const int batchblas = alg_rinter; // use the same keyword for GEMM_batch
+                  auto batchrenorm = std::make_tuple(batchblas,batchblas,batchblas);
+                  RMMtask<Tm> Rmmtask;
+                  Rmmtask.init(Rlst, batchblas, batchrenorm, batchsize, blksize*2, blksize0);
+                  if(rank==0 && schd.ctns.verbose>1){
+                     std::cout << " rank=" << rank 
+                        << " Rlst.size=" << Rlst.size()
+                        << " Rmmtask.totsize=" << Rmmtask.totsize
+                        << " batchsize=" << Rmmtask.batchsize 
+                        << " nbatch=" << Rmmtask.nbatch 
+                        << std::endl;
+                  }
+                  opaddr[4] = workspace + batchsize*blksize*2; // memory layout [workspace|inter]
+                  preprocess_renorm_batchDirectSingle(op.data(), site._data, site._data, size, rank, op.size(),
+                        Rmmtask, opaddr, workspace, rinter._data);
+                  delete[] workspace;
+               } // blksize>0
             }
             // reduction of op
             int iproc = distribute1(qops.ifkr, size, index);
@@ -315,7 +425,7 @@ namespace ctns{
             oper_renorm_kernel_opS(superblock, icomb, int2e, schd, site, qops1, qops2, qops, size, rank);
 
          }else if(alg_renorm == 1){
-        
+
             symbolic_kernel_renorm_opS(superblock, icomb, int2e, schd, site, qops1, qops2, qops, size, rank);
 
          }else if(alg_renorm == 4){
@@ -324,9 +434,14 @@ namespace ctns{
 
          }else if(alg_renorm == 6 || alg_renorm == 7 || alg_renorm == 8 || alg_renorm == 9){
 
+            preprocess_renorm_batch_opS(superblock, icomb, int2e, schd, site, qops1, qops2, qops, size, rank);
+
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
 
+            /*
+               preprocess_renorm_batchGPU_opS(superblock, icomb, int2e, schd, site, qops1, qops2, qops, size, rank);
+               */
 
 #endif
          }else{
