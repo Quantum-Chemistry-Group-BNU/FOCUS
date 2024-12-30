@@ -285,31 +285,6 @@ namespace ctns{
 
          } // ifab2pq_gpunccl
 
-
-         icomb.world.barrier();
-         if(rank == 0){
-            for(const auto& pr : qops('S')){
-               const auto& index = pr.first;
-               const auto& opS = pr.second;
-               std::cout << "lzd rank=" << rank << " opS index=" << index
-                  << " norm=" << opS.normF()
-                  << std::endl;
-               //opS.to_matrix().print("opS_rank"+std::to_string(rank)+"_p"+std::to_string(index));
-            }
-         }
-         icomb.world.barrier();
-         if(rank == 1){
-            for(const auto& pr : qops('S')){
-               const auto& index = pr.first;
-               const auto& opS = pr.second;
-               std::cout << "lzd rank=" << rank << " opS index=" << index
-                  << " norm=" << opS.normF()
-                  << std::endl;
-               //opS.to_matrix().print("opS_rank"+std::to_string(rank)+"_p"+std::to_string(index));
-            }
-         }
-         icomb.world.barrier();
-
          timing.tf14 = tools::get_time();
          if(debug){
             if(alg_renorm == 0 && schd.ctns.verbose>1) oper_timer.analysis();

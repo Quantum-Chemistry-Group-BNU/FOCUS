@@ -281,7 +281,7 @@ namespace ctns{
 #ifdef GPU
          }else if(alg_renorm == 16 || alg_renorm == 17 || alg_renorm == 18 || alg_renorm == 19){
 
-            // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
+            // BatchGPU: symbolic formulae + rintermediates + preallocation of workspace
 
             // initialization of qops on gpu
             qops.allocate_gpu(true);
