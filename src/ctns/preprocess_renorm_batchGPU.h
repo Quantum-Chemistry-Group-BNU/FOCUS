@@ -24,20 +24,9 @@ namespace ctns{
             RMMtasks<Tm>& Rmmtasks,
             Tm** opaddr,
             Tm* workspace,
-            Tm* dev_red){
-#ifdef _OPENMP
-         int maxthreads = omp_get_max_threads();
-#else
-         int maxthreads = 1;
-#endif
-         const bool debug = false;
-         if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_renorm_batchGPU"
-               << " mpisize=" << size 
-               << " maxthreads=" << maxthreads
-               << std::endl;
-         }
-
+            Tm* dev_red,
+            const bool debug){
+         
          double time_gemm=0.0;
          double time_reduction=0.0;
 
@@ -72,8 +61,7 @@ namespace ctns{
             } // k
          } // i
 
-         // timing
-         if(rank == 0){
+         if(debug){
             std::cout << "preprocess_renorm_batchGPU: T(gemm,reduction)="
                       << time_gemm << "," << time_reduction 
                       << std::endl;
@@ -92,19 +80,8 @@ namespace ctns{
             Tm** opaddr,
             Tm* workspace,
             Tm* alphas,
-            Tm* dev_red){
-#ifdef _OPENMP
-         int maxthreads = omp_get_max_threads();
-#else
-         int maxthreads = 1;
-#endif
-         const bool debug = false;
-         if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_renorm_batchDirectGPU"
-               << " mpisize=" << size 
-               << " maxthreads=" << maxthreads
-               << std::endl;
-         }
+            Tm* dev_red,
+            const bool debug){
 
          double time_inter=0.0;
          double time_gemm=0.0;
@@ -146,8 +123,7 @@ namespace ctns{
             } // k
          } // i
 
-         // timing
-         if(rank == 0){
+         if(debug){
             std::cout << "preprocess_renorm_batchDirectGPU: T(inter,gemm,reduction)="
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;
@@ -165,19 +141,8 @@ namespace ctns{
             RMMtask<Tm>& Rmmtask,
             Tm** opaddr,
             Tm* workspace,
-            Tm* dev_red){
-#ifdef _OPENMP
-         int maxthreads = omp_get_max_threads();
-#else
-         int maxthreads = 1;
-#endif
-         const bool debug = false;
-         if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_renorm_batchGPUSingle"
-               << " mpisize=" << size 
-               << " maxthreads=" << maxthreads
-               << std::endl;
-         }
+            Tm* dev_red,
+            const bool debug){
 
          double time_gemm=0.0;
          double time_reduction=0.0;
@@ -209,8 +174,7 @@ namespace ctns{
             time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
-         // timing
-         if(rank == 0){
+         if(debug){
             std::cout << "preprocess_renorm_batchGPUSingle: T(gemm,reduction)="
                       << time_gemm << "," << time_reduction 
                       << std::endl;
@@ -229,19 +193,8 @@ namespace ctns{
             Tm** opaddr,
             Tm* workspace,
             Tm* alphas,
-            Tm* dev_red){
-#ifdef _OPENMP
-         int maxthreads = omp_get_max_threads();
-#else
-         int maxthreads = 1;
-#endif
-         const bool debug = false;
-         if(rank == 0 && debug){
-            std::cout << "ctns::preprocess_renorm_batchDirectGPUSingle"
-               << " mpisize=" << size 
-               << " maxthreads=" << maxthreads
-               << std::endl;
-         }
+            Tm* dev_red,
+            const bool debug){
 
          double time_inter=0.0;
          double time_gemm=0.0;
@@ -279,8 +232,7 @@ namespace ctns{
             time_reduction += tools::get_duration(t1reduction-t0reduction);
          } // k
 
-         // timing
-         if(rank == 0){
+         if(debug){
             std::cout << "preprocess_renorm_batchDirectGPUDirect: T(inter,gemm,reduction)="
                       << time_inter << "," << time_gemm << "," << time_reduction 
                       << std::endl;

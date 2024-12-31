@@ -316,7 +316,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
-                  << " (oper,site)(GB)=" << gpumem_oper/std::pow(1024.0,3) 
+                  << " (oper,site)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_site/std::pow(1024.0,3) 
                   << std::endl;
             }
@@ -390,26 +390,26 @@ namespace ctns{
                      preprocess_renorm_batchGPU(qops._dev_data, dev_site, dev_site2, 
                            size, rank, qops._size,
                            Rmmtasks, dev_opaddr, dev_workspace, 
-                           dev_red);
+                           dev_red, rank==0 && schd.ctns.verbose>0);
                   }else{
                      dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
                      preprocess_renorm_batchDirectGPU(qops._dev_data, dev_site, dev_site2, 
                            size, rank, qops._size,
                            Rmmtasks, dev_opaddr, dev_workspace, 
-                           rinter._dev_data, dev_red);
+                           rinter._dev_data, dev_red, rank==0 && schd.ctns.verbose>0);
                   }
                }else{
                   if(!ifDirect){
                      preprocess_renorm_batchGPUSingle(qops._dev_data, dev_site, dev_site2, 
                            size, rank, qops._size,
                            Rmmtask, dev_opaddr, dev_workspace, 
-                           dev_red);
+                           dev_red, rank==0 && schd.ctns.verbose>0);
                   }else{
                      dev_opaddr[4] = dev_workspace + batchsize*blksize*2; // tmpspace for intermediates
                      preprocess_renorm_batchDirectGPUSingle(qops._dev_data, dev_site, dev_site2, 
                            size, rank, qops._size,
                            Rmmtask, dev_opaddr, dev_workspace, 
-                           rinter._dev_data, dev_red);
+                           rinter._dev_data, dev_red, rank==0 && schd.ctns.verbose>0);
                   }
                }
             } // blksize>0
