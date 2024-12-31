@@ -26,7 +26,7 @@ namespace ctns{
                << " size=" << size << std::endl;
          }
          auto t0 = tools::get_time();
-
+         
          // initialize dev_diag on GPU
          size_t used = GPUmem.used();
          size_t nblk = wf.info._nnzaddr.size();
@@ -87,11 +87,13 @@ namespace ctns{
          twodot_diagGPU_BQ("c1c2", c1qops, c2qops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c1r" , c1qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
          twodot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, size, rank);
+
+         // ZL@2024/12/31 synchronize
+         GPUmem.sync();
          auto t4 = tools::get_time();
 
          // debug
          if(diagcheck) twodot_diagGPU_check(ndim, dev_diag, qops_dict, wf, size, rank, ifdist1);
-
          GPUmem.deallocate(dev_dims, nblk*9*sizeof(size_t));
          auto t5 = tools::get_time();
          if(!ifnccl){
@@ -259,7 +261,7 @@ namespace ctns{
 
             } // endif
 
-         } // index
+         } // bindex   
       }
 
 } // ctns

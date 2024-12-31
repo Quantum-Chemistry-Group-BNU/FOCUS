@@ -509,7 +509,11 @@ namespace ctns{
             delete[] workspace;
          }
 #ifdef GPU
-         if(alg_hvec>10) GPUmem.deallocate(dev_workspace, gpumem_dvdson+gpumem_batch);
+         if(alg_hvec>10){
+            // ZL@2024/12/31 synchronize
+            GPUmem.sync();
+            GPUmem.deallocate(dev_workspace, gpumem_dvdson+gpumem_batch);
+         }
 #endif
       }
 

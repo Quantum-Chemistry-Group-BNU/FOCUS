@@ -149,6 +149,9 @@ namespace ctns{
 
          } // iproc
 
+         // ZL@2024/12/31 synchronize
+         GPUmem.sync();
+
          // Clean up
          GPUmem.deallocate(dev_work, maxsize);
 
@@ -404,6 +407,9 @@ namespace ctns{
             } // b
 
          } // iproc
+         
+         // ZL@2024/12/31 synchronize
+         GPUmem.sync();
 
          // Clean up
          GPUmem.deallocate(dev_work, maxsize);

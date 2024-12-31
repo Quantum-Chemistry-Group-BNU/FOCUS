@@ -585,12 +585,15 @@ namespace ctns{
 #endif
          } // index
          auto tc = tools::get_time();
-         
+
+         // ZL@2024/12/31 synchronize
+         GPUmem.sync();
+
          // deallocate
          GPUmem.deallocate(dev_workspace, max_gpumem_batch);
          GPUmem.deallocate(dev_site, gpumem_site);
          GPUmem.deallocate(dev_op, gpumem_op);
-         
+   
          auto t1 = tools::get_time();
          if(rank==0 && schd.ctns.verbose>0){
             auto dt = tools::get_duration(t1-t0);

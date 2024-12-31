@@ -434,6 +434,8 @@ namespace ctns{
          }
 #ifdef GPU
          if(alg_renorm>10){
+            // ZL@2024/12/31 synchronize
+            GPUmem.sync();
             GPUmem.deallocate(dev_site, gpumem_site); // GPUmem is not a stack anymore
             if(blksize>0) GPUmem.deallocate(dev_workspace, gpumem_batch);
          }
