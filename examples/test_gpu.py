@@ -36,6 +36,8 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h6_ab2pq',
         'tests_gpu/h6_sadmrg_ab2pq',
         'tests_gpu/fe2s2_ab2pq',
-        'tests_gpu/fe2s2_sadmrg_ab2pq'
+        'tests_gpu/fe2s2_sadmrg_ab2pq',
+        'tests_gpu/fe2s2_ab2pq_ifdists',
+        'tests_gpu/fe2s2_sadmrg_ab2pq_ifdists'
         ]
 test_utils.test_run(dirs)

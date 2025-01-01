@@ -645,7 +645,7 @@
       - alg_renorm = 2 - not supported
       - alg_renorm = 4 [DONE@2024/12/23]
       - alg_renorm = 6,7,8,9 [DONE@2024/12/25]
-      - alg_renorm = 16,17,18,19 [DONE@2024/12/31]
+      - alg_renorm = 16,17,18,19 [DONE@2025/01/01]
       - test for fe4s4 on jinan
       - test for fe8s7 on jinan
 

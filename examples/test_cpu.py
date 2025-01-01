@@ -35,6 +35,8 @@ dirs = ['tests_cpu/0_h6_tns',
         'tests_cpu/12_h6_ab2pq',
         'tests_cpu/12_h6_sadmrg_ab2pq',
         'tests_cpu/13_fe2s2_ab2pq',
-        'tests_cpu/13_fe2s2_sadmrg_ab2pq'
+        'tests_cpu/13_fe2s2_sadmrg_ab2pq',
+        'tests_cpu/14_fe2s2_ab2pq_ifdists',
+        'tests_cpu/14_fe2s2_sadmrg_ab2pq_ifdists'
         ]
 test_utils.test_run(dirs)
