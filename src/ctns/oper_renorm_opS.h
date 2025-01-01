@@ -570,7 +570,6 @@ namespace ctns{
             GPUmem.memset(dev_op, gpumem_op);
             // opS can be empty for ifdist1=true
             if(formulasizes[i] != 0 and blksizes[i] > 0){
-               if(rank==0 && schd.ctns.verbose>2) std::cout << " compute opS: index=" << index << std::endl;
                auto tx = tools::get_time();
                size_t blksize = blksizes[i];
                size_t blksize0 = blksizes0[i];
@@ -584,6 +583,13 @@ namespace ctns{
                      dev_inter, dev_red, rank==0 && schd.ctns.verbose>2);
                auto ty = tools::get_time();
                dtcomp += tools::get_duration(ty-tx);
+               if(rank==0 && schd.ctns.verbose>2){
+                  std::cout << " compute opS: rank=" << rank
+                     << " i=" << i << "/" << nop 
+                     << " index=" << index
+                     << " dt=" << tools::get_duration(ty-tx) 
+                     << std::endl;
+               }
             } // formula.size()>0 and blksize>0
 #ifndef NCCL
             std::cout << "error: NCCL must be used for preprocess_renorm_batchGPU_opS!" << std::endl; 
