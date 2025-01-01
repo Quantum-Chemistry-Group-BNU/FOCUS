@@ -582,12 +582,14 @@ namespace ctns{
                      Rmmtasks[i], dev_opaddr, dev_workspace, 
                      dev_inter, dev_red, rank==0 && schd.ctns.verbose>2);
                auto ty = tools::get_time();
-               dtcomp += tools::get_duration(ty-tx);
+               double dt = tools::get_duration(ty-tx);
+               dtcomp += dt; 
                if(rank==0 && schd.ctns.verbose>2){
                   std::cout << " compute opS: rank=" << rank
                      << " i=" << i << "/" << nop 
                      << " index=" << index
-                     << " dt=" << tools::get_duration(ty-tx) 
+                     << " dt=" << dt
+                     << " dtcomp=" << dtcomp
                      << std::endl;
                }
             } // formula.size()>0 and blksize>0
