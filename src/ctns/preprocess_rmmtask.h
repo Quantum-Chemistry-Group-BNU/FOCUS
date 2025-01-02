@@ -19,13 +19,13 @@ namespace ctns{
    template <typename Tm>
       struct RMMtask{
          public:
-	    void clear(){
-		mmbatch2.clear();
-		collectc.clear();
-		collectc.clear();
-		mvbatch.clear();
-		imvbatch.clear();
-	    }
+            void clear(){
+               mmbatch2.clear();
+               collectc.clear();
+               collectc.clear();
+               mvbatch.clear();
+               imvbatch.clear();
+            }
             void init(Rlist<Tm>& Rlst, 
                   const int _batchblas,
                   const std::tuple<int,int,int>& _batchrenorm,
@@ -117,7 +117,7 @@ namespace ctns{
 #endif
                   } // batchblas
                } // icase
-              
+
                // 2. reduction by GEMV
                Tm* pcoeff = const_cast<Tm*>(coefflst[k].data());  
 #ifdef GPU
@@ -174,7 +174,7 @@ namespace ctns{
          }
          if(batchsize == 0 || totsize == 0) return;
          nbatch = (totsize+batchsize-1)/batchsize;
-         
+
          // start process Rlst
          icase = Rlst[0].icase; 
          mmbatch2.resize(nbatch);
@@ -188,7 +188,7 @@ namespace ctns{
          for(int k=0; k<nbatch; k++){
             size_t off = k*batchsize;
             size_t jlen = std::min(totsize-off, batchsize);
-         
+
             // 1. setup imvbatch for inter
             if(offset0 != 0){
                size_t nInter = 0;
@@ -225,8 +225,8 @@ namespace ctns{
                   // sort
                   std::stable_sort(mvlst.begin(), mvlst.end(),
                         [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
-                           return mv1 > mv2;
-                           });
+                        return mv1 > mv2;
+                        });
                   imvbatch[k].init(mvlst);
                } // nInter
             }
@@ -280,7 +280,7 @@ namespace ctns{
                // sort
                std::stable_sort(mmlst2[i].begin(), mmlst2[i].end(),
                      [](const MMinfo<Tm>& mm1, const MMinfo<Tm>& mm2){
-                        return mm1 > mm2; 
+                     return mm1 > mm2; 
                      });
                mmbatch2[k][i].init(mmlst2[i]);
 #ifdef _OPENMP
@@ -345,9 +345,9 @@ namespace ctns{
             const Tm beta = 1.0;
             // sort
             std::stable_sort(mvlst.begin(), mvlst.end(),
-                        [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
-                           return mv1 > mv2;
-                           });
+                  [](const MVinfo<Tm>& mv1, const MVinfo<Tm>& mv2){
+                  return mv1 > mv2;
+                  });
             mvbatch[k].init(mvlst, beta);
          } // k
       }

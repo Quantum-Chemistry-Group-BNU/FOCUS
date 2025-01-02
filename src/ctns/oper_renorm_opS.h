@@ -289,6 +289,8 @@ namespace ctns{
             const int size,
             const int rank){
          const bool skipId = true;
+         const bool ifSingle = true;
+         const bool ifDirect = true;
          const std::string block1 = superblock.substr(0,1);
          const std::string block2 = superblock.substr(1,2);
          const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
@@ -329,8 +331,6 @@ namespace ctns{
                rtasks.append(std::make_tuple('S', index, formula));
                // BatchCPU: symbolic formulae + rintermediates + preallocation of workspace
                rintermediates<Qm::ifabelian,Tm> rinter;
-               const bool ifSingle = true;
-               const bool ifDirect = true;
                const int batchgemv = 1;
                rinter.init(ifDirect, schd.ctns.alg_rinter, batchgemv, qops_dict, oploc, opaddr, rtasks, rank==0);
                // GEMM list and GEMV list
@@ -398,6 +398,8 @@ namespace ctns{
             const int rank){
          auto t0 = tools::get_time();
          const bool skipId = true;
+         const bool ifSingle = true;
+         const bool ifDirect = true;
          const std::string block1 = superblock.substr(0,1);
          const std::string block2 = superblock.substr(1,2);
          const qoper_dictmap<Qm::ifabelian,Tm> qops_dict = {{block1,qops1}, {block2,qops2}};
@@ -430,10 +432,10 @@ namespace ctns{
          auto sindex = oper_index_opS(qops.krest, qops.ifkr);
          size_t nop = sindex.size();
          std::vector<size_t> opsizes(nop), formulasizes(nop);
-         std::vector<size_t> blksizes(nop), blksizes0(nop), batchsizes(nop);
          std::vector<rintermediates<Qm::ifabelian,Tm>> rinters(nop);
-         std::vector<RMMtask<Tm>> Rmmtasks(nop);
-         size_t max_opsize = 0, max_gpumem_batch = 0, tot_gpumem_rinter = 0;
+         std::vector<Rlist<Tm>> Rlsts(nop); 
+         std::vector<size_t> blksizes(nop), blksizes0(nop), batchsizes(nop);
+         size_t max_opsize = 0, tot_gpumem_rinter = 0;
          for(int i=0; i<nop; i++){
             auto index = sindex[i];
             auto sym_op = get_qsym_opS(Qm::isym, index);
@@ -469,8 +471,6 @@ namespace ctns{
                rtasks.append(std::make_tuple('S', index, formula));
                // BatchGPU: symbolic formulae + rintermediates + preallocation of workspace
                // compute hintermediates on CPU
-               const bool ifSingle = true;
-               const bool ifDirect = true;
                const int batchgemv = std::get<0>(schd.ctns.batchrenorm);
                rinters[i].init(ifDirect, schd.ctns.alg_rinter, batchgemv, qops_dict, oploc, 
                      dev_opaddr, rtasks, rank==0 && schd.ctns.verbose>2);
@@ -485,39 +485,21 @@ namespace ctns{
                      << std::endl;
                }
                // GEMM list and GEMV list
-               Rlist<Tm> Rlst; 
                size_t blksize=0, blksize0=0;
                double cost=0.0;
                preprocess_formulae_Rlist_opS(ifDirect, schd.ctns.alg_rcoper, superblock, 
                      opSinfo, qops_dict, oploc, opaddr, rtasks, site, site, skipId, rinters[i],
-                     Rlst, blksize, blksize0, cost, rank==0 && schd.ctns.verbose>2);
+                     Rlsts[i], blksize, blksize0, cost, rank==0 && schd.ctns.verbose>2);
                blksizes[i] = blksize;
                blksizes0[i] = blksize0; 
-               if(blksize > 0){
-                  // Determine batchsize dynamically & GPUmem.allocate
-                  size_t blocksize = 2*blksize+blksize0+1;
-                  size_t maxbatch = Rlst.size();
-                  size_t batchsize, gpumem_batch;
-                  preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 0, rank, 
-                        batchsize, gpumem_batch);
-                  batchsizes[i] = batchsize;
-                  max_gpumem_batch = std::max(max_gpumem_batch, gpumem_batch);
-                  // generate Rmmtasks given batchsize
-                  const int batchblas = 2; // GPU
-                  Rmmtasks[i].init(Rlst, batchblas, schd.ctns.batchrenorm, batchsize, blksize*2, blksize0);
-                  if(rank==0 && schd.ctns.verbose>2){
-                     std::cout << " rank=" << rank 
-                        << " opS: i=" << i << "/" << nop 
-                        << " index=" << index 
-                        << " blksize=" << blksize
-                        << " blksize0=" << blksize0
-                        << " Rmmtask.totsize=" << Rmmtasks[i].totsize
-                        << " batchsize=" << Rmmtasks[i].batchsize 
-                        << " nbatch=" << Rmmtasks[i].nbatch
-                        << " gpumem_batch(GB)=" << gpumem_batch/std::pow(1024.0,3)
-                        << std::endl;
-                  }
-               } // blksize>0
+               if(rank==0 && schd.ctns.verbose>2){
+                  std::cout << " rank=" << rank 
+                     << " opS: i=" << i << "/" << nop 
+                     << " index=" << index 
+                     << " blksize=" << blksize
+                     << " blksize0=" << blksize0
+                     << std::endl;
+               }
             } // formula.size()>0
          } // sindex      
          auto ta = tools::get_time();
@@ -551,7 +533,42 @@ namespace ctns{
                << "," << tot_gpumem_rinter/std::pow(1024.0,3) 
                << std::endl;
          }
-         // allocate workspace for batch calculations
+         // ZL@2025/01/02: determine workspace for batch calculations
+         // this needs to be after the tot_gpumem_rinter is obtained,
+         // otherwise, an error of insufficient gpu memory will occur!
+         std::vector<RMMtask<Tm>> Rmmtasks(nop);
+         size_t max_gpumem_batch = 0;
+         for(int i=0; i<nop; i++){
+            auto index = sindex[i];
+            // opS can be empty for ifdist1=true
+            if(formulasizes[i] != 0 and blksizes[i] > 0){
+               // Determine batchsize dynamically & GPUmem.allocate
+               size_t blksize = blksizes[i];
+               size_t blksize0 = blksizes0[i];
+               size_t blocksize = 2*blksize+blksize0+1;
+               size_t maxbatch = Rlsts[i].size();
+               size_t batchsize, gpumem_batch;
+               preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, tot_gpumem_rinter, rank, 
+                     batchsize, gpumem_batch);
+               batchsizes[i] = batchsize;
+               max_gpumem_batch = std::max(max_gpumem_batch, gpumem_batch);
+               // generate Rmmtasks given batchsize
+               const int batchblas = 2; // GPU
+               Rmmtasks[i].init(Rlsts[i], batchblas, schd.ctns.batchrenorm, batchsize, blksize*2, blksize0);
+               if(rank==0 && schd.ctns.verbose>2){
+                  std::cout << " rank=" << rank 
+                     << " opS: i=" << i << "/" << nop 
+                     << " index=" << index 
+                     << " blksize=" << blksize
+                     << " blksize0=" << blksize0
+                     << " Rmmtask.totsize=" << Rmmtasks[i].totsize
+                     << " batchsize=" << Rmmtasks[i].batchsize 
+                     << " nbatch=" << Rmmtasks[i].nbatch
+                     << " gpumem_batch(GB)=" << gpumem_batch/std::pow(1024.0,3)
+                     << std::endl;
+               }
+            } // formula.size()>0 and blksize>0
+         } // sindex      
          Tm* dev_workspace = (Tm*)GPUmem.allocate(max_gpumem_batch);
          if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
             std::cout << "rank=" << rank
