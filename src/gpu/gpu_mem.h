@@ -9,7 +9,7 @@
 #include <iostream>
 #include "gpu_check.h"
 
-const size_t MAX_GPU_PAGE = 128*1024*1024;
+const size_t MAX_GPU_PAGE = 256*1024*1024;
 extern const size_t MAX_GPU_PAGE;
 
 // interface
@@ -23,7 +23,7 @@ class gpu_mem{
       }
 
       size_t available(const int rank){
-	 _rank = rank;
+         _rank = rank;
          size_t avail, total;
          CUDA_CHECK(cudaMemGetInfo(&avail, &total));
          if(avail <= MAX_GPU_PAGE){
@@ -35,19 +35,21 @@ class gpu_mem{
       }
 
       void* allocate(const size_t size){
-	 /*
-	 size_t avail, total;
-	 CUDA_CHECK(cudaMemGetInfo(&avail, &total));
-	 if(size > avail){
-	    std::cout << "error: size is too large on GPU!:"
-		    << " rank=" << _rank 
-		    << " avail=" << avail/1024.0/1024.0/1024.0
-		    << " total=" << total/1024.0/1024.0/1024.0
-		    << " size=" << size/1024.0/1024.0/1024.0 
-		    << std::endl;
-	    exit(1);
-	 }
-	 */	
+         //-----------------------------
+         // ZL@2025/01/02: check memory 
+         //-----------------------------
+         size_t avail, total;
+         CUDA_CHECK(cudaMemGetInfo(&avail, &total));
+         if(size > avail){
+            std::cout << "error: no enough memory on GPU!:"
+               << " rank=" << _rank 
+               << " total=" << total/1024.0/1024.0/1024.0
+               << " avail=" << avail/1024.0/1024.0/1024.0
+               << " used=" << used/1024.0/1024.0/102.4.0
+               << " size[need]=" << size/1024.0/1024.0/1024.0 
+               << std::endl;
+         }
+         //-----------------------------
          void *addr;
          CUDA_CHECK(cudaMalloc((void**)&addr, size));
          _used += size; 

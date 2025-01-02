@@ -90,6 +90,8 @@ void params_ctns::read(ifstream& istrm){
          alg_mrpt2 = stoi(line.substr(9));
       }else if(line.substr(0,9)=="debug_rdm"){
          debug_rdm = true;
+      }else if(line.substr(0,12)=="debug_gpumem"){
+         debug_gpumem = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
       }else if(line.substr(0,9)=="ifoutcore"){
@@ -449,4 +451,5 @@ void params_ctns::print() const{
    cout << "nc2 = " << nc2 << endl;
    // debug distribution
    cout << "mpisize_debug = " << mpisize_debug << endl;
+   cout << "debug_gpumem = " << debug_gpumem << endl;
 }

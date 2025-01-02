@@ -527,35 +527,38 @@ namespace ctns{
          size_t gpumem_op = sizeof(Tm)*max_opsize;
          Tm* dev_op = (Tm*)GPUmem.allocate(gpumem_op);
          // initialization of qops on gpu
-         size_t opertot = qops1.size() + qops2.size() + qops.size() + max_opsize;
+         size_t opertot = qops1.size() + qops2.size() + qops.size();
          size_t gpumem_oper = sizeof(Tm)*opertot;
-         if(rank==0 && schd.ctns.verbose>0){
+         if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
             std::cout << "rank=" << rank
                << std::scientific << std::setprecision(3)
                << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
-               << " (oper)=" << gpumem_oper/std::pow(1024.0,3)
+               << " (optmp,oper)=" << gpumem_op/std::pow(1024.0,3)
+               << "," << gpumem_oper/std::pow(1024.0,3)
                << std::endl;
          }
          // copy bra and ket to GPU
          size_t gpumem_site = sizeof(Tm)*site.size();
          Tm* dev_site = (Tm*)GPUmem.allocate(gpumem_site);
          GPUmem.to_gpu(dev_site, site._data, gpumem_site);
-         if(rank==0 && schd.ctns.verbose>0){
+         if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
             std::cout << "rank=" << rank
                << std::scientific << std::setprecision(3)
                << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
-               << " (oper,site,rinter)=" << gpumem_oper/std::pow(1024.0,3) 
+               << " (optmp,oper,site,rinter)=" << gpumem_op/std::pow(1024.0,3)
+               << "," << gpumem_oper/std::pow(1024.0,3) 
                << "," << gpumem_site/std::pow(1024.0,3) 
                << "," << tot_gpumem_rinter/std::pow(1024.0,3) 
                << std::endl;
          }
          // allocate workspace for batch calculations
          Tm* dev_workspace = (Tm*)GPUmem.allocate(max_gpumem_batch);
-         if(rank==0 && schd.ctns.verbose>0){
+         if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
             std::cout << "rank=" << rank
                << std::scientific << std::setprecision(3)
                << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
-               << " (oper,site,rinter,batch)=" << gpumem_oper/std::pow(1024.0,3) 
+               << " (optmp,oper,site,rinter,batch)=" << gpumem_op/std::pow(1024.0,3)
+               << "," << gpumem_oper/std::pow(1024.0,3) 
                << "," << gpumem_site/std::pow(1024.0,3) 
                << "," << tot_gpumem_rinter/std::pow(1024.0,3) 
                << "," << max_gpumem_batch/std::pow(1024.0,3)

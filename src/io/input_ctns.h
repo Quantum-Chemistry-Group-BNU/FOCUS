@@ -111,7 +111,7 @@ namespace input{
                   & inputconf & saveconfs & loadconfs
                   & alg_rdm & debug_rdm
                   & alg_mrpt2 & nv2 & nc2
-                  & mpisize_debug;
+                  & mpisize_debug & debug_gpumem;
             }
       public:
          void read(std::ifstream& istrm);
@@ -219,8 +219,8 @@ namespace input{
          int alg_mrpt2 = 0;
          int nv2 = 0;
          int nc2 = 0;
-         // debug distribution
-         int mpisize_debug = 1;
+         int mpisize_debug = 1; // debug distribution
+         bool debug_gpumem = false; // display gpu memory usage for all ranks
    };
 
 } // input

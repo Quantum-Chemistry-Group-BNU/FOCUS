@@ -287,7 +287,7 @@ namespace ctns{
             qops.allocate_gpu(true);
             size_t opertot = qops1.size() + qops2.size() + qops.size();
             size_t gpumem_oper = sizeof(Tm)*opertot;
-            if(rank==0 && schd.ctns.verbose>0){
+            if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
@@ -312,7 +312,7 @@ namespace ctns{
                GPUmem.to_gpu(dev_site2, site2._data, gpumem_site2);
                gpumem_site += gpumem_site2;
             }
-            if(rank==0 && schd.ctns.verbose>0){
+            if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
@@ -328,7 +328,7 @@ namespace ctns{
             const int batchgemv = std::get<0>(schd.ctns.batchrenorm);
             rinter.init(ifDirect, schd.ctns.alg_rinter, batchgemv, qops_dict, oploc, dev_opaddr, rtasks, rank==0);
             size_t gpumem_rinter = sizeof(Tm)*rinter.size();
-            if(rank==0 && schd.ctns.verbose>0){
+            if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
@@ -348,7 +348,7 @@ namespace ctns{
                size_t blocksize = 2*blksize+blksize0+1;
                preprocess_gpu_batchsize<Tm>(schd.ctns.batchmem, blocksize, maxbatch, 0, rank, 
                      batchsize, gpumem_batch);
-               if(rank==0 && schd.ctns.verbose>0){
+               if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
                   size_t used = GPUmem.used();
                   size_t avail = GPUmem.available(rank);
                   size_t total = used + avail;
@@ -364,7 +364,7 @@ namespace ctns{
                      << std::endl;
                }
                dev_workspace = (Tm*)GPUmem.allocate(gpumem_batch);
-               if(rank==0 && schd.ctns.verbose>0){
+               if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
                   std::cout << "rank=" << rank
                      << std::scientific << std::setprecision(3)
                      << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
