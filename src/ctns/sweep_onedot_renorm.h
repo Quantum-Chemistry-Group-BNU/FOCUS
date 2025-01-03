@@ -117,6 +117,8 @@ namespace ctns{
                   cqops, rqops, qops, fname, timing, fmmtask, 1);
          } // superblock
 
+         //xiangchunyang 20241220
+         icomb.world.barrier();
          // erase fneed to save memory
          qops_pool.join_and_erase(fneed, fneed_next);
          if(debug) get_mem_status(rank);

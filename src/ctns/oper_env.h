@@ -212,6 +212,9 @@ namespace ctns{
                auto td = tools::get_time();
                t_comp += tools::get_duration(td-tc);
 
+               // xiangchunyang 20241220
+               icomb.world.barrier();
+
                // c. erase fneed to save memory
                qops_pool.join_and_erase(fneed);
                if(debug) get_mem_status(rank);

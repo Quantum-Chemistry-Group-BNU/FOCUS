@@ -45,6 +45,9 @@ namespace ctns{
          qtensor2<Qm::ifabelian,Tm> rot;
          twodot_decimation(icomb, schd, scratch, sweeps, isweep, ibond, 
                superblock, vsol, wf, rot);
+
+         //xiangchunyang 20241220
+         icomb.world.barrier();
 #ifndef SERIAL
          if(size > 1) mpi_wrapper::broadcast(icomb.world, rot, 0); 
 #endif
@@ -134,6 +137,8 @@ namespace ctns{
                   c1qops, c2qops, qops, fname, timing, fmmtask); 
          } // superblock      
 
+         //xiangchunyang 20241220
+         icomb.world.barrier();
          // erase fneed to save memory
          qops_pool.join_and_erase(fneed, fneed_next);
          if(debug) get_mem_status(rank);

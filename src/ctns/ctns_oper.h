@@ -85,9 +85,15 @@ namespace ctns{
             std::string superblock = "cr";
             std::string fname, fmmtask;
             dot_timing timing_local;
+
+           //xiangchunyang 20241220
+            icomb.world.barrier();
+
             oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
                   cqops, rqops, qops_pool[frop], fname, timing_local, fmmtask);
 
+           //xiangchunyang 20241220
+            icomb.world.barrier();
             // c. save operators to disk
             qops_pool.join_and_erase(fneed);
             qops_pool.save_to_disk(frop, schd.ctns.async_save);

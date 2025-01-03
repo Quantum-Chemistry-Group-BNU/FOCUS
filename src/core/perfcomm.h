@@ -45,6 +45,8 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
             << std::endl;
       }
    }
+   //xiangchunyang 20250103
+   world.barrier();
 
 #ifdef GPU
 #ifdef NCCL
@@ -77,6 +79,9 @@ void perfcomm(const boost::mpi::communicator& world, const size_t data_count){
             << std::endl;
       }
    }
+   //xiangchunyang 20250103
+   world.barrier();
+
    GPUmem.deallocate(dev_data, count);
 #endif
 #endif
