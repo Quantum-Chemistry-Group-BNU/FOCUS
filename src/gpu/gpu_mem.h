@@ -41,13 +41,14 @@ class gpu_mem{
          size_t avail, total;
          CUDA_CHECK(cudaMemGetInfo(&avail, &total));
          if(size > avail){
-            std::cout << "error: no enough memory on GPU!:"
+            std::cout << "error in GPUmem.allocate: insufficient memory!"
                << " rank=" << _rank 
                << " total=" << total/1024.0/1024.0/1024.0
-               << " avail=" << avail/1024.0/1024.0/1024.0
                << " used=" << _used/1024.0/1024.0/1024.0
+               << " avail=" << avail/1024.0/1024.0/1024.0
                << " size[need]=" << size/1024.0/1024.0/1024.0 
                << std::endl;
+            exit(1);
          }
          //-----------------------------
          void *addr;

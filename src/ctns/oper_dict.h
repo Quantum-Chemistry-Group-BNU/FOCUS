@@ -62,9 +62,11 @@ namespace ctns{
                CUDA_CHECK(cudaMemGetInfo(&avail, &total));
                size_t size_bytes = _size*sizeof(Tm);
                if(size_bytes > avail){
-                  std::cout << "error: required size is larger than avail for allocate_gpu:"
-                     << " _size=" << _size << " size_bytes=" << size_bytes
-                     << " avail=" << avail << " total=" << total
+                  std::cout << "error in qoper_dict.allocate_gpu: insufficient memory!"
+                     << " rank=" << mpirank 
+                     << " size=" << size_bytes/1024.0/1024.0/1024.0
+                     << " avail=" << avail/1024.0/1024.0/1024.0 
+                     << " total=" << total/1024.0/1024.0/1024.0
                      << std::endl;
                   exit(1);
                }
