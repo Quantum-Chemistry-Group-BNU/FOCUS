@@ -178,7 +178,12 @@ namespace ctns{
                // 1. form H in the subspace: H = V^+W, V(ndim,nsub), W(ndim,nsub)
                const Tm alpha = 1.0, beta=0.0;
                linalg::matrix<Tm> tmpH(nsub,nsub);
-               linalg::xgemm("C", "N", nsub, nsub, ndim,
+               //linalg::xgemm("C", "N", nsub, nsub, ndim,
+               //      alpha, vbas, ndim, wbas, ndim,
+               //      beta, tmpH.data(), nsub);
+
+               //xiangchunyang 20250103
+               linalg::xgemm_small("C", "N", nsub, nsub, ndim,
                      alpha, vbas, ndim, wbas, ndim,
                      beta, tmpH.data(), nsub);
                auto t0a = tools::get_time();
@@ -214,12 +219,20 @@ namespace ctns{
                // 5. form full residuals: Res[i]=HX[i]-e[i]*X[i]
                // vbas = {X[i]}
                linalg::xcopy(ndim*nsub, vbas, rbas); 
-               linalg::xgemm("N", "N", ndim, nsub1, nsub,
+               //linalg::xgemm("N", "N", ndim, nsub1, nsub,
+               //      alpha, rbas, ndim, tmpU.data(), nsub,
+               //      beta, vbas, ndim);
+               //xiangchunyang 20250103
+               linalg::xgemm_small("N", "N", ndim, nsub1, nsub,
                      alpha, rbas, ndim, tmpU.data(), nsub,
                      beta, vbas, ndim);
                // wbas = {HX[i]}
                linalg::xcopy(ndim*nsub, wbas, rbas); 
-               linalg::xgemm("N", "N", ndim, nsub1, nsub,
+               //linalg::xgemm("N", "N", ndim, nsub1, nsub,
+               //      alpha, rbas, ndim, tmpU.data(), nsub,
+               //      beta, wbas, ndim);
+               //xiangchunyang 20250103
+               linalg::xgemm_small("N", "N", ndim, nsub1, nsub,
                      alpha, rbas, ndim, tmpU.data(), nsub,
                      beta, wbas, ndim);
                auto t0d = tools::get_time();

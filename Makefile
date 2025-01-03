@@ -1,16 +1,16 @@
 
-machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = wuhan#dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
-DEBUG = yes
+DEBUG = no
 USE_GCC = yes
 USE_MPI = yes
 USE_OPENMP = yes
-USE_MKL = yes
+USE_MKL = no 
 USE_ILP64 = yes
 USE_GPU = yes
 USE_NCCL = yes
 USE_TCMALLOC = yes
-USE_MAGMA = no #yes
+USE_MAGMA = yes #yes
 # compression
 USE_LZ4 = no
 USE_ZSTD = no
@@ -20,6 +20,10 @@ INSTALL_CTNS = yes
 INSTALL_POST = no #yes
 INSTALL_VMC = no #yes
 INSTALL_PY = no #yes
+
+MATHLIB=
+BOOST=
+LFLAGS=
 
 # set library
 ifeq ($(strip $(machine)), lenovo)
@@ -114,13 +118,20 @@ else ifeq ($(strip $(machine)), scy0799)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), wuhan)
-   #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/libs
-   #MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64
-   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
-   BOOST =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_openmpi_64
+   MATHLIB =/home/share/l6eub2ic/home/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   BOOST =/home/share/l6eub2ic/home/xiangchunyang/software/boost_1.80.0_install_openmpi_64
    LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-a64 -lboost_timer-mt-a64 -lboost_serialization-mt-a64 -lboost_system-mt-a64 -lboost_iostreams-mt-a64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-a64
+   endif
+
+   GSLDIR =/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/gsl-2.7.1-install
+   NLOPTDIR_LIB =/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/nlopt-2.7.1-install/lib64 
+   NLOPTDIR_INCLUDE =/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/nlopt-2.7.1-install/include
+	 TCMALLOC_DIR=/home/share/l6eub2ic/home/xiangchunyang/project/qubic_kunpeng/qubic_20241216/FOCUS/extlibs/gperftools-install
+   ifeq ($(strip $(USE_TCMALLOC)), yes)  
+      FLAGS += -DTCMALLOC -I$(TCMALLOC_DIR)/include/gperftools
+      LFLAGS += -L$(TCMALLOC_DIR)/lib -ltcmalloc
    endif
 else ifeq ($(strip $(machine)), scv7260)
    MATHLIB =/data/apps/oneAPI/2022.2/mkl/latest/lib/intel64
@@ -236,13 +247,14 @@ ifeq ($(strip $(USE_MKL)),yes)
 else
    # openblas/kblas
    MATH = -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lopenblas -lpthread -lm -ldl -lrt 
+          -lopenblas_omp -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
    FLAGS += -fopenmp -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
 endif
 endif
 # quaternion matrix diagonalization
 MATH += -L./extlibs/zquatev -lzquatev 
+MATH += -L./extlibs/blas_optimized_libs/lib -lblas_level3
 LFLAGS += ${MATH}
 
 # GPU
@@ -250,15 +262,20 @@ ifeq ($(strip $(USE_GPU)), yes)
 
 ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
+   #CUDA_DIR=/home/HPCBase/compilers/cuda/11.7.0
+   #CUDA_DIR=/home/HPCBase/compilers/cuda/11.8.0
    FLAGS += -DGPU -I${CUDA_DIR}/include
    LFLAGS += -L${CUDA_DIR}/lib64 -lcudart_static -lcublas -lcusolver
    ifeq ($(strip $(USE_MAGMA)), yes)
-      MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
+      MAGMA_DIR=/home/share/l6eub2ic/home/xiangchunyang/software/magma-2.7.1-install-openblas64
       FLAGS += -DMAGMA -I${MAGMA_DIR}/include 
       LFLAGS += -L${MAGMA_DIR}/lib -lmagma
    endif
    ifeq ($(strip $(USE_NCCL)), yes)
-      NCCL_DIR = /home/HPCBase/libs/nccl/2.16.5-cuda11.4
+		   NCCL_DIR = /home/HPCBase/libs/nccl/2.16.5-cuda11.4
+      #NCCL_DIR =/home/share/l6eub2ic/home/xiangchunyang/software/nccl-2.14.3+cuda-11.7.0-install
+      #NCCL_DIR = /home/HPCBase/libs/nccl/2.12.12-1+cuda11.6
+      #NCCL_DIR = /home/HPCBase/libs/nccl/2.16.5-1+cuda11.8
       FLAGS += -DNCCL -I${NCCL_DIR}/include	
       LFLAGS += -L${NCCL_DIR}/lib -lnccl
    endif
@@ -362,7 +379,8 @@ SRC_DIR_EXPT = ./$(SRC)/experiment
 INCLUDE_DIR = -I./src \
 				  -I$(SRC_DIR_CORE) \
      	        -I$(SRC_DIR_IO) \
-              -I$(SRC_DIR_EXPT)
+              -I$(SRC_DIR_EXPT) \
+							-Iextlibs/blas_optimized_libs/include
 
 ifeq ($(strip $(INSTALL_CI)), yes)
    SRC_DIR_CI   = ./$(SRC)/ci

@@ -177,6 +177,19 @@ namespace linalg{
          if(trans=='T' || trans=='C'){
             Trans = CUBLAS_OP_T;
          }
+//         // https://docs.nvidia.com/cuda/cublas/index.html
+//         CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+//                  Trans, 
+//                  m, n,
+//                  alpha,
+//                  &dev_A_array[ista], lda, // pointer of matrix should be on device
+//                  &dev_X_array[ista], incx,
+//                  beta,
+//                  &dev_Y_array[ista], incy,
+//                  nbatch));
+
+            //xiangchunyang 20250103
+#if 0
          // https://docs.nvidia.com/cuda/cublas/index.html
          CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
                   Trans, 
@@ -187,6 +200,37 @@ namespace linalg{
                   beta,
                   &dev_Y_array[ista], incy,
                   nbatch));
+
+#else
+           
+           //for(int j=0; j<nbatch; j++){
+           //   cublasDgemv(handle_cublas,
+           //         Trans, 
+           //         m, n, 
+           //         alpha,
+           //         A_array[ista+j], lda,
+           //         X_array[ista+j], incx,
+           //         beta,
+           //         Y_array[ista+j], incy);
+           //}
+           magma_trans_t Trans_ = MagmaNoTrans;
+           if(trans=='T' || trans=='C'){
+               Trans = CUBLAS_OP_T;
+               Trans_ = MagmaTrans;
+           }
+
+           magmablas_dgemv_batched(
+                              Trans_, 
+                              m, n,
+                              alpha[0],
+                              &dev_A_array[ista], lda, // pointer should be on device
+                              &dev_X_array[ista], incx,
+                              beta[0],
+                              &dev_Y_array[ista], incy,
+                              nbatch,
+                              magma_queue
+                              );
+#endif
          /*
             for(int j=0; j<nbatch; j++){
             std::cout << "ista=" << ista << " j=" << j << " ista+j=" << ista+j 
@@ -272,6 +316,19 @@ namespace linalg{
             if(trans=='T' || trans=='C'){
                Trans = CUBLAS_OP_T;
             }
+//            // https://docs.nvidia.com/cuda/cublas/index.html
+//            CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
+//                     Trans, 
+//                     m, n,
+//                     alpha,
+//                     &dev_A_array[ista], lda, // pointer of matrix should be on device
+//                     &dev_X_array[ista], incx,
+//                     beta,
+//                     &dev_Y_array[ista], incy,
+//                     nbatch));
+//
+            //xiangchunyang 20250103
+#if 0
             // https://docs.nvidia.com/cuda/cublas/index.html
             CUBLAS_CHECK(cublasDgemvBatched(handle_cublas,
                      Trans, 
@@ -282,6 +339,34 @@ namespace linalg{
                      beta,
                      &dev_Y_array[ista], incy,
                      nbatch));
+#else
+          // for(int jj=0; jj<nbatch; jj++){
+          //    cublasDgemv(handle_cublas,
+          //          Trans, 
+          //          m, n, 
+          //          alpha,
+          //          A_array[ista+jj], lda,
+          //          X_array[ista+jj], incx,
+          //          beta,
+          //          Y_array[ista+jj], incy);
+          // }
+           magma_trans_t Trans_ = MagmaNoTrans;
+           if(trans=='T' || trans=='C'){
+               Trans = CUBLAS_OP_T;
+               Trans_ = MagmaTrans;
+           }
+              magmablas_dgemv_batched(
+                      Trans_, 
+                      m, n,
+                      alpha[0],
+                      &dev_A_array[ista], lda, // pointer should be on device
+                      &dev_X_array[ista], incx,
+                      beta[0],
+                      &dev_Y_array[ista], incy,
+                      nbatch,
+                      magma_queue
+                      );
+#endif
          } // j
 
          for(int j=0; j<jlen; j++){
