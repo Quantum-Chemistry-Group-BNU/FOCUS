@@ -18,6 +18,8 @@ namespace ext { namespace bio = ext::boost::iostreams; }
 #include <boost/iostreams/filter/zstd.hpp>
 #endif
 
+#include "../experiment/fp_codec.h"
+
 namespace ctns{ 
 
    const bool debug_oper_io = true;
@@ -87,6 +89,12 @@ namespace ctns{
             out.reset();
             ofs2.close();
 #endif
+         }else if(iomode == 3){
+            std::ofstream ofs2(fname+".data", std::ios::binary);
+            const double prec = 1.e-14;
+            FPCodec<double> fp(prec);
+            fp.write_array(ofs2, (double*)qops._data, qops._size);
+            ofs2.close();
          }else{
             std::cout << "error: no such option in oper_save! iomode=" << iomode << std::endl;
             exit(1); 
@@ -158,6 +166,11 @@ namespace ctns{
             in.reset();
             ifs2.close();
 #endif
+         }else if(iomode == 3){
+            std::ifstream ifs2(fname+".data", std::ios::binary);
+            FPCodec<double> fp; 
+            fp.read_array(ifs2, (double*)qops._data, qops._size);
+            ifs2.close();
          }else{
             std::cout << "error: no such option in oper_load! iomode=" << iomode << std::endl;
             exit(1); 
