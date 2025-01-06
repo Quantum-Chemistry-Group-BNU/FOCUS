@@ -9,6 +9,7 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void sweep_final_LCR2CRR(comb<Qm,Tm>& icomb,
             const double rdm_svd,
+            const int svd_iop,
             const std::string fname,
             const bool debug){
          if(debug) std::cout << "\nctns::sweep_final_LCR2CRR: convert [LC]R => [CR]R" << std::endl;
@@ -31,7 +32,7 @@ namespace ctns{
          std::vector<double> sigs2full;
          // 2. decimation
          decimation_row(icomb, wfinfo.qmid, wfinfo.qcol, 
-               iftrunc, dcut, rdm_svd, alg_decim, 
+               iftrunc, dcut, rdm_svd, svd_iop, alg_decim, 
                wfs2, sigs2full, rot, dwt, deff, fname, 
                debug);
          rot = rot.P();
@@ -48,6 +49,7 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void sweep_final_CR2cRR(comb<Qm,Tm>& icomb,
             const double rdm_svd,
+            const int svd_iop,
             const std::string fname,
             const bool debug){
          if(debug) std::cout << "\nctns::sweep_final_CR2cRR: convert [C]R => [cR]R" << std::endl;
@@ -70,7 +72,7 @@ namespace ctns{
          std::vector<double> sigs2full;
          // 2. decimation
          decimation_row(icomb, wfinfo.qmid, wfinfo.qcol,
-               iftrunc, dcut, rdm_svd, alg_decim,
+               iftrunc, dcut, rdm_svd, svd_iop, alg_decim,
                wfs2, sigs2full, rot, dwt, deff, fname,
                debug);
          rot = rot.P();
@@ -121,12 +123,12 @@ namespace ctns{
             // small bond dimension.
             icomb.orthonormalize_cpsi();
             fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_C0R1.txt";
-            sweep_final_LCR2CRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+            sweep_final_LCR2CRR(icomb, schd.ctns.rdm_svd, schd.ctns.svd_iop, fname, schd.ctns.verbose>0);
    
             // 2. compute rwfuns & R0 from C0: CRRR => cRRRR
             icomb.orthonormalize_cpsi();
             fname = scratch+"/decimation_isweep"+std::to_string(isweep)+"_cR0.txt";
-            sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, fname, schd.ctns.verbose>0);
+            sweep_final_CR2cRR(icomb, schd.ctns.rdm_svd, schd.ctns.svd_iop, fname, schd.ctns.verbose>0);
    
             // 3. save & check
             rcanon_save(icomb, rcanon_file);

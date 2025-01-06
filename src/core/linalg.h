@@ -59,10 +59,10 @@ void eig_solver(const matrix<std::complex<double>>& A, std::vector<double>& e,
 //     = 13 : JOBZ=S (default)
 void svd_solver(const matrix<double>& A, std::vector<double>& s, 
 		matrix<double>& U, matrix<double>& Vt, 
-		const MKL_INT iop=13);
+		const MKL_INT svd_iop=3);
 void svd_solver(const matrix<std::complex<double>>& A, std::vector<double>& s, 
 		matrix<std::complex<double>>& U, matrix<std::complex<double>>& Vt, 
-		const MKL_INT iop=13);
+		const MKL_INT svd_iop=3);
 
 } // linalg
 

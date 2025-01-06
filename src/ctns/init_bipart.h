@@ -287,6 +287,7 @@ namespace ctns{
             const linalg::matrix<Tm>& vs,
             const double thresh_proj,
             const double rdm_svd,
+            const int svd_iop,
             const bool debug){
          const bool debug_basis = false;
          auto t0 = tools::get_time();
@@ -329,7 +330,7 @@ namespace ctns{
                }
                matched += 1;
                if(matched > 1) tools::exit("multiple matched ql is not supported!");
-               kramers::get_renorm_states_nkr(blk, sigs2, U, rdm_svd, debug_basis);
+               kramers::get_renorm_states_nkr(blk, sigs2, U, rdm_svd, svd_iop, debug_basis);
             } // ql
             // 2.2 select important renormalized states from (sigs2,U) 
             // NOTE: it is possible that matched=0, when we add flipped det in bipart_space with sym=NSz!
@@ -361,6 +362,7 @@ namespace ctns{
             const linalg::matrix<std::complex<double>>& vs,
             const double thresh_proj,
             const double rdm_svd,
+            const int svd_iop,
             const bool debug){
          const bool debug_basis = false;
          using Tm = std::complex<double>;
@@ -413,7 +415,7 @@ namespace ctns{
                if(debug_basis) std::cout << "find matched ql =" << ql << std::endl;
                matched += 1;
                if(matched > 1) tools::exit("multiple matched ql is not supported!");
-               kramers::get_renorm_states_kr(qr, phases, blk, sigs2, U, rdm_svd, debug_basis);
+               kramers::get_renorm_states_kr(qr, phases, blk, sigs2, U, rdm_svd, svd_iop, debug_basis);
             } // ql
               // 2.2 select important renormalized states from (sigs2,U) 
             if(matched == 1){

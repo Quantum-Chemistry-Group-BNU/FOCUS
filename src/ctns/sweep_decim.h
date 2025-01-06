@@ -123,6 +123,7 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const int svd_iop,
             const int alg_decim,
             const std::vector<qtensor2<Qm::ifabelian,Tm>>& wfs2,
             std::vector<double>& sigs2full,
@@ -180,7 +181,7 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results, debug);
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, svd_iop, alg_decim, wfs2, results, debug);
          auto t1 = tools::get_time();
 
          if(rank == 0){
@@ -256,6 +257,7 @@ namespace ctns{
             const bool iftrunc,
             const int dcut,
             const double rdm_svd,
+            const int svd_iop,
             const int alg_decim,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
             std::vector<double>& sigs2full,
@@ -322,7 +324,7 @@ namespace ctns{
 
          // 1. compute reduced basis
          std::map<int,std::pair<std::vector<double>,linalg::matrix<Tm>>> results;
-         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, alg_decim, wfs2, results, debug);
+         decimation_genbasis(icomb, qs1, qs2, qrow, qcol, dpt, rdm_svd, svd_iop, alg_decim, wfs2, results, debug);
          auto t1 = tools::get_time();
 
          if(rank == 0){

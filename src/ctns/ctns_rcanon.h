@@ -139,7 +139,8 @@ namespace ctns{
             blks[iroot] = icomb.rwfuns[iroot].to_matrix();
          }
          const double rdm_svd = 1.5;
-         kramers::get_renorm_states_kr(sym_state, phases, blks, sigs2, U, rdm_svd, debug);
+         const int svd_iop = 3;
+         kramers::get_renorm_states_kr(sym_state, phases, blks, sigs2, U, rdm_svd, svd_iop, debug);
          assert(U.cols() == nroots);
          if(debug){
             std::cout << "\nrcanon_rwfuns: Kramers projection" << std::endl;
@@ -252,6 +253,7 @@ namespace ctns{
             // perform decimation: see sweep_twodot_decim.h
             const bool iftrunc = true;
             const double rdm_svd = 1.5;
+            const int svd_iop = 3;
             const int alg_decim = 0; // serial version
             std::string fname;
             std::vector<double> sigs2full; 
@@ -267,7 +269,7 @@ namespace ctns{
                   wfs2[i] = std::move(wf2);
                }
                decimation_row(icomb, wf.info.qrow, wf.info.qmid, // lc1=(row,mid) 
-                     iftrunc, dmax, rdm_svd, alg_decim,
+                     iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                      wfs2, sigs2full, rot, dwt, deff, fname,
                      debug);
 
@@ -279,7 +281,7 @@ namespace ctns{
                   wfs2[i] = std::move(wf2);
                }
                decimation_row(icomb, wf.info.qver, wf.info.qcol, // c2r=(ver,col)
-                     iftrunc, dmax, rdm_svd, alg_decim,
+                     iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                      wfs2, sigs2full, rot, dwt, deff, fname,
                      debug);
                rot = rot.P();
@@ -294,7 +296,7 @@ namespace ctns{
                   wfs2[i] = std::move(wf2);
                }
                decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
-                     iftrunc, dmax, rdm_svd, alg_decim,
+                     iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                      wfs2, sigs2full, rot, dwt, deff, fname,
                      debug);
 
@@ -308,7 +310,7 @@ namespace ctns{
                   wfs2[i] = std::move(wf2);
                } // i
                decimation_row(icomb, wf.info.qmid, wf.info.qver, 
-                     iftrunc, dmax, rdm_svd, alg_decim,
+                     iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                      wfs2, sigs2full, rot, dwt, deff, fname,
                      debug);
                rot = rot.P(); // permute two lines for RCF
@@ -339,8 +341,9 @@ namespace ctns{
 
          // compute rwfuns for the next call of reduce_entropy_single
          const double rdm_svd = 1.5;
+         const int svd_iop = 3;
          std::string fname;
-         sweep_final_CR2cRR(icomb, rdm_svd, fname, debug);
+         sweep_final_CR2cRR(icomb, rdm_svd, svd_iop, fname, debug);
 
          // Orthonormalize rwfuns[iroot,alpha] (->-*->-) via SVD
          if(ifortho) rcanon_rwfuns(icomb, debug);

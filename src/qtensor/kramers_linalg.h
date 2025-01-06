@@ -301,8 +301,6 @@ namespace kramers{
    //---------------------------------------------------------------
    // Compute right renormalized states from a set of wavefunctions
    //---------------------------------------------------------------
-   const int svd_iop = 3;
-   extern const int svd_iop;
 
    // Input: a vector of matrices {c[l,r]}
    // Output: the reduced basis U[r,alpha] for the right space
@@ -311,6 +309,7 @@ namespace kramers{
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
             const double rdm_svd,
+            const int svd_iop,
             const bool debug_basis=false,
             const double thresh_Uortho=1.e-8){
          int nroots = clr.size();
@@ -362,6 +361,7 @@ namespace kramers{
             std::vector<double>& sigs2,
             linalg::matrix<Tm>& U,
             const double rdm_svd,
+            const int svd_iop,
             const bool debug_basis=false,
             const double thresh_Uortho=1.e-8){
          const double thresh_kept = 1.e-16;

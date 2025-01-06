@@ -30,15 +30,15 @@ void test_eig_cpu(const linalg::matrix<Tm>& mat){
 }
 
 template <typename Tm>
-void test_svd_cpu(const linalg::matrix<Tm>& mat){
-   std::cout << "test_svd_cpu:";
+void test_svd_cpu(const linalg::matrix<Tm>& mat,
+      const int svd_iop=3){
+   std::cout << "test_svd_cpu: svd_iop=" << svd_iop;
    int r = std::min(mat.rows(),mat.cols());
-   const int iop = 13;
    auto t0 = tools::get_time();
    {
       vector<double> s;
       matrix<Tm> U, Vt;
-      svd_solver(mat, s, U, Vt, iop);
+      svd_solver(mat, s, U, Vt, svd_iop);
       std::cout << " s[0]=" << s[0] << " s[-1]=" << s[r-1];
    }
    auto t1 = tools::get_time();
@@ -62,15 +62,15 @@ void test_eig_gpu(const linalg::matrix<Tm>& mat){
 }
 
 template <typename Tm>
-void test_svd_gpu(const linalg::matrix<Tm>& mat){
-   std::cout << "test_svd_gpu:";
+void test_svd_gpu(const linalg::matrix<Tm>& mat,
+      const int svd_iop=3){
+   std::cout << "test_svd_gpu: svd_iop=" << svd_iop;
    int r = std::min(mat.rows(),mat.cols());
-   const int iop = 13;
    auto t0 = tools::get_time();
    {
       vector<double> s;
       matrix<Tm> U, Vt;
-      svd_solver_gpu(mat, s, U, Vt, iop);
+      svd_solver_gpu(mat, s, U, Vt, svd_iop);
       std::cout << " s[0]=" << s[0] << " s[-1]=" << s[r-1];
    }
    auto t1 = tools::get_time();
@@ -99,18 +99,22 @@ int main(){
       for(int k=0; k<cycle; k++){
          using Tm = double;
          auto mat = linalg::random_matrix<Tm>(rows[i],cols[i]);
-         test_svd_cpu<Tm>(mat);
+         test_svd_cpu<Tm>(mat, 3);
+         test_svd_cpu<Tm>(mat, 13);
 #ifdef GPU
-         test_svd_gpu<Tm>(mat);
+         test_svd_gpu<Tm>(mat, 3);
+         test_svd_gpu<Tm>(mat, 13);
 #endif
       }
       std::cout << "complex:" << std::endl;
       for(int k=0; k<cycle; k++){
          using Tm = double;
          auto mat = linalg::random_matrix<Tm>(rows[i],cols[i]);
-         test_svd_cpu<Tm>(mat);
+         test_svd_cpu<Tm>(mat, 3);
+         test_svd_cpu<Tm>(mat, 13);
 #ifdef GPU
-         test_svd_gpu<Tm>(mat);
+         test_svd_gpu<Tm>(mat, 3);
+         test_svd_gpu<Tm>(mat, 13);
 #endif
       }
    }
@@ -143,7 +147,6 @@ int main(){
 #ifdef GPU
    // large tests
    rows = {1000,2000,3000,4000,5000,6000,10000};
-   const double rdm_svd = 1.8;
 
    cout << "\n=== svd[large] ===" << endl;
    for(int i=0; i<rows.size(); i++){
@@ -153,7 +156,10 @@ int main(){
       for(int k=0; k<cycle; k++){
          using Tm = double;
          auto mat = linalg::random_matrix<Tm>(rows[i],cols);
-         test_svd_gpu<Tm>(mat);
+         test_svd_cpu<Tm>(mat, 3);
+         test_svd_cpu<Tm>(mat, 13);
+         test_svd_gpu<Tm>(mat, 3);
+         test_svd_gpu<Tm>(mat, 13);
       }
    }
 

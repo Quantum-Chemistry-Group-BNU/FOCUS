@@ -39,14 +39,15 @@ namespace ctns{
             ksupp = dims[2] + dims[3];
          }
          const auto& rdm_svd = schd.ctns.rdm_svd;
+         const auto& svd_iop = schd.ctns.svd_iop;
          const int& dbranch = schd.ctns.dbranch;
          const int dcut = (dbranch>0 && dbond.p1.second>0)? dbranch : sweeps.ctrls[isweep].dcut;
          const bool iftrunc = start_truncation(ksupp, dcut) && !schd.ctns.notrunc;
          const auto& noise = sweeps.ctrls[isweep].noise;
          if(debug){
             std::cout << "ctns::twodot_renorm superblock=" << superblock
-               << " (rdm_svd,dbranch,dcut,iftrunc,noise)=" 
-               << std::scientific << std::setprecision(1) << rdm_svd << ","
+               << " (rdm_svd,svd_iop,dbranch,dcut,iftrunc,noise)=" 
+               << std::scientific << std::setprecision(1) << rdm_svd << "," << svd_iop << ","
                << dbranch << "," << dcut << "," << iftrunc << ","
                << noise << std::endl;
          }
@@ -65,7 +66,7 @@ namespace ctns{
             }
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
+                  iftrunc, dcut, rdm_svd, svd_iop, schd.ctns.alg_decim,
                   wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
@@ -79,7 +80,7 @@ namespace ctns{
             }
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qver, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
+                  iftrunc, dcut, rdm_svd, svd_iop, schd.ctns.alg_decim,
                   wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.P(); // rot[alpha,r] = (V^+)
@@ -96,7 +97,7 @@ namespace ctns{
             }
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qrow, wf.info.qcol, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
+                  iftrunc, dcut, rdm_svd, svd_iop, schd.ctns.alg_decim,
                   wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
 
@@ -112,7 +113,7 @@ namespace ctns{
             } // i
             t1 = tools::get_time();
             decimation_row(icomb, wf.info.qmid, wf.info.qver, 
-                  iftrunc, dcut, rdm_svd, schd.ctns.alg_decim,
+                  iftrunc, dcut, rdm_svd, svd_iop, schd.ctns.alg_decim,
                   wfs2, sigs2full, rot, result.dwt, result.deff, fname,
                   debug);
             rot = rot.P(); // permute two lines for RCF

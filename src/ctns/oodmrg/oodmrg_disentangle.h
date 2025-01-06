@@ -32,6 +32,7 @@ namespace ctns{
          // decimation
          const bool iftrunc = true;
          const double rdm_svd = 1.5;
+         const int svd_iop = 3;
          const int alg_decim = 0;
          std::string fname;
          std::vector<double> sigs2full; 
@@ -40,13 +41,13 @@ namespace ctns{
          if(forward){
             wfs2[0] = wf.merge_lc1_c2r();
             decimation_row(icomb, wf.info.qrow, wf.info.qmid, // lc1=(row,mid) 
-                  iftrunc, dmax, rdm_svd, alg_decim,
+                  iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
          }else{
             wfs2[0] = wf.merge_lc1_c2r().P();
             decimation_row(icomb, wf.info.qver, wf.info.qcol, // c2r=(ver,col)
-                  iftrunc, dmax, rdm_svd, alg_decim,
+                  iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
             rot = rot.P(); 
@@ -344,8 +345,9 @@ namespace ctns{
 
          // compute rwfuns for the next call of reduce_entropy_single
          const double rdm_svd = 1.5;
+         const int svd_iop = 3;
          std::string fname;
-         sweep_final_CR2cRR(icomb, rdm_svd, fname, debug_check);
+         sweep_final_CR2cRR(icomb, rdm_svd, svd_iop, fname, debug_check);
 
          if(iprt > 0){
             auto t1 = tools::get_time();

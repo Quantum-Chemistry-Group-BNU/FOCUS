@@ -115,8 +115,8 @@ namespace linalg{
 
    // singular value decomposition: 
    template <typename Tm>
-      void svd_solver_gpu(const matrix<Tm>& A, std::vector<double>& S, 
-            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT iop=13){
+      void svd_solver_gpu_gesvdp(const matrix<Tm>& A, std::vector<double>& S, 
+            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT svd_iop){
 
          using data_type = typename std::conditional<tools::is_complex<Tm>(), cuDoubleComplex, double>::type;
 
@@ -130,12 +130,12 @@ namespace linalg{
          int ldu, ldv;
          S.resize(r);
          linalg::matrix<Tm> V;
-         if(iop == 10){
+         if(svd_iop == 10){
             econ = 0; U.resize(m,m); ldu = m; V.resize(n,n); ldv = n;
-         }else if(iop == 13){                           
+         }else if(svd_iop == 13){                           
             econ = 1; U.resize(m,r); ldu = m; V.resize(n,r); ldv = n;
          }else{
-            std::cout << "error: no such option in svd_solver_gpu!" << std::endl;
+            std::cout << "error: no such option in svd_solver_gpu_gesvdp!" << std::endl;
             exit(1);
          } 
          cusolverEigMode_t jobz = CUSOLVER_EIG_MODE_VECTOR;
@@ -230,10 +230,159 @@ namespace linalg{
          CUDA_CHECK(cudaStreamDestroy(stream));
 
          if(info){
-            std::cout << "svd[d] failed with info=" << info << " for iop=" << iop << std::endl;
+            std::cout << "svd[d] failed with info=" << info << " for svd_iop=" << svd_iop << std::endl;
             exit(1);
          }
          VT = V.H();
+      }
+
+   template <typename Tm>
+      void svd_solver_gpu_gesvd_MgeN(const matrix<Tm>& A, std::vector<double>& S, 
+            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT svd_iop){
+
+         using data_type = typename std::conditional<tools::is_complex<Tm>(), cuDoubleComplex, double>::type;
+
+         // adapted from
+         // https://github.com/NVIDIA/CUDALibrarySamples/blob/master/cuSOLVER/Xgesvd/cusolver_Xgesvd_example.cu
+         int m = A.rows();
+         int n = A.cols();
+         int r = std::min(m,n); 
+         int lda = m;  // lda >= m
+         int ldu, ldvt;
+         S.resize(r);
+         signed char jobu, jobvt;
+         if(svd_iop == 0){
+            U.resize(m,m); ldu = m; VT.resize(n,n); ldvt = n; 
+            jobu = 'A', jobvt = 'A';
+         }else if(svd_iop == 3){                           
+            U.resize(m,r); ldu = m; VT.resize(n,r); ldvt = n;
+            jobu = 'S', jobvt = 'S';
+         }else{
+            std::cout << "error: no such option in svd_solver_gpu_gesvd_MgeN!" << std::endl;
+            exit(1);
+         } 
+
+         cusolverDnHandle_t cusolverH = NULL;
+         cublasHandle_t cublasH = NULL;
+         cudaStream_t stream = NULL;
+         cusolverDnParams_t params = NULL;
+
+         data_type *d_A = nullptr;
+         double *d_S = nullptr;  // singular values
+         data_type *d_U = nullptr;  // left singular vectors
+         data_type *d_VT = nullptr; // right singular vectors
+         int *d_info = nullptr;
+         data_type *d_work = nullptr; // Device workspace
+         data_type *h_work = nullptr; // Host workspace
+         data_type *d_rwork = nullptr;
+
+         size_t workspaceInBytesOnDevice = 0;
+         size_t workspaceInBytesOnHost = 0;
+         int info = 0;
+
+         /* step 1: create cusolver handle, bind a stream */
+         CUSOLVER_CHECK(cusolverDnCreate(&cusolverH));
+         CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+         CUSOLVER_CHECK(cusolverDnSetStream(cusolverH, stream));
+         CUSOLVER_CHECK(cusolverDnCreateParams(&params));
+
+         /* step 2: copy A to device */
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(data_type) * A.size()));
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_S), sizeof(double) * S.size()));
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_U), sizeof(data_type) * U.size()));
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_VT), sizeof(data_type) * VT.size()));
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_info), sizeof(int)));
+
+         CUDA_CHECK(cudaMemcpyAsync(d_A, A.data(), sizeof(data_type) * lda * n, cudaMemcpyHostToDevice,
+                  stream));
+
+         /* step 3: query working space of SVD */
+         CUSOLVER_CHECK(cusolverDnXgesvd_bufferSize(
+                  cusolverH, params, jobu, jobvt, m, n, 
+                  traits<data_type>::cuda_data_type, d_A, lda,
+                  traits<double>::cuda_data_type, d_S, 
+                  traits<data_type>::cuda_data_type, d_U, ldu, 
+                  traits<data_type>::cuda_data_type, d_VT, ldvt,
+                  traits<data_type>::cuda_data_type,
+                  &workspaceInBytesOnDevice,
+                  &workspaceInBytesOnHost));
+
+         // allocate work space
+         CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_work), workspaceInBytesOnDevice));
+
+         if (0 < workspaceInBytesOnHost) {
+            h_work = reinterpret_cast<data_type *>(malloc(workspaceInBytesOnHost));
+            if (h_work == nullptr) {
+               throw std::runtime_error("Error: h_work not allocated.");
+            }
+         }
+
+         /* step 4: compute SVD */
+         CUSOLVER_CHECK(cusolverDnXgesvd(
+                  cusolverH, params, jobu, jobvt, m, n, 
+                  traits<data_type>::cuda_data_type, d_A, lda,
+                  traits<double>::cuda_data_type, d_S, 
+                  traits<data_type>::cuda_data_type, d_U, ldu,
+                  traits<data_type>::cuda_data_type, d_VT, ldvt,
+                  traits<data_type>::cuda_data_type, d_work,
+                  workspaceInBytesOnDevice, h_work,
+                  workspaceInBytesOnHost, d_info));
+
+         // step 5: copy back
+         CUDA_CHECK(cudaMemcpyAsync(U.data(), d_U, sizeof(data_type) * U.size(), cudaMemcpyDeviceToHost,
+                  stream));
+         CUDA_CHECK(cudaMemcpyAsync(VT.data(), d_VT, sizeof(data_type) * VT.size(),
+                  cudaMemcpyDeviceToHost, stream));
+         CUDA_CHECK(cudaMemcpyAsync(S.data(), d_S, sizeof(double) * S.size(), cudaMemcpyDeviceToHost,
+                  stream));
+         CUDA_CHECK(cudaMemcpyAsync(&info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream));
+
+         CUDA_CHECK(cudaStreamSynchronize(stream));
+
+         /* free resources */
+         CUDA_CHECK(cudaFree(d_A));
+         CUDA_CHECK(cudaFree(d_S));
+         CUDA_CHECK(cudaFree(d_U));
+         CUDA_CHECK(cudaFree(d_VT));
+         CUDA_CHECK(cudaFree(d_info));
+         CUDA_CHECK(cudaFree(d_work));
+         free(h_work);
+
+         CUSOLVER_CHECK(cusolverDnDestroy(cusolverH));
+         CUDA_CHECK(cudaStreamDestroy(stream));
+
+         if(info){
+            std::cout << "svd[d] failed with info=" << info << " for svd_iop=" << svd_iop << std::endl;
+            exit(1);
+         }
+      }
+
+   template <typename Tm>
+      void svd_solver_gpu_gesvd(const matrix<Tm>& A, std::vector<double>& S, 
+            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT svd_iop){
+         int m = A.rows();
+         int n = A.cols();
+         if(m >= n){
+            // A = U*S*VH
+            svd_solver_gpu_gesvd_MgeN(A, S, U, VT, svd_iop);
+         }else{
+            // AH = V*SH*UH
+            auto Ah = A.H();
+            matrix<Tm> Uh, V;
+            svd_solver_gpu_gesvd_MgeN(Ah, S, V, Uh, svd_iop);
+            U = Uh.H();
+            VT = V.H();
+         }
+      }
+
+   template <typename Tm>
+      void svd_solver_gpu(const matrix<Tm>& A, std::vector<double>& S, 
+            matrix<Tm>& U, matrix<Tm>& VT, const MKL_INT svd_iop=3){
+         if(svd_iop < 10){
+            svd_solver_gpu_gesvd(A, S, U, VT, svd_iop); 
+         }else{
+            svd_solver_gpu_gesvdp(A, S, U, VT, svd_iop);
+         }
       }
 
    // Input: a vector of matrices {c[l,r]}
@@ -243,6 +392,7 @@ namespace linalg{
             std::vector<double>& sigs2,
             matrix<Tm>& U,
             const double rdm_svd,
+            const int svd_iop,
             const bool debug_basis=false,
             const double thresh_Uortho=1.e-8){
          int nroots = clr.size();
@@ -273,7 +423,7 @@ namespace linalg{
             } // iroot
             vrl *= 1.0/std::sqrt(nroots);
             matrix<Tm> vt; // size of sig2,U,vt will be determined inside svd_solver!
-            svd_solver_gpu(vrl, sigs2, U, vt);
+            svd_solver_gpu(vrl, sigs2, U, vt, svd_iop);
             std::transform(sigs2.begin(), sigs2.end(), sigs2.begin(),
                   [](const double& x){ return x*x; });
 

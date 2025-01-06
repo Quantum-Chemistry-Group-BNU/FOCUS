@@ -92,7 +92,7 @@ namespace input{
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file 
                   & restart_sweep 
-                  & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & outprec 
+                  & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
                   & alg_renorm & alg_rinter & alg_rcoper & alg_decim & alg_a2p & alg_b2q & notrunc 
@@ -142,6 +142,7 @@ namespace input{
          double thresh_proj = 1.e-14;
          double thresh_ortho = 1.e-8;
          double rdm_svd = 1.5;
+         int svd_iop = 13;
          int outprec = 12;
          // sweep
          int nroots = 1; // this can be smaller than nroots in CI 

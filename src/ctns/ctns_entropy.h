@@ -89,13 +89,14 @@ namespace ctns{
             }
             const bool iftrunc = true;
             const double rdm_svd = 1.5;
+            const int svd_iop = 3;
             const int alg_decim = 0; // serial version
             std::string fname;
             std::vector<double> sigs2full; 
             double dwt;
             int deff;
             decimation_row(icomb_tmp, wf.info.qrow, wf.info.qmid, 
-                  iftrunc, dmax, rdm_svd, alg_decim,
+                  iftrunc, dmax, rdm_svd, svd_iop, alg_decim,
                   wfs2, sigs2full, rot, dwt, deff, fname,
                   debug);
             svalues[ibond] = std::move(sigs2full);

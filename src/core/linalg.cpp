@@ -67,23 +67,23 @@ void linalg::eig_solver(const matrix<complex<double>>& A, vector<double>& e,
 // real A = U*s*Vt
 void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
 			matrix<double>& U, matrix<double>& Vt,
-			const MKL_INT iop){
+			const MKL_INT svd_iop){
    MKL_INT m = A.rows(), n = A.cols(), r = min(m,n);
    MKL_INT lwork = -1, ldu = 1, ldvt = 1, info;
    char JOBU, JOBVT, JOBZ;
    matrix<double> Atmp(A);
    s.resize(r);
-   if(iop < 10){
-      if(iop == 0){
+   if(svd_iop < 10){
+      if(svd_iop == 0){
          JOBU = 'A'; U.resize(m,m); ldu = m;
          JOBVT = 'A'; Vt.resize(n,n); ldvt = n;
-      }else if(iop == 1){
+      }else if(svd_iop == 1){
          JOBU = 'S'; U.resize(m,r); ldu = m;
          JOBVT = 'N';
-      }else if(iop == 2){
+      }else if(svd_iop == 2){
          JOBU = 'N';
          JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
-      }else if(iop == 3){
+      }else if(svd_iop == 3){
          JOBU = 'S'; U.resize(m,r); ldu = m;
          JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
       }
@@ -98,9 +98,9 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
       //std::cout << "U.shape=" << U.rows() << "," << U.cols() << std::endl;
       //auto diff = linalg::check_orthogonality(U);
    }else{
-      if(iop == 10){
+      if(svd_iop == 10){
          JOBZ = 'A'; U.resize(m,m); ldu = m; Vt.resize(n,n); ldvt = n;
-      }else if(iop == 13){
+      }else if(svd_iop == 13){
          JOBZ = 'S'; U.resize(m,r); ldu = m; Vt.resize(r,n); ldvt = r;
       }
       unique_ptr<MKL_INT[]> iwork(new MKL_INT[8*r]);
@@ -113,7 +113,7 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
               Vt.data(),&ldvt,work.get(),&lwork,iwork.get(),&info);
    }
    if(info){
-      cout << "svd[d] failed with info=" << info << " for iop=" << iop << endl;
+      cout << "svd[d] failed with info=" << info << " for svd_iop=" << svd_iop << endl;
       exit(1);
    }
 }
@@ -121,23 +121,23 @@ void linalg::svd_solver(const matrix<double>& A, vector<double>& s,
 // complex A = U*s*Vh
 void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
 			matrix<complex<double>>& U, matrix<complex<double>>& Vt,
-			const MKL_INT iop){
+			const MKL_INT svd_iop){
    MKL_INT m = A.rows(), n = A.cols(), r = min(m,n);
    MKL_INT lwork = -1, ldu = 1, ldvt = 1, info;
    char JOBU, JOBVT, JOBZ;
    matrix<complex<double>> Atmp(A);
    s.resize(r);
-   if(iop < 10){
-      if(iop == 0){
+   if(svd_iop < 10){
+      if(svd_iop == 0){
          JOBU = 'A'; U.resize(m,m); ldu = m;
          JOBVT = 'A'; Vt.resize(n,n); ldvt = n;
-      }else if(iop == 1){
+      }else if(svd_iop == 1){
          JOBU = 'S'; U.resize(m,r); ldu = m;
          JOBVT = 'N';
-      }else if(iop == 2){
+      }else if(svd_iop == 2){
          JOBU = 'N';
          JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
-      }else if(iop == 3){
+      }else if(svd_iop == 3){
          JOBU = 'S'; U.resize(m,r); ldu = m;
          JOBVT = 'S'; Vt.resize(r,n); ldvt = r;
       }
@@ -150,9 +150,9 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
       zgesvd_(&JOBU,&JOBVT,&m,&n,Atmp.data(),&m,s.data(),U.data(),&ldu,
               Vt.data(),&ldvt,work.get(),&lwork,rwork.get(),&info);
    }else{
-      if(iop == 10){
+      if(svd_iop == 10){
          JOBZ = 'A'; U.resize(m,m); ldu = m; Vt.resize(n,n); ldvt = n;
-      }else if(iop == 13){
+      }else if(svd_iop == 13){
          JOBZ = 'S'; U.resize(m,r); ldu = m; Vt.resize(r,n); ldvt = r;
       }
       complex<double> workopt;
@@ -169,7 +169,7 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
               Vt.data(),&ldvt,work.get(),&lwork,rwork.get(),iwork.get(),&info);
    }
    if(info){
-      cout << "svd[z] failed with info=" << info << " for iop=" << iop << endl;
+      cout << "svd[z] failed with info=" << info << " for svd_iop=" << svd_iop << endl;
       exit(1);
    }
 }

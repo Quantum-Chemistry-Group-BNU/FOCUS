@@ -142,6 +142,8 @@ void params_ctns::read(ifstream& istrm){
          thresh_ortho = stod(line.substr(12));
       }else if(line.substr(0,7)=="rdm_svd"){
          rdm_svd = stod(line.substr(7));
+      }else if(line.substr(0,7)=="svd_iop"){
+         svd_iop = stoi(line.substr(7));
       }else if(line.substr(0,7)=="outprec"){
          outprec = stoi(line.substr(7));
       }else if(line.substr(0,6)=="nroots"){
@@ -358,6 +360,7 @@ void params_ctns::print() const{
    cout << "thresh_proj = " << scientific << thresh_proj << endl;
    cout << "thresh_ortho = " << scientific << thresh_ortho << endl;
    cout << "rdm_svd = " << scientific << rdm_svd << endl;
+   cout << "svd_iop = " << svd_iop << endl;
    cout << "outprec = " << outprec << endl;
    // sweep
    cout << "nroots = " << nroots << endl;

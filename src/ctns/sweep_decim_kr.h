@@ -14,6 +14,7 @@ namespace ctns{
             const qbond& qcol,
             const qdpt& dpt,
             const double rdm_svd,
+            const int svd_iop,
             const int alg_decim,
             const std::vector<stensor2<std::complex<double>>>& wfs2,
             decim_map<std::complex<double>>& results,
@@ -61,7 +62,7 @@ namespace ctns{
                      for(int iroot=0; iroot<nroots; iroot++){
                         blks[iroot] = wfs2[iroot](br,bc).to_matrix().reorder_row(pos_new).T();
                      }
-                     kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, debug_decimation);
+                     kramers::get_renorm_states_kr(qr, phases, blks, sigs2, U, rdm_svd, svd_iop, debug_decimation);
                      // convert back to the original product basis
                      U = U.reorder_row(pos_new,1);
                   } // qc

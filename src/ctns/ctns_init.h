@@ -68,7 +68,7 @@ namespace ctns{
          }
 
          // 1. compute renormalized bases {|r>} from SCI wavefunctions
-         init_rbases(icomb, space, vs, schd.ctns.rdm_svd, schd.ctns.thresh_proj);
+         init_rbases(icomb, space, vs, schd.ctns.rdm_svd, schd.ctns.svd_iop, schd.ctns.thresh_proj);
 
          // 2. build sites from rbases
          init_rsites(icomb, schd.ctns.thresh_ortho);
@@ -89,9 +89,11 @@ namespace ctns{
             const fock::onspace& space,
             const linalg::matrix<Tm>& vs,
             const double rdm_svd,
+            const int svd_iop,
             const double thresh_proj){
          std::cout << "\nctns::init_rbases" << std::scientific << std::setprecision(3) 
             << " rdm_svd=" << rdm_svd
+            << " svd_iop=" << svd_iop
             << " thresh_proj=" << thresh_proj 
             << std::endl;
          auto t0 = tools::get_time();
@@ -135,7 +137,7 @@ namespace ctns{
 
                // 3. bipartition of space and compute renormalized states [time-consuming part!]
                popBc[idx] = right_projection<Qm,Tm>(rbasis, 2*bpos, space2, vs2, 
-                     thresh_proj, rdm_svd, debug_init);
+                     thresh_proj, rdm_svd, svd_iop, debug_init);
 
             } // node type
 //#ifdef _OPENMP

@@ -14,6 +14,7 @@ namespace ctns{
             const qbond& qcol,
             const qdpt& dpt,
             const double rdm_svd,
+            const int svd_iop,
             const int alg_decim,
             const std::vector<stensor2<Tm>>& wfs2,
             decim_map<Tm>& results,
@@ -58,7 +59,7 @@ namespace ctns{
                // decimation
                std::vector<double> sigs2;
                linalg::matrix<Tm> U;
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, svd_iop, debug_decimation);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -110,7 +111,7 @@ namespace ctns{
                // decimation
                std::vector<double> sigs2;
                linalg::matrix<Tm> U;
-               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, debug_decimation);
+               kramers::get_renorm_states_nkr(blks, sigs2, U, rdm_svd, svd_iop, debug_decimation);
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -133,7 +134,7 @@ namespace ctns{
                // decimation
                std::vector<double> sigs2;
                linalg::matrix<Tm> U;
-               linalg::get_renorm_states_nkr_gpu(blks, sigs2, U, rdm_svd, debug_decimation);
+               linalg::get_renorm_states_nkr_gpu(blks, sigs2, U, rdm_svd, svd_iop, debug_decimation);
                local_results[ibr] = std::make_pair(br,std::make_pair(sigs2, U));
             } // i
             auto tc = tools::get_time();
