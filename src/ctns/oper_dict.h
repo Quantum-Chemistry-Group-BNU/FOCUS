@@ -75,6 +75,9 @@ namespace ctns{
             void to_gpu(){
                assert(_dev_data != nullptr && _data != nullptr);
                GPUmem.to_gpu(_dev_data, _data, _size*sizeof(Tm));
+
+               //xiangchunyang 20250106
+               GPUmem.sync();
             }
             void to_cpu(){
                assert(_dev_data != nullptr);
@@ -83,6 +86,10 @@ namespace ctns{
                   this->setup_data(); // assign pointer for each operator
                }
                GPUmem.to_cpu(_data, _dev_data, _size*sizeof(Tm));
+
+               //xiangchunyang 20250106
+               GPUmem.sync();
+
             }
 #endif
             // copy

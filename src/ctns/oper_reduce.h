@@ -42,6 +42,9 @@ namespace ctns{
             Tm* dev_ptr = qops._dev_data+off;
             nccl_comm.reduce(dev_ptr, opsize, 0);
             if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
+
+            //xiangchunyang 20250106
+            GPUmem.sync(); 
 #endif
          }
 #endif // GPU
