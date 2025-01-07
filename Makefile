@@ -55,10 +55,8 @@ else ifeq ($(strip $(machine)), scy0799)
       LFLAGS += -lboost_mpi-mt-x64
    endif
 else ifeq ($(strip $(machine)), wuhan)
-   #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/libs
-   #MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/lapack-3.11.0-install-64/lib64
-   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
-   BOOST =/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/boost_1.80.0_install_openmpi_64
+   MATHLIB =/home/share/l6eub2ic/home/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   BOOST =/home/share/l6eub2ic/home/xiangchunyang/software/boost_1.80.0_install_openmpi_64
    LFLAGS = -L${BOOST}/lib -lboost_chrono-mt-a64 -lboost_timer-mt-a64 -lboost_serialization-mt-a64 -lboost_system-mt-a64 -lboost_iostreams-mt-a64
    ifeq ($(strip $(USE_MPI)), yes)   
       LFLAGS += -lboost_mpi-mt-a64
@@ -163,7 +161,7 @@ else
    # Use GNU OpenMP library: -lmkl_gnu_thread -lgomp replace -liomp5
    MATH = \
 	        -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) \
-          -lopenblas -lpthread -lm -ldl -lrt 
+          -lopenblas_omp -lpthread -lm -ldl -lrt 
           #-lblas64 -llapack64 -lpthread -lm -ldl -lrt 
    FLAGS += -fopenmp -DUSE_BLAS -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
 
@@ -193,7 +191,7 @@ else ifeq ($(strip $(machine)), scv7260)
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static
 else ifeq ($(strip $(machine)), wuhan)
    CUDA_DIR=/home/HPCBase/compilers/cuda/11.4.0
-   MAGMA_DIR=/home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/magma-2.7.1-install-openblas64
+	 MAGMA_DIR=/home/share/l6eub2ic/home/xiangchunyang/software/magma-2.7.1-install-openblas64
    FLAGS += -DGPU -I${MAGMA_DIR}/include -I${CUDA_DIR}/include
    LFLAGS += -L${MAGMA_DIR}/lib -lmagma -L${CUDA_DIR}/lib64 -lcudart_static -lcublas
    ifeq ($(strip $(USE_NCCL)), yes)

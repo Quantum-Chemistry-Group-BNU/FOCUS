@@ -29,7 +29,7 @@ else ifeq ($(strip $(machine)), scv7260)
 else ifeq ($(strip $(machine)), wuhan)
    CXX = g++ 
    CXXFLAGS = -O2 -DNDEBUG -std=c++17 $(INCLUDE)
-   MATHLIB = /home/share/zhongkyjssuo/home/jiaweile/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
+   MATHLIB =/home/share/l6eub2ic/home/xiangchunyang/software/OpenBLAS-0.3.23-install-ilp64/lib
    #MATHLIB =/home/HPCBase/libs/openblas0.3.18_kgcc9.3.1/lib
 else ifeq ($(strip $(machine)), cluster)
    CXX = icpc 
@@ -52,7 +52,7 @@ endif
 
 ifeq ($(strip $(USE_BLAS)), yes)
       CXXFLAGS += -DLAPACK_ILP64 -DMKL_ILP64 -DOPENBLAS_USE64BITINT -DUSE64BITINT
-      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas  -lpthread  -ldl 
+      LIBS += -L$(MATHLIB) -Wl,-rpath,$(MATHLIB) -lopenblas_omp  -lpthread  -ldl 
 endif
 
 LD       = $(CXX)
