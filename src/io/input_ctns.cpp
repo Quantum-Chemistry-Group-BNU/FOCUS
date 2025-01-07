@@ -279,6 +279,7 @@ void params_ctns::read(ifstream& istrm){
          tools::exit("error: no matching key! line = "+line);
       }
    }
+   
    // setup ctrls
    int size = tmp_ctrls.size();
    if(size == 0){
@@ -308,12 +309,20 @@ void params_ctns::read(ifstream& istrm){
          ctrls[j].isweep = j;
       }
    } // size
+   
+   //-------------
    // check input
+   //-------------
    assert(alg_hcoper <= 2);
    assert(alg_rcoper <= 1);
    // diag gpu check
    if(diagcheck && async_fetch){
       std::cout << "error: diagcheck should not be used with async_fetch!" << std::endl;
+      exit(1);
+   }
+   // algorithm
+   if(ifdists && !ifdist1){
+      std::cout << "error: ifdists must be used with ifdist1!" << std::endl;
       exit(1);
    }
    // nccl

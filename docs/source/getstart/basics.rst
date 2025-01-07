@@ -192,9 +192,17 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
 * ``ifdistc``: whether to treat dot in dmrg specially. This is possible because
  dot operators are stored in all processes.
 
-* ``ifdists``: whether to store opS distributedly
+* ``ifdists``: whether to store opS distributedly. This must be used with ifdist1,
+  otherwise, some C*S terms are missing, leading to wrong results!
 
-* ``ifab2pq``: switch from A,B to P,Q in renormalization
+* ``ifab2pq``: switch from A,B to P,Q in renormalization: 
+
+* ``alg_a2p,alg_b2q``: control the algorithms for A,B to P,Q:
+
+  * =0: CPU - xaxpy
+  * =1: CPU - gemm
+  * =2: CPU - gemm [saving memory]
+  * =3: GPU - gemm [saving memory]
 
 Some keyworks useful for debugging
 ==================================
