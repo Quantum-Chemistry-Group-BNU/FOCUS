@@ -396,6 +396,10 @@ namespace ctns{
             qoper_dict<Qm::ifabelian,Tm>& qops,
             const int size,
             const int rank){
+         if(!schd.ctns.ifnccl){
+            std::cout << "error: nccl must be used for reduction of opS!" << std::endl;
+            exit(1);
+         }
          auto t0 = tools::get_time();
          const bool skipId = true;
          const bool ifSingle = true;
@@ -614,7 +618,8 @@ namespace ctns{
                }
             } // formula.size()>0 and blksize>0
 #ifndef NCCL
-            std::cout << "error: NCCL must be used for preprocess_renorm_batchGPU_opS!" << std::endl; 
+            std::cout << "error: NCCL must be used for preprocess_renorm_batchGPU_opS!" << std::endl;
+            exit(1); 
 #else
             auto tx = tools::get_time();
             // reduction of op on GPU using nccl
@@ -664,13 +669,13 @@ namespace ctns{
             qoper_dict<Qm::ifabelian,Tm>& qops){
          int size = icomb.world.size();
          int rank = icomb.world.rank();
-         const bool ifdist1 = schd.ctns.ifdist1;
-         const bool ifdistc = schd.ctns.ifdistc;
-         const bool ifdists = schd.ctns.ifdists;
-         const int alg_renorm = schd.ctns.alg_renorm;
          const bool ifab = Qm::ifabelian;
-         const int isym = Qm::isym;
+         const int  isym = Qm::isym;
          const bool ifkr = Qm::ifkr;
+         const bool ifdist1 = schd.ctns.ifdist1;
+         const bool ifdists = schd.ctns.ifdists;
+         const bool ifnccl  = schd.ctns.ifnccl;
+         const int alg_renorm = schd.ctns.alg_renorm;
          const bool debug = (rank == 0); 
          if(debug and schd.ctns.verbose>0){ 
             std::cout << "ctns::oper_renorm_opS"
@@ -679,7 +684,8 @@ namespace ctns{
                << " isym=" << isym 
                << " ifkr=" << ifkr
                << " ifdist1=" << ifdist1
-               << " ifdists=" << ifdists 
+               << " ifdists=" << ifdists
+               << " ifnccl=" << ifnccl 
                << " alg_renorm=" << alg_renorm	
                << " mpisize=" << size
                << std::endl;
