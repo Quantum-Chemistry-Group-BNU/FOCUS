@@ -632,7 +632,7 @@ namespace ctns{
             }
             auto ty = tools::get_time();
             dtred += tools::get_duration(ty-tx);
-#endif
+#endif // NCCL
          } // index
          auto tc = tools::get_time();
 
@@ -655,7 +655,7 @@ namespace ctns{
               << std::endl;
          }
       }
-#endif
+#endif // GPU
 
    // driver (following sweep_renorm)
    template <typename Qm, typename Tm>

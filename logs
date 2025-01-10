@@ -646,17 +646,18 @@
       - alg_renorm = 4 [DONE@2024/12/23]
       - alg_renorm = 6,7,8,9 [DONE@2024/12/25]
       - alg_renorm = 16,17,18,19 [DONE@2025/01/01]
+      - correct ifab2pq + ifdists [DONE@2025/01/10]
       - test for fe4s4 on jinan
       - test for fe8s7 on jinan
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
-   - performance on a800: cublas-12.2 is slow for batchgemm, 12.4 works 
+   - performance on a800[xiyun]: cublas-12.2 is slow for batchgemm, 12.4 works 
    - compilation on jiageng: need to use mkl for magma/zquatev, 
      but use mkl2022 for focus, otherwise, dgemv_batch does not exist!
    - platforms:
-      - jinan: a100-40G,64G/GPU: cpu memory issue?
-      - wuhan: a100-40G,64G/GPU
-      - xiyun: a800-80G,256G/GPU
+      - jinan: a100-40G,64G CPUmem/GPU: cpu memory issue?
+      - wuhan: a100-40G,64G CPUmem/GPU
+      - xiyun: a800-80G,256G CPUmem/GPU
    - estimate minimal condition for D=20000 in our implementation: 
       - two qops [40-60GB] in GPU memory at the same time?
       - large-scale test on jinan/wuhan/xiyun/jiageng?

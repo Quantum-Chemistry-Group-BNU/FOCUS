@@ -554,6 +554,7 @@ namespace ctns{
                      tcomp += tools::get_duration(t1c-t0c);
                   } // q
                } // b
+
             } // iproc
 
          // keep both BN such that only one bcast is need 

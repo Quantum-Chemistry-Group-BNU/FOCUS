@@ -99,6 +99,9 @@ namespace ctns{
          twodot_diagGPU_BQ("c1r" , c1qops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
          twodot_diagGPU_BQ("c2r" , c2qops,  rqops, wf, dev_diag, dev_dims, opoffs, vec_fac, dev_fac, size, rank);
          GPUmem.deallocate(dev_fac, nblk*sizeof(double));
+         
+         // ZL@2024/12/31 synchronize
+         GPUmem.sync();
          auto t4 = tools::get_time();
 
          // debug

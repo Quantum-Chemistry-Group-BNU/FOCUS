@@ -18,9 +18,14 @@ namespace linalg{
 #ifdef MAGMA
       }else{
          magma_dcopy(N, X, 1, Y, 1, magma_queue);
+#else  
+      }else{
+         std::cout << "error: no such option in xcopy_gpu: iop=" << iop << std::endl;
+         exit(1);
 #endif
       }
    }
+
    // zcopy
    inline void xcopy_gpu(const MKL_INT N, const std::complex<double>* X, std::complex<double>* Y, const int iop=0){
       if(iop == 0){
@@ -29,6 +34,10 @@ namespace linalg{
 #ifdef MAGMA
       }else{
          magma_zcopy(N, (magmaDoubleComplex *)X, 1, (magmaDoubleComplex *)Y, 1, magma_queue);
+#else  
+      }else{
+         std::cout << "error: no such option in xcopy_gpu: iop=" << iop << std::endl;
+         exit(1);
 #endif
       }
    }
@@ -42,6 +51,10 @@ namespace linalg{
 #ifdef MAGMA
       }else{
          magma_daxpy(N, alpha, X, 1, Y, 1, magma_queue);
+#else  
+      }else{
+         std::cout << "error: no such option in xaxpy_gpu: iop=" << iop << std::endl;
+         exit(1);
 #endif
       }
    }
@@ -55,6 +68,10 @@ namespace linalg{
       }else{
          magmaDoubleComplex alpha1{alpha.real(),alpha.imag()};
          magma_zaxpy(N, alpha1, (magmaDoubleComplex *)X, 1, (magmaDoubleComplex *)Y, 1, magma_queue);
+#else
+      }else{
+         std::cout << "error: no such option in xaxpy_gpu: iop=" << iop << std::endl;
+         exit(1);
 #endif
       }
    }

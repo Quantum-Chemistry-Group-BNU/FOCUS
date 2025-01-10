@@ -75,6 +75,40 @@ namespace ctns{
       return ifab2pq and ifmps and ab2pq;
    }
 
+   template <bool ifab, typename Tm>
+      void check_opH_consistency(const qoper_dict<ifab,Tm>& qops,
+            const comb_coord& pcoord,
+            const int rank,
+            const bool debug,
+            const std::string msg,
+            const double thresh_opdiff=1.e-9){
+         const auto& opH = qops('H').at(0);
+         // debug
+         opH.to_matrix().print(msg+": opH pcoord"+std::to_string(pcoord.first)+" rank"+std::to_string(rank),10);
+         // NAN check
+         for(int i=0; i<opH.size(); i++){
+            double Hr = std::real(opH._data[i]);
+            double Hi = std::imag(opH._data[i]);
+            if(std::isnan(Hr) or std::isnan(Hi)){
+               std::cout << "error: opH contains NAN at rank=" << rank << std::endl;
+               exit(1);
+            }
+         }
+         // Hermicity check
+         auto diffH = (opH-opH.H()).normF();
+         if(debug){
+            std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+               << " coord=" << pcoord << " rank=" << rank << std::defaultfloat << std::endl;
+         }
+         if(diffH > thresh_opdiff){
+            std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
+               << " is larger than thresh_opdiff=" << thresh_opdiff 
+               << " for rank=" << rank 
+               << std::endl;
+            exit(1);
+         }
+      }
+
    template <typename Qm, typename Tm>
       void oper_ab2pq(const std::string superblock,
             const comb<Qm,Tm>& icomb,
@@ -106,6 +140,25 @@ namespace ctns{
          double ta2p = 0.0, tb2q = 0.0;
          double t2gpu = 0.0, t2cpu = 0.0, tmove = 0.0;
 
+         //---------------
+         // check op norm
+         qops.to_cpu();
+         for(int iproc=0; iproc<size; iproc++){
+            if(iproc == rank){
+               for(const auto& key : qops.oplist){
+                  for(const auto& pr : qops(key)){
+                     std::cout << "lzd opnorm[in]: rank=" << rank 
+                        << " key=" << key
+                        << " index=" << pr.first 
+                        << " |op|=" << std::defaultfloat << std::setprecision(10) << pr.second.normF()
+                        << std::endl;
+                  }
+               }
+            }
+            icomb.world.barrier();
+         }
+         //---------------
+
          // 0. initialization: for simplicity, we perform the transformation on CPU
          qoper_dict<Qm::ifabelian,Tm> qops2;
          qops2.sorb = qops.sorb;
@@ -130,6 +183,7 @@ namespace ctns{
             get_mem_status(rank);
          }
 
+         // compute ab2pq on cpu
          if(!ifab2pq_gpunccl){
 
             // 0. initialization
@@ -137,9 +191,10 @@ namespace ctns{
             auto ta = tools::get_time();
             tinit = tools::get_duration(ta-t0);
 
-            // 1. copy CSH
+            // 1. copy CSH on cpu
             std::string opseq = "CSH";
             for(const auto& key : opseq){
+               assert(qops.size_ops(key) == qops2.size_ops(key));
                linalg::xcopy(qops.size_ops(key), qops.ptr_ops(key), qops2.ptr_ops(key));
             }
             auto tb = tools::get_time();
@@ -185,9 +240,10 @@ namespace ctns{
             auto ta = tools::get_time();
             tinit = tools::get_duration(ta-t0);
 
-            // 1. copy CSH
+            // 1. copy CSH from qops to qops2 on gpu
             std::string opseq = "CSH";
             for(const auto& key : opseq){
+               assert(qops.size_ops(key) == qops2.size_ops(key));
                linalg::xcopy_gpu(qops.size_ops(key), qops.ptr_ops_gpu(key), qops2.ptr_ops_gpu(key));
             }
             auto tb = tools::get_time();
@@ -220,6 +276,30 @@ namespace ctns{
             tools::exit("error: gpu-nccl version is not enabled!");
 #endif
          } // ifab2pq_gpunccl
+
+         // consistency check for Hamiltonian
+         check_opH_consistency(qops, pcoord, rank, debug, "lzd oper_ab2pq");
+         // check op norm
+         for(int iproc=0; iproc<size; iproc++){
+            if(iproc == rank){
+               for(const auto& key : qops.oplist){
+                  for(const auto& pr : qops(key)){
+                     std::cout << "lzd opnorm: rank=" << rank 
+                        << " key=" << key
+                        << " index=" << pr.first 
+                        << " |op|=" << std::defaultfloat << std::setprecision(10) << pr.second.normF()
+                        << std::endl;
+                  }
+               }
+            }
+            icomb.world.barrier();
+            for(const auto& key : qops.oplist){
+               std::cout << "lzd rank=" << rank << " key=" << key
+                  << " ptr=" << qops.ptr_ops_gpu(key)
+                  << std::endl;
+            }
+            icomb.world.barrier();
+         }
 
          if(debug){
             auto t1 = tools::get_time();

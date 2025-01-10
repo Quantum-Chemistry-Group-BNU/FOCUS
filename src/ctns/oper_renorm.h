@@ -19,9 +19,6 @@ namespace ctns{
    const bool debug_oper_renorm = false;
    extern const bool debug_oper_renorm;
 
-   const double thresh_opdiff = 1.e-9;
-   extern const double thresh_opdiff;
-
    // renormalize operators
    // ndots only matter for ifab2pq=true
    template <typename Qm, typename Tm>
@@ -226,7 +223,7 @@ namespace ctns{
                linalg::xcopy(qops._size, data0, qops._data);
                delete[] data0;
                delete[] data1;
-               if(diff > thresh_opdiff) exit(1);
+               if(diff > 1.e-9) exit(1);
             } // debug
             timing.tf13 = tools::get_time();
 
@@ -239,34 +236,8 @@ namespace ctns{
             // qops is available on CPU, consistency check
             {
                // consistency check for Hamiltonian
-               const auto& opH = qops('H').at(0);
+               check_opH_consistency(qops, pcoord, rank, debug, "lzd oper_renorm");
 
-               //debug:
-               //opH.to_matrix().print("lzd opH_rank"+std::to_string(rank),10);
-               //if(pcoord.first == 15) exit(1);
-
-               // NAN check
-               for(int i=0; i<opH.size(); i++){
-                  double Hr = std::real(opH._data[i]);
-                  double Hi = std::imag(opH._data[i]);
-                  if(std::isnan(Hr) or std::isnan(Hi)){
-                     std::cout << "error: opH contains NAN at rank=" << rank << std::endl;
-                     exit(1);
-                  }
-               }
-               // Hermicity check
-               auto diffH = (opH-opH.H()).normF();
-               if(debug){
-                  std::cout << "check ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-                     << " coord=" << pcoord << " rank=" << rank << std::defaultfloat << std::endl;
-               } 
-               if(diffH > thresh_opdiff){
-                  std::cout <<  "error in oper_renorm: ||H-H.dagger||=" << std::scientific << std::setprecision(3) << diffH 
-                     << " is larger than thresh_opdiff=" << thresh_opdiff 
-                     << " for rank=" << rank 
-                     << std::endl;
-                  exit(1);
-               }
                // check against explicit construction
                if(debug_oper_rbasis){
                   for(const auto& key : qops.oplist){
@@ -283,7 +254,7 @@ namespace ctns{
                }
             } // end of consistency check
 
-         } // ifab2pq_gpunccl
+         } // ifab2pq_gpunccl=false
 
          timing.tf14 = tools::get_time();
          if(debug){
