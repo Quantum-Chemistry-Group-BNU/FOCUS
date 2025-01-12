@@ -84,7 +84,7 @@ namespace ctns{
             const double thresh_opdiff=1.e-9){
          const auto& opH = qops('H').at(0);
          // debug
-         opH.to_matrix().print(msg+": opH pcoord"+std::to_string(pcoord.first)+" rank"+std::to_string(rank),10);
+         //opH.to_matrix().print(msg+": opH pcoord"+std::to_string(pcoord.first)+" rank"+std::to_string(rank),10);
          // NAN check
          for(int i=0; i<opH.size(); i++){
             double Hr = std::real(opH._data[i]);
