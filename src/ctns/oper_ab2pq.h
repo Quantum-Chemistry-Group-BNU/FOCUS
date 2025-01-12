@@ -48,7 +48,7 @@ namespace ctns{
          const comb_coord& pcoord,
          const bool ifab2pq,
          const int ndots=2){
-      std::string oplist = "CSH";
+      std::string oplist = "HCS";
       if(!ifab2pq){
          oplist += "ABPQ";
       }else{
@@ -140,7 +140,7 @@ namespace ctns{
          double ta2p = 0.0, tb2q = 0.0;
          double t2gpu = 0.0, t2cpu = 0.0, tmove = 0.0;
 
-         //---------------
+         /*
          // check op norm
          qops.to_cpu();
          for(int iproc=0; iproc<size; iproc++){
@@ -157,7 +157,7 @@ namespace ctns{
             }
             icomb.world.barrier();
          }
-         //---------------
+         */
 
          // 0. initialization: for simplicity, we perform the transformation on CPU
          qoper_dict<Qm::ifabelian,Tm> qops2;
@@ -168,7 +168,7 @@ namespace ctns{
          qops2.krest = qops.krest;
          qops2.qbra = qops.qbra;
          qops2.qket = qops.qket;
-         qops2.oplist = "CSHPQ";
+         qops2.oplist = "HCSPQ";
          qops2.mpisize = size;
          qops2.mpirank = rank;
          qops2.ifdist2 = true;
@@ -191,8 +191,8 @@ namespace ctns{
             auto ta = tools::get_time();
             tinit = tools::get_duration(ta-t0);
 
-            // 1. copy CSH on cpu
-            std::string opseq = "CSH";
+            // 1. copy HCS on cpu
+            std::string opseq = "HCS";
             for(const auto& key : opseq){
                assert(qops.size_ops(key) == qops2.size_ops(key));
                linalg::xcopy(qops.size_ops(key), qops.ptr_ops(key), qops2.ptr_ops(key));
@@ -240,15 +240,15 @@ namespace ctns{
             auto ta = tools::get_time();
             tinit = tools::get_duration(ta-t0);
 
-            // 1. copy CSH from qops to qops2 on gpu
-            std::string opseq = "CSH";
+            // 1. copy HCS from qops to qops2 on gpu
+            std::string opseq = "HCS";
             for(const auto& key : opseq){
                assert(qops.size_ops(key) == qops2.size_ops(key));
                linalg::xcopy_gpu(qops.size_ops(key), qops.ptr_ops_gpu(key), qops2.ptr_ops_gpu(key));
             }
             auto tb = tools::get_time();
             tcopy = tools::get_duration(tb-ta);
-
+ 
             // 2. transform A to P
             oper_a2pGPU(icomb, int2e, qops, qops2, schd.ctns.alg_a2p);
             auto tc = tools::get_time();
@@ -279,6 +279,7 @@ namespace ctns{
 
          // consistency check for Hamiltonian
          check_opH_consistency(qops, pcoord, rank, debug, "lzd oper_ab2pq");
+         /*
          // check op norm
          for(int iproc=0; iproc<size; iproc++){
             if(iproc == rank){
@@ -300,11 +301,12 @@ namespace ctns{
             }
             icomb.world.barrier();
          }
+         */
 
          if(debug){
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR oper_ab2pq : " << tools::get_duration(t1-t0) << " S"
-               << " T(init/copyCSH/opP/opQ/to_gpu/to_cpu/move)=" << tinit << "," 
+               << " T(init/copyHCS/opP/opQ/to_gpu/to_cpu/move)=" << tinit << "," 
                << tcopy << "," << ta2p << "," << tb2q << "," << t2gpu << "," << t2cpu << "," << tmove << " -----"
                << std::endl;
             get_mem_status(rank);

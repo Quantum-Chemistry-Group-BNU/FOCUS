@@ -2,7 +2,7 @@
 #define OPER_DOT_H
 
 /*
-   Dot operators: CSHABPQ
+   Dot operators: HCSABPQ
 
    The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
 
@@ -44,7 +44,7 @@ namespace ctns{
          auto qphys = get_qbond_phys(isym);
          qops.qbra = qphys;
          qops.qket = qphys;
-         qops.oplist = "CSHABPQ";
+         qops.oplist = "HCSABPQ";
          // initialize memory
          qops.init(true);
          // compute local operators on dot

@@ -126,7 +126,7 @@ namespace ctns{
 
             std::string lblock = "lc";
             std::string rblock = "cr";
-            auto coplist = "CSHABPQ"; 
+            auto coplist = "HCSABPQ"; 
             std::string loplist, roplist;
             if(ndots == 2){
                if(p0.first == 1){

@@ -2,7 +2,7 @@
 #define OPER_DOT_SU2_H
 
 /*
-   Dot operators: CSHABPQ
+   Dot operators: HCSABPQ
 
    The local basis is {|0>,|2>,|a>,|b>} in consistent with ctns_phys.h
 
