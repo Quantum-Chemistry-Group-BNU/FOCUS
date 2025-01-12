@@ -42,6 +42,8 @@ namespace ctns{
             Tm* dev_ptr = qops._dev_data+off;
             nccl_comm.reduce(dev_ptr, opsize, 0);
             if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
+            // ZL@2025/01/12: add sync
+            GPUmem.sync(); 
 #endif
          }
 #endif // GPU

@@ -254,7 +254,6 @@ namespace ctns{
                // broadcast opB
                auto t0b = tools::get_time();
                if(size > 1){
-                  std::cout << "rank=" << rank << " size=" << qops_tmp.size_ops('B') << " iproc=" << iproc << std::endl;
                   nccl_comm.broadcast(dev_work, qops_tmp.size_ops('B'), iproc);
                }
                auto t1b = tools::get_time();
