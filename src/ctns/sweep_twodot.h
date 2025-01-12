@@ -92,7 +92,7 @@ namespace ctns{
          auto frop = fbond.first;
          auto fdel = fbond.second;
          auto fneed_next = sweep_fneed_next(icomb, scratch, sweeps, isweep, ibond, debug && schd.ctns.verbose>0);
-         if(alg_hvec>10 && alg_renorm>10){
+         if(alg_hvec>10 && alg_renorm>10 && !schd.ctns.diagcheck){
             const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
             qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper, qops_pool.frop_prev);
             if(debug){

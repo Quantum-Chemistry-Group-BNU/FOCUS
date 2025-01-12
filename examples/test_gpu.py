@@ -30,8 +30,9 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/h5_rNSz_alg19',
         'tests_gpu/h5_rNSz_alg19b', # ifdist1
         'tests_gpu/h5_rNSz_cisolver',
+        'tests_gpu/h6_diagcheck',
         'tests_gpu/h6_sadmrg_cisolver',
-        'tests_gpu/h6_sadmrg_onedot',
+        'tests_gpu/h6_sadmrg_diagcheck',
         'tests_gpu/h6_sadmrg_nccl',
         'tests_gpu/h6_ab2pq',
         'tests_gpu/h6_sadmrg_ab2pq',
@@ -41,7 +42,7 @@ dirs = ['tests_gpu/h4',
         'tests_gpu/fe2s2_ab2pq_ifdists_small',
         'tests_gpu/fe2s2_sadmrg_ab2pq',
         'tests_gpu/fe2s2_sadmrg_ab2pq_small',
-        'tests_gpu/fe2s2_sadmrg_ab2pq_ifdists'
+        'tests_gpu/fe2s2_sadmrg_ab2pq_ifdists',
         'tests_gpu/fe2s2_sadmrg_ab2pq_ifdists_small'
         ]
 test_utils.test_run(dirs)

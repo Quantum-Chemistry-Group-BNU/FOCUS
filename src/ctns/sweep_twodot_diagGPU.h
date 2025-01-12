@@ -94,6 +94,7 @@ namespace ctns{
 
          // debug
          if(diagcheck) twodot_diagGPU_check(ndim, dev_diag, qops_dict, wf, size, rank, ifdist1);
+
          GPUmem.deallocate(dev_dims, nblk*9*sizeof(size_t));
          auto t5 = tools::get_time();
          if(!ifnccl){
