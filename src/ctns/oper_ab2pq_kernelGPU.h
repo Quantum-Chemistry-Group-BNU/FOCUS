@@ -79,7 +79,8 @@ namespace ctns{
             // convert opA to opA.H() on GPU
             auto t0h = tools::get_time();
             if(iproc == rank){
-               batchedHermitianConjugateGPU(qops, 'A', qops_tmp, 'M', true, qops._dev_data, dev_work); 
+               batchedHermitianConjugateGPU(qops, 'A', qops_tmp, 'M', true, qops._dev_data, dev_work);
+               GPUmem.sync(); // ZL@2025/01/12: sync before broadcast
             } // rank
             auto t1h = tools::get_time();
             double dth = tools::get_duration(t1h-t0h);
@@ -205,8 +206,6 @@ namespace ctns{
          if(maxsize == 0) return;
          maxsize = maxsize*sizeof(Tm);
          Tm* dev_work = (Tm*)GPUmem.allocate(maxsize);
-               
-         GPUmem.sync();
 
          // loop over rank
          for(int iproc=0; iproc<size; iproc++){
@@ -227,11 +226,7 @@ namespace ctns{
                qops_tmp.mpisize = size;
                qops_tmp.mpirank = iproc; // not rank
                qops_tmp.ifdist2 = true;
-               
-               //qops_tmp.setup_opdict();
-               qops_tmp.init();
-               //qops_tmp.allocate_gpu(true);
-
+               qops_tmp.setup_opdict();
                if(qops_tmp.size() == 0) continue; 
                auto t1i = tools::get_time();
                double dti = tools::get_duration(t1i-t0i);
@@ -247,7 +242,7 @@ namespace ctns{
                if(iproc == rank){
                   assert(qops.size_ops('B') == qops_tmp.size_ops('B'));
                   linalg::xcopy_gpu(qops_tmp.size_ops('B'), qops.ptr_ops_gpu('B'), dev_work);
-                  //linalg::xcopy_gpu(qops_tmp.size_ops('B'), qops.ptr_ops_gpu('B'), qops_tmp.ptr_ops_gpu('B')); 
+                  GPUmem.sync(); // ZL@2025/01/12: sync before broadcast
                }
                auto t1c = tools::get_time();
                double dtc = tools::get_duration(t1c-t0c);
@@ -259,8 +254,8 @@ namespace ctns{
                // broadcast opB
                auto t0b = tools::get_time();
                if(size > 1){
+                  std::cout << "rank=" << rank << " size=" << qops_tmp.size_ops('B') << " iproc=" << iproc << std::endl;
                   nccl_comm.broadcast(dev_work, qops_tmp.size_ops('B'), iproc);
-                  //nccl_comm.broadcast(qops_tmp.ptr_ops_gpu('B'), qops_tmp.size_ops('B'), iproc);
                }
                auto t1b = tools::get_time();
                double dtb = tools::get_duration(t1b-t0b);
@@ -302,46 +297,12 @@ namespace ctns{
                      int rows = bindex.size();
                      int cols = qindex.size();
                      const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
-                     
                      const Tm* ptr_opB_gpu = dev_work + qops_tmp._offset.at(std::make_pair('B',bindex[0]));
-                     //const Tm* ptr_opB_gpu = qops_tmp._dev_data + qops_tmp._offset.at(std::make_pair('B',bindex[0]));
-                     
                      Tm* ptr_opQ_gpu = qops2._dev_data + qops2._offset.at(std::make_pair('Q',qindex[0]));
-                     
-                     //----------------
-                     if(rank == 0 || rank == 1){
-                        qops2.to_cpu();
-                        tools::print_vector(bindex, "bindex_rank"+std::to_string(rank));
-                        tools::print_vector(qindex, "qindex_rank"+std::to_string(rank));
-                        //qops_tmp.to_cpu();
-                        std::cout << "lzd-qops2: before B rank=" << rank
-                          << " symBQ=" << symQ
-                          << " qindex[0]=" << qindex[0]
-                          << " norm=" << qops2('Q')[qindex[0]].normF()
-                          << " bindex[0]=" << bindex[0]
-                          << " norm=" << qops_tmp('B')[bindex[0]].normF()
-                          << " off=" << qops_tmp._offset.at(std::make_pair('B',bindex[0]))
-                          << " opsize,rows,cols=" << opsize << "," << rows << "," << cols
-                          << " |coeff|=" << cmat.normF()
-                          << std::endl; 
-                     }
-                     //----------------
- 
                      linalg::xgemm_gpu("N", "N", opsize, cols, rows, alpha,
                            ptr_opB_gpu, opsize, cmat_gpu, rows, beta,
                            ptr_opQ_gpu, opsize);
                      GPUmem.deallocate(cmat_gpu, gpumem_cmat);
-
-                     //----------------
-                     if(rank == 0 || rank == 1){
-                        qops2.to_cpu();
-                        std::cout << "lzd-qops2: after B rank=" << rank
-                          << " qindex[0]=" << qindex[0]
-                          << " norm=" << qops2('Q')[qindex[0]].normF()
-                          << std::endl; 
-                     }
-                     //----------------
- 
                   } // bmap
                   auto t1c = tools::get_time();
                   double dtc = tools::get_duration(t1c-t0c);
@@ -382,6 +343,7 @@ namespace ctns{
                if(iproc == rank){
                   assert(qops.size_ops('B') == qops_tmp.size_ops('N'));
                   batchedHermitianConjugateGPU(qops, 'B', qops_tmp, 'N', true, qops._dev_data, dev_work); 
+                  GPUmem.sync(); // ZL@2025/01/12: sync before broadcast
                } // rank
                auto t1h = tools::get_time();
                double dth = tools::get_duration(t1h-t0h);
@@ -437,36 +399,10 @@ namespace ctns{
                      const Tm alpha = 1.0, beta = 1.0; // accumulation from different processes
                      const Tm* ptr_opN_gpu = dev_work + qops_tmp._offset.at(std::make_pair('N',bindex[0]));
                      Tm* ptr_opQ_gpu = qops2._dev_data + qops2._offset.at(std::make_pair('Q',qindex[0]));
-
-                     //----------------
-                     if(rank == 0 || rank == 1){
-                        qops2.to_cpu();
-                        std::cout << "lzd-qops2: before N rank=" << rank
-                          << " qindex[0]=" << qindex[0]
-                          << " norm=" << qops2('Q')[qindex[0]].normF()
-                          << " bindex[0]=" << bindex[0]
-                          << " off=" << qops_tmp._offset.at(std::make_pair('N',bindex[0]))
-                          << " opsize,rows,cols=" << opsize << "," << rows << "," << cols
-                          << " |coeff|=" << cmat.normF()
-                          << std::endl; 
-                     }
-                     //----------------
- 
                      linalg::xgemm_gpu("N", "N", opsize, cols, rows, alpha,
                            ptr_opN_gpu, opsize, cmat_gpu, rows, beta,
                            ptr_opQ_gpu, opsize);
                      GPUmem.deallocate(cmat_gpu, gpumem_cmat);
-
-                     //----------------
-                     if(rank == 0 || rank == 1){
-                        qops2.to_cpu();
-                        std::cout << "lzd-qops2: after N rank=" << rank
-                          << " qindex[0]=" << qindex[0]
-                          << " norm=" << qops2('Q')[qindex[0]].normF()
-                          << std::endl; 
-                     }
-                     //----------------
-                     
                   } // nmap
                   auto t1c = tools::get_time();
                   double dtc = tools::get_duration(t1c-t0c);
