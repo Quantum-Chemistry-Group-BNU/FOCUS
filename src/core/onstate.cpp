@@ -11,8 +11,7 @@ onstate::onstate(const string& s, const int iop){
       _size = s.size();
       _len = (_size-1)/64+1;
       _repr = new unsigned long[_len];
-      // initialize, otherwise some unused bits will not be 0.
-      fill_n(_repr, _len, 0); 
+      fill_n(_repr, _len, 0); // initialize, otherwise some unused bits will not be 0.
       for(int i=0; i<_size; i++){
          (*this)[i] = (s[_size-1-i]=='1')? 1 : 0;
       }
@@ -21,6 +20,7 @@ onstate::onstate(const string& s, const int iop){
        _size = 2*size;
       _len = (_size-1)/64+1;
       _repr = new unsigned long[_len];
+      fill_n(_repr, _len, 0); // initialize, otherwise some unused bits will not be 0.
       for(int i=0; i<size; i++){
          if(s[size-1-i] == '0'){
             (*this)[2*i]=0; 
@@ -60,8 +60,7 @@ onstate::onstate(const std::vector<unsigned long> &array, const int n){
    _size = n;
    _len = (n-1)/64+1;
    _repr = new unsigned long[_len];
-   std::copy_n(&array[0], _len, _repr);
-
+   copy_n(&array[0], _len, _repr);
 };
 
 // unsigned long array constructors
@@ -69,7 +68,7 @@ onstate::onstate(const unsigned long *array, const int n){
    _size = n;
    _len = (n-1)/64+1;
    _repr = new unsigned long[_len];
-   std::copy_n(array, _len, _repr);
+   copy_n(array, _len, _repr);
 };
 
 // copy constructor
