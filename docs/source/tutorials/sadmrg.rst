@@ -73,54 +73,6 @@ This works also for open-shell case.
   
 This will generate ``rcanon_csf.info`` and ``rcanon_csf_nonsu2.info`` in scratch.
 
-
-Compute diagonal element of Hamiltonian for a CSF
-=================================================
-
-.. code-block::
-
-   $ctns
-   verbose 1
-   qkind rNS
-   maxdets 1000 # keep dets as much as possible
-   topology_file topology/topoA
-   thresh_proj 1.e-16
-   thresh_ortho 5.e-8
-   schedule
-   0  2 10 1.e-4 0.e0
-   end
-   maxsweep 1
-   task_ham
-   alg_hvec 4
-   alg_renorm 4
-   fromconf 222000u222222222u2uduuuuud22dddd2u22u22222222duu2uu2uuuddud22222222222ddddd2
-   $end
-  
-Start SA-DMRG with an input CSF
-===============================
-
-This can work with singlet embedding.
-
-.. code-block::
-
-   $ctns
-   verbose 1
-   qkind rNS
-   maxdets 1000 # keep dets as much as possible
-   topology_file topology/topoA
-   thresh_proj 1.e-16
-   thresh_ortho 5.e-8
-   schedule
-   0  2 1 1.e-4 0.e0
-   end
-   maxsweep 1
-   task_dmrg
-   alg_hvec 4
-   alg_renorm 4
-   fromconf 222000u222222222u2duuuuuu2dd2ddd2u2u222222222duu2uu2uuuddud2222222222d2ddd2d
-   singlet
-   $end
-   
 Convert a CSF into a nonsu2 mps, and then sample dets
 =====================================================
 
@@ -239,7 +191,81 @@ Output:
     i=7 idx=285 state=ababab pop=0.125 coeff=-0.353553
    dim=400 ovlp=1 Sdiag(exact)=2.07944 IPR=0.125
 
+Directly sample dets from a spin-adapted MPS
+============================================
 
+just add a keyword ``detbasis``
+
+Input:
+
+.. code-block::
+
+   $ctns
+   verbose 1
+   qkind rNS
+   maxdets 1000 # keep dets as much as possible
+   topology_file topology/topoA
+   thresh_proj 1.e-16
+   thresh_ortho 5.e-8
+   schedule
+   0  2 1 1.e-4 0.e0
+   end
+   maxsweep 1
+   alg_hvec 4
+   alg_renorm 4
+   fromconf 222000u222222222u2duuuuuu2dd2ddd2u2u222222222duu2uu2uuuddud2222222222d2ddd2d
+   task_sdiag
+   nsample 10000
+   detbasis
+   $end
+
+Compute diagonal element of Hamiltonian for a CSF
+=================================================
+
+.. code-block::
+
+   $ctns
+   verbose 1
+   qkind rNS
+   maxdets 1000 # keep dets as much as possible
+   topology_file topology/topoA
+   thresh_proj 1.e-16
+   thresh_ortho 5.e-8
+   schedule
+   0  2 10 1.e-4 0.e0
+   end
+   maxsweep 1
+   task_ham
+   alg_hvec 4
+   alg_renorm 4
+   fromconf 222000u222222222u2uduuuuud22dddd2u22u22222222duu2uu2uuuddud22222222222ddddd2
+   $end  
+  
+Start SA-DMRG with an input CSF
+===============================
+
+This can work with singlet embedding.
+
+.. code-block::
+
+   $ctns
+   verbose 1
+   qkind rNS
+   maxdets 1000 # keep dets as much as possible
+   topology_file topology/topoA
+   thresh_proj 1.e-16
+   thresh_ortho 5.e-8
+   schedule
+   0  2 1 1.e-4 0.e0
+   end
+   maxsweep 1
+   task_dmrg
+   alg_hvec 4
+   alg_renorm 4
+   fromconf 222000u222222222u2duuuuuu2dd2ddd2u2u222222222duu2uu2uuuddud2222222222d2ddd2d
+   singlet
+   $end
+ 
 Start OO-DMRG from a CSF
 ========================
 

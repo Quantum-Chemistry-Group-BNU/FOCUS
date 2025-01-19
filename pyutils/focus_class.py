@@ -209,7 +209,7 @@ class RDM:
         f.write('topology_file '+self.topology_file+'\n')
         f.write('alg_renorm '+str(self.alg_renorm)+'\n')
         f.write('alg_rdm '+str(self.alg_rdm)+'\n')
-        f.write('task_prop 2\n')
+        f.write('task_prop ova\n')
         if self.rcanon_file != None: f.write('rcanon_file '+self.rcanon_file+'\n')
         f.write('$end\n')
         f.close()

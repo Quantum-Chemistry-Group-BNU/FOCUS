@@ -189,8 +189,7 @@ DMRG (ctns.x, sadmrg.x, rdm.x)
    
 * ``ifdist1``: distributed computation of C*S terms for Hx
 
-* ``ifdistc``: whether to treat dot in dmrg specially. This is possible because
- dot operators are stored in all processes.
+* ``ifdistc``: whether to treat dot in dmrg specially. This is possible because dot operators are stored in all processes.
 
 * ``ifdists``: whether to store opS distributedly. This must be used with ifdist1,
   otherwise, some C*S terms are missing, leading to wrong results!
