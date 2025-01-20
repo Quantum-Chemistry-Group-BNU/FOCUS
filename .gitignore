@@ -22,7 +22,6 @@ extlibs/magma-2.6.1/
 extlibs/gsl-2.7.1/
 extlibs/nlopt-2.7.1
 extlibs/gperftools-master
-pyutils/.ipynb_checkpoints/
 src.tar
 .*.swo
 .*.swp
@@ -32,3 +31,5 @@ src/python/backup/
 docs/build
 rdm*.txt
 core.*
+.ipynb_checkpoints
+fe4s4.pdf
