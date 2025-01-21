@@ -89,7 +89,7 @@ namespace fock{
             _size = n;
             _len = (n-1)/64+1;
             _repr = new unsigned long[_len];
-            fill_n(_repr, _len, 0);
+            std::fill_n(_repr, _len, 0);
          }
          // destructors
          ~onstate(){ delete[] _repr; }

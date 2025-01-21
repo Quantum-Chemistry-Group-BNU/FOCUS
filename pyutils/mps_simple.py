@@ -19,7 +19,7 @@ def overlap(sites1,sites2):
         env = einsum('lnr,mnr->lm',sites1[i].conj(),tmp)
     return env
 
-def get_SvN(pop,thresh=0.0):
+def get_SvN(pop,thresh=1.e-100):
     s = 0.0
     for p in pop:
         if p < thresh: continue
@@ -29,6 +29,35 @@ def get_SvN(pop,thresh=0.0):
 #=========
 # Entropy
 #=========
+svd_driver='gesvd'
+
+# Method1 based on density matrix 
+def slstFromDM(sites, iroot=0):
+    nsite = len(sites)
+    sites_tmp = copy.deepcopy(sites)
+    slst = []
+    for i in range(1,nsite):
+        if i == 1:
+            site0 = sites_tmp[i-1][iroot]
+            shape = site0.shape
+            site0 = site0.reshape(1,shape[0],shape[1])
+        else:
+            site0 = sites_tmp[i-1]
+        site1 = sites_tmp[i]
+        psi = einsum('lnr,rmx->lnmx',site0,site1) # twodot wavefunction
+        shape = psi.shape
+        psi = psi.reshape(shape[0]*shape[1],shape[2]*shape[3])
+        u,s,vt = scipy.linalg.svd(psi, full_matrices=False, lapack_driver=svd_driver)
+        vt = einsum('l,lr->lr',s,vt)
+        sites_tmp[i-1] = u.reshape(shape[0],shape[1],s.shape[0])
+        sites_tmp[i] = vt.reshape(s.shape[0],shape[2],shape[3])
+        slst.append(s**2)
+    return slst
+
+def bipartiteEntropy(sites,iroot=0):
+    slst = slstFromDM(sites)
+    return [get_SvN(x) for x in slst]
+
 def singleSiteEntropy(sites,iroot=0):
     nsite = len(sites)
     sp = np.zeros(nsite)

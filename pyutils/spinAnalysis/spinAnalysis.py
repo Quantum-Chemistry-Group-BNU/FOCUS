@@ -1,5 +1,7 @@
 import numpy as np
 import spinTools
+import matplotlib.pyplot as plt
+from matplotlib import cm
 
 def spinAnalysis(twordm_spatial_lmo,groups,k,n,s):
     print('\n[spinAnalysis]: k,n,s=',k,n,s)
@@ -51,9 +53,6 @@ def spinAnalysis(twordm_spatial_lmo,groups,k,n,s):
         ne[i] = np.trace(rdm1)
     print('ne=',ne,np.sum(ne))
     return sisj
-
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
 def genSpinSpinPlot(sisj,fname='fe4s4.pdf'):
     # Plot the weighted
