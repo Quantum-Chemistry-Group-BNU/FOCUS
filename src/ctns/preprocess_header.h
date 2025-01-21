@@ -37,15 +37,18 @@ namespace ctns{
             const int rank,
             size_t& batchsize,
             size_t& gpumem_batch){
-         size_t gpumem_avail = std::min(GPUmem.available(rank),size_t(batchmem*std::pow(1024,3)));
+         size_t avail = GPUmem.available(rank);
+         size_t gpumem_avail = std::min(avail,size_t(batchmem*std::pow(1024,3))); // batchmem~10GB
          size_t gpumem_reserved = gpumem_other + 88; 
          if(gpumem_avail > gpumem_reserved){
             batchsize = std::floor(double(gpumem_avail - gpumem_reserved)/(sizeof(Tm)*blocksize + 136));
             if(batchsize == 0){
                std::cout << "error in preprocess_gpu_batchsize: batchsize=0!"
-                  << " rank=" << rank 
-                  << " gpumem_avail=" << gpumem_avail 
-                  << " gpumem_reserved=" << gpumem_reserved
+                  << " rank=" << rank
+                  << " avail(GB)=" << avail/std::pow(1024.0,3) 
+                  << " gpumem_avail(GB)=" << gpumem_avail/std::pow(1024.0,3)
+                  << " gpumem_reserved(GB)=" << gpumem_reserved/std::pow(1024.0,3)
+                  << " gpumem_avail-gpumem_reserved=" << (gpumem_avail - gpumem_reserved)
                   << " blocksize=" << blocksize
                   << " sizeof(Tm)*blocksize+136=" << (sizeof(Tm)*blocksize+136)
                   << std::endl;
@@ -54,8 +57,10 @@ namespace ctns{
          }else{
             std::cout << "error in preprocess_gpu_batchsize:: avail<=reserved!"
               << " rank=" << rank 
-              << " gpumem_avail=" << gpumem_avail 
-              << " gpumem_reserved=" << gpumem_reserved 
+              << " avail(GB)=" << avail/std::pow(1024.0,3) 
+              << " gpumem_avail(GB)=" << gpumem_avail/std::pow(1024.0,3)
+              << " gpumem_reserved(GB)=" << gpumem_reserved/std::pow(1024.0,3)
+              << " gpumem_avail-gpumem_reserved=" << (gpumem_avail - gpumem_reserved)
               << std::endl;
             exit(1);
          }

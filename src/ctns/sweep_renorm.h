@@ -291,6 +291,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
             }
@@ -316,6 +317,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper,site)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_site/std::pow(1024.0,3) 
                   << std::endl;
@@ -332,6 +334,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper,site,rinter)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_site/std::pow(1024.0,3) 
                   << "," << gpumem_rinter/std::pow(1024.0,3) 
@@ -368,6 +371,7 @@ namespace ctns{
                   std::cout << "rank=" << rank
                      << std::scientific << std::setprecision(3)
                      << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                     << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                      << " (oper,site,rinter,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                      << "," << gpumem_site/std::pow(1024.0,3) 
                      << "," << gpumem_rinter/std::pow(1024.0,3) 

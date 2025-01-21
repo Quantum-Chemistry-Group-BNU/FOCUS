@@ -395,6 +395,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper)=" << gpumem_oper/std::pow(1024.0,3) 
                   << std::endl;
             }
@@ -409,6 +410,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper,hinter)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << std::endl;
@@ -447,6 +449,7 @@ namespace ctns{
                std::cout << "rank=" << rank
                   << std::scientific << std::setprecision(3)
                   << " GPUmem(GB): used=" << GPUmem.used()/std::pow(1024.0,3)
+                  << " avail=" << GPUmem.available(rank)/std::pow(1024.0,3) 
                   << " (oper,hinter,dvdson,batch)=" << gpumem_oper/std::pow(1024.0,3) 
                   << "," << gpumem_hinter/std::pow(1024.0,3) 
                   << "," << gpumem_dvdson/std::pow(1024.0,3)
