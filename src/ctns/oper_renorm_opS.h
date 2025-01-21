@@ -646,7 +646,7 @@ namespace ctns{
          rinters.clear(); // deallocate gpumem for rinters
    
          auto t1 = tools::get_time();
-         if(rank==0 && schd.ctns.verbose>0){
+         if((rank==0 && schd.ctns.verbose>0) || schd.ctns.debug_gpumem){
             auto dt = tools::get_duration(t1-t0);
             std::cout << "----- TIMING FOR preprocess_renorm_batchGPU_opS : " << dt << " S"
               << " T(prep/alloc/comp/red/dealloc)=" << tools::get_duration(ta-t0) << ","
