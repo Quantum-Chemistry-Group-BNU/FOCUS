@@ -37,9 +37,9 @@ namespace ctns{
             const int rank,
             size_t& batchsize,
             size_t& gpumem_batch){
-         size_t avail = GPUmem.available(rank);
-         size_t gpumem_avail = std::min(avail,size_t(batchmem*std::pow(1024,3))); // batchmem~10GB
          size_t gpumem_reserved = gpumem_other + 88; 
+         size_t avail = GPUmem.available(rank);
+         size_t gpumem_avail = std::min(avail,gpumem_reserved+size_t(batchmem*std::pow(1024,3))); // batchmem~10GB
          if(gpumem_avail > gpumem_reserved){
             batchsize = std::floor(double(gpumem_avail - gpumem_reserved)/(sizeof(Tm)*blocksize + 136));
             if(batchsize == 0){
