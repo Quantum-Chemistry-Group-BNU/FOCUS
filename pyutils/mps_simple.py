@@ -183,3 +183,26 @@ def getRCFStateFromRCF(sites_rcf, iroot):
     sites_tmp[0] = site[[iroot],:,:]
     return sites_tmp
 
+# to abab ordering
+def to_abab(sites,thresh=1.e-14):
+    nsite = len(sites)
+    sites_new = [None]*(2*nsite)
+    for i in range(nsite):
+        site = sites[i] # lnr (n=0,2,a,b) => (n=0,b,a,2)
+        site_new = np.zeros_like(site)
+        site_new[:,0,:] = site[:,0,:]
+        site_new[:,1,:] = site[:,3,:]
+        site_new[:,2,:] = site[:,2,:]
+        site_new[:,3,:] = site[:,1,:]
+        shape = site_new.shape
+        assert shape[1] == 4
+        site_new = site_new.reshape(shape[0]*2,2*shape[2])
+        u,s,vt = scipy.linalg.svd(site_new, full_matrices=False)
+        idx = np.argwhere(s>thresh).flatten()
+        vtnew = vt[idx,:]
+        wnew = np.einsum('ij,j->ij',u[:,idx],s[idx])
+        d = len(idx)
+        sites_new[2*i] = wnew.reshape(shape[0],2,d)
+        sites_new[2*i+1] = vtnew.reshape(d,2,shape[2])
+    return sites_new
+
