@@ -59,20 +59,18 @@ namespace ctns{
             const int ibond){
          std::cout << "ctns::sweep_save isweep=" << isweep << " ibond=" << ibond << std::endl;
          // local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
+         std::string fresult = scratch+"/restart_result_ibond"+std::to_string(ibond);
          sweep_saveitem(sweeps.opt_result[isweep][ibond], fresult);
          // save site
-         if(!schd.ctns.ifoutcore){
-            const auto& dbond = sweeps.seq[ibond];
-            const auto p = dbond.get_current();
-            const auto& pdx = icomb.topo.rindex.at(p); 
-            auto fname = scratch+"/site"+std::to_string(pdx)+".temp";
-            std::cout << "save_site fname=" << fname << std::endl;
-            icomb.sites[pdx].save_site(fname);
-         }
+         const auto& dbond = sweeps.seq[ibond];
+         const auto p = dbond.get_current();
+         const auto& pdx = icomb.topo.rindex.at(p); 
+         auto fname = scratch+"/restart_site_ibond"+std::to_string(ibond)+".info";
+         std::cout << "save_site fname=" << fname << std::endl;
+         icomb.sites[pdx].save_site(fname);
          // generated cpsi
          if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
+            std::string fcpsi = scratch+"/restart_cpsi_ibond"+std::to_string(ibond);
             sweep_saveitem(icomb.cpsi, fcpsi);
          }
       }
@@ -86,21 +84,19 @@ namespace ctns{
             const int ibond){
          std::cout << "ctns::sweep_load isweep=" << isweep << " ibond=" << ibond << std::endl;
          // load local result
-         std::string fresult = scratch+"/result_ibond"+std::to_string(ibond);
+         std::string fresult = scratch+"/restart_result_ibond"+std::to_string(ibond);
          sweep_loaditem(sweeps.opt_result[isweep][ibond], fresult);
          sweeps.opt_result[isweep][ibond].print();
          // load site
-         if(!schd.ctns.ifoutcore){
-            const auto& dbond = sweeps.seq[ibond];
-            const auto p = dbond.get_current();
-            const auto& pdx = icomb.topo.rindex.at(p);
-            auto fname = scratch+"/site"+std::to_string(pdx)+".temp";
-            std::cout << "load_site fname=" << fname << std::endl;
-            icomb.sites[pdx].load_site(fname);
-         }
+         const auto& dbond = sweeps.seq[ibond];
+         const auto p = dbond.get_current();
+         const auto& pdx = icomb.topo.rindex.at(p);
+         auto fname = scratch+"/restart_site_ibond"+std::to_string(ibond)+".info";
+         std::cout << "load_site fname=" << fname << std::endl;
+         icomb.sites[pdx].load_site(fname);
          // load cpsi
          if(schd.ctns.guess){ 
-            std::string fcpsi = scratch+"/cpsi_ibond"+std::to_string(ibond);
+            std::string fcpsi = scratch+"/restart_cpsi_ibond"+std::to_string(ibond);
             sweep_loaditem(icomb.cpsi, fcpsi);
          }
       }

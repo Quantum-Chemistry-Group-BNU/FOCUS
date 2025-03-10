@@ -110,7 +110,7 @@ namespace ctns{
 #endif 
          if(rank == 0){
             std::cout << std::endl;
-            Hmat.print("Hmat_isweep"+std::to_string(isweep), schd.ctns.outprec);
+            Hmat.print("Hij_isweep"+std::to_string(isweep), schd.ctns.outprec);
             std::cout << std::endl;
          }
          return Hmat;

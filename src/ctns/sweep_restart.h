@@ -76,6 +76,14 @@ namespace ctns{
                fname, timing_local, fmmtask); 
          
          qops_pool.join_and_erase(fneed);
+
+         if(schd.ctns.ifab2pq){
+            const int nsite = icomb.get_nphysical();
+            const bool ifmps = icomb.topo.ifmps;
+            const bool ab2pq_current = get_ab2pq_current(superblock, ifmps, nsite, pcoord, schd.ctns.ifab2pq, 2);
+            if(ab2pq_current) oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops_pool[frop]);
+         }
+ 
          qops_pool.save_to_disk(frop, schd.ctns.async_save);
 
          auto t1 = tools::get_time();
