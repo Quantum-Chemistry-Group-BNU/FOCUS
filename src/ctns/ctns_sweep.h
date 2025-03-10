@@ -6,6 +6,7 @@
 #include "sweep_twodot.h"
 #include "sweep_init.h"
 #include "sweep_final.h"
+#include "sweep_restart.h"
 #include "ctns_outcore.h"
 
 namespace ctns{
@@ -92,20 +93,28 @@ namespace ctns{
                if(schd.ctns.ifoutcore){
                   rcanon_load_site(icomb, ndx, scratch, debug); 
                }
-               // optimization
-               if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-                  sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
-                        qops_pool, sweeps, isweep, ibond); 
-               }else{
-                  sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
+               
+               if(ibond < schd.ctns.restart_bond){
+                  sweep_restart(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond);
+               }else{
+                  // optimization
+                  if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
+                     sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
+                           qops_pool, sweeps, isweep, ibond); 
+                  }else{
+                     sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
+                           qops_pool, sweeps, isweep, ibond);
+                  }
                }
+
                // save updated sites
                if(schd.ctns.ifoutcore){
                   rcanon_save_site(icomb, pdx, scratch, debug);
                }
+
 #ifdef TCMALLOC
-   	       release_freecpumem();
+   	         release_freecpumem();
 #endif
                // timing 
                if(debug){
@@ -133,22 +142,22 @@ namespace ctns{
           
             // finalize: load all sites to memory, as they will be save and checked in sweep_final 
             if(schd.ctns.ifoutcore){
-	       rcanon_load_sites(icomb, scratch, debug);
-	    }
+	            rcanon_load_sites(icomb, scratch, debug);
+	         }
             // generate right rcanonical form and save checkpoint file
             sweep_final(icomb, schd, scratch, isweep, rcfprefix);
             // compute Hmat for checking purpose 
             oper_final(icomb, int2e, int1e, ecore, schd, scratch, qops_pool, isweep);
             
-	    if(debug){
+	         if(debug){
                auto tl = tools::get_time();
                tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
-	       std::cout << std::endl;
+	            std::cout << std::endl;
             }
          } // isweep
          qops_pool.finalize();
 
-         // no need to load to memory again to output final icomb, because
+         // Note: no need to load sites to memory again to output final icomb, because
          // in the last step, rcanon_load_sites has already been called,
          // such that all the sites are in memory.
          //if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);

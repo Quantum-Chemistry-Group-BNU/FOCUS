@@ -242,6 +242,9 @@ namespace ctns{
          // 4. cleanup operators
          qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
 
+         // save for restart
+         if(rank == 0 && schd.ctns.timestamp) sweep_save(icomb, schd, scratch, sweeps, isweep, ibond);
+
          timing.t1 = tools::get_time();
          if(debug){
             get_mem_status(rank);

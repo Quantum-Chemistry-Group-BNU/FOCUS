@@ -1,5 +1,13 @@
 
-### 2025 DMRG[RDM(SU2)] ###
+### 2025 DMRG + Quantum Computing ###
+
+ * Disentangle transformation:
+   - Combined with LEOs [!]
+   - Python implementation for preparation of MPS [linear combination of CSF]
+   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!]
+
+
+### 2026 DMRG[RDM(SU2)] ###
 
  * RDMs for su2 case:
    - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
@@ -26,10 +34,10 @@
    - rdm1t (Tpq-1RDM for spin-adapted MPS [without singlet embedding])
    - MPS-based CI? <A|H|B>
 
-### 2025 Large-scale CASSCF / dynamical correlation / SOC ###
+### 2026 Large-scale CASSCF / dynamical correlation / SOC ###
 
  * Further optimized kernel for assembling RDM:
-   - Interface with DSRG-MRPT2 for treating hundreds of active orbitals?
+   - Interface with MRPT2 for treating hundreds of active orbitals?
    - Optimizations:
       - alg_rdm=2: 
          - classify l,r operators by symmetry
@@ -70,13 +78,6 @@
    - deterministic evaluation following Hanshi Hu's work
    - stochastic evaluation following Sandeep Sharma's work
    - more rigorous scheme akin to p-DMRG?
-
-### TODOs: DMRG + Quantum Computing ###
-
- * Disentangle transformation:
-   - Combined with LEOs 
-   - Python implementation for preparation of MPS [linear combination of CSF]
-   - Generate practical circuits for quantum computers [this will be useful for QC-QC community in future!]
 
 ### TODOs: more functionalities ###
 

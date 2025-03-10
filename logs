@@ -649,6 +649,11 @@
       - correct ifab2pq + ifdists [DONE@2025/01/10]
       - test for fe4s4 on jinan
       - test for fe8s7 on jinan
+ 
+### 2025 DMRG: benchmarks ###
+  
+ * restart_bond: [DONE@2025/03/10]
+   - restart for reducing time for debugging purpose
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - performance on a800[xiyun]: cublas-12.2 is slow for batchgemm, 12.4 works 

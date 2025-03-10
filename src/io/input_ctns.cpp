@@ -66,6 +66,10 @@ void params_ctns::read(ifstream& istrm){
          }
       }else if(line.substr(0,13)=="restart_sweep"){
          restart_sweep = stoi(line.substr(13));
+      }else if(line.substr(0,12)=="restart_bond"){
+         restart_bond = stoi(line.substr(12));
+      }else if(line.substr(0,9)=="timestamp"){
+         timestamp = true;
       }else if(line.substr(0,8)=="alg_hvec"){
          alg_hvec = stoi(line.substr(8));
       }else if(line.substr(0,10)=="alg_hinter"){
@@ -361,6 +365,8 @@ void params_ctns::print() const{
    cout << "task_schmidt = " << task_schmidt << endl;
    cout << "schmidt_file = " << schmidt_file << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
+   cout << "restart_bond = " << restart_bond << endl;
+   cout << "timestamp = " << timestamp << endl;
    // conversion of sci
    cout << "ciroots = ";
    for(const auto& k : ciroots) std::cout << k << " ";
