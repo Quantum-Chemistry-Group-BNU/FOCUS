@@ -202,7 +202,7 @@ void CTNS(const input::schedule& schd){
       }
       io::create_scratch(scratch, (rank == 0));
       // compute hamiltonian 
-      if(schd.ctns.task_ham){
+      if(schd.ctns.task_ham and !schd.ctns.localrestart){
          auto Hij = ctns::get_Hmat(icomb, int2e, int1e, ecore, schd, scratch); 
          if(rank == 0){
             Hij.print("Hij",schd.ctns.outprec);

@@ -57,34 +57,36 @@ namespace ctns{
 #endif
 
          // 2. load operators & renorm
-         auto fneed = icomb.topo.get_fqops(1, dbond, scratch, false); // lrc
-         auto frop = icomb.topo.get_fbond(dbond, scratch, false).first;
-         std::string superblock, fname, fmmtask;
-         if(dbond.forward){
-            superblock = dbond.is_cturn()? "lr" : "lc";
-            if(superblock == "lc") fneed[1] = fneed[2];
-         }else{
-            superblock = "cr";
-            fneed[0] = fneed[2];
-         }
-         fneed.resize(2);
-         qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
-         
-         dot_timing timing_local;
-         oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
-               qops_pool.at(fneed[0]), qops_pool.at(fneed[1]), qops_pool[frop], 
-               fname, timing_local, fmmtask); 
-         
-         qops_pool.join_and_erase(fneed);
+         if(!schd.ctns.localrestart){
+            auto fneed = icomb.topo.get_fqops(1, dbond, scratch, false); // lrc
+            auto frop = icomb.topo.get_fbond(dbond, scratch, false).first;
+            std::string superblock, fname, fmmtask;
+            if(dbond.forward){
+               superblock = dbond.is_cturn()? "lr" : "lc";
+               if(superblock == "lc") fneed[1] = fneed[2];
+            }else{
+               superblock = "cr";
+               fneed[0] = fneed[2];
+            }
+            fneed.resize(2);
+            qops_pool.fetch_to_memory(fneed, schd.ctns.alg_renorm>10);
+            
+            dot_timing timing_local;
+            oper_renorm(superblock, icomb, pcoord, int2e, int1e, schd,
+                  qops_pool.at(fneed[0]), qops_pool.at(fneed[1]), qops_pool[frop], 
+                  fname, timing_local, fmmtask); 
+            
+            qops_pool.join_and_erase(fneed);
 
-         if(schd.ctns.ifab2pq){
-            const int nsite = icomb.get_nphysical();
-            const bool ifmps = icomb.topo.ifmps;
-            const bool ab2pq_current = get_ab2pq_current(superblock, ifmps, nsite, pcoord, schd.ctns.ifab2pq, 2);
-            if(ab2pq_current) oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops_pool[frop]);
-         }
+            if(schd.ctns.ifab2pq){
+               const int nsite = icomb.get_nphysical();
+               const bool ifmps = icomb.topo.ifmps;
+               const bool ab2pq_current = get_ab2pq_current(superblock, ifmps, nsite, pcoord, schd.ctns.ifab2pq, 2);
+               if(ab2pq_current) oper_ab2pq(superblock, icomb, pcoord, int2e, schd, qops_pool[frop]);
+            }
  
-         qops_pool.save_to_disk(frop, schd.ctns.async_save);
+            qops_pool.save_to_disk(frop, schd.ctns.async_save);
+         }
 
          auto t1 = tools::get_time();
          if(debug) tools::timing("ctns::sweep_restart", t0, t1);

@@ -91,7 +91,7 @@ namespace input{
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file 
-                  & restart_sweep & restart_bond & timestamp 
+                  & restart_sweep & restart_bond & timestamp & keepoper & localrestart 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
                   & alg_hvec & alg_hinter & alg_hcoper 
@@ -138,6 +138,8 @@ namespace input{
          int restart_sweep = 0;
          int restart_bond = 0;
          bool timestamp = false;
+         bool keepoper = false;
+         bool localrestart = false;
          // conversion of sci 
          std::vector<int> ciroots;
          int maxdets = 10000;

@@ -91,7 +91,8 @@ namespace ctns{
             void cleanup_sweep(const std::string frop,
                   const std::string fdel,
                   const bool async_save,
-                  const bool async_remove);
+                  const bool async_remove,
+                  const bool keepoper);
             // join
             void join_all(){
                if(thread_fetch.joinable()) thread_fetch.join();
@@ -385,10 +386,15 @@ namespace ctns{
       void qoper_pool<ifab,Tm>::cleanup_sweep(const std::string frop,
             const std::string fdel,
             const bool async_save,
-            const bool async_remove){
+            const bool async_remove,
+            const bool keepoper){
          auto t0 = tools::get_time();
          if(debug){
-            std::cout << "ctns::qoper_pool::cleanup_sweep" << std::endl;
+            std::cout << "ctns::qoper_pool::cleanup_sweep"
+               << " async_save=" << async_save 
+               << " async_remove=" << async_remove 
+               << " keepoper=" << keepoper
+               << std::endl;
             std::cout << " frop=" << frop << std::endl;
             std::cout << " fdel=" << fdel << std::endl;
          }
@@ -401,7 +407,7 @@ namespace ctns{
          // in the later configuration should wait until the file from the 
          // former configuration has been saved! Therefore, oper_remove should 
          // come later than save, which contains the synchronization!
-         this->remove_from_disk(fdel, async_remove);
+         if(!keepoper) this->remove_from_disk(fdel, async_remove);
 
          if(debug){
             auto t2 = tools::get_time();

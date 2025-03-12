@@ -243,7 +243,7 @@ namespace ctns{
             
             // 4. cleanup operators
             qops_pool.join_and_erase(fneed, fneed_next);
-            qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove);
+            qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove, schd.ctns.keepoper);
 
             timing.t1 = tools::get_time();
             if(debug){
