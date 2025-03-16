@@ -63,7 +63,7 @@ namespace ctns{
                return dmax;
             }
             // print size 
-            size_t display_size() const{
+            size_t display_size(const int rank=0) const{
                std::cout << "comb::display_size qkind=" << qkind::get_name<Qm>() << std::endl;
                size_t sz = 0;
                sz += display_vec_size<Tm>(rbases, "rbases");
@@ -73,8 +73,9 @@ namespace ctns{
                std::cout << "total mem of comb=" << sz << ":" 
                   << tools::sizeMB<Tm>(sz) << "MB:"
                   << tools::sizeGB<Tm>(sz) << "GB"
+                  << " rank=" << rank
                   << std::endl;
-               get_mem_status(0);
+               get_mem_status(rank);
                return sz;
             }
             // helpers

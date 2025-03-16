@@ -4,6 +4,7 @@
 #include <map>
 #include "../core/serialization.h"
 #include "../core/integral.h"
+#include "../core/mem_status.h"
 #include "../qtensor/qtensor.h"
 #include "oper_index.h"
 #ifdef GPU
@@ -57,7 +58,7 @@ namespace ctns{
 #ifdef GPU
             void allocate_gpu(const bool ifmemset=false){
                assert(!this->avail_gpu());
-               //--- ZL@2024/12/15 memory check --- 
+               //--- ZL@2024/12/15 gpu memory check --- 
                size_t avail, total;
                CUDA_CHECK(cudaMemGetInfo(&avail, &total));
                size_t size_bytes = _size*sizeof(Tm);
@@ -134,7 +135,13 @@ namespace ctns{
             // allocate cpu memory
             void allocate_cpu(const bool ifmemset=false){
                assert(!this->avail_cpu());
-               _data = new Tm[_size];
+               try{
+                  _data = new Tm[_size];
+               }catch(const std::bad_alloc& e){
+                  std::cout << "cpu memory allocation failed: " << e.what() << " at rank=" << mpirank << std::endl;
+                  get_cpumem_status(mpirank, 0, "check allocation failure"); 
+                  exit(1);
+               }
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
             }
             // initialization

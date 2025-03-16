@@ -36,6 +36,7 @@ namespace ctns{
                << " mpisize=" << size
                << " maxthreads=" << maxthreads 
                << std::endl;
+            icomb.display_size();
          }
          auto t0 = tools::get_time();
 

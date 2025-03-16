@@ -58,9 +58,11 @@ namespace ctns{
             const int isweep,
             const int ibond){
          std::cout << "ctns::sweep_save isweep=" << isweep << " ibond=" << ibond << std::endl;
+         
          // local result
          std::string fresult = scratch+"/restart_result_ibond"+std::to_string(ibond);
          sweep_saveitem(sweeps.opt_result[isweep][ibond], fresult);
+         
          // save site
          const auto& dbond = sweeps.seq[ibond];
          const auto p = dbond.get_current();
@@ -68,6 +70,7 @@ namespace ctns{
          auto fname = scratch+"/restart_site_ibond"+std::to_string(ibond)+".info";
          std::cout << "save_site fname=" << fname << std::endl;
          icomb.sites[pdx].save_site(fname);
+         
          // generated cpsi
          if(schd.ctns.guess){ 
             std::string fcpsi = scratch+"/restart_cpsi_ibond"+std::to_string(ibond);
@@ -83,22 +86,44 @@ namespace ctns{
             const int isweep,
             const int ibond){
          std::cout << "ctns::sweep_load isweep=" << isweep << " ibond=" << ibond << std::endl;
+         auto t0 = tools::get_time();
+         double sizeGB = 0.0;
+         
          // load local result
          std::string fresult = scratch+"/restart_result_ibond"+std::to_string(ibond);
          sweep_loaditem(sweeps.opt_result[isweep][ibond], fresult);
          sweeps.opt_result[isweep][ibond].print();
+         
          // load site
          const auto& dbond = sweeps.seq[ibond];
          const auto p = dbond.get_current();
          const auto& pdx = icomb.topo.rindex.at(p);
          auto fname = scratch+"/restart_site_ibond"+std::to_string(ibond)+".info";
-         std::cout << "load_site fname=" << fname << std::endl;
+         std::cout << "load site: fname=" << fname << std::endl;
          icomb.sites[pdx].load_site(fname);
+         std::cout << " size(GB) of sites[pdx=" << pdx << "]="
+            << tools::sizeGB<Tm>(icomb.sites[pdx].size()) 
+            << std::endl;
+         sizeGB += tools::sizeGB<Tm>(icomb.sites[pdx].size());
+         
          // load cpsi
          if(schd.ctns.guess){ 
             std::string fcpsi = scratch+"/restart_cpsi_ibond"+std::to_string(ibond);
+            icomb.cpsi.clear(); // to avoid memory leak
             sweep_loaditem(icomb.cpsi, fcpsi);
+            for(int iroot=0; iroot<icomb.cpsi.size(); iroot++){
+               std::cout << " size(GB) of cpsi[iroot=" << iroot << "]=" 
+                  << tools::sizeGB<Tm>(icomb.cpsi[iroot].size()) 
+                  << std::endl;
+               sizeGB += tools::sizeGB<Tm>(icomb.cpsi[iroot].size()); 
+            }
          }
+         
+         auto t1 = tools::get_time();
+         double dt = tools::get_duration(t1-t0);
+         std::cout << "----- TIMING FOR sweep_load : " << dt << " S"
+           << " size(GB)=" << sizeGB << " speed=" << sizeGB/dt << "GB/S -----"
+           << std::endl; 
       }
 
 } // ctns

@@ -176,7 +176,7 @@ namespace ctns{
                }
 
                // ZL@2024/12/08
-               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch, debug);
+               if(schd.ctns.ifoutcore) rcanon_load_site(icomb, idx, scratch, rank);
 
                // a. get operators from memory / disk
                std::vector<std::string> fneed(2);
@@ -246,7 +246,7 @@ namespace ctns{
                // stop just for debug
                if(idx == schd.ctns.maxidx){
                   qops_pool.finalize();
-                  if(rank == 0) std::cout << "exit for debug oper_env" << std::endl;
+                  if(rank == 0) std::cout << "maxidx reached: exit for debugging oper_env!" << std::endl;
                   exit(1);
                }
             }
@@ -254,7 +254,7 @@ namespace ctns{
          qops_pool.finalize();
 
          // 3. outcore
-         if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
+         if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, rank);
 
          if(debug){
             auto t1 = tools::get_time();

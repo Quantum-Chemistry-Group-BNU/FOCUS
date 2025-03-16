@@ -6,19 +6,18 @@
 
 namespace ctns{
 
-   // outcore
+   // set the site to an empty tensor to save memory;
    template <typename Qm, typename Tm>
       void rcanon_clear_site(comb<Qm,Tm>& icomb,
             const int idx){
-         // set the site to an empty tensor to save memory;
-         icomb.sites[idx] = qtensor3<Qm::ifabelian,Tm>();
+         icomb.sites[idx] = std::move(qtensor3<Qm::ifabelian,Tm>());
       }
 
    template <typename Qm, typename Tm>
       void rcanon_save_sites(comb<Qm,Tm>& icomb,
             const std::string scratch,
-            const bool debug){
-         if(debug){
+            const int rank){
+         if(rank == 0){
             std::cout << "ctns::rcanon_save_sites scratch=" << scratch;
          }
          auto t0 = tools::get_time();
@@ -31,7 +30,7 @@ namespace ctns{
 #ifdef TCMALLOC
          release_freecpumem();
 #endif
-         if(debug){
+         if(rank == 0){
             auto t1 = tools::get_time();
             double dt = tools::get_duration(t1-t0);
             std::cout << std::setprecision(2) << " T(save)=" << dt << "S" << std::endl; 
@@ -40,8 +39,8 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void rcanon_load_sites(comb<Qm,Tm>& icomb,
             const std::string scratch,
-            const bool debug){
-         if(debug){
+            const int rank){
+         if(rank == 0){
             std::cout << "ctns::rcanon_load_sites scratch=" << scratch;
          }
          auto t0 = tools::get_time();
@@ -50,7 +49,7 @@ namespace ctns{
             auto fname = scratch+"/site"+std::to_string(idx)+".temp";
             icomb.sites[idx].load_site(fname);
          }
-         if(debug){
+         if(rank == 0){
             auto t1 = tools::get_time();
             double dt = tools::get_duration(t1-t0);
             std::cout << std::setprecision(2) << " T(load)=" << dt << "S" << std::endl;
@@ -61,8 +60,8 @@ namespace ctns{
       void rcanon_save_site(comb<Qm,Tm>& icomb,
             const int idx,
             const std::string scratch,
-            const bool debug){
-         if(debug){
+            const int rank){
+         if(rank == 0){
             std::cout << "ctns::rcanon_save_site idx=" << idx << " scratch=" << scratch;
          }
          auto t0 = tools::get_time();
@@ -72,7 +71,7 @@ namespace ctns{
          icomb.sites[idx].save_site(fname);
          // clear
          rcanon_clear_site(icomb, idx);
-         if(debug){
+         if(rank == 0){
             auto t1 = tools::get_time();
             double dt = tools::get_duration(t1-t0);
             std::cout << " size=" << sz << ":" 
@@ -86,15 +85,15 @@ namespace ctns{
       void rcanon_load_site(comb<Qm,Tm>& icomb,
             const int idx,
             const std::string scratch,
-            const bool debug){
-         if(debug){
+            const int rank){
+         if(rank == 0){
             std::cout << "ctns::rcanon_load_site idx=" << idx << " scratch=" << scratch;
          }
          auto t0 = tools::get_time();
          // load site
          auto fname = scratch+"/site"+std::to_string(idx)+".temp";
          icomb.sites[idx].load_site(fname);
-         if(debug){
+         if(rank == 0){
             auto t1 = tools::get_time();
             size_t sz = icomb.sites[idx].size();
             double dt = tools::get_duration(t1-t0);

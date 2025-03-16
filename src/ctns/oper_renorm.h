@@ -67,6 +67,7 @@ namespace ctns{
                << " mpisize=" << size
                << " maxthreads=" << maxthreads
                << std::endl;
+            get_mem_status(rank);
          }
          timing.tf0 = tools::get_time(); 
 
@@ -116,13 +117,16 @@ namespace ctns{
 
          // 1. kernel for renormalization
          oper_timer.dot_start();
+        
          Renorm_wrapper<Qm,Tm,qtensor3<ifab,Tm>> Renorm;
          const bool is_same = true;
          const bool skipId = true;
+         
          Renorm.kernel(superblock, is_same, skipId, ifmps, site, site,
                qops1, qops2, qops, int2e, schd, size, rank, maxthreads, timing, fname, fmmtask);
 
          Renorm.finalize();
+        
          timing.tf10 = tools::get_time();
 
          // 1.5 special kernel for opS
@@ -147,8 +151,8 @@ namespace ctns{
          if(!ifab2pq_gpunccl){
 
 #ifdef GPU
-            // 3. send back to CPU
-            if(alg_renorm>10){
+            // 3. send back to CPU for saving to disk
+            if(alg_renorm > 10){
                auto t0x = tools::get_time();
                qops.to_cpu();
                auto t1x = tools::get_time();

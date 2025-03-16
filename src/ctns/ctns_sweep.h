@@ -70,7 +70,7 @@ namespace ctns{
 
             // outcore: save comb to disk to save memory
             if(schd.ctns.ifoutcore){
-               rcanon_save_sites(icomb, scratch, debug);
+               rcanon_save_sites(icomb, scratch, rank);
             }
 
             // loop over sites
@@ -91,10 +91,11 @@ namespace ctns{
                const int ndx = icomb.topo.rindex.at(dbond.get_next());
                // for guess 
                if(schd.ctns.ifoutcore){
-                  rcanon_load_site(icomb, ndx, scratch, debug); 
+                  rcanon_load_site(icomb, ndx, scratch, rank); 
                }
-               
+         
                if(ibond < schd.ctns.restart_bond){
+                  // restart by loading information from disk
                   sweep_restart(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond);
                }else{
@@ -107,12 +108,11 @@ namespace ctns{
                            qops_pool, sweeps, isweep, ibond);
                   }
                }
-
+               
                // save updated sites
                if(schd.ctns.ifoutcore){
-                  rcanon_save_site(icomb, pdx, scratch, debug);
+                  rcanon_save_site(icomb, pdx, scratch, rank);
                }
-
 #ifdef TCMALLOC
    	         release_freecpumem();
 #endif
@@ -126,7 +126,7 @@ namespace ctns{
                // stop just for debug
                if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond){
                   qops_pool.finalize();
-                  if(rank == 0) std::cout << "exit for debug sweep_opt" << std::endl;
+                  if(rank == 0) std::cout << "maxbond reached: exit for debugging sweep_opt!" << std::endl;
                   exit(1);
                }
             } // ibond
@@ -142,7 +142,7 @@ namespace ctns{
           
             // finalize: load all sites to memory, as they will be save and checked in sweep_final 
             if(schd.ctns.ifoutcore){
-	            rcanon_load_sites(icomb, scratch, debug);
+	            rcanon_load_sites(icomb, scratch, rank);
 	         }
             // generate right rcanonical form and save checkpoint file
             sweep_final(icomb, schd, scratch, isweep, rcfprefix);
@@ -160,7 +160,7 @@ namespace ctns{
          // Note: no need to load sites to memory again to output final icomb, because
          // in the last step, rcanon_load_sites has already been called,
          // such that all the sites are in memory.
-         //if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, debug);
+         //if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, rank);
 
          if(debug){
             auto t1 = tools::get_time();

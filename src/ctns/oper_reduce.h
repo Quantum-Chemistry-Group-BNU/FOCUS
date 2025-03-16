@@ -31,9 +31,7 @@ namespace ctns{
                   size_t opsize = opS.size();
                   size_t off = qops._offset[std::make_pair('S',p)];
                   Tm* dev_ptr = qops._dev_data+off;
-                  std::cout << "lzd debug reduce opSi: rank=" << rank << " iproc=" << iproc << " p=" << p << " opsize=" << opsize << std::endl;
                   nccl_comm.reduce(dev_ptr, opsize, iproc);
-                  std::cout << "lzd debug reduce opSo: rank=" << rank << " iproc=" << iproc << " p=" << p << " opsize=" << opsize << std::endl;
                   if(iproc != rank) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
                }
             }
@@ -42,14 +40,10 @@ namespace ctns{
             size_t opsize = opH.size();
             size_t off = qops._offset[std::make_pair('H',0)];
             Tm* dev_ptr = qops._dev_data+off;
-            std::cout << "lzd debug reduce opHi: rank=" << rank << " opsize=" << opsize << std::endl;
             nccl_comm.reduce(dev_ptr, opsize, 0);
-            std::cout << "lzd debug reduce opHo: rank=" << rank << " opsize=" << opsize << std::endl;
             if(rank != 0) GPUmem.memset(dev_ptr, opsize*sizeof(Tm));
-            std::cout << "lzd debug oper_reduce: i rank=" << rank << std::endl;
             // ZL@2025/01/12: add sync
             GPUmem.sync(); 
-            std::cout << "lzd debug oper_reduce: o rank=" << rank << std::endl;
 #endif
          }
 #endif // GPU

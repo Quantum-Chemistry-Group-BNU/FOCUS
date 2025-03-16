@@ -657,6 +657,7 @@
    - support ifab2pq and ifoutcore
    - support gpu 
    - support keepoper and localrestart to enable restart at a bond 
+   - fixbug for memory leak in sweep_load.h [DONE@2025/03/16]
 
  * Goal: reach D>20000 with more GPUs? what is the bottleneck now?
    - performance on a800[xiyun]: cublas-12.2 is slow for batchgemm, 12.4 works 

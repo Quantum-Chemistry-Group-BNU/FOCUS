@@ -418,7 +418,10 @@ namespace mpi_wrapper{
          boost::mpi::broadcast(comm, qt3.own, root);
          boost::mpi::broadcast(comm, qt3.info, root);
          int rank = comm.rank();
-         if(rank != root && qt3.own) qt3._data = new Tm[qt3.info._size];
+         if(rank != root && qt3.own){
+            delete[] qt3._data;
+            qt3._data = new Tm[qt3.info._size];
+         }
          broadcast(comm, qt3._data, qt3.info._size, root);
          /*
          size_t chunksize = get_chunksize<Tm>();
