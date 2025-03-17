@@ -100,6 +100,8 @@ void params_ctns::read(ifstream& istrm){
          debug_rdm = true;
       }else if(line.substr(0,12)=="debug_gpumem"){
          debug_gpumem = true;
+      }else if(line.substr(0,12)=="debug_cpumem"){
+         debug_cpumem = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
       }else if(line.substr(0,9)=="ifoutcore"){
@@ -476,4 +478,5 @@ void params_ctns::print() const{
    // debug distribution
    cout << "mpisize_debug = " << mpisize_debug << endl;
    cout << "debug_gpumem = " << debug_gpumem << endl;
+   cout << "debug_cpumem = " << debug_cpumem << endl;
 }

@@ -135,13 +135,12 @@ namespace ctns{
             // allocate cpu memory
             void allocate_cpu(const bool ifmemset=false){
                assert(!this->avail_cpu());
-               try{
-                  _data = new Tm[_size];
-               }catch(const std::bad_alloc& e){
-                  std::cout << "cpu memory allocation failed: " << e.what() << " at rank=" << mpirank << std::endl;
-                  get_cpumem_status(mpirank, 0, "check allocation failure"); 
-                  exit(1);
-               }
+               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: before allocate_cpu");
+#ifdef TCMALLOC
+   	         release_freecpumem(); // force release pageheap_free
+#endif
+               _data = new Tm[_size];
+               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: after allocate_cpu");
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
             }
             // initialization

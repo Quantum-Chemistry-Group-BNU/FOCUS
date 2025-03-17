@@ -123,6 +123,7 @@ namespace ctns{
                   timing_global.accumulate(timing, "global opt", schd.ctns.verbose>0);
                   get_mem_status(rank, schd.ctns.verbose>1);
                }
+               if(schd.ctns.debug_cpumem and rank>0) get_mem_status(rank);
                // stop just for debug
                if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond){
                   qops_pool.finalize();
