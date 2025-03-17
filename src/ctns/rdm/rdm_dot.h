@@ -37,6 +37,8 @@ namespace ctns{
          }
          // initialize memory
          qops.ifhermi = false; 
+         qops.mpisize = size;
+         qops.mpirank = rank;
          qops.init(true);
          // compute local operators on dot
          oper_dot_opI(qops);

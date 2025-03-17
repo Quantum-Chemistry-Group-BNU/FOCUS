@@ -93,9 +93,6 @@ namespace ctns{
          if(alg_hvec>10 && alg_renorm>10 && !schd.ctns.diagcheck){
             const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
             qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper, qops_pool.frop_prev);
-            if(debug){
-               get_mem_status(rank, 0, "after clear_from_cpumem");
-            }
          }
          timing.ta = tools::get_time();
 
@@ -222,15 +219,9 @@ namespace ctns{
             if(alg_hvec>10 && alg_renorm>10){
                const bool ifkeepcoper = schd.ctns.alg_hcoper>=1 || schd.ctns.alg_rcoper>=1;
                qops_pool.clear_from_cpumem(fneed, fneed_next, ifkeepcoper);
-               if(debug){
-                  get_mem_status(rank, 0, "after clear_from_cpumem");
-               }
             }
             qops_pool[frop]; // just declare a space for frop
             qops_pool.fetch_to_cpumem(fneed_next, schd.ctns.async_fetch); // just to cpu
-            if(debug){
-               get_mem_status(rank, 0, "after fetch_to_cpumem");
-            }
          }
 
          // 3. decimation & renormalize operators

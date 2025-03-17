@@ -100,6 +100,8 @@ namespace ctns{
          auto qembed = get_qbond_embed(ts);
          qops2.qbra = qembed;
          qops2.qket = qembed;
+         qops2.mpisize = qops.mpisize;
+         qops2.mpirank = qops.mpirank;
          // initialize memory
          qops2.init(true);
          // transform operators

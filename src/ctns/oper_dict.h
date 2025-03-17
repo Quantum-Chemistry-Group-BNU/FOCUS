@@ -140,8 +140,8 @@ namespace ctns{
    	         release_freecpumem(); // force release pageheap_free
 #endif
                _data = new Tm[_size];
-               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: after allocate_cpu");
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
+               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: after allocate_cpu");
             }
             // initialization
             void init(const bool ifmemset=false){

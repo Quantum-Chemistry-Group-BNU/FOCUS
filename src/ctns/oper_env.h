@@ -247,6 +247,7 @@ namespace ctns{
                if(idx == schd.ctns.maxidx){
                   qops_pool.finalize();
                   if(rank == 0) std::cout << "maxidx reached: exit for debugging oper_env!" << std::endl;
+                  icomb.world.barrier();
                   exit(1);
                }
             }

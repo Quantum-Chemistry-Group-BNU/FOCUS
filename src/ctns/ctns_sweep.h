@@ -128,6 +128,7 @@ namespace ctns{
                if(isweep == schd.ctns.maxsweep-1 && ibond == schd.ctns.maxbond){
                   qops_pool.finalize();
                   if(rank == 0) std::cout << "maxbond reached: exit for debugging sweep_opt!" << std::endl;
+                  icomb.world.barrier();
                   exit(1);
                }
             } // ibond

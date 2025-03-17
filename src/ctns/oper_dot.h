@@ -45,6 +45,8 @@ namespace ctns{
          qops.qbra = qphys;
          qops.qket = qphys;
          qops.oplist = "HCSABPQ";
+         qops.mpisize = size;
+         qops.mpirank = rank;
          // initialize memory
          qops.init(true);
          // compute local operators on dot
