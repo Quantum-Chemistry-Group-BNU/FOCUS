@@ -197,7 +197,7 @@ void CTNS(const input::schedule& schd){
       // create scratch
       auto scratch = schd.scratch+"/sweep";
       // restart_bond require data in existing scratch 
-      if((schd.ctns.task_ham || schd.ctns.task_opt) && schd.ctns.restart_bond == 0){ 
+      if((schd.ctns.task_ham || schd.ctns.task_opt) && schd.ctns.restart_bond == -1){ 
          io::remove_scratch(scratch, (rank == 0)); // start a new scratch
       }
       io::create_scratch(scratch, (rank == 0));

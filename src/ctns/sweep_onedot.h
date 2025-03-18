@@ -81,7 +81,7 @@ namespace ctns{
                << ":" << tools::sizeMB<Tm>(opertot) << "MB"
                << ":" << tools::sizeGB<Tm>(opertot) << "GB"
                << std::endl;
-            get_mem_status(rank);
+            get_mem_status(rank, 0, "sweep_onedot", true);
          }
 
          // 1.5 look ahead for the next dbond
@@ -205,7 +205,7 @@ namespace ctns{
          if(debug){
             sweeps.print_eopt(isweep, ibond);
             if(alg_hvec == 0) oper_timer.analysis();
-            get_mem_status(rank);
+            get_mem_status(rank, 0, "after onedot_localCI", true);
          }
          timing.tc = tools::get_time();
 
@@ -238,7 +238,7 @@ namespace ctns{
 
          timing.t1 = tools::get_time();
          if(debug){
-            get_mem_status(rank);
+            get_mem_status(rank, 0, "after sweep_onedot", true);
             timing.analysis("local opt", schd.ctns.verbose>0);
          }
       }

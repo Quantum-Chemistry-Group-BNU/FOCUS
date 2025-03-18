@@ -43,20 +43,17 @@ namespace ctns{
          if(gpumem_avail > gpumem_reserved){
             batchsize = std::floor(double(gpumem_avail - gpumem_reserved)/(sizeof(Tm)*blocksize + 136));
             if(batchsize == 0){
-               std::cout << "error in preprocess_gpu_batchsize: batchsize=0!"
-                  << " rank=" << rank
+               std::cout << "rank=" << rank << " error in preprocess_gpu_batchsize: batchsize=0!"
                   << " avail(GB)=" << avail/std::pow(1024.0,3) 
                   << " gpumem_avail(GB)=" << gpumem_avail/std::pow(1024.0,3)
                   << " gpumem_reserved(GB)=" << gpumem_reserved/std::pow(1024.0,3)
                   << " gpumem_avail-gpumem_reserved=" << (gpumem_avail - gpumem_reserved)
-                  << " blocksize=" << blocksize
-                  << " sizeof(Tm)*blocksize+136=" << (sizeof(Tm)*blocksize+136)
+                  << " < sizeof(Tm)*blocksize+136=" << (sizeof(Tm)*blocksize+136)
                   << std::endl;
                exit(1);
             }
          }else{
-            std::cout << "error in preprocess_gpu_batchsize:: avail<=reserved!"
-              << " rank=" << rank 
+            std::cout << "rank=" << rank << " error in preprocess_gpu_batchsize:: avail<=reserved!"
               << " avail(GB)=" << avail/std::pow(1024.0,3) 
               << " gpumem_avail(GB)=" << gpumem_avail/std::pow(1024.0,3)
               << " gpumem_reserved(GB)=" << gpumem_reserved/std::pow(1024.0,3)
@@ -75,7 +72,7 @@ namespace ctns{
             const size_t maxbatch,
             size_t& batchsize,
             size_t& cpumem_batch){
-         assert(blocksize>0);
+         assert(blocksize > 0);
          batchsize = size_t(batchmem*std::pow(1024,3)/(sizeof(Tm)*blocksize));
          if(batchsize == 0){
             std::cout << "error in preprocess_cpu_batchsize: batchsize=0! blocksize=" << blocksize << std::endl;

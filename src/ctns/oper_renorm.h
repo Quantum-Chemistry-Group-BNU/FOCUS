@@ -114,6 +114,7 @@ namespace ctns{
             qops.print("qops", schd.ctns.verbose-1);
             get_mem_status(rank);
          }
+         icomb.world.barrier(); // to make sure qops has been printed!
 
          // 1. kernel for renormalization
          oper_timer.dot_start();

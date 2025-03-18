@@ -135,8 +135,8 @@ namespace input{
          bool task_schmidt = false; // compute schmidt values
          std::string schmidt_file = "svalues"; 
          // restart
-         int restart_sweep = 0;
-         int restart_bond = 0;
+         int restart_sweep = 0; // must be > 0
+         int restart_bond = -1; // must be >= 0 
          bool timestamp = false;
          bool keepoper = false;
          bool localrestart = false;

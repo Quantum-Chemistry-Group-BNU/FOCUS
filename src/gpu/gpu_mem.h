@@ -27,7 +27,7 @@ class gpu_mem{
          size_t avail, total;
          CUDA_CHECK(cudaMemGetInfo(&avail, &total));
          if(avail <= MAX_GPU_PAGE){
-            std::cout << "error: GPU memory is too small on rank=" << rank << std::endl;
+            std::cout << "rank=" << _rank << " error in GPUmem.available: avail<=MAX_GPU_PAGE!" << std::endl;
             exit(1);
          }
          avail -= MAX_GPU_PAGE;
@@ -41,12 +41,11 @@ class gpu_mem{
          size_t avail, total;
          CUDA_CHECK(cudaMemGetInfo(&avail, &total));
          if(size > avail){
-            std::cout << "error in GPUmem.allocate: insufficient memory!"
-               << " rank=" << _rank 
-               << " total=" << total/1024.0/1024.0/1024.0
-               << " used=" << _used/1024.0/1024.0/1024.0
-               << " avail=" << avail/1024.0/1024.0/1024.0
+            std::cout << "rank=" << _rank << " error in GPUmem.allocate: insufficient memory!"
                << " size[need]=" << size/1024.0/1024.0/1024.0 
+               << " > avail=" << avail/1024.0/1024.0/1024.0
+               << " used=" << _used/1024.0/1024.0/1024.0
+               << " total=" << total/1024.0/1024.0/1024.0
                << std::endl;
             exit(1);
          }
