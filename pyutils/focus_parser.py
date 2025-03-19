@@ -107,26 +107,31 @@ def parse_oodmrg(fname="ctns.out",iprt=0):
          elines.append(line)
          if iprt > 0: print(line)
     f.close()
+    
     # parse
     result = []
+    
+    # initial MPS
     elst = elines[1].split()
     eSCI = eval(elst[5])
-    Sd = eval(elst[7])
-    Sr = eval(elst[9])
-    result.append([1,eSCI,Sd,Sr])
+    Sr = eval(elst[7])
+    Sd = eval(elst[9])
+    #result.append([1,eSCI,Sr,Sd])
+    
+    # oo-dmrg result
     for i in range(len(elines)):
         if i < 3 or i > len(elines)-1: continue
         elst = elines[i].split()
         accept = eval(elst[1])
         em = eval(elst[3])
-        sd = eval(elst[7])
-        sr = eval(elst[9])
-        result.append([accept,em,sd,sr])
+        sr = eval(elst[7])
+        sd = eval(elst[9])
+        result.append([accept,em,sr,sd])
     result = np.array(result).T
     result = {'acceptance':result[0],
               'emin':result[1],
-              'Sdiag':result[2],
-              'Srenyi':result[3]}
+              'Srenyi':result[2],
+              'Sdiag':result[3]}
     return result
 
 def parse_Sdiag(output):
