@@ -249,11 +249,11 @@ namespace ctns{
                std::cout << "initial energy of MPS Hii= " 
                   << std::fixed << std::setprecision(schd.ctns.outprec) << emin_history[0]
                   << std::scientific << std::setprecision(2) 
-                  << " Sd= " << sdiag_history[0]
                   << " Sr= " << srenyi_history[0] 
+                  << " Sd= " << sdiag_history[0]
                   << std::endl;
                std::cout << "  iter accept        enew            emin        deltaE    lowerE"
-                  << "   srnew    srenyi    sdnew    sdiag   |Ui-I|" 
+                  << "   Srnew    Srenyi    Sdnew    Sdiag   |Ui-I|" 
                   << std::endl; 
                int amoves = 0;
                for(int jter=0; jter<=iter; jter++){
