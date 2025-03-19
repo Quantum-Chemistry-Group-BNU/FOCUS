@@ -39,7 +39,8 @@ namespace ctns{
                std::cout << "=== imicro=" << imicro << " ===" << std::endl;
             }
             // optimize
-            double imaxdwt = reduce_entropy_single(icomb, urot, "opt", dmax, ooparams);
+            std::string scheme = ooparams.swap? "swap" : "opt"; 
+            double imaxdwt = reduce_entropy_single(icomb, urot, scheme, dmax, ooparams);
             maxdwt = std::max(maxdwt, imaxdwt);
             s_new = rcanon_entropysum(icomb, alpha);
             s_diff = s_new - s_old;

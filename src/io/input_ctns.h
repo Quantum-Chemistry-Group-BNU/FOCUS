@@ -19,7 +19,8 @@ namespace input{
          template<class Archive>
             void serialize(Archive & ar, const unsigned int version){
                ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt 
-                  & thrdloc & thrddwt & thrdeps & nptloc & acceptall & unrestricted & urot;
+                  & thrdloc & thrddwt & thrdeps & nptloc & acceptall & unrestricted 
+                  & swap & urot;
             }
        public:
          inline void print() const{
@@ -37,6 +38,7 @@ namespace input{
             std::cout << " nptloc=" << nptloc << std::endl;
             std::cout << " acceptall=" << acceptall << std::endl;
             std::cout << " unrestricted=" << unrestricted << std::endl;
+            std::cout << " swap=" << swap << std::endl;
             std::cout << " urot=" << urot << std::endl;
          }
       public:
@@ -53,6 +55,7 @@ namespace input{
          double nptloc = 20;
          bool acceptall = false;
          bool unrestricted = false;
+         bool swap = false; 
          std::string urot = ""; 
    };
 

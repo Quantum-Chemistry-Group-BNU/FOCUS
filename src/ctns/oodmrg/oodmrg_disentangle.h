@@ -179,6 +179,8 @@ namespace ctns{
             std::vector<double> xvec(nspin);
             std::vector<std::pair<double,double>> anglst;
             double fmin;
+            // schems in {opt,swap,randomswap,random}
+            // apply optimized rotation gates in forward and backward sweeps
             if(scheme == "opt"){
             
                // repare a good initial guess by scanning 
@@ -240,7 +242,22 @@ namespace ctns{
                   std::cout << "nlopt failed: " << e.what() << std::endl;
                }
 
-            // randomly apply SWAP gates
+            // apply SWAP gate if cost is lowered by SWAP
+            }else if(scheme == "swap"){
+      
+               npt = 2;
+               funlst.resize(npt);
+               std::vector<double> theta(nspin); // record the initial fun value
+               theta[0] = 0;
+               if(nspin == 2) theta[1] = 0; 
+               funlst[0] = fun(theta);
+               theta[0] = pi/2.0;
+               if(nspin == 2) theta[1] = pi/2.0;
+               funlst[1] = fun(theta);
+               xvec[0] = funlst[0]<funlst[1]? 0.0 : pi/2.0;
+               if(nspin == 2) xvec[1] = xvec[0];
+
+            // apply SWAP gates randomly
             }else if(scheme == "randomswap"){
            
                npt = 1;
@@ -258,7 +275,7 @@ namespace ctns{
                   if(nspin == 2) xvec[1] = 0.0;
                }
            
-            // randomly apply rotation gates
+            // apply rotation gates randomly
             }else if(scheme == "random"){
            
                npt = 1;

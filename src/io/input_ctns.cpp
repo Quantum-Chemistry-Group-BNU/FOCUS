@@ -253,6 +253,8 @@ void params_ctns::read(ifstream& istrm){
          ooparams.acceptall = true;
       }else if(line.substr(0,15)=="oo_unrestricted"){
          ooparams.unrestricted = true;
+      }else if(line.substr(0,7)=="oo_swap"){
+         ooparams.swap = true;
       }else if(line.substr(0,7)=="oo_urot"){
          stringstream is(line.substr(7));
          is >> ooparams.urot; 
