@@ -283,7 +283,7 @@ namespace ctns{
                std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
-            get_mem_status(0, 0, "before clear", true);
+            get_mem_status(0, 0, "before clear");
          }
          for(const auto& fqop : fclear){
             //if(fqop == frop_prev) continue; // DO NOT remove CPU space, since saving may not finish!
@@ -298,7 +298,7 @@ namespace ctns{
 #endif
          if(debug){
             this->display("out");
-            get_mem_status(0, 0, "after clear", true);
+            get_mem_status(0, 0, "after clear");
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR qoper_pool::clear_from_memory : "
                << tools::get_duration(t1-t0) << " S -----"
@@ -323,7 +323,7 @@ namespace ctns{
                std::cout << " clear: fqop=" << fqop << " ifexist=" << ifexist << " ifclear=" << ifclear << std::endl;
             }
             this->display("in");
-            get_mem_status(0, 0, "before clear cpumem", true);
+            get_mem_status(0, 0, "before clear cpumem");
          }
          for(int i=0; i<fclear.size(); i++){
             if(ifkeepcoper && i >= 2) continue; // skip op[c2/c1]
@@ -338,7 +338,7 @@ namespace ctns{
 #endif
          if(debug){
             this->display("out");
-            get_mem_status(0, 0, "after clear cpumem", true);
+            get_mem_status(0, 0, "after clear cpumem");
             auto t1 = tools::get_time();
             std::cout << "----- TIMING FOR qoper_pool::clear_from_cpumem : "
                << tools::get_duration(t1-t0) << " S -----"

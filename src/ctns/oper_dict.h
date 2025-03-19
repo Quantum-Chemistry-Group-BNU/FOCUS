@@ -135,13 +135,13 @@ namespace ctns{
             // allocate cpu memory
             void allocate_cpu(const bool ifmemset=false){
                assert(!this->avail_cpu());
-               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: before allocate_cpu");
+               //if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: before allocate_cpu");
 #ifdef TCMALLOC
    	         release_freecpumem(); // force release pageheap_free
 #endif
                _data = new Tm[_size];
                if(ifmemset) memset(_data, 0, _size*sizeof(Tm));
-               if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: after allocate_cpu");
+               //if(mpirank == 0) get_mem_status(mpirank, 0, "oper_dict: after allocate_cpu");
             }
             // initialization
             void init(const bool ifmemset=false){

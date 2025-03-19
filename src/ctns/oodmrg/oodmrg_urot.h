@@ -3,6 +3,7 @@
 
 namespace ctns{
 
+   // umat contains urot_a and urot_b, which for spin-restricted rotations are the same!
    template <typename Tm> 
       struct urot_class{
          public:
