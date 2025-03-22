@@ -27,6 +27,7 @@ namespace ctns{
          const double thrdeps = schd.ctns.ooparams.thrdeps;
          const bool acceptall = schd.ctns.ooparams.acceptall;
          const bool unrestricted = schd.ctns.ooparams.unrestricted;
+         const std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
          if(debug){
             std::cout << "\nctns::oodmrg"
                << " maxiter=" << maxiter 
@@ -163,7 +164,6 @@ namespace ctns{
             // optimization of MPS with new integrals
             double eminlast = std::real(Hij(0,0));
             if(schd.ctns.maxsweep > 0){
-               std::string rcfprefix = "oo_" + schd.ctns.rcfprefix;
                auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
                if(rank == 0) eminlast = result.get_eminlast(0);
             }
@@ -280,13 +280,13 @@ namespace ctns{
 
                // save the current best results
                if(acceptance[iter]){
-                  auto rcanon_file = schd.scratch+"/oo_"+schd.ctns.rcfprefix+"rcanon_iter"+std::to_string(iter); 
+                  auto rcanon_file = schd.scratch+"/"+rcfprefix+"rcanon_iter"+std::to_string(iter); 
                   if(!Qm::ifabelian) rcanon_file += "_su2";
                   rcanon_save(icomb, rcanon_file);
                   // save to where?
-                  auto urot_file = schd.scratch+"/"+schd.ctns.rcfprefix+"urot_iter"+std::to_string(iter);
+                  auto urot_file = schd.scratch+"/"+rcfprefix+"urot_iter"+std::to_string(iter);
                   urot_min.save_txt(urot_file, schd.ctns.outprec);
-                  auto schmidt_file = schd.scratch+"/"+schd.ctns.rcfprefix+"svalues_iter"+std::to_string(iter);
+                  auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_iter"+std::to_string(iter);
                   ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
                }
             } // rank-0

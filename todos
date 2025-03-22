@@ -1,6 +1,8 @@
 
 ### 2025 DMRG + Quantum Computing ###
 
+ * Complexity measure
+
  * Disentangle transformation:
    - Combined with LEOs [!]
    - Python implementation for preparation of MPS [linear combination of CSF]

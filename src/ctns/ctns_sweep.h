@@ -8,6 +8,7 @@
 #include "sweep_final.h"
 #include "sweep_restart.h"
 #include "ctns_outcore.h"
+#include "ctns_entropy.h"
 
 namespace ctns{
 
@@ -155,6 +156,18 @@ namespace ctns{
                auto tl = tools::get_time();
                tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
 	            std::cout << std::endl;
+            }
+
+            // post processing
+            if(rank == 0){
+               if(schd.ctns.task_sdiag){
+                  ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+                        schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+               }
+               if(schd.ctns.task_schmidt){
+                  auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_isweep"+std::to_string(isweep);
+                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schd.ctns.schmidt_file);
+               }
             }
          } // isweep
          qops_pool.finalize();
