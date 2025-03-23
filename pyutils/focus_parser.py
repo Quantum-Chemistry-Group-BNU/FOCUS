@@ -48,6 +48,53 @@ def parse_ctns(fname="ctns.out"):
       elst.append(es)
    return elst
 
+def parse_ctns_full(fname="ctns.out"):
+   debug = False
+   f = open(fname,"r")
+   lines = f.readlines()
+   # get nsweep
+   pattern = "results:"
+   nsweep = 0
+   for line in lines:
+      if pattern in line:
+         nsweep += 1
+   if(debug): print("nsweep=",nsweep)
+   # process
+   isweep = 0
+   iread = 0
+   ene = []
+   for line in lines:
+      if pattern in line:
+         isweep += 1
+         if isweep == nsweep:
+            iread = 1
+      elif iread == 1 and isweep > 0:
+         isweep -= 1
+         ene.append(line)
+   f.close()
+   # parse
+   dcutlst = []
+   dwtlst = []
+   elst = []
+   nstate = 0
+   for line in ene:
+      dat = line.split()
+      dcut = eval(dat[1])
+      dcutlst.append(dcut)
+      dwt = eval(dat[2])
+      dwtlst.append(dwt)
+      nstate = (len(dat)-3)//2
+      es = []
+      for istate in range(nstate):
+         ei = float(dat[3+2*istate].split('=')[-1])
+         es.append(ei)
+      if(debug): print('es=',es)
+      elst.append(es)
+   dic = {'dcut':dcutlst,
+          'dwt':dwtlst,
+          'elst':elst}
+   return dic
+
 def parse_ham(fname="ham.out"):
     f = open(fname,"r")
     lines = f.readlines()
@@ -134,31 +181,75 @@ def parse_oodmrg(fname="ctns.out",iprt=0):
               'Sdiag':result[3]}
     return result
 
-def parse_Sdiag(output):
+def parse_Sdiag(output,iprt=0):
     f = open(output,'r')
     lines = f.readlines()
     iread = 0
     sdiag = -1
     cmax = -1
     conf = None
+    data = []
+    nsample_lst = []
+    Sdiag_lst = []
+    IPR_lst = []
+    leadconf_lst = []
+    cmax_lst = []
     for line in lines:
         if 'ctns::rcanon_Sdiag_sample: ifab=' in line:
             iread = 1
             nsample = eval(line.split()[3].split('=')[-1])
+            nsample_lst.append(nsample)
+            if iprt>0: print(line)
         elif "TIMING FOR ctns::rcanon_Sdiag_sample" in line:
             iread = 0
-            break
+            Sdiag_lst.append(Sdiag)
+            IPR_lst.append(IPR)
+            leadconf_lst.append(leadconf)
+            cmax_lst.append(cmax)
         elif iread >= 1:
+            if iprt>0: print(line)
             iread += 1
             # we simply assume 10 lines
             if iread == 12:
-                sdiag = eval(line.split()[3])
+                #print(line.split())
+                Sdiag = eval(line.split()[3])
+                IPR = eval(line.split()[5].split('=')[-1])
             elif iread == 15:
                 res = line.split('=')
-                conf = res[2].split()[0]
+                leadconf = res[2].split()[0]
                 cmax = eval(res[3].split()[0])
     f.close()
-    return (sdiag,conf,cmax)
+    dic = {'nsample':nsample_lst,
+           'Sdiag':Sdiag_lst,
+           'IPR':IPR_lst,
+           'leadconf':leadconf_lst,
+           'cmax':cmax_lst}
+    return dic
+
+def parse_entropy(output,iprt=0):
+    f = open(output,'r')
+    lines = f.readlines()
+    sumSvN_lst = []
+    sumSr_lst = []
+    maxSvN_lst = []
+    maxSr_lst = []
+    for line in lines:
+        if 'SvN[sum' in line:
+            sumSvN = eval(line.split()[0].split('=')[-1])
+            sumSr  = eval(line.split()[1].split('=')[-1])
+            sumSvN_lst.append(sumSvN)
+            sumSr_lst.append(sumSr)
+        if 'SvN[max' in line:
+            maxSvN = eval(line.split()[0].split('=')[-1])
+            maxSr  = eval(line.split()[1].split('=')[-1])
+            maxSvN_lst.append(maxSvN)
+            maxSr_lst.append(maxSr)
+    f.close()
+    dic = {'sumSvN':sumSvN_lst,
+           'sumSr':sumSr_lst,
+           'maxSvN':maxSvN_lst,
+           'maxSr':maxSr_lst}
+    return dic
 
 if __name__ == '__main__':
 
