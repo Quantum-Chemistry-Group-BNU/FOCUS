@@ -148,7 +148,7 @@ void CTNS(const input::schedule& schd){
          tools::exit("error in ctns: schd.nelec != icomb.get_qsym_state().ne()");
       }
       if(schd.twom != icomb.get_qsym_state().tm()){
-         tools::exit("error in ctns: schd.twom != icomb.get_qsym_state().tm()")
+         tools::exit("error in ctns: schd.twom != icomb.get_qsym_state().tm()");
       }
    } // rank 0
 

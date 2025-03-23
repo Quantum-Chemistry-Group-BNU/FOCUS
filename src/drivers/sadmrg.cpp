@@ -162,7 +162,7 @@ void SADMRG(const input::schedule& schd){
          tools::exit("error in sadmrg: schd.nelec != icomb.get_qsym_state().ne()");
       }
       if(schd.twos != icomb.get_qsym_state().ts()){
-         tools::exit("error in sadmrg: schd.twos != icomb.get_qsym_state().ts()")
+         tools::exit("error in sadmrg: schd.twos != icomb.get_qsym_state().ts()");
       }
    } // rank 0
 
