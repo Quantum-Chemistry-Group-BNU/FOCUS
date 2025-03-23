@@ -15,7 +15,9 @@ void SCI(const input::schedule& schd){
    integral::one_body<Tm> int1e;
    double ecore;
    integral::load(int2e, int1e, ecore, schd.integral_file);
-   assert(schd.sorb == int1e.sorb);
+   if(schd.sorb != int1e.sorb){
+      tools::exit("error in sci: schd.sorb != int1e.sorb");
+   }
    
    // SCI
    int nroots = schd.ci.nroots;

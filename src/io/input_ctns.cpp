@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream> // istringstream
 #include <string>
-#include <cassert>
 #include "input.h"
 #include "../core/tools.h"
 
@@ -325,8 +324,14 @@ void params_ctns::read(ifstream& istrm){
    //-------------
    // check input
    //-------------
-   assert(alg_hcoper <= 2);
-   assert(alg_rcoper <= 1);
+   if(!(alg_hcoper <= 2)){
+      std::cout << "error: alg_hcoper<=2! alg_hcoper=" << alg_hcoper << std::endl;
+      exit(1); 
+   }
+   if(!(alg_rcoper <= 1)){
+      std::cout << "error: alg_rcoper<=1! alg_rcoper=" << alg_rcoper << std::endl;
+      exit(1);
+   }
    // diag gpu check
    if(diagcheck && async_fetch){
       std::cout << "error: diagcheck should not be used with async_fetch!" << std::endl;

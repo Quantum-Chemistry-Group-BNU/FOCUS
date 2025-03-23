@@ -152,9 +152,18 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_load(icomb, rcanon_file);
       }
 
-      assert(schd.sorb == 2*icomb.get_nphysical());
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
       icomb.display_size();
+      // consistency check
+      if(schd.sorb != 2*icomb.get_nphysical()){
+         tools::exit("error in sadmrg: schd.sorb != 2*icomb.get_nphysical()");
+      }
+      if(schd.nelec != icomb.get_qsym_state().ne()){
+         tools::exit("error in sadmrg: schd.nelec != icomb.get_qsym_state().ne()");
+      }
+      if(schd.twos != icomb.get_qsym_state().ts()){
+         tools::exit("error in sadmrg: schd.twos != icomb.get_qsym_state().ts()")
+      }
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
@@ -224,7 +233,9 @@ void SADMRG(const input::schedule& schd){
       double ecore;
       if(rank == 0){
          integral::load(int2e, int1e, ecore, schd.integral_file);
-         assert(schd.sorb == int1e.sorb);
+         if(schd.sorb != int1e.sorb){
+            tools::exit("error in sadmrg: schd.sorb != int1e.sorb");
+         }
       }
 #ifndef SERIAL
       if(size > 1){

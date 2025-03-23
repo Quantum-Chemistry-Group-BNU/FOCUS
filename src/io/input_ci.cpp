@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream> // istringstream
 #include <string>
-#include <cassert>
 #include "input.h"
 #include "../core/tools.h"
 

@@ -138,9 +138,18 @@ void CTNS(const input::schedule& schd){
          ctns::rcanon_load(icomb, rcanon_file);
       }
 
-      assert(schd.sorb == 2*icomb.get_nphysical());
       ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
       icomb.display_size();
+      // consistency check
+      if(schd.sorb != 2*icomb.get_nphysical()){
+         tools::exit("error in ctns: schd.sorb != 2*icomb.get_nphysical()");
+      }
+      if(schd.nelec != icomb.get_qsym_state().ne()){
+         tools::exit("error in ctns: schd.nelec != icomb.get_qsym_state().ne()");
+      }
+      if(schd.twom != icomb.get_qsym_state().tm()){
+         tools::exit("error in ctns: schd.twom != icomb.get_qsym_state().tm()")
+      }
    } // rank 0
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
@@ -185,7 +194,9 @@ void CTNS(const input::schedule& schd){
       double ecore;
       if(rank == 0){
          integral::load(int2e, int1e, ecore, schd.integral_file);
-         assert(schd.sorb == int1e.sorb);
+         if(schd.sorb != int1e.sorb){
+            tools::exit("error in ctns: schd.sorb != int1e.sorb");
+         }
       }
 #ifndef SERIAL
       if(size > 1){

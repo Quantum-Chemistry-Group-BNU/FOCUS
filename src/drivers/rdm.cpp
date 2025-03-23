@@ -39,7 +39,9 @@ void RDM(const input::schedule& schd){
    ctns::comb<Qm,Tm> icomb;
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
-      assert(icomb.topo.ifmps);
+      if(!icomb.topo.ifmps){ // must be MPS
+         tools::exit("error in rdm: icomb.topo.ifmps=false is not supported yet!");
+      }
       if(rank == 0){
       	 ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
          icomb.display_size();
@@ -54,7 +56,9 @@ void RDM(const input::schedule& schd){
    ctns::comb<Qm,Tm> icomb2;
    if(schd.ctns.rcanon2_file.size()>0){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
-      assert(icomb2.topo.ifmps); // must be MPS
+      if(!icomb2.topo.ifmps){ // must be MPS
+         tools::exit("error in rdm: icomb2.topo.ifmps=false is not supported yet!");
+      }
       if(rank == 0){
       	 ctns::rcanon_check(icomb2, schd.ctns.thresh_ortho);
          icomb2.display_size();
@@ -69,7 +73,9 @@ void RDM(const input::schedule& schd){
    const int jroot = schd.ctns.jroot;
 
    // display task_prop
-   assert(schd.sorb == 2*icomb.get_nphysical());
+   if(schd.sorb != 2*icomb.get_nphysical()){
+      tools::exit("error in rdm: schd.sorb != 2*icomb.get_nphysical()");
+   }
    const size_t k = schd.sorb;
    const size_t k2 = k*(k-1)/2;
    const size_t k3 = k*(k-1)*(k-2)/6;
