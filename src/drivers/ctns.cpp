@@ -182,7 +182,7 @@ void CTNS(const input::schedule& schd){
    // compute schmidt decomposition
    if(schd.ctns.task_schmidt){
       if(rank == 0){
-         ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schd.ctns.schmidt_file);
+         ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schd.scratch+"/"+schd.ctns.schmidt_file);
       }
    }
 
