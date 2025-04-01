@@ -155,9 +155,7 @@ namespace ctns{
 	         if(debug){
                auto tl = tools::get_time();
                tools::timing("sweep_opt: isweep="+std::to_string(isweep), ti, tl);
-	            std::cout << std::endl;
             }
-
             // post processing
             if(rank == 0){
                if(schd.ctns.task_sdiag){
@@ -166,8 +164,9 @@ namespace ctns{
                }
                if(schd.ctns.task_schmidt){
                   auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_isweep"+std::to_string(isweep);
-                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schd.ctns.schmidt_file);
+                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
                }
+	            std::cout << std::endl;
             }
          } // isweep
          qops_pool.finalize();
