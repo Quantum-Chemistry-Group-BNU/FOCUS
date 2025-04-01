@@ -215,7 +215,8 @@ namespace ctns{
                enew_history[iter] = eminlast;
                double deltaE = enew_history[iter] - emin_history[iter];
                bool accept = (iter == maxiter-1) or (iter == 0) or
-                  acceptall or (deltaE <= -thrdeps) or 
+                  //acceptall or (deltaE <= -thrdeps) or 
+                  acceptall or (deltaE < 0) or 
                   (std::abs(deltaE)<thrdeps and srnew_history[iter]<srenyi_history[iter]);
                if(accept){
                   status = "accept move!";

@@ -190,12 +190,11 @@ void SADMRG(const input::schedule& schd){
    if(schd.ctns.task_sdiag){
       // parallel sampling can be implemented in future (should be very simple)!
       if(rank == 0){
-         if(!schd.ctns.detbasis){
-            ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
-                  schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
-            ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
-                  schd.ctns.saveconfs);
-         }else{
+         ctns::rcanon_Sdiag_sample(icomb, schd.ctns.iroot, schd.ctns.nsample, 
+               schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+         ctns::rcanon_listcoeff(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,
+               schd.ctns.saveconfs);
+         if(schd.ctns.detbasis){
             ctns::rcanon_Sdiag_sample_det(icomb, schd.ctns.iroot, schd.ctns.nsample, 
                   schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
             ctns::rcanon_listcoeff_det(icomb, schd.ctns.iroot, schd.ctns.thresh_cabs,

@@ -350,6 +350,7 @@ namespace ctns{
          << (*eav_ptr.second - *eav_ptr.first) << std::endl;
       // minimal energy   
       min_result[isweep] = opt_result[isweep][pos_eav_min];
+      min_result[isweep].dwt = *dwt_ptr.second; // ZL@20250401: change to max
       min_result[isweep].nmvp = nmvp;
       const auto& eopt = min_result[isweep].eopt; 
       for(int i=0; i<nroots; i++){
@@ -395,16 +396,16 @@ namespace ctns{
             << std::defaultfloat << tblas/t_total[jsweep]*100 
             << std::endl;
       } // jsweep
-      std::cout << "results: isweep, dcut, dwt, energies (delta_e)" << std::endl;
+      std::cout << "results: isweep, dcut, dwt_max, energies (delta_e)" << std::endl;
       const auto& eopt_isweep = min_result[isweep].eopt;
       for(int jsweep=0; jsweep<=isweep; jsweep++){
          if(jsweep < restart_sweep) continue;
          const auto& ctrl = ctrls[jsweep];
-         const auto& dwt = min_result[jsweep].dwt;
+         const auto& dwt_max = min_result[jsweep].dwt;
          const auto& eopt_jsweep = min_result[jsweep].eopt;
          std::cout << std::setw(13) << jsweep
             << std::setw(8) << ctrl.dcut << " "
-            << std::showpos << std::scientific << std::setprecision(3) << dwt
+            << std::showpos << std::scientific << std::setprecision(3) << dwt_max
             << std::noshowpos << std::fixed << std::setprecision(12);
          for(int j=0; j<nroots; j++){ 
             std::cout << " e[" << j << "]=" 
