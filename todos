@@ -11,6 +11,9 @@
 
 ### 2026 DMRG[RDM(SU2)] ###
 
+ * RDMs for non-su2 case:
+   - mpisize=8 is incorrect for 2p2h [see example for femoco[d100] on jiageng]
+
  * RDMs for su2 case:
    - su2 dot operators {I,D,M,T,F} [DONE@2024/09/12]
       - oper_dot_su2.h
