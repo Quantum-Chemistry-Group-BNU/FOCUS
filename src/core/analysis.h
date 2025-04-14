@@ -5,6 +5,8 @@
 #include <vector>
 #include <complex>
 #include "onspace.h"
+#include "integral.h"
+#include "hamiltonian.h"
 
 namespace fock{
 
@@ -132,6 +134,61 @@ namespace fock{
          coeff_population(space, civec, thresh, iop);
       }
 
+   // iop=1: (N,Sz) - used in SCI 
+   template <typename Tm>	
+      void coeff_population_printHii(const onspace& space, 
+            const std::vector<Tm>& civec,
+            const double thresh,
+            const integral::two_body<Tm>& int2e,
+            const integral::one_body<Tm>& int1e,
+            const double ecore){
+         const double cutoff = 1.e-12;
+         std::cout << "fock::coeff_population_printHii dim=" << space.size() 
+            << " thresh=" << thresh 
+            << std::endl;
+
+         std::cout << "  i-th  /  idx  /  coeff  /  pop(%)  /  rank  /  seniority  /  onstate  /  nelec  /  Hii" << std::endl;
+         double ne = 0.0, na = 0.0, nb = 0.0;
+         double ne2 = 0.0, na2 = 0.0, nb2 = 0.0;
+         double pi, psum0 = 0.0, psum = 0.0, Sd = 0.0;
+         std::vector<int> idx;
+         idx = tools::sort_index_abs(civec, 1);
+         int j = 0;
+         for(const auto& i : idx){ 
+            pi = std::norm(civec[i]);
+            psum0 += pi;
+            Sd += (pi < cutoff)? 0.0 : -pi*log(pi);
+            // Measurement in Z-basis
+            int nelec = space[i].nelec(); ne += pi*nelec; ne2 += pi*nelec*nelec;
+            int nelec_a = space[i].nelec_a(); na += pi*nelec_a; na2 += pi*nelec_a*nelec_a;
+            int nelec_b = space[i].nelec_b(); nb += pi*nelec_b; nb2 += pi*nelec_b*nelec_b;
+            if(std::abs(civec[i]) > thresh){ 
+               std::cout << std::setw(8) << j << " : " << std::setw(8) << i << "   ";
+               std::cout << std::fixed << std::scientific << std::setprecision(3) 
+                  << std::showpos << civec[i] << std::noshowpos;
+               std::cout << std::fixed << std::setw(8) << std::setprecision(3) << pi*100;
+               double Hii = get_Hii(space[i], int2e, int1e) + ecore;
+               std::cout << std::fixed << std::setw(5) << space[i].diff_num(space[idx[0]])/2
+                  << std::fixed << std::setw(5) << space[i].norb_single() << "  "
+                  << space[i] << " ("
+                  << space[i].nelec() << ","
+                  << space[i].nelec_a() << ","
+                  << space[i].nelec_b() << ")"
+                  << "   " << std::fixed << std::setprecision(12) << Hii
+                  << std::endl;
+               psum += pi;
+               j++;
+            }
+         }
+         std::cout << std::setprecision(6);
+         std::cout << "psum=" << psum << " psum0=" << psum0 << " Sd=" << Sd << std::endl;
+         std::cout << "<Ne>=" << ne << " std=" << std::pow(std::abs(ne2-ne*ne),0.5) << std::endl;
+         std::cout << "<Na>=" << na << " std=" << std::pow(std::abs(na2-na*na),0.5) << std::endl;
+         std::cout << "<Nb>=" << nb << " std=" << std::pow(std::abs(nb2-nb*nb),0.5) << std::endl;
+
+         coeff_analysis(civec);
+      }
+ 
    inline double pop_entropy(const std::vector<double>& p, 
          const double cutoff=1.e-100){
       double psum = 0.0, ssum = 0.0;

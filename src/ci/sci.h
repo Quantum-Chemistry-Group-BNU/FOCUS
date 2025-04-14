@@ -423,8 +423,7 @@ namespace sci{
                   << " conv=" << conv[i] 
                   << " SvN=" << SvN
                   << std::endl;
-               fock::coeff_population(space, vtmp, schd.ci.cthrd);
-               fock::coeff_analysis(vtmp);
+               fock::coeff_population_printHii(space, vtmp, schd.ci.cthrd, int2e, int1e, ecore);
                if(i != neig-1) std::cout << std::endl;
             }
             esol = esol1;
