@@ -1,5 +1,9 @@
 import numpy as np
 
+def get_onerdm_spinorbital_matrix(fname='rdm1mps.0.0.txt'):
+    mat = np.loadtxt(fname)
+    return mat
+
 def get_twordm_spinorbital_matrix(fname='rdm2mps.0.0.txt'):
     mat = np.loadtxt(fname)
     return mat

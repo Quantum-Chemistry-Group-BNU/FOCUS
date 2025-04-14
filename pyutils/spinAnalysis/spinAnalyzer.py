@@ -3,8 +3,8 @@ import spinTools
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-def spinAnalysis(twordm_spatial_lmo,groups,k,n,s):
-    print('\n[spinAnalysis]: k,n,s=',k,n,s)
+def spinAnalyzer(twordm_spatial_lmo,groups,k,n,s):
+    print('\n[spinAnalyzer]: k,n,s=',k,n,s)
     twordm = twordm_spatial_lmo
     onerdm = np.einsum('ijjl->il',twordm)/(n-1)
     print('<n>=',np.trace(onerdm))
