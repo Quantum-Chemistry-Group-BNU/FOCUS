@@ -35,21 +35,14 @@ void RDM(const input::schedule& schd){
    //-----------------------------------------------------------------
 
    // initialization of MPS and save to binary format
-   bool exist1 = false;
    ctns::comb<Qm,Tm> icomb;
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
       if(!icomb.topo.ifmps){ // must be MPS
          tools::exit("error in rdm: icomb.topo.ifmps=false is not supported yet!");
       }
-      if(rank == 0){
-      	 ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
-         icomb.display_size();
-         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
-      }
-      exist1 = true;
-   }
-   if(schd.ctns.rcanon_file.size() == 0){
+      if(rank == 0 and schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+   }else{
       tools::exit("error: MPS1 must be given!");
    }
    bool is_same = false;
@@ -59,11 +52,7 @@ void RDM(const input::schedule& schd){
       if(!icomb2.topo.ifmps){ // must be MPS
          tools::exit("error in rdm: icomb2.topo.ifmps=false is not supported yet!");
       }
-      if(rank == 0){
-      	 ctns::rcanon_check(icomb2, schd.ctns.thresh_ortho);
-         icomb2.display_size();
-         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
-      }
+      if(rank == 0 and schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
    }else{
       auto jcomb = icomb;
       icomb2 = std::move(jcomb);

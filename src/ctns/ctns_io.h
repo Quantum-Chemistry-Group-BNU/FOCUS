@@ -5,6 +5,7 @@
 #include "../io/io.h"
 #include "../core/serialization.h"
 #include "ctns_comb.h"
+#include "ctns_ova.h"
 
 namespace ctns{ 
 
@@ -106,7 +107,10 @@ namespace ctns{
             
             // load RCF
             rcanon_load(icomb, rcanon_file, debug);
-            if(debug) rcanon_check(icomb, schd.ctns.thresh_ortho);
+         
+            // check   
+      	   ctns::rcanon_check(icomb, schd.ctns.thresh_ortho);
+            icomb.display_size();
          } // rank 0
 #ifndef SERIAL
          if(size > 1){
