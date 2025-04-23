@@ -416,7 +416,7 @@ namespace ctns{
          // performing canonicalization can change renormalized basis,
          // and hence should not be used when performing debug_oper_rbasis
          if(!debug_oper_rbasis){
-            rcanon_canonicalize(icomb_new, ifortho, debug);
+            rcanon_canonicalize(icomb_new, icomb_new.get_dmax(), ifortho, debug);
          }
 
          auto smat0b = get_Smat(icomb_new);

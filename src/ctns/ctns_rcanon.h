@@ -155,11 +155,11 @@ namespace ctns{
    // rcanonicalize MPS: this function use twodot [!!!] algorithm to perform canonicalization of MPS
    template <typename Qm, typename Tm>
       void rcanon_canonicalize(comb<Qm,Tm>& icomb,
+            const int dmax,
             const bool ifortho=true,
             const bool debug=true){
          const bool ifab = Qm::ifabelian;
          const int nroots = icomb.get_nroots();
-         const int dmax = icomb.get_dmax();
          std::cout << "\nrcanon::rcanon_canonicalize"
               << " ifortho=" << ifortho
               << " ifab=" << ifab

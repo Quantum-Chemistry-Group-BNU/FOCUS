@@ -41,6 +41,11 @@ namespace ctns{
          }
          auto t0 = tools::get_time();
 
+         // only support singlet
+         if(ctns::qkind::get_name<Qm>()=="qNS" and !schd.ctns.singlet){
+            tools::exit("For qNS, singlet embedding must be used in oodmrg!");
+         }
+         
          // initialization
          const int norb = icomb.get_nphysical();
          std::vector<double> enew_history(maxiter);
@@ -175,6 +180,13 @@ namespace ctns{
                   std::cout << "iter=" << iter << " no energy optimization is performed as maxsweep=0!" << std::endl;
                   std::cout << tools::line_separator2 << std::endl;
                }
+               // compress back to the original dcut 
+               if(rank == 0) ctns::rcanon_canonicalize(icomb_new, icomb.get_dmax(), true, schd.ctns.verbose>1); 
+#ifndef SERIAL
+               if(size > 1){
+                  mpi_wrapper::broadcast(schd.world, icomb_new, 0);
+               }
+#endif
             }
             if(rank == 0){
                sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);

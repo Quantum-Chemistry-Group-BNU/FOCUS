@@ -450,7 +450,7 @@ namespace ctns{
          // canonicalize
          const bool ifortho = true;
          const bool debug = false; 
-         rcanon_canonicalize(mps, ifortho, debug);
+         rcanon_canonicalize(mps, mps.get_dmax(), ifortho, debug);
          auto t3 = tools::get_time();
          // check cocfficients
          linalg::matrix<Tm> vs(size,1);
