@@ -176,6 +176,7 @@ namespace ctns{
          // generate sweep sequence
          const auto& rindex = icomb.topo.rindex;
          auto sweep_seq = icomb.topo.get_sweeps(true); // include boundary
+         double maxdwt = -1.0;
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
             auto tp0 = icomb.topo.get_type(dbond.p0);
@@ -316,6 +317,7 @@ namespace ctns{
                rot = rot.P(); // permute two lines for RCF
 
             }
+            maxdwt = std::max(maxdwt,dwt);
 
             // save the current site
             const auto p = dbond.get_current();
@@ -352,6 +354,7 @@ namespace ctns{
          rcanon_lastdots(icomb);
 
          auto t1 = tools::get_time();
+         std::cout << "maxdwt=" << maxdwt << std::endl;         
          tools::timing("ctns::rcanon_canonicalize", t0, t1);
       }
 
