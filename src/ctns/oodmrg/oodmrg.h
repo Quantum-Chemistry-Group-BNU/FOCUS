@@ -56,6 +56,9 @@ namespace ctns{
          // urot_min 
          urot_class<Tm> urot_min(unrestricted, norb);
          if(rank == 0) urot_min.initialize(schd);
+         // for excited state
+         init_cpsi_dot0(icomb, schd.ctns.iroot, schd.ctns.singlet);
+         const int iroot = 0;
 
          //----------------------------------------------
          // Debug rotation
@@ -103,7 +106,7 @@ namespace ctns{
             exit(1);
          }
          //----------------------------------------------
-
+         
          // start optimization
          for(int iter=0; iter<maxiter; iter++){
 
@@ -120,7 +123,7 @@ namespace ctns{
             }
 
             // minimize entanglement only at rank 0
-            auto icomb_new = icomb; 
+            auto icomb_new = icomb;
             auto urot = urot_min;
             if(iter != maxiter-1 and iter != 0){
                // we assume that icomb has already been available, 
@@ -166,6 +169,12 @@ namespace ctns{
             if(schd.ctns.maxsweep > 0){
                auto result = sweep_opt(icomb_new, int2e_new, int1e_new, ecore, schd, scratch, rcfprefix);
                if(rank == 0) eminlast = result.get_eminlast(0);
+            }else{
+               if(rank == 0){
+                  std::cout << "\n" << tools::line_separator2 << std::endl;
+                  std::cout << "iter=" << iter << " no energy optimization is performed as maxsweep=0!" << std::endl;
+                  std::cout << tools::line_separator2 << std::endl;
+               }
             }
             if(rank == 0){
                sdnew_history[iter] = rcanon_Sdiag_sample(icomb_new, 0, schd.ctns.nsample, schd.ctns.pthrd, schd.ctns.nprt);
@@ -288,7 +297,7 @@ namespace ctns{
                   auto urot_file = schd.scratch+"/"+rcfprefix+"urot_iter"+std::to_string(iter);
                   urot_min.save_txt(urot_file, schd.ctns.outprec);
                   auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_iter"+std::to_string(iter);
-                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
+                  ctns::rcanon_schmidt(icomb, iroot, schmidt_file);
                }
             } // rank-0
          } // iter

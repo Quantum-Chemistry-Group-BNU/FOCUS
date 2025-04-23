@@ -43,6 +43,8 @@ namespace ctns{
                std::cout << "\nibond=" << ibond << "/seqsize=" << fsweep_seq.size()
                   << " dots=" << dots << " dbond=" << dbond
                   << std::endl;
+               std::cout << tools::line_separator << std::endl;
+               icomb.topo.check_partition(dots, dbond, debug, 0);
             }
             
             // construct twodot wavefunction: wf4
@@ -149,7 +151,8 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void rcanon_schmidt(const comb<Qm,Tm>& icomb, // initial comb wavefunction
             const int iroot,
-            const std::string schmidt_file){
+            const std::string schmidt_file,
+            const bool debug=false){
          std::cout << "\nctns::rcanon_schmidt:"
            << " iroot=" << iroot 
            << " fname=" << schmidt_file << ".txt"
@@ -157,7 +160,6 @@ namespace ctns{
          auto t0 = tools::get_time();
 
          // compute the Schmidt decomposition
-         const bool debug = false;
          const bool singlet = true; // use singlet embedding by default
          auto svalues = get_schmidt_values(icomb, iroot, singlet, debug);
 
