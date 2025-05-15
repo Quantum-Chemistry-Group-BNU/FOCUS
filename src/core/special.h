@@ -24,7 +24,7 @@ namespace fock{
       double r3 = ms - int(ms);
       double thresh = 1.e-10;
       // Inconsistent j,mp,ms values
-      if(abs(r1-r2)>thresh || abs(r2-r3)>thresh || abs(r1-r3)>thresh){
+      if(std::abs(r1-r2)>thresh || std::abs(r2-r3)>thresh || std::abs(r1-r3)>thresh){
          return 0.0;
       }
       double f1 = gamma(j+mp+1);

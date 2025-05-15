@@ -157,7 +157,7 @@ namespace ctns{
                state1[i] = 0;
                state1[a] = 1;
                auto pr = fock::get_HijS(state,state1,int2e,int1e);
-               if(abs(pr.first)>eps2) sdspace.emplace_back(state1, pr.first);
+               if(std::abs(pr.first)>eps2) sdspace.emplace_back(state1, pr.first);
             } // ia 
             auto t2x = tools::get_time();
             std::cout << "iter=" << iter << " t2=" << tools::get_duration(t2x-t1x) 
@@ -179,7 +179,7 @@ namespace ctns{
                      state2[a] = 1;
                      state2[b] = 1;
                      auto pr = fock::get_HijD(state,state2,int2e,int1e);
-                     if(abs(pr.first)>eps2) sdspace.emplace_back(state2, pr.first);
+                     if(std::abs(pr.first)>eps2) sdspace.emplace_back(state2, pr.first);
                   }
                } // ab
             } // ij

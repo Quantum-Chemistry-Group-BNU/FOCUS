@@ -47,7 +47,7 @@ int tests::test_csf(){
          sum += coeff*coeff; 
       }
       std::cout << " sum=" << std::scientific << sum << std::endl;
-      if(abs(sum-1.0)>1.e-10){
+      if(std::abs(sum-1.0)>1.e-10){
          std::cout << "error: deviate from 1! sum-1.0=" << sum-1.0 << std::endl;
          exit(1);
       }

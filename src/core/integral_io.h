@@ -90,6 +90,11 @@ namespace integral{
          std::cout << "integral::save fname = " << fname 
             << " with thresh=" << thresh << std::endl;
 
+         int1e.print();
+         int2e.print();
+         std::cout << "int1e.sorb=" << int1e.sorb << std::endl;
+         std::cout << "int2e.sorb=" << int2e.sorb << std::endl;
+
          std::ofstream ostrm(fname);
          if(!ostrm){
             std::cout << "failed to open " << fname << std::endl;
@@ -107,7 +112,7 @@ namespace integral{
                   int lmax = (k==i)? j+1 : k;
                   for(int l=0; l<lmax; l++){
                      Tm val = int2e.get(i,j,k,l);
-                     if(abs(val)<thresh) continue;
+                     if(std::abs(val)<thresh) continue;
                      ostrm << i+1 << " " << j+1 << " " << k+1 << " " << l+1 << " "
                        << val << std::endl;
                   }
@@ -118,7 +123,7 @@ namespace integral{
          for(int i=0; i<sorb; i++){
             for(int j=0; j<sorb; j++){
                Tm val = int1e.get(i,j);
-               if(abs(val)<thresh) continue;
+               if(std::abs(val)<thresh) continue;
                ostrm << i+1 << " " << j+1 << " 0 0 " 
                   << val << std::endl; 
             }

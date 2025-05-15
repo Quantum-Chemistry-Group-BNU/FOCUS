@@ -120,15 +120,15 @@ namespace ctns{
       for(const auto& pi : p){
          if(pi < cutoff) continue;
          psum += pi;
-         if(abs(alpha-1.0) < 1.e-8){
+         if(std::abs(alpha-1.0) < 1.e-8){
             ssum -= pi*log(pi);
          }else{
             ssum += std::pow(pi,alpha);
          }
       }
       // Correct formula for Renyi entropy
-      if(abs(alpha-1.0) > 1.e-8) ssum = 1.0/(1.0-alpha)*std::log(ssum);
-      assert(abs(psum-1.0) < 1.e-8);
+      if(std::abs(alpha-1.0) > 1.e-8) ssum = 1.0/(1.0-alpha)*std::log(ssum);
+      assert(std::abs(psum-1.0) < 1.e-8);
       return ssum;
    }
 

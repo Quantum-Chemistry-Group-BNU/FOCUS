@@ -66,7 +66,7 @@ double csfstate::det_coeff(const onstate& state) const{
          tmout = tmin + tmdelta;
          // we impose that only the high-spin det is generated.
          //if(i == 0) tmout = twos(); 
-         if(abs(tmout)<=tsout){
+         if(std::abs(tmout)<=tsout){
             coeff *= cgcoeff(1,tsin,tsout,tmdelta,tmin,tmout); // <s[i]m[i]S[i-1]M[i-1]|S[i]M[i]>
          }else{
             coeff = 0.0;
@@ -140,12 +140,12 @@ std::pair<onstate,double> csfstate::random() const{
          // alpha
          tmin = tmout - 1;
          double ca = 0.0;
-         if(abs(tmin)<=tsin) ca = cgcoeff(1,tsin,tsout,1,tmin,tmout);
+         if(std::abs(tmin)<=tsin) ca = cgcoeff(1,tsin,tsout,1,tmin,tmout);
          weights[0] = ca*ca;                                    
          // beta                                                
          tmin = tmout + 1;                                      
          double cb = 0.0;                                       
-         if(abs(tmin)<=tsin) cb = cgcoeff(1,tsin,tsout,-1,tmin,tmout);
+         if(std::abs(tmin)<=tsin) cb = cgcoeff(1,tsin,tsout,-1,tmin,tmout);
          weights[1] = cb*cb;
          // sample 
          std::discrete_distribution<> dist(weights.begin(),weights.end());
@@ -234,7 +234,7 @@ double csfstate::Sdiag_exact() const{
    std::vector<double> coeff(dim,0.0);
    for(size_t i=0; i<dim; i++){
       coeff[i] = detexpansion.second[i];
-      if(abs(coeff[i])<1.e-10) continue;
+      if(std::abs(coeff[i])<1.e-10) continue;
       std::cout << " i=" << i << " det=" << detexpansion.first[i]
          << " coeff=" << coeff[i] << std::endl;
    }

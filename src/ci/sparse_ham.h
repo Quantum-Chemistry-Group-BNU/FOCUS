@@ -551,7 +551,7 @@ namespace fci{
          std::cout << std::setprecision(6);
          for(int i=0; i<dim; i++){
             for(int j=0; j<dim; j++){
-               //if(abs(H1(i,j))<1.e-8 && abs(H2(i,j))<1.e-8) continue;
+               //if(std::abs(H1(i,j))<1.e-8 && std::abs(H2(i,j))<1.e-8) continue;
                if(std::abs(H1(i,j)-H0(i,j))<1.e-8) continue;
                std::cout << "i,j=" << i << "," << j 
                   << " val1=" << H1(i,j)  
