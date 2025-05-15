@@ -1,5 +1,5 @@
 
-machine = dell2 #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
+machine = mac #jiageng #scv7260 #scy0799 #DCU_419 #mac #dell #lenovo
 
 DEBUG = yes
 USE_GCC = yes
@@ -7,8 +7,8 @@ USE_MPI = yes
 USE_OPENMP = yes
 USE_MKL = yes
 USE_ILP64 = yes
-USE_GPU = yes
-USE_NCCL = yes
+USE_GPU = no #yes
+USE_NCCL = no #yes
 USE_TCMALLOC = yes
 USE_MAGMA = no #yes
 # compression
@@ -448,7 +448,8 @@ core: $(LIB_DIR)/libcore.a \
 	$(BIN_DIR)/tests_core.x \
 	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
 	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
-	$(BIN_DIR)/benchmark_nccl.x $(BIN_DIR)/benchmark_lapack.x 
+	$(BIN_DIR)/benchmark_nccl.x $(BIN_DIR)/benchmark_lapack.x \
+	$(BIN_DIR)/rotate_integral.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -567,6 +568,10 @@ $(BIN_DIR)/benchmark_nccl.x: $(OBJ_DIR)/benchmark_nccl.o $(LIB_DIR)/libcore.a
 $(BIN_DIR)/benchmark_lapack.x: $(OBJ_DIR)/benchmark_lapack.o $(LIB_DIR)/libcore.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/benchmark_lapack.o -L$(LIB_DIR) -lcore $(LFLAGS)
+
+$(BIN_DIR)/rotate_integral.x: $(OBJ_DIR)/rotate_integral.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/rotate_integral.o -L$(LIB_DIR) -lcore -lio $(LFLAGS) 
 
 # CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
