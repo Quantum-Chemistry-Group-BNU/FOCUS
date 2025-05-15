@@ -90,10 +90,12 @@ namespace integral{
          std::cout << "integral::save fname = " << fname 
             << " with thresh=" << thresh << std::endl;
 
+         /*
          int1e.print();
          int2e.print();
          std::cout << "int1e.sorb=" << int1e.sorb << std::endl;
          std::cout << "int2e.sorb=" << int2e.sorb << std::endl;
+         */
 
          std::ofstream ostrm(fname);
          if(!ostrm){
