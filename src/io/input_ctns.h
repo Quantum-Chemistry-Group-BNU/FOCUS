@@ -93,7 +93,8 @@ namespace input{
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
                   & task_vmc & task_expand & task_tononsu2 & task_prop
-                  & task_schmidt & schmidt_file & task_cicoeff & detlist & csflist
+                  & task_schmidt & schmidt_file & task_cicoeff & detlist & csflist 
+                  & task_compress & dcompress
                   & restart_sweep & restart_bond & timestamp & keepoper & localrestart 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
@@ -141,6 +142,9 @@ namespace input{
          bool task_cicoeff = false;
          std::vector<std::string> detlist;
          std::vector<std::string> csflist;
+         // SVD compression
+         bool task_compress = false;
+         int dcompress = -1;
          // restart
          int restart_sweep = 0; // must be > 0
          int restart_bond = -1; // must be >= 0 
