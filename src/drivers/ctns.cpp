@@ -168,6 +168,12 @@ void CTNS(const input::schedule& schd){
       }
    }
 
+   if(schd.ctns.task_cicoeff){
+      if(rank == 0){
+         ctns::rcanon_detcoeff(icomb, schd.ctns.detlist);
+      }
+   }
+
    // compute sdiag
    if(schd.ctns.task_sdiag){
       // TODOs: parallel sampling can be implemented in future (should be very simple)!

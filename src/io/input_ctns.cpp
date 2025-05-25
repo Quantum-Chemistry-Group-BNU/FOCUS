@@ -57,6 +57,28 @@ void params_ctns::read(ifstream& istrm){
          task_schmidt = true;
          istringstream is(line.substr(12));
          is >> schmidt_file;
+      }else if(line.substr(0,12)=="task_cicoeff"){
+         task_cicoeff = true;
+      }else if(line.substr(0,4)=="dets"){
+         while(true){
+            line.clear();	   
+            getline(istrm,line);
+            std::cout << line << std::endl;
+            if(line.empty() || line[0]=='#') continue;
+            if(line.substr(0,3)=="end") break;
+            // read occ from string 
+            detlist.push_back(line);
+         }
+       }else if(line.substr(0,4)=="csfs"){
+         while(true){
+            line.clear();	   
+            getline(istrm,line);
+            std::cout << line << std::endl;
+            if(line.empty() || line[0]=='#') continue;
+            if(line.substr(0,3)=="end") break;
+            // read occ from string 
+            csflist.push_back(line);
+         }
       }else if(line.substr(0,9)=="task_prop"){
          istringstream is(line.substr(9));
          std::string property;
@@ -377,6 +399,7 @@ void params_ctns::print() const{
    std::cout << std::endl;
    cout << "task_schmidt = " << task_schmidt << endl;
    cout << "schmidt_file = " << schmidt_file << endl;
+   cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;

@@ -75,6 +75,18 @@ namespace ctns{
          return coeff;
       }
 
+   template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
+      void rcanon_detcoeff(const comb<Qm,Tm>& icomb,
+            const std::vector<std::string>& detlist){
+         std::cout << "\nctns::rcanon_detcoeff: size(dets)=" << detlist.size() << std::endl;
+         for(int i=0; i<detlist.size(); i++){
+            fock::onstate state(detlist[i]);
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            std::cout << "det=" << state << std::endl;
+            tools::print_vector(coeff, " coeffs", 8);
+         }
+      }
+
    // check rcanon_CIcoeff
    template <typename Qm, typename Tm, std::enable_if_t<Qm::ifabelian,int> = 0>
       int rcanon_CIcoeff_check(const comb<Qm,Tm>& icomb,

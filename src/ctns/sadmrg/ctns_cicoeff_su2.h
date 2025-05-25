@@ -237,6 +237,30 @@ namespace ctns{
          return coeff;
       }
 
+   // <csf|MPS>
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      void rcanon_detcoeff(const comb<Qm,Tm>& icomb,
+            const std::vector<std::string>& detlist){
+         std::cout << "\nctns::rcanon_detcoeff: size(dets)=" << detlist.size() << std::endl;
+         for(int i=0; i<detlist.size(); i++){
+            fock::onstate state(detlist[i]);
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            std::cout << "det=" << state << std::endl;
+            tools::print_vector(coeff, " coeffs", 8);
+         }
+      }
+   template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
+      void rcanon_csfcoeff(const comb<Qm,Tm>& icomb,
+            const std::vector<std::string>& csflist){
+         std::cout << "\nctns::rcanon_csfcoeff: size(csfs)=" << csflist.size() << std::endl;
+         for(int i=0; i<csflist.size(); i++){
+            fock::csfstate state(csflist[i]);
+            auto coeff = rcanon_CIcoeff(icomb, state);
+            std::cout << "csf=" << state << std::endl;
+            tools::print_vector(coeff, " coeffs", 8);
+         }
+      }
+
 } // ctns
 
 #endif

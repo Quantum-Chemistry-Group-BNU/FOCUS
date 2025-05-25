@@ -129,7 +129,7 @@ def parse_ham(fname="ham.out"):
             Sij = np.zeros((dim,dim))
     return Hij,Sij
 
-def parse_oodmrg(fname="ctns.out",iprt=0):
+def parse_oodmrg(fname="ctns.out",iprt=0,ifnew=True):
     f = open(fname,"r")
     lines = f.readlines()
     # get nsweep
@@ -170,9 +170,14 @@ def parse_oodmrg(fname="ctns.out",iprt=0):
         if i < 3 or i > len(elines)-1: continue
         elst = elines[i].split()
         accept = eval(elst[1])
-        em = eval(elst[3])
-        sr = eval(elst[7])
-        sd = eval(elst[9])
+        if ifnew:
+            em = eval(elst[2])
+            sr = eval(elst[6])
+            sd = eval(elst[8])
+        else:
+            em = eval(elst[3])
+            sr = eval(elst[7])
+            sd = eval(elst[9])
         result.append([accept,em,sr,sd])
     result = np.array(result).T
     result = {'acceptance':result[0],
