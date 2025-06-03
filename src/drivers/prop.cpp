@@ -19,7 +19,7 @@ using namespace std;
 using namespace fock;
 
 template <typename Qm, typename Tm>  
-void RDM(const input::schedule& schd){
+void PROP(const input::schedule& schd){
    int rank = 0, size = 1;
 #ifndef SERIAL
    rank = schd.world.rank();
@@ -27,11 +27,11 @@ void RDM(const input::schedule& schd){
 #endif
    // consistency check for dtype
    if((schd.dtype == 1) != tools::is_complex<Tm>()){
-      tools::exit("error: inconsistent dtype in RDM!");
+      tools::exit("error: inconsistent dtype in PROP!");
    }
 
    //-----------------------------------------------------------------
-   // The driver RDM only support MPS with the same kind (topo,Qm,Tm)
+   // The driver PROP only support MPS with the same kind (topo,Qm,Tm)
    //-----------------------------------------------------------------
 
    // initialization of MPS and save to binary format
@@ -735,23 +735,23 @@ int main(int argc, char *argv[]){
 #endif
 
    if(schd.ctns.qkind == "rZ2"){
-      RDM<ctns::qkind::qZ2,double>(schd);
+      PROP<ctns::qkind::qZ2,double>(schd);
    }else if(schd.ctns.qkind == "cZ2"){
-      RDM<ctns::qkind::qZ2,std::complex<double>>(schd);
+      PROP<ctns::qkind::qZ2,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rN"){
-      RDM<ctns::qkind::qN,double>(schd);
+      PROP<ctns::qkind::qN,double>(schd);
    }else if(schd.ctns.qkind == "cN"){
-      RDM<ctns::qkind::qN,std::complex<double>>(schd);
+      PROP<ctns::qkind::qN,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNSz"){
-      RDM<ctns::qkind::qNSz,double>(schd);
+      PROP<ctns::qkind::qNSz,double>(schd);
    }else if(schd.ctns.qkind == "cNSz"){
-      RDM<ctns::qkind::qNSz,std::complex<double>>(schd);
+      PROP<ctns::qkind::qNSz,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "cNK"){
-      RDM<ctns::qkind::qNK,std::complex<double>>(schd);
+      PROP<ctns::qkind::qNK,std::complex<double>>(schd);
    }else if(schd.ctns.qkind == "rNS"){
-      RDM<ctns::qkind::qNS,double>(schd);
+      PROP<ctns::qkind::qNS,double>(schd);
    }else if(schd.ctns.qkind == "cNS"){
-      RDM<ctns::qkind::qNS,std::complex<double>>(schd);
+      PROP<ctns::qkind::qNS,std::complex<double>>(schd);
    }else{
       tools::exit("error: no such qkind for prop!");
    } // qkind
@@ -763,6 +763,6 @@ int main(int argc, char *argv[]){
 #endif
 
    // cleanup 
-   if(rank == 0) tools::finish("RDM");	   
+   if(rank == 0) tools::finish("PROP");	   
    return 0;
 }

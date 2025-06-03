@@ -18,7 +18,7 @@ Basic usages
 
 * use ``sadmrg.x`` to optimize MPS with SU(2) symmetry
 
-* use ``rdm.x`` to savebin / compute RDMs (slow)
+* use ``prop.x`` to compute properties (savebin, overlap, RDMs)
 
 A typical input file
 ********************
@@ -101,8 +101,8 @@ CI (exactdiag.x, fci.x, sci.x)
 * ``schedule``: iteration & tolerance for selecting determinants :math:`|H_{AI}*c_I|>\epsilon_1`
 * ``maxiter``: max no of SCI iterations
 
-DMRG (ctns.x, sadmrg.x, rdm.x)
-==============================
+DMRG (ctns.x, sadmrg.x, prop.x)
+===============================
 
 * ``verbose``: 0,1,2 - print level for debugging
 * ``qkind``: rNSz - symmetry of the calculation: rNSz - real, N, Sz

@@ -28,7 +28,7 @@ and spin-adapted DMRG with nonrelativistic Hamiltonian.
    tutorials/ci
    tutorials/ctns
    tutorials/sadmrg
-   tutorials/rdm
+   tutorials/prop
 
 .. toctree::
    :maxdepth: 1

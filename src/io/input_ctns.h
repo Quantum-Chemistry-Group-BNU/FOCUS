@@ -94,7 +94,7 @@ namespace input{
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & schmidt_file & task_cicoeff & detlist & csflist 
-                  & task_compress & dcompress
+                  & task_compress & dcompress & task_scramble & depth
                   & restart_sweep & restart_bond & timestamp & keepoper & localrestart 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
@@ -145,6 +145,9 @@ namespace input{
          // SVD compression
          bool task_compress = false;
          int dcompress = -1;
+         // scramble
+         bool task_scramble = false;
+         int depth = -1;
          // restart
          int restart_sweep = 0; // must be > 0
          int restart_bond = -1; // must be >= 0 

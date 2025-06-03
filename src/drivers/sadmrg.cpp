@@ -168,6 +168,15 @@ void SADMRG(const input::schedule& schd){
 
    if(schd.ctns.task_init) return; // only perform initialization (converting to CTNS)
 
+   // randomization
+   if(schd.ctns.task_scramble){
+      if(rank == 0){
+         ctns::random_givens(icomb, schd); 
+         auto rcanon_file = schd.scratch+"/rcanon_scrambled_su2";
+         ctns::rcanon_save(icomb, rcanon_file);
+      }
+   }
+
 #ifndef SERIAL
    if(size > 1){
       mpi_wrapper::broadcast(schd.world, icomb, 0);

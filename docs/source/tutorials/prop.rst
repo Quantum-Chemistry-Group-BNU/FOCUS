@@ -1,6 +1,6 @@
 
-rdm.x
-#####
+prop.x
+######
 
 Properties of MPS
 
@@ -56,5 +56,10 @@ Output:
    total no. of nonzero blocks=1 nblocks=1 size=4:3.051758e-05MB
    
    ctns::rcanon_savebin fname=./scratch/rcanon_ci2
-
  
+Compute overlap between two MPS
+===============================
+
+Compute RDMs for MPS (working) 
+==============================
+

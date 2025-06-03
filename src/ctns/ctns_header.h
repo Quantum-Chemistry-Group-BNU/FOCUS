@@ -33,6 +33,7 @@
 
 #include "ctns_entropy.h"
 #include "oodmrg/oodmrg.h"
+#include "ctns_scramble.h"
 
 #include "rdm/rdm_simple.h"
 #include "rdm/ctns_rdm.h"
