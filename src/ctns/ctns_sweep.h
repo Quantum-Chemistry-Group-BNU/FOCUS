@@ -164,7 +164,7 @@ namespace ctns{
                }
                if(schd.ctns.task_schmidt){
                   auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_isweep"+std::to_string(isweep);
-                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file);
+                  ctns::rcanon_schmidt(icomb, schd.ctns.iroot, schmidt_file, schd.ctns.save_schmidt);
                }
 	            std::cout << std::endl;
             }

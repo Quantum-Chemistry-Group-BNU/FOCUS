@@ -309,7 +309,7 @@ namespace ctns{
                   auto urot_file = schd.scratch+"/"+rcfprefix+"urot_iter"+std::to_string(iter);
                   urot_min.save_txt(urot_file, schd.ctns.outprec);
                   auto schmidt_file = schd.scratch+"/"+rcfprefix+"svalues_iter"+std::to_string(iter);
-                  ctns::rcanon_schmidt(icomb, iroot, schmidt_file);
+                  ctns::rcanon_schmidt(icomb, iroot, schmidt_file, schd.ctns.save_schmidt);
                }
             } // rank-0
          } // iter

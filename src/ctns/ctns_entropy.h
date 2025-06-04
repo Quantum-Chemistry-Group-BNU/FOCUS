@@ -152,10 +152,12 @@ namespace ctns{
       void rcanon_schmidt(const comb<Qm,Tm>& icomb, // initial comb wavefunction
             const int iroot,
             const std::string schmidt_file,
+            const bool save_schdmit,
             const bool debug=false){
          std::cout << "\nctns::rcanon_schmidt:"
            << " iroot=" << iroot 
            << " fname=" << schmidt_file << ".txt"
+           << " save_schmidt=" << save_schmidt
            << std::endl;
          auto t0 = tools::get_time();
 
@@ -186,17 +188,19 @@ namespace ctns{
             << " Sr[max]=" << sh_max << std::endl; 
 
          // save into file
-         std::cout << "save schdmidt values into file" << std::endl;
-         std::ofstream file(schmidt_file+".txt");
-         file << icomb.get_nphysical() << std::endl;
-         file << std::scientific << std::setprecision(10);
-         for(int i=0; i<svalues.size(); i++){
-            for(int j=0; j<svalues[i].size(); j++){
-               file << svalues[i][j] << " ";
+         if(save_schmidt){
+            std::cout << "save schdmidt values into file=" << schmidt_file << std::endl;
+            std::ofstream file(schmidt_file+".txt");
+            file << icomb.get_nphysical() << std::endl;
+            file << std::scientific << std::setprecision(10);
+            for(int i=0; i<svalues.size(); i++){
+               for(int j=0; j<svalues[i].size(); j++){
+                  file << svalues[i][j] << " ";
+               }
+               file << std::endl;
             }
-            file << std::endl;
+            file.close();
          }
-         file.close();
 
          auto t1 = tools::get_time();
          tools::timing("ctns::rcanon_schmidt", t0, t1);

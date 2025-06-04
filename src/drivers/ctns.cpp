@@ -211,7 +211,7 @@ void CTNS(const input::schedule& schd){
       if(rank == 0){
          ctns::rcanon_schmidt(icomb, schd.ctns.iroot, 
                schd.scratch+"/"+schd.ctns.schmidt_file,
-               schd.ctns.verbose>1);
+               schd.ctns.save_schmidt, schd.ctns.verbose>1);
       }
    }
 

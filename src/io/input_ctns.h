@@ -93,7 +93,7 @@ namespace input{
                ar & run & qkind & topology_file & verbose
                   & task_init & task_sdiag & task_ham & task_opt & task_oodmrg
                   & task_vmc & task_expand & task_tononsu2 & task_prop
-                  & task_schmidt & schmidt_file & task_cicoeff & detlist & csflist 
+                  & task_schmidt & save_schmidt & schmidt_file & task_cicoeff & detlist & csflist 
                   & task_compress & dcompress & task_scramble & depth
                   & restart_sweep & restart_bond & timestamp & keepoper & localrestart 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
@@ -137,7 +137,8 @@ namespace input{
          bool task_tononsu2 = false; // convert SU2-MPS to non-SU2-MPS
          std::vector<std::string> task_prop; // mps properties
          bool task_schmidt = false; // compute schmidt values
-         std::string schmidt_file = "svalues"; 
+         bool save_schmidt = false; 
+         std::string schmidt_file = "svalues"; // no saving by default
          // <det/csf|MPS> evaluation
          bool task_cicoeff = false;
          std::vector<std::string> detlist;

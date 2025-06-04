@@ -55,6 +55,9 @@ void params_ctns::read(ifstream& istrm){
          task_tononsu2 = true;
       }else if(line.substr(0,12)=="task_schmidt"){
          task_schmidt = true;
+      }else if(line.substr(0,12)=="save_schmidt"){
+         save_schmidt = true;
+      }else if(line.substr(0,12)=="schmidt_file"){
          istringstream is(line.substr(12));
          is >> schmidt_file;
       }else if(line.substr(0,12)=="task_cicoeff"){
@@ -404,6 +407,7 @@ void params_ctns::print() const{
    for(const auto& k : task_prop) std::cout << k << " ";
    std::cout << std::endl;
    cout << "task_schmidt = " << task_schmidt << endl;
+   cout << "save_schmidt = " << save_schmidt << endl;
    cout << "schmidt_file = " << schmidt_file << endl;
    cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "task_compress = " << task_compress << endl;
