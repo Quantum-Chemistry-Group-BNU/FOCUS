@@ -152,7 +152,7 @@ namespace ctns{
       void rcanon_schmidt(const comb<Qm,Tm>& icomb, // initial comb wavefunction
             const int iroot,
             const std::string schmidt_file,
-            const bool save_schdmit,
+            const bool save_schmidt,
             const bool debug=false){
          std::cout << "\nctns::rcanon_schmidt:"
            << " iroot=" << iroot 

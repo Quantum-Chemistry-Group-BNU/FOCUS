@@ -113,8 +113,10 @@ namespace ctns{
                   << ": random swap + entanglement compression ###"
                   << std::endl;
             }
-            // apply_randomlayer
-            double maxdwt = reduce_entropy_single(icomb, urot, "randomswap", dmax, schd.ctns.ooparams);
+            // apply_randomlayer for certain layers
+            for(int d=0; d<schd.ctns.ooparams.depth; d++){
+               reduce_entropy_single(icomb, urot, "randomswap", dmax, schd.ctns.ooparams);
+            }
             // reduce_entropy
             double s_new = reduce_entropy_multi(icomb, urot, dmax, schd.ctns.ooparams);
             if(iprt >= 0){

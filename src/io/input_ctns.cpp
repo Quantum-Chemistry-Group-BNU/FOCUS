@@ -288,6 +288,10 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,7)=="oo_urot"){
          stringstream is(line.substr(7));
          is >> ooparams.urot; 
+      }else if(line.substr(0,8)=="oo_depth"){
+         ooparams.depth = stoi(line.substr(8));
+      }else if(line.substr(0,7)=="oo_seed"){
+         ooparams.seed = stoi(line.substr(7));
       }else if(line.substr(0,9)=="rcfprefix"){
          istringstream is(line.substr(9));
          is >> rcfprefix;

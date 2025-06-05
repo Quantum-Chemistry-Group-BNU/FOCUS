@@ -20,7 +20,7 @@ namespace input{
             void serialize(Archive & ar, const unsigned int version){
                ar & iprt & maxiter & dfac & macroiter & microiter & alpha & thrdopt 
                   & thrdloc & thrddwt & thrdeps & nptloc & acceptall & unrestricted 
-                  & swap & urot;
+                  & swap & urot & depth & seed;
             }
        public:
          inline void print() const{
@@ -40,6 +40,8 @@ namespace input{
             std::cout << " unrestricted=" << unrestricted << std::endl;
             std::cout << " swap=" << swap << std::endl;
             std::cout << " urot=" << urot << std::endl;
+            std::cout << " depth=" << depth << std::endl;
+            std::cout << " seed=" << seed << std::endl;
          }
       public:
          int iprt = 1;
@@ -57,6 +59,8 @@ namespace input{
          bool unrestricted = false;
          bool swap = false; 
          std::string urot = ""; 
+         int depth = 1;
+         int seed = -1;
    };
 
    // sweep

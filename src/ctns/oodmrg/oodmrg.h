@@ -21,6 +21,7 @@ namespace ctns{
          rank = icomb.world.rank();
 #endif  
          const bool debug = (rank==0);
+         const int seed = schd.ctns.ooparams.seed;
          const int maxiter = schd.ctns.ooparams.maxiter;
          const int dcut = schd.ctns.maxsweep>0? schd.ctns.ctrls[schd.ctns.maxsweep-1].dcut : icomb.get_dmax();
          const double alpha = schd.ctns.ooparams.alpha;
@@ -37,6 +38,7 @@ namespace ctns{
                << " thrdeps=" << thrdeps 
                << " acceptall=" << acceptall
                << " unrestricted=" << unrestricted
+               << " seed=" << seed
                << std::endl;
          }
          auto t0 = tools::get_time();
@@ -64,6 +66,8 @@ namespace ctns{
          // for excited state
          init_cpsi_dot0(icomb, schd.ctns.iroot, schd.ctns.singlet);
          const int iroot = 0;
+         // reset seed if necessary
+         if(seed>=0) tools::generator.seed(seed); 
 
          //----------------------------------------------
          // Debug rotation
