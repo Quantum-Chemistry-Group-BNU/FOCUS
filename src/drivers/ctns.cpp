@@ -173,12 +173,14 @@ void CTNS(const input::schedule& schd){
    // compress
    if(schd.ctns.task_compress){
       if(rank == 0){
-         auto icomb_new = icomb;
-         ctns::rcanon_canonicalize(icomb_new, schd.ctns.dcompress, true, false);
-         auto ova = get_Smat(icomb, icomb_new);
-         ova.print("<Psi|Psi[compressed]>");
-         auto rcanon_file = schd.scratch+"/rcanon_dcompress"+std::to_string(schd.ctns.dcompress);
-         ctns::rcanon_save(icomb_new, rcanon_file);
+         for(const auto& dcut : schd.ctns.dcompress){
+            auto icomb_new = icomb;
+            ctns::rcanon_canonicalize(icomb_new, dcut, true, false);
+            auto ova = get_Smat(icomb, icomb_new);
+            ova.print("<Psi|Psi[compressed]>");
+            auto rcanon_file = schd.scratch+"/rcanon_dcompress"+std::to_string(dcut);
+            ctns::rcanon_save(icomb_new, rcanon_file);
+         } // dcut
       }
    }
 

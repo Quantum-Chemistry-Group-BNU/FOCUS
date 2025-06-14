@@ -64,7 +64,11 @@ void params_ctns::read(ifstream& istrm){
          task_cicoeff = true;
       }else if(line.substr(0,13)=="task_compress"){
          task_compress = true;
-         dcompress = stoi(line.substr(13));
+         istringstream is(line.substr(13));
+         string s;
+         while(is>>s){
+            dcompress.push_back( stoi(s) );
+         }
       }else if(line.substr(0,13)=="task_scramble"){
          task_scramble = true;
          depth = stoi(line.substr(13));
@@ -415,8 +419,10 @@ void params_ctns::print() const{
    cout << "schmidt_file = " << schmidt_file << endl;
    cout << "task_cicoeff = " << task_cicoeff << endl;
    cout << "task_compress = " << task_compress << endl;
-   cout << "dcompress = " << dcompress << endl;
-   cout << "task_scrabmel = " << task_scramble << endl;
+   cout << "dcompress = ";
+   for(const auto& d : dcompress) std::cout << d << " ";
+   std::cout << std::endl;
+   cout << "task_scramble = " << task_scramble << endl;
    cout << "depth = " << depth << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;

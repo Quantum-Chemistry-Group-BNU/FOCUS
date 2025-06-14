@@ -149,7 +149,7 @@ namespace input{
          std::vector<std::string> csflist;
          // SVD compression
          bool task_compress = false;
-         int dcompress = -1;
+         std::vector<int> dcompress;
          // scramble
          bool task_scramble = false;
          int depth = -1;

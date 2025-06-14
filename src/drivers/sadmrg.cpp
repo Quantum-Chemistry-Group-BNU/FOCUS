@@ -187,12 +187,14 @@ void SADMRG(const input::schedule& schd){
    // compress
    if(schd.ctns.task_compress){
       if(rank == 0){
-         auto icomb_new = icomb;
-         ctns::rcanon_canonicalize(icomb_new, schd.ctns.dcompress, true, false);
-         auto ova = get_Smat(icomb, icomb_new);
-         ova.print("<Psi|Psi[compressed]>");
-         auto rcanon_file = schd.scratch+"/rcanon_dcompress"+std::to_string(schd.ctns.dcompress)+"_su2";
-         ctns::rcanon_save(icomb_new, rcanon_file);
+         for(const auto& dcut : schd.ctns.dcompress){
+            auto icomb_new = icomb;
+            ctns::rcanon_canonicalize(icomb_new, dcut, true, false);
+            auto ova = get_Smat(icomb, icomb_new);
+            ova.print("<Psi|Psi[compressed]>");
+            auto rcanon_file = schd.scratch+"/rcanon_dcompress"+std::to_string(dcut)+"_su2";
+            ctns::rcanon_save(icomb_new, rcanon_file);
+         } // dcut
       }
    }
 
@@ -244,8 +246,10 @@ void SADMRG(const input::schedule& schd){
          ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();
          icomb_NSz.display_shape();
+         /*
          ctns::rcanon_Sdiag_sample(icomb_NSz, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
+         */
       }
    }
 
