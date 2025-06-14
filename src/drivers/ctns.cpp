@@ -173,14 +173,22 @@ void CTNS(const input::schedule& schd){
    // compress
    if(schd.ctns.task_compress){
       if(rank == 0){
+         std::vector<Tm> result;
          for(const auto& dcut : schd.ctns.dcompress){
             auto icomb_new = icomb;
             ctns::rcanon_canonicalize(icomb_new, dcut, true, false);
             auto ova = get_Smat(icomb, icomb_new);
             ova.print("<Psi|Psi[compressed]>");
+            result.push_back(ova(0,0));
             auto rcanon_file = schd.scratch+"/rcanon_dcompress"+std::to_string(dcut);
             ctns::rcanon_save(icomb_new, rcanon_file);
          } // dcut
+         std::cout << "\nSummary of compressions: D,ovlp,|ovlp|^2" << std::endl;
+         for(int i=0; i<result.size(); i++){
+            std::cout << " " << schd.ctns.dcompress[i] 
+               << " " << std::setprecision(10) << result[i] 
+               << " " << std::norm(result[i]) << std::endl;
+         }
       }
    }
 
