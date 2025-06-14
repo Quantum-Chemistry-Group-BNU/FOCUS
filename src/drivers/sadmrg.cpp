@@ -245,8 +245,8 @@ void SADMRG(const input::schedule& schd){
          rcanon_file += "_nonsu2"; 
          ctns::rcanon_save(icomb_NSz, rcanon_file);
          icomb.display_shape();
-         icomb_NSz.display_shape();
          /*
+         icomb_NSz.display_shape();
          ctns::rcanon_Sdiag_sample(icomb_NSz, schd.ctns.iroot, schd.ctns.nsample, 
                schd.ctns.pthrd, schd.ctns.nprt, schd.ctns.saveconfs);
          */
