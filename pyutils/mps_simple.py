@@ -5,6 +5,14 @@ from opt_einsum import contract as einsum
 
 # Some functions for MPS
 
+def random(n, dcut):
+    sites = [None]*n
+    sites[0] = np.random.uniform(-1,1,size=(1,4,dcut))
+    sites[n-1] = np.random.uniform(-1,1,size=(dcut,4,1))
+    for i in range(1,n-1):
+        sites[i] = np.random.uniform(-1,1,size=(dcut,4,dcut))
+    return sites
+
 def shapes(sites):
     shape = []
     for i in range(len(sites)):
@@ -139,29 +147,58 @@ def checkLCF(sites,thresh=1.e-10):
     else:
         print('MPS is in LCF')
         return 0
-        
-def leftCanonicalization(sites, svd_driver='gesvd'):
+       
+# We assume MPS is only for a single state!
+def leftCanonicalization(sites, dcut=-1, svd_driver='gesvd'):
     nsite = len(sites)
     sites_tmp = copy.deepcopy(sites)
     cpsi = sites_tmp[0]
     shape = cpsi.shape
     cpsi = cpsi.reshape(shape[0],1,shape[1],shape[2]) # ilnr
     for i in range(nsite-1):
-        psi2 = cpsi.transpose(1,2,3,0) # ilnr->lnri
+        psi2 = cpsi.transpose(1,2,3,0) # ilnr->ln|ri
         shape = psi2.shape
         psi2 = psi2.reshape(shape[0]*shape[1],shape[2]*shape[3])
         u,s,vt = scipy.linalg.svd(psi2, full_matrices=False, lapack_driver=svd_driver)
         d = s.shape[0]
-        sites_tmp[i] = u.reshape(shape[0],shape[1],d)
-        vt = einsum('l,lr->lr',s,vt)
+        u = u.reshape(shape[0],shape[1],d)
+        vt = np.einsum('l,lr->lr',s,vt)
         vt = vt.reshape(d,shape[2],shape[3])
+        if dcut>0: d = min(d,dcut)
+        sites_tmp[i] = u[:,:,:d]
         # update cpsi for the next site
-        cpsi = einsum('lci,cnr->ilnr',vt,sites_tmp[i+1])
+        cpsi = np.einsum('lci,cnr->ilnr',vt[:d,:,:],sites_tmp[i+1])
     # construct the last site
     shape = cpsi.shape
     assert shape[3] == 1
     cpsi = cpsi.reshape(shape[0],shape[1],shape[2])
-    sites_tmp[nsite-1] = einsum('iln->lni',cpsi)
+    sites_tmp[nsite-1] = np.einsum('iln->lni',cpsi)/np.linalg.norm(cpsi)
+    return sites_tmp
+
+def rightCanonicalization(sites, dcut=-1, svd_driver='gesvd'):
+    nsite = len(sites)
+    sites_tmp = copy.deepcopy(sites)
+    cpsi = sites_tmp[-1]
+    shape = cpsi.shape
+    cpsi = cpsi.reshape(shape[0], shape[1], shape[2], 1)  # lnir
+    for i in range(nsite-1, 0, -1):
+        psi2 = cpsi.transpose(2, 0, 1, 3)  # lnir -> il|nr
+        shape = psi2.shape
+        psi2 = psi2.reshape(shape[0]*shape[1], shape[2]*shape[3])
+        u, s, vt = scipy.linalg.svd(psi2, full_matrices=False, lapack_driver=svd_driver)
+        d = s.shape[0]
+        vt = vt.reshape(d, shape[2], shape[3]) # cnr
+        u = np.einsum('lr,r->lr', u, s)
+        u = u.reshape(shape[0], shape[1], d) # ilc
+        if dcut > 0: d = min(d, dcut)
+        sites_tmp[i] = vt[:d, :, :]
+        # update cpsi for the next site
+        cpsi = np.einsum('lnr,irc->lnic', sites_tmp[i-1], u[:, :, :d])
+    # construct the first site
+    shape = cpsi.shape
+    assert shape[0] == 1
+    cpsi = cpsi.reshape(shape[1], shape[2], shape[3])
+    sites_tmp[0] = np.einsum('nic->inc', cpsi)/np.linalg.norm(cpsi)
     return sites_tmp
 
 def getLCFStateFromLCF(sites_lcf, iroot):
