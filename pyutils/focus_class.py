@@ -100,6 +100,7 @@ class CTNS:
         self.alg_hvec = 4
         self.alg_renorm = 4
         self.rcanon_file = None
+        self.additional = []
 
     def gen_input(self,fname,iprt):
         # TOPO
@@ -131,6 +132,9 @@ class CTNS:
         if self.oo_macroiter != None: f.write('oo_macroiter '+str(self.oo_macroiter)+'\n')
         if self.oo_alpha != None: f.write('oo_alpha '+str(self.oo_alpha)+'\n')
         if self.rcanon_file != None: f.write('rcanon_file '+str(self.rcanon_file)+'\n')
+        if len(self.additional) != 0:
+            for command in self.additional:
+                f.write(command+'\n')
         f.write('$end\n')
         f.close()
         if iprt > 0:
@@ -140,8 +144,12 @@ class CTNS:
 
     def kernel(self,fname='ctns.dat',output='ctns.out',iprt=0):
         os.chdir(self.common.workdir)
-        cmd = "ctns.x "+fname+" > "+output
-        print('\nCTNS calculations: '+cmd)
+        if self.qkind == 'rNS': 
+            cmd = "sadmrg.x "+fname+" > "+output
+            print('\nSADMRG calculations: '+cmd)
+        else:
+            cmd = "ctns.x "+fname+" > "+output
+            print('\nCTNS calculations: '+cmd)
         self.gen_input(fname,iprt)
         info = os.system(cmd)
         assert info == 0
@@ -169,7 +177,10 @@ class CTNS:
         f.write('\n$ctns\n')
         f.write('qkind '+self.qkind+'\n')
         f.write('topology_file '+self.topology_file+'\n')
-        f.write('rcanon_file rcanon_isweep'+str(isweep)+'\n')
+        if self.qkind == 'rNS':
+            f.write('rcanon_file rcanon_isweep'+str(isweep)+'_su2\n')
+        else:
+            f.write('rcanon_file rcanon_isweep'+str(isweep)+'\n')
         f.write('savebin\n')
         if task_ham: f.write('task_ham\n')
         f.write('$end\n')
