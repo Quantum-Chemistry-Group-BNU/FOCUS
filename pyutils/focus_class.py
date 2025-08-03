@@ -10,6 +10,7 @@ class Common:
         self.sorb = None
         self.nelec = None
         self.twom = None
+        self.twos = None
         self.integral_file = None
         self.scratch = "scratch"
 
@@ -17,7 +18,8 @@ class Common:
         f.write('dtype '+str(self.dtype)+'\n')
         f.write('sorb '+str(self.sorb)+'\n')
         f.write('nelec '+str(self.nelec)+'\n')
-        f.write('twom '+str(self.twom)+'\n')
+        if self.twom != None: f.write('twom '+str(self.twom)+'\n')
+        if self.twos != None: f.write('twos '+str(self.twos)+'\n')
         f.write('integral_file '+str(self.integral_file)+'\n')
         f.write('scratch '+str(self.scratch)+'\n')
         return 0
@@ -39,17 +41,19 @@ class SCI:
         self.eps0 = 1.e-2
         self.maxiter = 3
         self.schedule = [[0,1.e-2]]
+        self.additional = []
 
     def gen_input(self,fname,iprt):
         f = open(fname,'w')
         self.common.gen_input(f)
         f.write('\n$ci\n')
         # dets
-        f.write('dets\n')
-        for i in range(len(self.dets)):
-            line = ' '.join(str(k) for k in self.dets[i])+'\n'
-            f.write(line)
-        f.write('end\n')
+        if self.dets != None:
+            f.write('dets\n')
+            for i in range(len(self.dets)):
+                line = ' '.join(str(k) for k in self.dets[i])+'\n'
+                f.write(line)
+            f.write('end\n')
         # schedule
         if self.schedule != None:
             f.write('schedule\n')
@@ -60,6 +64,9 @@ class SCI:
         f.write('eps0 '+str(self.eps0)+'\n')
         f.write('maxiter '+str(self.maxiter)+'\n')
         f.write('analysis\n')
+        if len(self.additional) != 0:
+            for command in self.additional:
+                f.write(command+'\n')
         f.write('$end\n')
         f.close()
         if iprt > 0:
