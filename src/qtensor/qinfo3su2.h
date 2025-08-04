@@ -99,7 +99,21 @@ namespace ctns{
          qrow.dump(ofs);
          qcol.dump(ofs);
          qmid.dump(ofs);
-         ofs.write((char*)(_nnzaddr.data()), sizeof(_nnzaddr[0])*_nnzaddr.size());
+         //ofs.write((char*)(_nnzaddr.data()), sizeof(_nnzaddr[0])*_nnzaddr.size());
+       
+         // ZL@20250804: for interfacing with block2 
+         ofs.write((char*)(&couple), sizeof(couple));
+         size_t ndx = _nnzaddr.size();
+         ofs.write((char*)(&ndx), sizeof(ndx));
+         std::vector<int> data(4 * _nnzaddr.size(), 0);
+         for (size_t i = 0; i < _nnzaddr.size(); i++) {
+            data[4 * i + 0] = std::get<0>(_nnzaddr[i]);
+            data[4 * i + 1] = std::get<1>(_nnzaddr[i]);
+            data[4 * i + 2] = std::get<2>(_nnzaddr[i]);
+            data[4 * i + 3] = std::get<3>(_nnzaddr[i]);
+         }
+         ofs.write((char*)(data.data()), sizeof(int) * data.size());
+
          ofs.write((char*)(&_size), sizeof(_size)); // F order
       }
 
