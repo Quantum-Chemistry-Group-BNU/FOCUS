@@ -199,7 +199,7 @@ class CTNS:
 
     def savebin(self,isweep=0,iprt=0,fname='savebin.dat',output='savebin.out'):
         os.chdir(self.common.workdir)
-        cmd = "rdm.x "+fname+" > "+output
+        cmd = "prop.x "+fname+" > "+output
         print('\nSAVEBIN: '+cmd)
         self.gen_savebin(fname,iprt,isweep,False)
         info = os.system(cmd)
@@ -238,7 +238,7 @@ class RDM:
 
     def kernel(self,fname='rdm.dat',output='rdm.out',iprt=0):
         os.chdir(self.common.workdir)
-        cmd = "rdm.x "+fname+" > "+output
+        cmd = "prop.x "+fname+" > "+output
         print('\nRDM calculations: '+cmd)
         self.gen_input(fname,iprt)
         info = os.system(cmd)

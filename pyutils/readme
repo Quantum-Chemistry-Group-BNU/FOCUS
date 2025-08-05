@@ -3,7 +3,7 @@ To use these functions, add path to PYTHONPATH:
 
    export PYTHONPATH="/Users/zhendongli/Desktop/FOCUS/pyutils:${PYTHONPATH}"
 
-Example for input for rdm.x
+Example for input for prop.x
 
    $ctns
    verbose 1
@@ -12,5 +12,5 @@ Example for input for rdm.x
    rcanon_file rcanon_isweep1
    iroot 0
    savebin
-   task_rdm 3
+   task_prop 2p2h
    $end
