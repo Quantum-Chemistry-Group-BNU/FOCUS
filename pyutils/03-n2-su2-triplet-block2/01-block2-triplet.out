@@ -1,0 +1,27 @@
+symmetrize error =  0.0
+integral symmetrize error =  0.0
+integral cutoff error =  0.0
+reordering =  [9 8 7 6 5 4 3 2 1 0]
+mpo terms =       1094
+
+Build MPO | Nsites =    10 | Nterms =       1094 | Algorithm = FastBIP | Cutoff = 1.00e-20
+ Site =     0 /    10 .. Mmpo =    10 DW = 0.00e+00 NNZ =       10 SPT = 0.0000 Tmvc = 0.000 T = 0.000
+ Site =     1 /    10 .. Mmpo =    22 DW = 0.00e+00 NNZ =       25 SPT = 0.8864 Tmvc = 0.000 T = 0.000
+ Site =     2 /    10 .. Mmpo =    32 DW = 0.00e+00 NNZ =       49 SPT = 0.9304 Tmvc = 0.000 T = 0.000
+ Site =     3 /    10 .. Mmpo =    42 DW = 0.00e+00 NNZ =       55 SPT = 0.9591 Tmvc = 0.000 T = 0.000
+ Site =     4 /    10 .. Mmpo =    60 DW = 0.00e+00 NNZ =      205 SPT = 0.9187 Tmvc = 0.000 T = 0.000
+ Site =     5 /    10 .. Mmpo =    74 DW = 0.00e+00 NNZ =      215 SPT = 0.9516 Tmvc = 0.000 T = 0.001
+ Site =     6 /    10 .. Mmpo =    50 DW = 0.00e+00 NNZ =      593 SPT = 0.8397 Tmvc = 0.000 T = 0.001
+ Site =     7 /    10 .. Mmpo =    28 DW = 0.00e+00 NNZ =       69 SPT = 0.9507 Tmvc = 0.000 T = 0.000
+ Site =     8 /    10 .. Mmpo =    14 DW = 0.00e+00 NNZ =       49 SPT = 0.8750 Tmvc = 0.000 T = 0.000
+ Site =     9 /    10 .. Mmpo =     1 DW = 0.00e+00 NNZ =       14 SPT = 0.0000 Tmvc = 0.000 T = 0.000
+Ttotal =      0.003 Tmvc-total = 0.001 MPO bond dimension =    74 MaxDW = 0.00e+00
+NNZ =         1284 SIZE =        14744 SPT = 0.9129
+
+Rank =     0 Ttotal =      0.003 MPO method = FastBipartite bond dimension =      74 NNZ =         1284 SIZE =        14744 SPT = 0.9129
+Energy from pdms = -107.356943001126993
+Energy from expectation = -107.356943001127078
+DMRG energy = -107.356943001684996
+DMRG energy = -107.356943001672263
+Energy from pdms = -107.356943001672121
+Energy from expectation = -107.356943001672377

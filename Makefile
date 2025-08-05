@@ -449,7 +449,7 @@ core: $(LIB_DIR)/libcore.a \
 	$(BIN_DIR)/benchmark_mathlib.x $(BIN_DIR)/benchmark_blas.x \
 	$(BIN_DIR)/benchmark_io.x $(BIN_DIR)/benchmark_mpi.x \
 	$(BIN_DIR)/benchmark_nccl.x $(BIN_DIR)/benchmark_lapack.x \
-	$(BIN_DIR)/rotate_integral.x 
+	$(BIN_DIR)/rotate_integral.x $(BIN_DIR)/fcidump.x 
 
 ifeq ($(strip $(INSTALL_CI)), yes)
 ci: $(LIB_DIR)/libci.a $(BIN_DIR)/tests_ci.x $(BIN_DIR)/exactdiag.x $(BIN_DIR)/fci.x $(BIN_DIR)/sci.x
@@ -572,6 +572,10 @@ $(BIN_DIR)/benchmark_lapack.x: $(OBJ_DIR)/benchmark_lapack.o $(LIB_DIR)/libcore.
 $(BIN_DIR)/rotate_integral.x: $(OBJ_DIR)/rotate_integral.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
 	@echo "=== LINK $@"
 	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/rotate_integral.o -L$(LIB_DIR) -lcore -lio $(LFLAGS) 
+
+$(BIN_DIR)/fcidump.x: $(OBJ_DIR)/fcidump.o $(LIB_DIR)/libcore.a $(LIB_DIR)/libio.a
+	@echo "=== LINK $@"
+	$(CXX) $(FLAGS) -o $@ $(OBJ_DIR)/fcidump.o -L$(LIB_DIR) -lcore -lio $(LFLAGS) 
 
 # CI
 $(BIN_DIR)/tests_ci.x: $(OBJ_DIR)/tests_ci.o $(LIB_DIR)/libci.a
