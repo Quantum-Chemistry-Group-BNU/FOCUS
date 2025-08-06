@@ -41,7 +41,10 @@ void PROP(const input::schedule& schd){
       if(!icomb.topo.ifmps){ // must be MPS
          tools::exit("error in rdm: icomb.topo.ifmps=false is not supported yet!");
       }
-      if(rank == 0 and schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+      if(rank == 0){
+         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
+         if(schd.ctns.lcanon) ctns::lcanon(icomb, schd, schd.ctns.rcanon_file);
+      }
    }else{
       tools::exit("error: MPS1 must be given!");
    }
@@ -52,7 +55,10 @@ void PROP(const input::schedule& schd){
       if(!icomb2.topo.ifmps){ // must be MPS
          tools::exit("error in rdm: icomb2.topo.ifmps=false is not supported yet!");
       }
-      if(rank == 0 and schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
+      if(rank == 0){
+         if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
+         if(schd.ctns.lcanon) ctns:lcanon(icomb, schd, schd.ctns.rcanon2_file);
+      }
    }else{
       auto jcomb = icomb;
       icomb2 = std::move(jcomb);

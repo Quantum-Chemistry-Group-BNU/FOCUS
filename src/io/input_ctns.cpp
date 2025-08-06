@@ -136,6 +136,8 @@ void params_ctns::read(ifstream& istrm){
          debug_gpumem = true;
       }else if(line.substr(0,12)=="debug_cpumem"){
          debug_cpumem = true;
+      }else if(line.substr(0,6)=="lcanon"){
+         lcanon = true;
       }else if(line.substr(0,7)=="notrunc"){
          notrunc = true;
       }else if(line.substr(0,9)=="ifoutcore"){
@@ -533,4 +535,6 @@ void params_ctns::print() const{
    cout << "mpisize_debug = " << mpisize_debug << endl;
    cout << "debug_gpumem = " << debug_gpumem << endl;
    cout << "debug_cpumem = " << debug_cpumem << endl;
+   // left canonicalization
+   cout << "lcanon = " << lcanon << endl;
 }

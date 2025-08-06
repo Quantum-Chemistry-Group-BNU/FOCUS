@@ -187,9 +187,12 @@ class CTNS:
         if self.qkind == 'rNS':
             f.write('rcanon_file rcanon_isweep'+str(isweep)+'_su2\n')
         else:
-            f.write('rcanon_file rcanon_isweep'+str(isweep)+'\n')
+            f.write('rcanon_file rcanon_isweep'+str(isweep)+'\n') 
         f.write('savebin\n')
         if task_ham: f.write('task_ham\n')
+        if len(self.additional) != 0:
+            for command in self.additional:
+                f.write(command+'\n')
         f.write('$end\n')
         f.close()
         if iprt > 0:

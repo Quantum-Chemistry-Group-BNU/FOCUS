@@ -1,181 +1,89 @@
-#ifndef CTNS_RCANON_H
-#define CTNS_RCANON_H
+#ifndef CTNS_LCANON_H
+#define CTNS_LCANON_H
+
+#include "../io/io.h"
+#include "../core/serialization.h"
 
 namespace ctns{
 
-   // --<--*-->--
-   //     /|\
-   // boundary_coupling: |tot>=|vaccum>*|physical>
    template <typename Qm, typename Tm>
-      qtensor2<Qm::ifabelian,Tm> get_boundary_coupling(const qsym& sym_state, const bool singlet){
-         const int isym = sym_state.isym();
-         qbond qcol({{sym_state,1}});
-         qtensor2<Qm::ifabelian,Tm> wf2;
-         if(isym == 3 && singlet){
-            qbond qrow({{qsym(3,sym_state.ts(),sym_state.ts()),1}}); // couple to fictious site
-            wf2.init(qsym(3,sym_state.ne()+sym_state.ts(),0),qrow,qcol,dir_WF2);
-         }else{ 
-            qbond qrow({{qsym(isym,0,0),1}}); // couple to vacuum
-            wf2.init(sym_state,qrow,qcol,dir_WF2);
+      void sweep_final_LC2LLc(comb<Qm,Tm>& icomb,
+            const double rdm_svd,
+            const int svd_iop,
+            const std::string fname,
+            const bool debug){
+         if(debug) std::cout << "\nctns::sweep_final_LC2LLc: convert L[C] => L[Lc]" << std::endl;
+         int nroots = icomb.cpsi.size();
+         // 1. setup 
+         const auto& wfinfo = icomb.cpsi[0].info;
+         qtensor2<Qm::ifabelian,Tm> rot;
+         std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
+         for(int i=0; i<nroots; i++){
+            auto wf2 = icomb.cpsi[i].recouple_lc().merge_lc();
+            wfs2[i] = std::move(wf2);
          }
-         assert(wf2.size() == 1);
-         wf2._data[0] = 1.0;
-         return wf2;
-      }
-
-   // r*R0*R1*R2 to C0*R1*R2 
-   template <typename Qm, typename Tm>
-      void init_cpsi_dot0(comb<Qm,Tm>& icomb,
-            const int iroot=-1,
-            const bool singlet=true){
-         const auto& rindex = icomb.topo.rindex;
-         const auto& site0 = icomb.sites[rindex.at(std::make_pair(0,0))]; // will be updated
-         const auto sym_state = icomb.get_qsym_state();
-         const auto wf2 = get_boundary_coupling<Qm,Tm>(sym_state, singlet); // env*C[0]
-         int nroots = (iroot==-1)? icomb.get_nroots() : 1;
-         icomb.cpsi.resize(nroots);
-         if(iroot == -1){
-            for(int iroot=0; iroot<nroots; iroot++){
-               // qt2(1,r): ->-*->-
-               auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[iroot]);
-               // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
-               auto qt3 = contract_qt3_qt2("l",site0,qt2);
-               // recouple to qt3(1,r0,n0)[LCcouple]
-               icomb.cpsi[iroot] = qt3.recouple_lc();
-            } // iroot
-         }else{
-            // get an MPS for a single state
-            if(iroot != 0) icomb.rwfuns[0] = std::move(icomb.rwfuns[iroot]);
-            icomb.rwfuns.resize(1);
-            // qt2(1,r): ->-*->-
-            auto qt2 = contract_qt2_qt2(wf2,icomb.rwfuns[0]);
-            // qt2(1,r)*site0(r,r0,n0) = qt3(1,r0,n0)[CRcouple]
-            auto qt3 = contract_qt3_qt2("l",site0,qt2);
-            // recouple to qt3(1,r0,n0)[LCcouple]
-            icomb.cpsi[0] = qt3.recouple_lc();
-         }
-      }
-
-   //     | qs |
-   //  ---*----*---(0,0)
-   //    r1  r0
-   template <typename Qm, typename Tm>
-      void rcanon_lastdots(comb<Qm,Tm>& icomb){
-         // select boundary sites
-         // topo:
-         //  i=0 : 4
-         //  i=1 : -1 5 1
-         //  i=2 : -1 0 3
-         //  i=3 : 2
-         std::vector<std::pair<int,int>> bpairs;
-         for(int i=1; i<icomb.topo.nbackbone; i++){ // exclude the first site
-            for(int j=0; j<icomb.topo.nodes[i].size(); j++){
-               const auto& node = icomb.topo.nodes[i][j];
-               if(node.type != 0) continue;
-               bpairs.push_back(std::make_pair(i,j));
-            }
-         }
-         // loop over boundaries
-         for(const auto& pr : bpairs){
-            int i = pr.first;
-            int j = pr.second;
-            int pdx0, pdx1;
-            if(j == 0){
-               pdx0 = icomb.topo.rindex.at(std::make_pair(i,0));
-               pdx1 = icomb.topo.rindex.at(std::make_pair(i-1,0));
+         const int dcut = nroots; // psi[1,n,r,i] => U[1,i,a]sigma[a]Vt[a,n,r]
+         double dwt;
+         int deff;
+         const bool iftrunc = true;
+         const int alg_decim = 0;
+         std::vector<double> sigs2full;
+         // 2. decimation
+         decimation_row(icomb, wfinfo.qrow, wfinfo.qmid,
+               iftrunc, dcut, rdm_svd, svd_iop, alg_decim,
+               wfs2, sigs2full, rot, dwt, deff, fname,
+               debug);
+         // 3. save site0
+         const auto& pdx0 = icomb.topo.rindex.at(std::make_pair(icomb.topo.nphysical-1,0));
+         icomb.sites[pdx0] = rot.split_lc(wfinfo.qrow, wfinfo.qmid);
+         // 4. form rwfuns(iroot,irbas)
+         //const auto& sym_state = icomb.get_qsym_state(); // not wfinfo.sym in singlet embedding (wfinfo.sym=0) 
+         const auto& sym_state = wfinfo.sym; // in this case auxilliary site is included in the left boundary
+         const auto& qrow = rot.info.qcol;
+         qbond qcol({{sym_state, 1}});
+         icomb.rwfuns.resize(nroots);
+         for(int i=0; i<nroots; i++){
+            auto cwf = rot.H().dot(wfs2[i]); // <-W[alpha,1]->
+            // change the carrier of sym_state from center to left
+            qtensor2<Qm::ifabelian,Tm> rwfun(qsym(Qm::isym), qrow, qcol, dir_OPER);
+            assert(cwf.size() == rwfun.size());
+            linalg::xcopy(cwf.size(), cwf.data(), rwfun.data());
+            icomb.rwfuns[i] = std::move(rwfun);
+            
+            // TO BE IMPROVED IN FUTURE; FOR INTERFACING WITH BLOCK2, WE ONLY CONSIDER SINGLE STATE 
+            if(nroots != 1 or !check_identityMatrix(cwf.to_matrix())){
+               std::cout << "error: lcanon only supports nroots=1 and cwf=Id currently!" << std::endl;
+               exit(1); 
             }else{
-               pdx0 = icomb.topo.rindex.at(std::make_pair(i,j));
-               pdx1 = icomb.topo.rindex.at(std::make_pair(i,j-1));
+               icomb.rwfuns[i].print("lwfun",2);
             }
-            auto& rsite_last0 = icomb.sites[pdx0];
-            auto& rsite_last1 = icomb.sites[pdx1];
-            auto& qs = rsite_last0.info.qrow;
-            auto qmid = get_qbond_phys(Qm::isym);
-            if(qs == qmid) return; // no need to do anything
-            assert(qs.size() <= qmid.size());
-            // We simply use computation to avoid explicitly deal
-            // with the formation of the last two sites.
-            auto rmat = rsite_last0.merge_cr();
-            // P is due to definition in contract_qt3_qt2
-            rsite_last1 = contract_qt3_qt2("r",rsite_last1,rmat.P());
-            rsite_last0 = get_right_bsite<Qm,Tm>();
-         }
+
+         } // iroot
       }
 
+   // left canonicalization
    template <typename Qm, typename Tm>
-      void rcanon_rwfuns(comb<Qm,Tm>& icomb, const bool debug){
-         const int nroots = icomb.get_nroots();
-         auto rwfunW = icomb.get_wf2().to_matrix();
-         std::vector<double> s;
-         linalg::matrix<Tm> U, Vt;
-         linalg::svd_solver(rwfunW, s, U, Vt, 13);
-         if(debug){
-            std::cout << "\nrcanon_rwfuns: Lowdin orthonormalization" << std::endl;
-            tools::print_vector(s,"sigs");
-         }
-         // lowdin orthonormalization: wf2new = U*Vt 
-         auto wf2new = linalg::xgemm("N","N",U,Vt).T(); // T() for convenience
-         // save the data back
-         for(int i=0; i<nroots; i++){
-            assert(wf2new.rows() == icomb.rwfuns[i].size());
-            linalg::xcopy(wf2new.rows(), wf2new.col(i), icomb.rwfuns[i].data());
-         }
-      }
-
-   template <>
-      inline void rcanon_rwfuns(comb<qkind::qNK,std::complex<double>>& icomb, const bool debug){
-         const int nroots = icomb.get_nroots();
-         auto sym_state = icomb.get_qsym_state();
-         std::vector<double> sigs2;
-         linalg::matrix<std::complex<double>> U;
-         std::vector<double> phases;
-         int nbas = icomb.rwfuns[0].info.qcol.get_dimAll();
-         if(sym_state.parity()){
-            assert(nbas%2 == 0);
-            phases.resize(nbas/2,1.0);
-         }
-         std::vector<linalg::matrix<std::complex<double>>> blks(nroots);
-         for(int iroot=0; iroot<nroots; iroot++){
-            blks[iroot] = icomb.rwfuns[iroot].to_matrix();
-         }
-         const double rdm_svd = 1.5;
-         const int svd_iop = 3;
-         kramers::get_renorm_states_kr(sym_state, phases, blks, sigs2, U, rdm_svd, svd_iop, debug);
-         assert(U.cols() == nroots);
-         if(debug){
-            std::cout << "\nrcanon_rwfuns: Kramers projection" << std::endl;
-            tools::print_vector(sigs2,"sigs2");
-         }
-         // save the data back
-         for(int i=0; i<nroots; i++){
-            linalg::xcopy(U.rows(), U.col(i), icomb.rwfuns[i].data());
-         } 
-      }
-
-   // rcanonicalize MPS: this function use twodot [!!!] algorithm to perform canonicalization of MPS
-   template <typename Qm, typename Tm>
-      void rcanon_canonicalize(comb<Qm,Tm>& icomb,
-            const int dmax,
-            const bool ifortho=true,
+      void lcanon(const comb<Qm,Tm>& icomb0,
+            const input::schedule& schd,
+            const std::string rcanon_file,
             const bool debug=true){
          const bool ifab = Qm::ifabelian;
-         const int nroots = icomb.get_nroots();
-         std::cout << "\nctns::rcanon_canonicalize"
-              << " ifortho=" << ifortho
+         const size_t dmax = icomb0.get_dmax();
+         const bool singlet = schd.ctns.singlet;
+         std::cout << "\nctns::lcanon"
               << " ifab=" << ifab
-              << " nroots=" << nroots
               << " dmax=" << dmax
+              << " singlet=" << singlet
               << std::endl;
          auto t0 = tools::get_time();
-
-         // initialization: generate cpsi
-         const int iroot = -1;
-         const bool singlet = true;
-         init_cpsi_dot0(icomb, iroot, singlet);
-
+             
+         const int nroots = 1; 
+         auto icomb = icomb0;
+         init_cpsi_dot0(icomb, schd.ctns.iroot, singlet);
+         
          // generate sweep sequence
          const auto& rindex = icomb.topo.rindex;
-         auto sweep_seq = icomb.topo.get_sweeps(true); // include boundary
+         auto sweep_seq = icomb.topo.get_mps_fsweeps(true); // include boundary
          double maxdwt = -1.0;
          for(int ibond=0; ibond<sweep_seq.size(); ibond++){
             const auto& dbond = sweep_seq[ibond];
@@ -345,17 +253,23 @@ namespace ctns{
          const double rdm_svd = 1.5;
          const int svd_iop = 3;
          std::string fname;
-         sweep_final_CR2cRR(icomb, rdm_svd, svd_iop, fname, debug);
-
-         // Orthonormalize rwfuns[iroot,alpha] (->-*->-) via SVD
-         if(ifortho) rcanon_rwfuns(icomb, debug);
-
-         // canonicalize last dot to identity
-         rcanon_lastdots(icomb);
+         sweep_final_LC2LLc(icomb, rdm_svd, svd_iop, fname, debug);
 
          auto t1 = tools::get_time();
-         std::cout << "maxdwt during canonicalization = " << maxdwt << std::endl;
-         tools::timing("ctns::rcanon_canonicalize", t0, t1);
+         std::cout << "\nmaxdwt during canonicalization = " << maxdwt << std::endl;
+
+         // --- savebin ---
+         fname = schd.scratch + "/" + rcanon_file + ".lcanon";
+         std::cout << "\nsave lcanon into file = " << fname << ".bin" << std::endl;
+         std::ofstream ofs2(fname+".bin", std::ios::binary);
+         ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
+         // save all sites
+         for(int idx=0; idx<icomb.topo.ntotal; idx++){
+            icomb.sites[idx].dump(ofs2);
+         }
+         ofs2.close();
+
+         tools::timing("ctns::lcanon", t0, t1);
       }
 
 } // ctns

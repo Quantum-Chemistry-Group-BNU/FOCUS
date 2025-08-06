@@ -41,4 +41,6 @@
 #include "rdm/rdm_auxdata.h"
 #include "rdm/rdm_mrpt2.h"
 
+#include "ctns_lcanon.h"
+
 #endif
