@@ -257,9 +257,11 @@ namespace ctns{
 
          auto t1 = tools::get_time();
          std::cout << "\nmaxdwt during canonicalization = " << maxdwt << std::endl;
+         icomb.display_shape();
 
          // --- savebin ---
          fname = schd.scratch + "/" + rcanon_file + ".lcanon";
+         if(singlet) fname += ".singlet";
          std::cout << "\nsave lcanon into file = " << fname << ".bin" << std::endl;
          std::ofstream ofs2(fname+".bin", std::ios::binary);
          ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
