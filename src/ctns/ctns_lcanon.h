@@ -260,16 +260,18 @@ namespace ctns{
          icomb.display_shape();
 
          // --- savebin ---
-         fname = schd.scratch + "/" + rcanon_file + ".lcanon";
-         if(singlet) fname += ".singlet";
-         std::cout << "\nsave lcanon into file = " << fname << ".bin" << std::endl;
-         std::ofstream ofs2(fname+".bin", std::ios::binary);
-         ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
-         // save all sites
-         for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            icomb.sites[idx].dump(ofs2);
+         if(schd.ctns.savebin){
+            fname = schd.scratch + "/" + rcanon_file + ".lcanon";
+            if(singlet) fname += ".singlet";
+            std::cout << "\nsave lcanon into file = " << fname << ".bin" << std::endl;
+            std::ofstream ofs2(fname+".bin", std::ios::binary);
+            ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
+            // save all sites
+            for(int idx=0; idx<icomb.topo.ntotal; idx++){
+               icomb.sites[idx].dump(ofs2);
+            }
+            ofs2.close();
          }
-         ofs2.close();
 
          tools::timing("ctns::lcanon", t0, t1);
       }

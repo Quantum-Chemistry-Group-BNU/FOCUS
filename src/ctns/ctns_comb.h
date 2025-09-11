@@ -95,7 +95,7 @@ namespace ctns{
                qbond qrow({{sym_state,nroots}});
                const auto& qcol = rwfuns[0].info.qcol;
                const auto& dir = rwfuns[0].info.dir;
-               assert(dir == dir_RWF);
+               assert(dir == dir_RWF or dir == dir_OPER); // LWF
                // matching state symmetry
                int jdx = -1;
                for(int j=0; j<qcol.size(); j++){
