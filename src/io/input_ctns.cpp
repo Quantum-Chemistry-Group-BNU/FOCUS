@@ -72,6 +72,14 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,13)=="task_scramble"){
          task_scramble = true;
          depth = stoi(line.substr(13));
+      }else if(line.substr(0,12)=="task_enedist"){
+         task_enedist = true;
+         istringstream is(line.substr(13));
+         string s;
+         while(is>>s){
+            enedist.push_back( stod(s) );
+         }
+         if(enedist.size() != 2) tools::exit("error: enedist.size() should be 2!");
       }else if(line.substr(0,4)=="dets"){
          while(true){
             line.clear();	   
@@ -426,6 +434,10 @@ void params_ctns::print() const{
    std::cout << std::endl;
    cout << "task_scramble = " << task_scramble << endl;
    cout << "depth = " << depth << endl;
+   cout << "task_enedist = " << task_enedist << endl;
+   cout << "enedist = ";
+   for(const auto& d : enedist) std::cout << d << " ";
+   std::cout << std::endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;

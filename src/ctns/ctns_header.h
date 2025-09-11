@@ -42,5 +42,6 @@
 #include "rdm/rdm_mrpt2.h"
 
 #include "ctns_lcanon.h"
+#include "ctns_enedist.h"
 
 #endif
