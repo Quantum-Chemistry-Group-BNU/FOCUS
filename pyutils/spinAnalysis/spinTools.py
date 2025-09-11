@@ -1,7 +1,7 @@
 import numpy
 
 #########################################################
-# <Sz[local]> 
+# <Sz[local]> [works only for spin eigenfunctions]
 # G[i,j,k,l] =<a_is1^+*a_js2^+*a_ks2*a_ls1>
 #########################################################
 def szHS(onepdm,twopdm,n,s):

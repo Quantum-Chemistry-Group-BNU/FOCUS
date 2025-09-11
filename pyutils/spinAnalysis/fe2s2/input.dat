@@ -1,0 +1,23 @@
+dtype 0
+sorb 40
+nelec 30
+twom 0
+twos 0 
+integral_file moleinfo/fmole.info
+scratch ./scratch
+
+$ctns
+verbose 1
+qkind rNSz
+maxdets 1000 # keep dets as much as possible
+thresh_proj 1.e-10
+thresh_ortho 1.e-8 #1.e-10
+nroots 1 
+schedule
+0  2 10 1.e-4 0.0
+end
+maxsweep 1
+rcanon_file rcanon_conf_su2_nonsu2
+task_compress 1
+task_sdiag
+$end
