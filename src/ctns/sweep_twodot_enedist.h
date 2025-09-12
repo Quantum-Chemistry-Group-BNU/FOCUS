@@ -31,7 +31,9 @@ namespace ctns{
             sweep_data& sweeps,
             const int isweep,
             const int ibond,
-            comb<Qm,Tm>& icomb0,
+            const comb<Qm,Tm>& icomb2,
+            const comb<Qm,Tm>& licomb2,
+            const std::vector<qtensor3<Qm::ifabelian,Tm>>& cpsis2,
             std::vector<qtensor2<Qm::ifabelian,Tm>>& environ){
          int rank = 0, size = 1, maxthreads = 1;
 #ifndef SERIAL

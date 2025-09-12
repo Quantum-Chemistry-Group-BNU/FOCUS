@@ -35,7 +35,7 @@ void PROP(const input::schedule& schd){
    //-----------------------------------------------------------------
 
    // initialization of MPS and save to binary format
-   ctns::comb<Qm,Tm> icomb;
+   ctns::comb<Qm,Tm> icomb, licomb;
    if(schd.ctns.rcanon_file.size()>0){
       ctns::comb_load(icomb, schd, schd.ctns.rcanon_file);
       if(!icomb.topo.ifmps){ // must be MPS
@@ -43,13 +43,13 @@ void PROP(const input::schedule& schd){
       }
       if(rank == 0){
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb, schd.scratch+"/"+schd.ctns.rcanon_file);
-         if(schd.ctns.lcanon) ctns::lcanon(icomb, schd, schd.ctns.rcanon_file);
+         if(schd.ctns.lcanon) ctns::lcanon_canonicalize(licomb, icomb, schd, schd.ctns.rcanon_file);
       }
    }else{
       tools::exit("error: MPS1 must be given!");
    }
    bool is_same = false;
-   ctns::comb<Qm,Tm> icomb2;
+   ctns::comb<Qm,Tm> icomb2, licomb2;
    if(schd.ctns.rcanon2_file.size()>0){
       ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
       if(!icomb2.topo.ifmps){ // must be MPS
@@ -57,7 +57,7 @@ void PROP(const input::schedule& schd){
       }
       if(rank == 0){
          if(schd.ctns.savebin) ctns::rcanon_savebin(icomb2, schd.scratch+"/"+schd.ctns.rcanon2_file);
-         if(schd.ctns.lcanon) ctns:lcanon(icomb, schd, schd.ctns.rcanon2_file);
+         if(schd.ctns.lcanon) ctns::lcanon_canonicalize(licomb2, icomb2, schd, schd.ctns.rcanon2_file);
       }
    }else{
       auto jcomb = icomb;

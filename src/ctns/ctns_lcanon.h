@@ -49,28 +49,33 @@ namespace ctns{
             assert(cwf.size() == rwfun.size());
             linalg::xcopy(cwf.size(), cwf.data(), rwfun.data());
             icomb.rwfuns[i] = std::move(rwfun);
-            
-            // TO BE IMPROVED IN FUTURE; FOR INTERFACING WITH BLOCK2, WE ONLY CONSIDER SINGLE STATE 
+            //------------------------------------------------------------
+            // TO BE IMPROVED IN FUTURE: 
+            // FOR INTERFACING WITH BLOCK2, WE ONLY CONSIDER SINGLE STATE 
+            // AND THE CWF MATRIX MUST BE SIMPLY [1].
+            //------------------------------------------------------------
             if(nroots != 1 or !check_identityMatrix(cwf.to_matrix())){
                std::cout << "error: lcanon only supports nroots=1 and cwf=Id currently!" << std::endl;
                exit(1); 
             }else{
                icomb.rwfuns[i].print("lwfun",2);
             }
-
+            //------------------------------------------------------------
          } // iroot
       }
 
    // left canonicalization
    template <typename Qm, typename Tm>
-      void lcanon(const comb<Qm,Tm>& icomb0,
+      std::vector<qtensor3<Qm::ifabelian,Tm>> lcanon_canonicalize(comb<Qm,Tm>& licomb,
+            const comb<Qm,Tm>& icomb0,
             const input::schedule& schd,
             const std::string rcanon_file,
+            const bool savecpsi=false,
             const bool debug=true){
          const bool ifab = Qm::ifabelian;
          const size_t dmax = icomb0.get_dmax();
          const bool singlet = schd.ctns.singlet;
-         std::cout << "\nctns::lcanon"
+         std::cout << "\nctns::lcanon_canonicalize"
               << " ifab=" << ifab
               << " dmax=" << dmax
               << " singlet=" << singlet
@@ -80,8 +85,11 @@ namespace ctns{
          const int nroots = 1; 
          auto icomb = icomb0;
          init_cpsi_dot0(icomb, schd.ctns.iroot, singlet);
-         
-         // generate sweep sequence
+        
+         std::vector<qtensor3<Qm::ifabelian,Tm>> cpsis;
+         if(savecpsi) cpsis.resize(icomb.topo.nphysical);
+
+         // generate sweep sequence: only forward
          const auto& rindex = icomb.topo.rindex;
          auto sweep_seq = icomb.topo.get_mps_fsweeps(true); // include boundary
          double maxdwt = -1.0;
@@ -247,6 +255,18 @@ namespace ctns{
             linalg::matrix<Tm> vsol(ndim, nroots, v0.data());
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
             vsol.clear();
+
+            //-----------
+            // save cpsi
+            //-----------
+            if(savecpsi){
+               assert(icomb.cpsi.size() == 1);
+               for(int i=0; i<icomb.cpsi.size(); i++){
+                  auto cpsi = icomb.cpsi[i];
+                  cpsis[dbond.p1.first] = std::move(cpsi);
+               }
+            }
+            //-----------
          } // ibond
 
          // compute rwfuns for the next call of reduce_entropy_single
@@ -256,7 +276,7 @@ namespace ctns{
          sweep_final_LC2LLc(icomb, rdm_svd, svd_iop, fname, debug);
 
          auto t1 = tools::get_time();
-         std::cout << "\nmaxdwt during canonicalization = " << maxdwt << std::endl;
+         std::cout << "\nmaxdwt during left canonicalization = " << maxdwt << std::endl;
          icomb.display_shape();
 
          // --- savebin ---
@@ -267,13 +287,17 @@ namespace ctns{
             std::ofstream ofs2(fname+".bin", std::ios::binary);
             ofs2.write((char*)(&icomb.topo.ntotal), sizeof(int));
             // save all sites
-            for(int idx=0; idx<icomb.topo.ntotal; idx++){
+            for(int idx=0; idx<icomb.topo.ntotal; idx++){ // different from rcanon_savebin
                icomb.sites[idx].dump(ofs2);
             }
             ofs2.close();
          }
-
-         tools::timing("ctns::lcanon", t0, t1);
+         
+         // Note that left most site is not canonicalize to identity [maybe needed in future]
+         licomb = std::move(icomb);
+         
+         tools::timing("ctns::lcanon_canonicalize", t0, t1);
+         return cpsis;
       }
 
 } // ctns

@@ -73,6 +73,7 @@ void params_ctns::read(ifstream& istrm){
          task_scramble = true;
          depth = stoi(line.substr(13));
       }else if(line.substr(0,12)=="task_enedist"){
+         task_ham = true;
          task_enedist = true;
          istringstream is(line.substr(13));
          string s;

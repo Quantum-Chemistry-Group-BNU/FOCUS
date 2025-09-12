@@ -43,38 +43,23 @@ namespace ctns{
          if(schd.ctns.ifdistc && !icomb.topo.ifmps){
             tools::exit("error: ifdistc should be used only with MPS!");
          }
-           
-         // ZL2025: enedist |psi0>
-         ctns::comb<Qm,Tm> icomb2;
-         std::vector<qtensor2<Qm::ifabelian,Tm>> environ;
+          
+         //--------------------------
+         // ZL202509: enedist |psi0>
+         //--------------------------
+         ctns::comb<Qm,Tm> icomb2, licomb2;
+         std::vector<qtensor3<Qm::ifabelian,Tm>> cpsis2;
+         std::vector<qtensor2<Qm::ifabelian,Tm>> environ(icomb.topo.nbackbone);
          if(schd.ctns.task_enedist){
             if(schd.ctns.rcanon2_file.size()==0){
                tools::exit("error: rcanon2_file must be defined for psi0!");
             }
-            ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
-            ctns::lcanon(icomb2, schd, schd.ctns.rcanon2_file);
-            exit(1); 
-            /*      
-            // construct environments for MPS only
-            environ.resize(icomb.topo.nbackbone);
-            const auto& nodes = icomb.topo.nodes;
-            const auto& rindex = icomb.topo.rindex;
-            qtensor2<Qm::ifabelian,Tm> qt2_r;
-            for(int i=icomb.topo.nbackbone-1; i>0; i--){
-               const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
-               const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
-               if(i == icomb.topo.nbackbone-1){
-                  qt2_r = contract_qt3_qt3("cr",site,site2);
-                  environ[i] = qt2_r;
-               }else{
-                  auto qtmp = contract_qt3_qt2("r",site2,qt2_r);
-                  qt2_r = contract_qt3_qt3("cr",site,qtmp);
-                  environ[i] = qt2_r;
-               }
-            } // i 
-         */
+            if(rank == 0){
+               ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
+               cpsis2 = ctns::lcanon_canonicalize(licomb2, icomb2, schd, schd.ctns.rcanon2_file, true);           
+            } // rank-0 
          }
-         exit(1);
+         //--------------------------
 
          // build operators on the left dot
          oper_init_dotL(icomb, int2e, int1e, schd, scratch);
@@ -107,6 +92,30 @@ namespace ctns{
                rcanon_save_sites(icomb, scratch, rank);
             }
 
+            //-------------------------------------------------
+            // ZL@2025/09: construct environments for MPS only
+            //-------------------------------------------------
+            if(isweep == schd.ctns.restart_sweep){
+               const auto& nodes = icomb.topo.nodes;
+               const auto& rindex = icomb.topo.rindex;
+               // right boundary
+               for(int i=icomb.topo.nbackbone-1; i>0; i--){
+                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+                  const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
+                  if(i == icomb.topo.nbackbone-1){
+                     environ[i] = contract_qt3_qt3("cr",site,site2);
+                  }else{
+                     auto qtmp = contract_qt3_qt2("r",site2,environ[i+1]);
+                     environ[i] = contract_qt3_qt3("cr",site,qtmp);
+                  }
+               } // i
+               // left boundary
+               const auto& site = icomb.sites[rindex.at(std::make_pair(0,0))];
+               const auto& site2 = licomb2.sites[rindex.at(std::make_pair(0,0))];
+               environ[0] = contract_qt3_qt3("lc",site,site2);
+            }
+            //-------------------------------------------------
+ 
             // loop over sites
             auto ti = tools::get_time();
             for(int ibond=0; ibond<sweeps.seqsize; ibond++){
@@ -133,19 +142,11 @@ namespace ctns{
                   sweep_restart(icomb, int2e, int1e, ecore, schd, scratch,
                         qops_pool, sweeps, isweep, ibond);
                }else{
-                  if(schd.ctns.task_enedist){
-                     sweep_twodot_enedist(icomb, int2e, int1e, ecore, schd, scratch,
-                           qops_pool, sweeps, isweep, ibond, icomb2, environ);
-                  }else{
-                     // optimization
-                     if(dots == 1){ // || (dots == 2 && tp0 == 3 && tp1 == 3)){
-                        sweep_onedot(icomb, int2e, int1e, ecore, schd, scratch,
-                              qops_pool, sweeps, isweep, ibond); 
-                     }else{
-                        sweep_twodot(icomb, int2e, int1e, ecore, schd, scratch,
-                              qops_pool, sweeps, isweep, ibond);
-                     }
-                  }
+                  // ZL@202509: currently only support twodot algorithm
+                  assert(dots == 2); 
+                  sweep_twodot_enedist(icomb, int2e, int1e, ecore, schd, scratch,
+                        qops_pool, sweeps, isweep, ibond, 
+                        icomb2, licomb2, cpsis2, environ);
                }
                
                // save updated sites

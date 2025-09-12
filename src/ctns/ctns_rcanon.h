@@ -354,7 +354,7 @@ namespace ctns{
          rcanon_lastdots(icomb);
 
          auto t1 = tools::get_time();
-         std::cout << "maxdwt during canonicalization = " << maxdwt << std::endl;
+         std::cout << "maxdwt during right canonicalization = " << maxdwt << std::endl;
          tools::timing("ctns::rcanon_canonicalize", t0, t1);
       }
 

@@ -20,7 +20,6 @@ namespace ctns{
          qsym sym(3,0,0);
 
          stensor2su2<Tm> qt2;
-/*
          if(superblock == "lc"){
             // flip direction and qsym on the first tensor
             direction2 dir = {1-std::get<1>(qt3a.info.dir), std::get<1>(qt3b.info.dir)}; 
@@ -28,14 +27,11 @@ namespace ctns{
          }else if(superblock == "cr"){
             direction2 dir = {1-std::get<0>(qt3a.info.dir), std::get<0>(qt3b.info.dir)}; 
             qt2.init(sym, qt3a.info.qrow, qt3b.info.qrow, dir);
+/*
          }else if(superblock == "lr"){
             direction2 dir = {1-std::get<2>(qt3a.info.dir), std::get<2>(qt3b.info.dir)}; 
             qt2.init(sym, qt3a.info.qmid, qt3b.info.qmid, dir);
-         }
 */
-         if(superblock == "cr"){
-            direction2 dir = {1-std::get<0>(qt3a.info.dir), std::get<0>(qt3b.info.dir)}; 
-            qt2.init(sym, qt3a.info.qrow, qt3b.info.qrow, dir);
          }
  
          contract_qt3_qt3_info(superblock,qt3a.info, qt3a.data(), 
@@ -54,28 +50,23 @@ namespace ctns{
             Tm* qt2_data){
          //assert(qt2_info.sym == -qt3a_info.sym + qt3b_info.sym);
          assert(qt3a_info.dir  == qt3b_info.dir); // bra dir fliped
-/*
          if(superblock == "lc"){
             assert(qt3a_info.qrow == qt3b_info.qrow);
             assert(qt3a_info.qmid == qt3b_info.qmid);
             contract_qt3_qt3_info_lc(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
          }else if(superblock == "cr"){
-            assert(qt3a_info.qcol == qt3b_info.qcol);
-            assert(qt3a_info.qmid == qt3b_info.qmid);
+            assert(qt3a_info.qcol == qt3b_info.qcol); // r
+            assert(qt3a_info.qmid == qt3b_info.qmid); // c
             contract_qt3_qt3_info_cr(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
+/*
          }else if(superblock == "lr"){
             assert(qt3a_info.qrow == qt3b_info.qrow);
             assert(qt3a_info.qcol == qt3b_info.qcol);
             contract_qt3_qt3_info_lr(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
                   qt2_info, qt2_data);
 */
-         if(superblock == "cr"){
-            assert(qt3a_info.qcol == qt3b_info.qcol); // r
-            assert(qt3a_info.qmid == qt3b_info.qmid); // c
-            contract_qt3_qt3_info_cr(qt3a_info, qt3a_data, qt3b_info, qt3b_data,
-                  qt2_info, qt2_data);
          }else{
             std::cout << "error: no such case in contract_qt3_qt3_info! superblock=" 
                << superblock << std::endl;
@@ -83,7 +74,6 @@ namespace ctns{
          }
       }
 
-   /*
    // formula: qt2(r,c) = \sum_xm Conj[qt3a](x,r,m)*qt3b(x,c,m) [storage: qt3(L,R,C)]
    //
    //          /--*--r qt3a
@@ -91,11 +81,13 @@ namespace ctns{
    //          \--*--c qt3b
    template <typename Tm>
       void contract_qt3_qt3_info_lc(const qinfo3su2<Tm>& qt3a_info,
-            const Tm* qt3a_data,	
+            Tm* qt3a_data,	
             const qinfo3su2<Tm>& qt3b_info,
-            const Tm* qt3b_data,
-            const qinfo2su2<Tm>& qt2_info,
+            Tm* qt3b_data,
+            qinfo2su2<Tm>& qt2_info,
             Tm* qt2_data){
+         assert(qt3a_info.couple == LCcouple);
+         assert(qt3b_info.couple == LCcouple);
          const Tm alpha = 1.0, beta = 1.0;
          // loop over qt3a
          int bx, br, bm, tsi;
@@ -131,7 +123,6 @@ namespace ctns{
             } // bc
          } // i
       }
-   */
 
    // formula: qt2(r,c) = \sum_xm Conj[qt3a](r,x,m)*qt3b(c,x,m)
    //
