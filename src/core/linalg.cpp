@@ -173,3 +173,38 @@ void linalg::svd_solver(const matrix<complex<double>>& A, vector<double>& s,
       exit(1);
    }
 }
+
+// real symmetric A
+void linalg::linear_solver(const matrix<double>& A, const std::vector<double>& rhs,
+      std::vector<double>& e, std::vector<double>& x){
+   assert(A.rows() == A.cols()); 
+   assert(A.rows() == rhs.size()); 
+   assert(A.rows() == x.size());
+   assert(e.size() == 1); 
+   MKL_INT n = A.rows(), nrhs = 1, lwork = -1, info = 0; 
+   char uplo = 'U';
+   double work_query;
+   std::vector<MKL_INT> ipiv(n);
+   // query optimal workspace
+   linalg::xcopy(n, rhs.data(), x.data());
+   auto Atmp = A;
+   dsysv_(&uplo, &n, &nrhs, Atmp.data(), &n, ipiv.data(), 
+          x.data(), &n, &work_query, &lwork, &info);
+   if(info != 0) {
+      tools::exit("error: LAPACK workspace query failed for dsysv");
+   }
+   lwork = static_cast<MKL_INT>(work_query);
+   unique_ptr<double[]> work(new double[lwork]);
+   dsysv_(&uplo, &n, &nrhs, Atmp.data(), &n, ipiv.data(), 
+          x.data(), &n, work.get(), &lwork, &info);
+   if(info != 0) {
+      tools::exit("error: LAPACK dsysv failed to solve the system");
+   }
+   // L[x] = x^t*A*x - 2*b^t*x = -(b^t*x)_re [Re will be used in general]
+   e[0] = linalg::xdot(n, rhs.data(), x.data());
+}
+
+void linalg::linear_solver(const matrix<std::complex<double>>& A, const std::vector<std::complex<double>>& rhs,
+      std::vector<double>& e, std::vector<std::complex<double>>& x){
+   tools::exit("error:linear_solver does not support complex matrix yet!");
+}

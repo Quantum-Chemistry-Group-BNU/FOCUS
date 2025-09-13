@@ -94,7 +94,7 @@ namespace ctns{
       }
 
    template <typename Qm, typename Tm>
-      void twodot_guess_v0(comb<Qm,Tm>& icomb, 
+      void twodot_guess_v0(const comb<Qm,Tm>& icomb, 
             const directed_bond& dbond,
             const size_t ndim,
             const int neig,

@@ -6,9 +6,9 @@
 #include "sweep_util.h"
 #include "sweep_twodot_diag.h"
 #include "sadmrg/sweep_twodot_diag_su2.h"
-#include "sweep_twodot_local.h"
 #include "sweep_twodot_renorm.h"
 #include "sweep_hvec.h"
+#include "../qtensor/plinear.h"
 #ifndef SERIAL
 #include "../core/mpi_wrapper.h"
 #endif
@@ -18,6 +18,96 @@
 #endif
 
 namespace ctns{
+
+   // local CI solver	
+   template <typename Qm, typename Tm>
+      void twodot_local_linear(comb<Qm,Tm>& icomb,
+            const input::schedule& schd,
+            const double eps,
+            const int parity,
+            const size_t ndim,
+            const int neig,
+            const double* diag,
+            HVec_type<Tm> HVec,
+            std::vector<double>& eopt,
+            linalg::matrix<Tm>& vsol,
+            int& nmvp,
+            qtensor4<Qm::ifabelian,Tm>& wf,
+            const directed_bond& dbond,
+            dot_timing& timing,
+            const std::vector<Tm>& rhs,
+            const int icase,
+            const double omegaR=0.0,
+            const double omegaI=0.0){
+         int size = 1, rank = 0;
+#ifndef SERIAL
+         size = icomb.world.size();
+         rank = icomb.world.rank();
+#endif
+
+         // without kramers restriction
+         plinearSolver_nkr<Tm> solver(ndim, neig, eps, schd.ctns.maxcycle, icase);
+         solver.iprt = schd.ctns.verbose;
+         solver.damping = schd.ctns.damping;
+         solver.precond = schd.ctns.precond;
+         solver.ifnccl = schd.ctns.ifnccl;
+         solver.Diag = const_cast<double*>(diag);
+         solver.HVec = HVec;
+         //-----------------------------------
+         // specification for linear equation
+         //-----------------------------------
+         solver.RHS = const_cast<Tm*>(rhs.data()); // RHS of A*x=b
+         solver.omegaR = omegaR;
+         solver.omegaI = omegaI;
+#ifndef SERIAL
+         solver.world = icomb.world;
+#endif
+
+         if(schd.ctns.cisolver == 0){
+
+            // full diagonalization for debug
+            solver.solve_diag(eopt.data(), vsol.data(), false);
+
+         }else if(schd.ctns.cisolver == 1){ 
+
+            // davidson
+            if(schd.ctns.guess == 0){
+               // davidson without initial guess
+               solver.solve_iter(eopt.data(), vsol.data()); 
+            }else if(schd.ctns.guess == 1){     
+               //------------------------------------
+               // prepare initial guess     
+               //------------------------------------
+               auto t0 = tools::get_time();
+               std::vector<Tm> v0;
+               if(rank == 0){
+                  assert(icomb.cpsi.size() == neig);
+                  // specific to twodot 
+                  twodot_guess_v0(icomb, dbond, ndim, neig, wf, v0);
+                  // reorthogonalization
+                  int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
+                  if(nindp != neig){
+                     std::cout << "error: nindp=" << nindp << " does not match neig=" << neig << std::endl;
+                     exit(1);
+                  } 
+               }
+               //------------------------------------
+               auto t1 = tools::get_time();
+               timing.dtb5 = tools::get_duration(t1-t0);
+               solver.solve_iter(eopt.data(), vsol.data(), v0.data());
+            }else{
+               std::cout << "error: no such option for guess=" << schd.ctns.guess << std::endl;
+               exit(1);
+            }
+
+         }
+         nmvp = solver.nmvp;
+         timing.dtb6 = solver.t_cal - oper_timer.tcpugpu - oper_timer.tcommgpu; 
+         timing.dtb7 = oper_timer.tcpugpu;
+         timing.dtb8 = oper_timer.tcommgpu;
+         timing.dtb9 = solver.t_comm;
+         timing.dtb10 = solver.t_rest;
+      }
 
    // twodot optimization algorithm for energy distribution P(E)
    template <typename Qm, typename Tm>
@@ -197,16 +287,66 @@ namespace ctns{
          // TODOs:
          // 
          // 1. Linear equation & CG algorithm for solving [(H-E)^2+eta^2]|psi>=eta|psi0>
-         //    (tested with a random RHS)
          //
          // 2. The most tricky part is the preparation of RHS.
          //
          // 3. Also add (H-E)*|psi> in renormalization? (add an option)
          //====================================================================
+         /*
          twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing);
-         exit(1);
-         //====================================================================
+         */
+
+         //-------------------------------
+         // construct RHS and solver Ax=b 
+         //-------------------------------
+         // adapted from twodot_guess_v0
+         std::vector<Tm> rhs(ndim);
+         auto pdx0 = icomb.topo.rindex.at(dbond.p0);
+         auto pdx1 = icomb.topo.rindex.at(dbond.p1);
+         if(dbond.forward){
+            //  /        \
+            //  *  |  |  *
+            //  \--c--r--/
+            const auto& cpsi = cpsis2[dbond.p0.first];
+            const auto& lenv = environ[dbond.p0.first-1];
+            auto cpsi_new = contract_qt3_qt2("l",cpsi,lenv); 
+            const auto& renv = environ[dbond.p1.first+1];
+            auto site_new = contract_qt3_qt2("r",icomb2.sites[pdx1],renv);
+            // psi[l,a,c1] => cwf[lc1,a]
+            auto cwf = cpsi_new.recouple_lc().merge_lc(); 
+            // cwf[lc1,a]*r[a,r,c2] => wf3[lc1,r,c2]
+            auto wf3 = contract_qt3_qt2("l",site_new,cwf); 
+            // wf3[lc1,r,c2] => wf4[l,r,c1,c2]
+            auto wf4 = wf3.split_lc1(wf.info.qrow, wf.info.qmid);
+            assert(wf4.size() == ndim);
+            wf4.to_array(rhs.data());
+         }else{
+            //  /        \
+            //  *  |  |  *
+            //  \--l--c--/
+            const auto& cpsi = cpsis2[dbond.p1.first];
+            const auto& renv = environ[dbond.p1.first+1];
+            auto cpsi_new = contract_qt3_qt2("r",cpsi,renv);
+            const auto& lenv = environ[dbond.p0.first-1];
+            auto site_new = contract_qt3_qt2("l",licomb2.sites[pdx0],lenv); 
+            // psi[a,r,c2] => cwf[a,c2r]
+            auto cwf = cpsi_new.recouple_cr().merge_cr();
+            // l[l,a,c1]*cwf[a,c2r] => wf3[l,c2r,c1]
+            auto wf3 = contract_qt3_qt2("r",site_new,cwf.P());
+            // wf3[l,c2r,c1] => wf4[l,r,c1,c2] 
+            auto wf4 = wf3.split_c2r(wf.info.qver, wf.info.qcol);
+            assert(wf4.size() == ndim);
+            wf4.to_array(rhs.data());
+         } // forward
+        
+         // solve [(H-E)^2+eta^2]|psi>=-eta|psi2>
+         const int icase = 0;
+         twodot_local_linear(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
+               ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing,
+               rhs, icase, schd.ctns.enedist[0], schd.ctns.enedist[1]);
+         rhs.clear();
+         //-------------------------------
 
          // free tmp space on CPU & GPU
          delete[] diag;
@@ -239,6 +379,28 @@ namespace ctns{
                sweeps, isweep, ibond);
          timing.tf = tools::get_time();
 
+         //---------------------
+         // update environments
+         //---------------------
+         if(dbond.forward){
+            // /--new--
+            // *   |
+            // \--l2---
+            const auto& cpsi = licomb2.sites[pdx0];
+            const auto& lenv = environ[dbond.p0.first-1];
+            auto cpsi_new = contract_qt3_qt2("l",cpsi,lenv); 
+            environ[dbond.p0.first] = contract_qt3_qt3("lc",icomb.sites[pdx0],cpsi_new);
+         }else{
+            // --new--\
+            //    |   *
+            // ---r2--/
+            const auto& cpsi = icomb2.sites[pdx1];
+            const auto& renv = environ[dbond.p1.first+1];
+            auto cpsi_new = contract_qt3_qt2("r",cpsi,renv);
+            environ[dbond.p1.first] = contract_qt3_qt3("cr",icomb.sites[pdx1],cpsi_new);
+         } 
+         //---------------------
+         
          // 4. save on disk 
          qops_pool.cleanup_sweep(frop, fdel, schd.ctns.async_save, schd.ctns.async_remove, schd.ctns.keepoper);
 

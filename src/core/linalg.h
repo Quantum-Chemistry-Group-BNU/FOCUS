@@ -5,6 +5,11 @@
 #include "matrix.h"
 
 extern "C" {
+// linear
+void dsysv_(const char* uplo, const MKL_INT* n, const MKL_INT* nrhs, 
+                double* A, const MKL_INT* lda, MKL_INT* ipiv, 
+                double* B, const MKL_INT* ldb, double* work, 
+                const MKL_INT* lwork, MKL_INT* info);
 // eig
 void dsyevd_(const char* JOBZ, const char* UPLO, const MKL_INT* N, 
 	     double* A, const MKL_INT* LDA, 
@@ -63,6 +68,12 @@ void svd_solver(const matrix<double>& A, std::vector<double>& s,
 void svd_solver(const matrix<std::complex<double>>& A, std::vector<double>& s, 
 		matrix<std::complex<double>>& U, matrix<std::complex<double>>& Vt, 
 		const MKL_INT svd_iop=3);
+
+// symmetric linear equation solver
+void linear_solver(const matrix<double>& A, const std::vector<double>& rhs,
+      std::vector<double>& e, std::vector<double>& x);
+void linear_solver(const matrix<std::complex<double>>& A, const std::vector<std::complex<double>>& rhs,
+      std::vector<double>& e, std::vector<std::complex<double>>& x);
 
 } // linalg
 
