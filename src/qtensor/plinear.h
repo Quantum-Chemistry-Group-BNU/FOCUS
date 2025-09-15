@@ -35,7 +35,7 @@ namespace ctns{
                const std::string ifconverge = "-+";
                if(iter == 1){
                   if(iprt > 0){		 
-                     size_t nmax = 6; // no. of vectors needed
+                     size_t nmax = 7; // no. of vectors needed
                      std::cout << std::defaultfloat; 
                      std::cout << "settings: ndim=" << ndim 
                         << " neig=" << neig
@@ -66,7 +66,7 @@ namespace ctns{
             }
 
             // perform H*x for a set of input vectors: x(nstate,ndim)
-            void HVecs(const int nstate, Tm* y, const Tm* x, Tm* work){
+            void HVecs(const int nstate, Tm* y, const Tm* x, Tm* work, const int cases){
                int size = 1, rank = 0;
 #ifndef SERIAL
                size = world.size();
@@ -76,14 +76,16 @@ namespace ctns{
                double tcal = 0.0, tcomm = 0.0;
                for(int istate=0; istate<nstate; istate++){
                   auto t0 = tools::get_time();
-                  if(icase == 0){
+                  if(cases == 0){
                      HVec(work, x+istate*ndim); // y=[(H-omegaR)^2+omegaI^2]*x
                      linalg::xaxpy(ndim, -omegaR, x+istate*ndim, work);
                      HVec(y+istate*ndim, work);
                      linalg::xaxpy(ndim, -omegaR, work, y+istate*ndim);
                      linalg::xaxpy(ndim, omegaI*omegaI, x+istate*ndim, y+istate*ndim);
-                  }else{
+                  }else if(cases == 1){
                      HVec(y+istate*ndim, x+istate*ndim); // y=H*x
+                  }else{
+                     tools::exit("error: no such cases for HVecs!");
                   }
                   auto t1 = tools::get_time();
                   tcal += tools::get_duration(t1-t0);
@@ -103,7 +105,7 @@ namespace ctns{
             }
 
             // check by full diag
-            void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
+            void solve_diag(double* es, Tm* vs, const bool debug_hmat=false){
                int size = 1, rank = 0;
 #ifndef SERIAL
                size = world.size();
@@ -115,7 +117,7 @@ namespace ctns{
                linalg::matrix<Tm> id = linalg::identity_matrix<Tm>(ndim);
                linalg::matrix<Tm> H(ndim,ndim);
                std::vector<Tm> work(ndim);
-               HVecs(ndim, H.data(), id.data(), work.data());
+               HVecs(ndim, H.data(), id.data(), work.data(), icase);
                work.clear();
 
                std::vector<Tm> rhs(ndim);
@@ -133,21 +135,6 @@ namespace ctns{
                      tools::exit("error: H is not Hermitian in ctns::plinearSolver_nkr::solve_diag!");
                   }
               
-                  // check consistency with diag
-                  double diff = 0.0;
-                  if(ifCheckDiag){
-                     std::cout << "CheckDiag[master]: ndim=" << ndim << std::endl;
-                     std::cout << std::setprecision(12);
-                     for(int i=0; i<ndim; i++){
-                        std::cout << "i=" << i 
-                           << " H(i,i)=" << H(i,i) 
-                           << " Diag[i]=" << Diag[i] 
-                           << " diff=" << Diag[i]-H(i,i)
-                           << std::endl;
-                        diff += std::abs(Diag[i]-H(i,i));
-                     } // i
-                  }
-
                   // solve eigenvalue problem by diagonalization
                   linalg::linear_solver(H, rhs, e, V);
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
@@ -155,12 +142,12 @@ namespace ctns{
                      std::cout << "i=" << i << " e=" << e[i] << std::endl;
                   }
                      
-                  if(ifCheckDiag){
-                     if(diff>1.e-10){
-                        std::cout << "error: |Diag[i]-H(i,i)| is too large! diff=" << diff << std::endl;
-                        exit(1);
-                     }
-                     std::cout << "CheckDiag passed successfully!" << std::endl;
+                  // ZL@2025/09/14: save for debug
+                  if(debug_hmat){
+                     HVecs(ndim, H.data(), id.data(), work.data(), 1); // save H
+                     H.save_txt("Hmat", 12);
+                     linalg::matrix<Tm> RHSmat(ndim, 1, RHS);
+                     RHSmat.save_txt("RHSmat", 12);
                   }
                } // rank-0
 #ifndef SERIAL
@@ -218,7 +205,7 @@ namespace ctns{
                   tools::exit(msg+std::to_string(neig));
                }
 
-               std::vector<Tm> x0(ndim,0.0), r0(ndim), z0(ndim), p0(ndim), Ap(ndim), work(ndim);
+               std::vector<Tm> x0(ndim), r0(ndim), z0(ndim), p0(ndim), Ap(ndim), Ax(ndim), work(ndim);
                std::vector<double> tmpE(1);
 
                // 1. generate initial subspace - vbas
@@ -228,18 +215,21 @@ namespace ctns{
                      linalg::xcopy(ndim, vguess, x0.data());
                      auto t1x = tools::get_time();
                      t_xcopy += tools::get_duration(t1x-t0x);
+                  }else{
+                     memset(x0.data(), 0, ndim*sizeof(Tm));
                   }
                }
 #ifndef SERIAL
                if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, x0.data(), ndim, 0);
 #endif
-
+   
                // r = b - A @ x
-               HVecs(neig, r0.data(), x0.data(), work.data());
-               linalg::xscal(ndim, -1.0, r0.data());
-               linalg::xaxpy(ndim, 1.0, RHS, r0.data()); 
+               HVecs(neig, Ax.data(), x0.data(), work.data(), icase); 
+               std::memset(r0.data(), 0, ndim*sizeof(Tm));
+               linalg::xaxpy(ndim, -1.0, Ax.data(), r0.data());
+               linalg::xaxpy(ndim,  1.0, RHS, r0.data()); 
                
-               precondition(r0.data(), z0.data());
+               precondition(r0.data(), z0.data()); // Mz0=r0
                linalg::xcopy(ndim, z0.data(), p0.data());
                Tm rtz = linalg::xdot(ndim, r0.data(), z0.data());
 
@@ -247,20 +237,22 @@ namespace ctns{
                bool ifconv = false;
                for(int iter=1; iter<maxcycle+1; iter++){
                   // perform A*p in parallel 
-                  HVecs(neig, Ap.data(), p0.data(), work.data());
+                  HVecs(neig, Ap.data(), p0.data(), work.data(), icase);
                   // rank-0: solve the subspace problem
                   if(rank == 0){
                      Tm ptAp = linalg::xdot(ndim, p0.data(), Ap.data()); 
                      Tm alpha = rtz / ptAp;
-                     linalg::xaxpy(ndim, alpha, p0.data(), x0.data());
+                     linalg::xaxpy(ndim,  alpha, p0.data(), x0.data());
+                     linalg::xaxpy(ndim,  alpha, Ap.data(), Ax.data());
                      linalg::xaxpy(ndim, -alpha, Ap.data(), r0.data());
-			            double rnorm = linalg::xnrm2(ndim, r0.data());
+                     double rnorm = linalg::xnrm2(ndim, r0.data());
 	                  ifconv = rnorm<crit_v;
-                     // b^t*x
-                     tmpE[0] = std::real(linalg::xdot(ndim, RHS, x0.data())); 
+                     // result = x^t*A*x - 2*b^t*x [variational]
+                     tmpE[0] = std::real(linalg::xdot(ndim, x0.data(), Ax.data()) \
+                                    - 2.0*linalg::xdot(ndim, RHS, x0.data())); 
                      auto t1 = tools::get_time();
                      if(iprt >= 0) print_iter(iter,tmpE[0],rnorm,tools::get_duration(t1-ti));
-                  } 
+                  }
 #ifndef SERIAL
                   if(size > 1) boost::mpi::broadcast(world, ifconv, 0);
 #endif

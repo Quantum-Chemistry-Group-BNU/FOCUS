@@ -66,7 +66,7 @@ namespace ctns{
          if(schd.ctns.cisolver == 0){
 
             // full diagonalization for debug
-            solver.solve_diag(eopt.data(), vsol.data(), false);
+            solver.solve_diag(eopt.data(), vsol.data(), schd.ctns.debug_hmat);
 
          }else if(schd.ctns.cisolver == 1){ 
 
@@ -82,14 +82,9 @@ namespace ctns{
                std::vector<Tm> v0;
                if(rank == 0){
                   assert(icomb.cpsi.size() == neig);
+                  assert(neig == 1); // for solving linear equation
                   // specific to twodot 
                   twodot_guess_v0(icomb, dbond, ndim, neig, wf, v0);
-                  // reorthogonalization
-                  int nindp = linalg::get_ortho_basis(ndim, neig, v0.data()); 
-                  if(nindp != neig){
-                     std::cout << "error: nindp=" << nindp << " does not match neig=" << neig << std::endl;
-                     exit(1);
-                  } 
                }
                //------------------------------------
                auto t1 = tools::get_time();
@@ -340,7 +335,12 @@ namespace ctns{
             wf4.to_array(rhs.data());
          } // forward
         
-         // solve [(H-E)^2+eta^2]|psi>=-eta|psi2>
+         // if the scaling factor is simply zeta, then P(E)=-eta/(pi*zeta^2)*Lmin
+         // so if this scaling factor is chosen for the RHS, final P(E)=-Lmin 
+         //double zeta = std::sqrt(schd.ctns.enedist[1]/(4.0*std::atan(1.0)));
+         //linalg::xscal(ndim, -zeta, rhs.data());
+         
+         // solve [(H-E)^2+eta^2]|Y>=zeta|psi2>
          const int icase = 0;
          twodot_local_linear(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing,

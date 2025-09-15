@@ -93,7 +93,7 @@ namespace ctns{
             }
 
             // check by full diag
-            void solve_diag(double* es, Tm* vs, const bool ifCheckDiag=false){
+            void solve_diag(double* es, Tm* vs, const bool debug_hmat=false, const bool ifCheckDiag=false){
                int size = 1, rank = 0;
 #ifndef SERIAL
                size = world.size();
@@ -139,6 +139,11 @@ namespace ctns{
                   std::cout << "eigenvalues:\n" << std::setprecision(12);
                   for(size_t i=0; i<ndim; i++){
                      std::cout << "i=" << i << " e=" << e[i] << std::endl;
+                  }
+
+                  // ZL@2025/09/14: save for debug
+                  if(debug_hmat){
+                     H.save_txt("Hmat_dvdson", 12);
                   }
                      
                   if(ifCheckDiag){

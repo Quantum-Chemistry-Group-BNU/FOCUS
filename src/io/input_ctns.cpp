@@ -81,6 +81,8 @@ void params_ctns::read(ifstream& istrm){
             enedist.push_back( stod(s) );
          }
          if(enedist.size() != 2) tools::exit("error: enedist.size() should be 2!");
+      }else if(line.substr(0,10)=="debug_hmat"){
+         debug_hmat = true;
       }else if(line.substr(0,4)=="dets"){
          while(true){
             line.clear();	   
@@ -437,8 +439,9 @@ void params_ctns::print() const{
    cout << "depth = " << depth << endl;
    cout << "task_enedist = " << task_enedist << endl;
    cout << "enedist = ";
-   for(const auto& d : enedist) std::cout << d << " ";
+   for(const auto& w : enedist) std::cout << w << " ";
    std::cout << std::endl;
+   cout << "debug_hmat = " << debug_hmat << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;
    cout << "timestamp = " << timestamp << endl;

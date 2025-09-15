@@ -200,8 +200,9 @@ void linalg::linear_solver(const matrix<double>& A, const std::vector<double>& r
    if(info != 0) {
       tools::exit("error: LAPACK dsysv failed to solve the system");
    }
-   // L[x] = x^t*A*x - 2*b^t*x = -(b^t*x)_re [Re will be used in general]
-   e[0] = linalg::xdot(n, rhs.data(), x.data());
+   // L[x] = x^t*A*x - 2*b^t*x = -(b^t*x)_re < 0 [Re will be used in general]
+   // since at the optimial point: x^t*A*x = b^t*x > 0
+   e[0] = -linalg::xdot(n, rhs.data(), x.data());
 }
 
 void linalg::linear_solver(const matrix<std::complex<double>>& A, const std::vector<std::complex<double>>& rhs,

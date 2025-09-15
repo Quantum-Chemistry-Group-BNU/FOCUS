@@ -42,7 +42,7 @@ namespace ctns{
          if(schd.ctns.cisolver == 0){
 
             // full diagonalization for debug
-            solver.solve_diag(eopt.data(), vsol.data(), true);
+            solver.solve_diag(eopt.data(), vsol.data(), schd.ctns.debug_hmat, true);
 
          }else if(schd.ctns.cisolver == 1){ 
 
