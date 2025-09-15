@@ -1,7 +1,7 @@
 dtype 1
 sorb 12
 nelec 5
-twom 1
+#twom 1
 integral_file moleinfo/fmole.info 
 scratch ./scratch
 
