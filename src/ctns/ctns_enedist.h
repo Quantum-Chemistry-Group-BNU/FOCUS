@@ -187,7 +187,7 @@ namespace ctns{
 	            rcanon_load_sites(icomb, scratch, rank);
 	         }
             // generate right rcanonical form and save checkpoint file
-            sweep_final(icomb, schd, scratch, isweep, rcfprefix);
+            sweep_final(icomb, schd, scratch, isweep, rcfprefix, false);
             // compute Hmat for checking purpose 
             oper_final(icomb, int2e, int1e, ecore, schd, scratch, qops_pool, isweep);
             
