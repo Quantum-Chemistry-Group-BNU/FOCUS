@@ -51,7 +51,8 @@ namespace ctns{
          timing.td = tools::get_time();
 
          // 2. prepare guess for the next site
-         if(rank == 0 && schd.ctns.guess){
+         //if(rank == 0 && schd.ctns.guess){
+         if(rank == 0){
             twodot_guess_psi(superblock, icomb, dbond, vsol, wf, rot);
          }
          vsol.clear();

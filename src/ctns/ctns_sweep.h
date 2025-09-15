@@ -65,9 +65,9 @@ namespace ctns{
             oper_timer.sweep_start(dots);
             
             // initialize: assume comb is in memory initially
-            if(schd.ctns.guess){
+            //if(schd.ctns.guess){
                sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
-            }
+            //}
 
             // outcore: save comb to disk to save memory
             if(schd.ctns.ifoutcore){
