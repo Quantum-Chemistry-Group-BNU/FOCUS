@@ -215,6 +215,14 @@ namespace ctns{
          // such that all the sites are in memory.
          //if(schd.ctns.ifoutcore) rcanon_load_sites(icomb, scratch, rank);
 
+         // print final resuls
+         if(rank == 0){
+            std::cout << ">>> Final enedist: (omegaR,omegaI)= " << schd.ctns.enedist[0] << " " << schd.ctns.enedist[1]
+              << " val= " << std::setprecision(12) << sweeps.get_eminlast(0)
+              << " valspec= " << -sweeps.get_eminlast(0) << "\n"
+              << std::endl;
+         }
+
          if(debug){
             auto t1 = tools::get_time();
             tools::timing("ctns::sweep_enedist", t0, t1);

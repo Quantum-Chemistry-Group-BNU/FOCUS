@@ -337,8 +337,8 @@ namespace ctns{
         
          // if the scaling factor is simply zeta, then P(E)=-eta/(pi*zeta^2)*Lmin
          // so if this scaling factor is chosen for the RHS, final P(E)=-Lmin 
-         //double zeta = std::sqrt(schd.ctns.enedist[1]/(4.0*std::atan(1.0)));
-         //linalg::xscal(ndim, -zeta, rhs.data());
+         double zeta = std::sqrt(schd.ctns.enedist[1]/(4.0*std::atan(1.0)));
+         linalg::xscal(ndim, -zeta, rhs.data());
          
          // solve [(H-E)^2+eta^2]|Y>=zeta|psi2>
          const int icase = 0;
