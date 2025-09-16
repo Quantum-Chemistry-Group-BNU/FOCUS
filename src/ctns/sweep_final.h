@@ -61,9 +61,6 @@ namespace ctns{
          qtensor2<Qm::ifabelian,Tm> rot;
          std::vector<qtensor2<Qm::ifabelian,Tm>> wfs2(nroots);
          for(int i=0; i<nroots; i++){
-            
-            icomb.cpsi[i].print("lzd-cpsi",2);
-
             auto wf2 = icomb.cpsi[i].recouple_cr().merge_cr().P();
             wfs2[i] = std::move(wf2);
          }

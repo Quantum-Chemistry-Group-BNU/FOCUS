@@ -338,7 +338,7 @@ namespace ctns{
                      auto t0r = tools::get_time();
                      for(int i=0; i<neig; i++){
                         double edel = std::abs(tmpE[i]-eigs(i,iter-1));
-			double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
+			               double norm = linalg::xnrm2(ndim, &rbas[i*ndim]);
                         eigs(i,iter) = tmpE[i];
                         rnorm(i,iter) = norm;
                         rconv[i] = this->ifconverged(iter, edel, norm);

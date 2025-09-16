@@ -278,20 +278,6 @@ namespace ctns{
          auto& eopt = sweeps.opt_result[isweep][ibond].eopt;
          oper_timer.dot_start();
  
-         //====================================================================
-         // TODOs:
-         // 
-         // 1. Linear equation & CG algorithm for solving [(H-E)^2+eta^2]|psi>=eta|psi0>
-         //
-         // 2. The most tricky part is the preparation of RHS.
-         //
-         // 3. Also add (H-E)*|psi> in renormalization? (add an option)
-         //====================================================================
-         /*
-         twodot_localCI(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
-               ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing);
-         */
-
          //-------------------------------
          // construct RHS and solver Ax=b 
          //-------------------------------
@@ -334,17 +320,16 @@ namespace ctns{
             assert(wf4.size() == ndim);
             wf4.to_array(rhs.data());
          } // forward
-        
          // if the scaling factor is simply zeta, then P(E)=-eta/(pi*zeta^2)*Lmin
          // so if this scaling factor is chosen for the RHS, final P(E)=-Lmin 
-         double zeta = std::sqrt(schd.ctns.enedist[1]/(4.0*std::atan(1.0)));
+         double zeta = std::sqrt(schd.ctns.omegaI/(4.0*std::atan(1.0)));
          linalg::xscal(ndim, -zeta, rhs.data());
-         
+
          // solve [(H-E)^2+eta^2]|Y>=zeta|psi2>
          const int icase = 0;
          twodot_local_linear(icomb, schd, sweeps.ctrls[isweep].eps, (schd.nelec)%2,
                ndim, neig, diag, HVec.Hx, eopt, vsol, nmvp, wf, dbond, timing,
-               rhs, icase, schd.ctns.enedist[0], schd.ctns.enedist[1]);
+               rhs, icase, schd.ctns.omegaR, schd.ctns.omegaI);
          rhs.clear();
          //-------------------------------
 

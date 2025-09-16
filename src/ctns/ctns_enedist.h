@@ -47,18 +47,28 @@ namespace ctns{
          //--------------------------
          // ZL202509: enedist |psi0>
          //--------------------------
+         assert(icomb.topo.ifmps);
          ctns::comb<Qm,Tm> icomb2, licomb2;
-         std::vector<qtensor3<Qm::ifabelian,Tm>> cpsis2;
-         std::vector<qtensor2<Qm::ifabelian,Tm>> environ(icomb.topo.nbackbone);
+         std::vector<qtensor3<Qm::ifabelian,Tm>> cpsis2(icomb.topo.nphysical);
          if(schd.ctns.task_enedist){
             if(schd.ctns.rcanon2_file.size()==0){
                tools::exit("error: rcanon2_file must be defined for psi0!");
             }
+            ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
             if(rank == 0){
-               ctns::comb_load(icomb2, schd, schd.ctns.rcanon2_file);
                cpsis2 = ctns::lcanon_canonicalize(licomb2, icomb2, schd, schd.ctns.rcanon2_file, true);           
             } // rank-0 
+#ifndef SERIAL
+            if(size > 1){
+               mpi_wrapper::broadcast(schd.world, licomb2, 0);
+               licomb2.world = schd.world;
+               for(int i=0; i<icomb.topo.nphysical; i++){
+                  mpi_wrapper::broadcast(schd.world, cpsis2[i], 0);
+               }
+            }
+#endif 
          }
+         std::vector<qtensor2<Qm::ifabelian,Tm>> environ(icomb.topo.nphysical);
          //--------------------------
 
          // build operators on the left dot
@@ -217,7 +227,8 @@ namespace ctns{
 
          // print final resuls
          if(rank == 0){
-            std::cout << ">>> Final enedist: (omegaR,omegaI)= " << schd.ctns.enedist[0] << " " << schd.ctns.enedist[1]
+            std::cout << ">>> Final enedist: (omegaR,omegaI)= " 
+              << schd.ctns.omegaR << " " << schd.ctns.omegaI
               << " val= " << std::setprecision(12) << sweeps.get_eminlast(0)
               << " valspec= " << -sweeps.get_eminlast(0) << "\n"
               << std::endl;

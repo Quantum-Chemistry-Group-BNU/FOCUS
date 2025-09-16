@@ -75,12 +75,10 @@ void params_ctns::read(ifstream& istrm){
       }else if(line.substr(0,12)=="task_enedist"){
          task_ham = true;
          task_enedist = true;
-         istringstream is(line.substr(13));
-         string s;
-         while(is>>s){
-            enedist.push_back( stod(s) );
-         }
-         if(enedist.size() != 2) tools::exit("error: enedist.size() should be 2!");
+      }else if(line.substr(0,6)=="omegaR"){
+         omegaR = stod(line.substr(6));
+      }else if(line.substr(0,6)=="omegaI"){
+         omegaI = stod(line.substr(6));
       }else if(line.substr(0,10)=="debug_hmat"){
          debug_hmat = true;
       }else if(line.substr(0,4)=="dets"){
@@ -438,9 +436,8 @@ void params_ctns::print() const{
    cout << "task_scramble = " << task_scramble << endl;
    cout << "depth = " << depth << endl;
    cout << "task_enedist = " << task_enedist << endl;
-   cout << "enedist = ";
-   for(const auto& w : enedist) std::cout << w << " ";
-   std::cout << std::endl;
+   cout << "omegaR = " << omegaR << endl;
+   cout << "omegaI = " << omegaI << endl; 
    cout << "debug_hmat = " << debug_hmat << endl;
    cout << "restart_sweep = " << restart_sweep << endl;
    cout << "restart_bond = " << restart_bond << endl;

@@ -77,11 +77,21 @@ namespace ctns{
                for(int istate=0; istate<nstate; istate++){
                   auto t0 = tools::get_time();
                   if(cases == 0){
-                     HVec(work, x+istate*ndim); // y=[(H-omegaR)^2+omegaI^2]*x
+                     // y=[(H-omegaR)^2+omegaI^2]*x
+                     // Hx=\sum_p H[p]*x
+                     HVec(work, x+istate*ndim); 
+#ifndef SERIAL
+                     if(!ifnccl && size > 1){
+                        mpi_wrapper::allreduce(world, work, ndim);
+                     }
+#endif
                      linalg::xaxpy(ndim, -omegaR, x+istate*ndim, work);
+                     // \sum_p H[p]*(H-omegaR)*x  
                      HVec(y+istate*ndim, work);
-                     linalg::xaxpy(ndim, -omegaR, work, y+istate*ndim);
-                     linalg::xaxpy(ndim, omegaI*omegaI, x+istate*ndim, y+istate*ndim);
+                     if(rank == 0){ 
+                        linalg::xaxpy(ndim, -omegaR, work, y+istate*ndim);
+                        linalg::xaxpy(ndim, omegaI*omegaI, x+istate*ndim, y+istate*ndim);
+                     }
                   }else if(cases == 1){
                      HVec(y+istate*ndim, x+istate*ndim); // y=H*x
                   }else{
@@ -206,7 +216,7 @@ namespace ctns{
                }
 
                std::vector<Tm> x0(ndim), r0(ndim), z0(ndim), p0(ndim), Ap(ndim), Ax(ndim), work(ndim);
-               std::vector<double> tmpE(1);
+               std::vector<double> tmpE(1,1.e3);
 
                // 1. generate initial subspace - vbas
                if(rank == 0){
@@ -222,18 +232,24 @@ namespace ctns{
 #ifndef SERIAL
                if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, x0.data(), ndim, 0);
 #endif
-   
-               // r = b - A @ x
+               // A*x
                HVecs(neig, Ax.data(), x0.data(), work.data(), icase); 
-               std::memset(r0.data(), 0, ndim*sizeof(Tm));
-               linalg::xaxpy(ndim, -1.0, Ax.data(), r0.data());
-               linalg::xaxpy(ndim,  1.0, RHS, r0.data()); 
-               
-               precondition(r0.data(), z0.data()); // Mz0=r0
-               linalg::xcopy(ndim, z0.data(), p0.data());
-               Tm rtz = linalg::xdot(ndim, r0.data(), z0.data());
-
-               // 2. begin to solve
+               Tm rtz;
+               if(rank == 0){
+                  // r = b - A*x
+                  std::memset(r0.data(), 0, ndim*sizeof(Tm));
+                  linalg::xaxpy(ndim, -1.0, Ax.data(), r0.data());
+                  linalg::xaxpy(ndim,  1.0, RHS, r0.data()); 
+                  // Mz0=r0
+                  precondition(r0.data(), z0.data()); 
+                  rtz = linalg::xdot(ndim, r0.data(), z0.data());
+                  linalg::xcopy(ndim, z0.data(), p0.data());
+               }
+#ifndef SERIAL
+               if(!ifnccl && size > 1) mpi_wrapper::broadcast(world, p0.data(), ndim, 0);
+#endif
+ 
+               // begin to solve
                bool ifconv = false;
                for(int iter=1; iter<maxcycle+1; iter++){
                   // perform A*p in parallel 

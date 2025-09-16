@@ -99,7 +99,7 @@ namespace input{
                   & task_vmc & task_expand & task_tononsu2 & task_prop
                   & task_schmidt & save_schmidt & schmidt_file & task_cicoeff & detlist & csflist 
                   & task_compress & dcompress & task_scramble & depth
-                  & task_enedist & enedist & debug_hmat
+                  & task_enedist & omegaR & omegaI & debug_hmat
                   & restart_sweep & restart_bond & timestamp & keepoper & localrestart 
                   & ciroots & maxdets & thresh_proj & thresh_ortho & rdm_svd & svd_iop & outprec 
                   & nroots & guess & dbranch & maxsweep & maxbond & maxidx & ctrls & rcfprefix
@@ -157,7 +157,8 @@ namespace input{
          int depth = -1;
          // energy distribution
          bool task_enedist = false;
-         std::vector<double> enedist; // (E,eta)
+         double omegaR = 0.0;
+         double omegaI = 0.01; 
          bool debug_hmat = false;
          // restart
          int restart_sweep = 0; // must be > 0
