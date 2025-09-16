@@ -68,8 +68,28 @@ namespace ctns{
             }
 #endif 
          }
+         //-------------------------------------------------
+         // ZL@2025/09: construct environments for MPS only
+         //-------------------------------------------------
          std::vector<qtensor2<Qm::ifabelian,Tm>> environ(icomb.topo.nphysical);
-         //--------------------------
+         const auto& nodes = icomb.topo.nodes;
+         const auto& rindex = icomb.topo.rindex;
+         // right boundary
+         for(int i=icomb.topo.nbackbone-1; i>0; i--){
+            const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
+            const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
+            if(i == icomb.topo.nbackbone-1){
+               environ[i] = contract_qt3_qt3("cr",site,site2);
+            }else{
+               auto qtmp = contract_qt3_qt2("r",site2,environ[i+1]);
+               environ[i] = contract_qt3_qt3("cr",site,qtmp);
+            }
+         } // i
+         if(schd.ctns.ifoutcore){
+            rcanon_save_sites(icomb2, scratch, rank, "icomb2");
+            rcanon_save_sites(licomb2, scratch, rank, "licomb2");
+         }
+         //-------------------------------------------------
 
          // build operators on the left dot
          oper_init_dotL(icomb, int2e, int1e, schd, scratch);
@@ -97,34 +117,20 @@ namespace ctns{
                sweep_init(icomb, schd.ctns.nroots, schd.ctns.singlet);
             //}
 
+            //----------------------------------------------
+            // left boundary [must be put after sweep_init]
+            //----------------------------------------------
+            const auto& ldx = rindex.at(std::make_pair(0,0));
+            const auto& site = icomb.sites[ldx];
+            const auto& site2 = licomb2.sites[ldx];
+            if(schd.ctns.ifoutcore) rcanon_load_site(licomb2, ldx, scratch, rank, "licomb2"); 
+            environ[0] = contract_qt3_qt3("lc",site,site2);
+            //----------------------------------------------
+
             // outcore: save comb to disk to save memory
             if(schd.ctns.ifoutcore){
                rcanon_save_sites(icomb, scratch, rank);
             }
-
-            //-------------------------------------------------
-            // ZL@2025/09: construct environments for MPS only
-            //-------------------------------------------------
-            if(isweep == schd.ctns.restart_sweep){
-               const auto& nodes = icomb.topo.nodes;
-               const auto& rindex = icomb.topo.rindex;
-               // right boundary
-               for(int i=icomb.topo.nbackbone-1; i>0; i--){
-                  const auto& site = icomb.sites[rindex.at(std::make_pair(i,0))];
-                  const auto& site2 = icomb2.sites[rindex.at(std::make_pair(i,0))];
-                  if(i == icomb.topo.nbackbone-1){
-                     environ[i] = contract_qt3_qt3("cr",site,site2);
-                  }else{
-                     auto qtmp = contract_qt3_qt2("r",site2,environ[i+1]);
-                     environ[i] = contract_qt3_qt3("cr",site,qtmp);
-                  }
-               } // i
-               // left boundary
-               const auto& site = icomb.sites[rindex.at(std::make_pair(0,0))];
-               const auto& site2 = licomb2.sites[rindex.at(std::make_pair(0,0))];
-               environ[0] = contract_qt3_qt3("lc",site,site2);
-            }
-            //-------------------------------------------------
  
             // loop over sites
             auto ti = tools::get_time();
@@ -140,11 +146,16 @@ namespace ctns{
                   std::cout << tools::line_separator << std::endl;
                   get_mem_status(rank);
                }
-               const int pdx = icomb.topo.rindex.at(dbond.get_current());
-               const int ndx = icomb.topo.rindex.at(dbond.get_next());
+               const auto& pdx0 = icomb.topo.rindex.at(dbond.p0);
+               const auto& pdx1 = icomb.topo.rindex.at(dbond.p1);
+               const auto& pdx = icomb.topo.rindex.at(dbond.get_current());
+               const auto& ndx = icomb.topo.rindex.at(dbond.get_next());
+               
                // for guess 
                if(schd.ctns.ifoutcore){
                   rcanon_load_site(icomb, ndx, scratch, rank); 
+                  rcanon_load_site(icomb2, pdx1, scratch, rank, "icomb2"); // for rhs/env
+                  rcanon_load_site(licomb2, pdx0, scratch, rank, "licomb2"); // for env/rhs
                }
          
                if(ibond < schd.ctns.restart_bond){
@@ -162,11 +173,14 @@ namespace ctns{
                // save updated sites
                if(schd.ctns.ifoutcore){
                   rcanon_save_site(icomb, pdx, scratch, rank);
+                  rcanon_save_site(icomb2, pdx1, scratch, rank, "icomb2");
+                  rcanon_save_site(licomb2, pdx0, scratch, rank, "licomb2");
                }
 #ifdef TCMALLOC
    	         release_freecpumem();
 #endif
-               // timing 
+
+               // update timing 
                if(debug){
                   const auto& timing = sweeps.opt_timing[isweep][ibond];
                   sweeps.timing_sweep[isweep].accumulate(timing, "sweep opt", schd.ctns.verbose>0);

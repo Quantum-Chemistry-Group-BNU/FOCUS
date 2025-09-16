@@ -16,14 +16,15 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void rcanon_save_sites(comb<Qm,Tm>& icomb,
             const std::string scratch,
-            const int rank){
+            const int rank,
+            const std::string prefix=""){
          if(rank == 0){
             std::cout << "ctns::rcanon_save_sites scratch=" << scratch;
          }
          auto t0 = tools::get_time();
          // save sites
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+            auto fname = scratch+"/"+prefix+"_site"+std::to_string(idx)+".temp";
             icomb.sites[idx].save_site(fname);
             rcanon_clear_site(icomb, idx);
          }
@@ -39,14 +40,15 @@ namespace ctns{
    template <typename Qm, typename Tm>
       void rcanon_load_sites(comb<Qm,Tm>& icomb,
             const std::string scratch,
-            const int rank){
+            const int rank,
+            const std::string prefix=""){
          if(rank == 0){
             std::cout << "ctns::rcanon_load_sites scratch=" << scratch;
          }
          auto t0 = tools::get_time();
          // load sites
          for(int idx=0; idx<icomb.topo.ntotal; idx++){
-            auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+            auto fname = scratch+"/"+prefix+"_site"+std::to_string(idx)+".temp";
             icomb.sites[idx].load_site(fname);
          }
          if(rank == 0){
@@ -60,14 +62,15 @@ namespace ctns{
       void rcanon_save_site(comb<Qm,Tm>& icomb,
             const int idx,
             const std::string scratch,
-            const int rank){
+            const int rank,
+            const std::string prefix=""){
          if(rank == 0){
             std::cout << "ctns::rcanon_save_site idx=" << idx << " scratch=" << scratch;
          }
          auto t0 = tools::get_time();
          size_t sz = icomb.sites[idx].size();
          // save site
-         auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+         auto fname = scratch+"/"+prefix+"_site"+std::to_string(idx)+".temp";
          icomb.sites[idx].save_site(fname);
          // clear
          rcanon_clear_site(icomb, idx);
@@ -85,13 +88,14 @@ namespace ctns{
       void rcanon_load_site(comb<Qm,Tm>& icomb,
             const int idx,
             const std::string scratch,
-            const int rank){
+            const int rank,
+            const std::string prefix=""){
          if(rank == 0){
             std::cout << "ctns::rcanon_load_site idx=" << idx << " scratch=" << scratch;
          }
          auto t0 = tools::get_time();
          // load site
-         auto fname = scratch+"/site"+std::to_string(idx)+".temp";
+         auto fname = scratch+"/"+prefix+"_site"+std::to_string(idx)+".temp";
          icomb.sites[idx].load_site(fname);
          if(rank == 0){
             auto t1 = tools::get_time();

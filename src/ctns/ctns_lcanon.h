@@ -80,7 +80,7 @@ namespace ctns{
          std::cout << "\nctns::lcanon_canonicalize"
               << " ifab=" << ifab
               << " dmax=" << dmax
-              << " singlet=" << single
+              << " singlet=" << singlet
               << " savecpsi=" << savecpsi
               << std::endl;
          auto t0 = tools::get_time();
