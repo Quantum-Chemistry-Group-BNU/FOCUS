@@ -42,9 +42,9 @@ namespace ctns{
             const auto& lop = lqops('I').at(0);
             const auto& cop = cqops('I').at(0);
             const auto& rop = rqops('I').at(0);
-            auto ldiff = linalg::check_identityMatrix(lop.to_matrix());
-            auto cdiff = linalg::check_identityMatrix(cop.to_matrix());
-            auto rdiff = linalg::check_identityMatrix(rop.to_matrix());
+            auto ldiff = linalg::deviationFromIdentity(lop.to_matrix());
+            auto cdiff = linalg::deviationFromIdentity(cop.to_matrix());
+            auto rdiff = linalg::deviationFromIdentity(rop.to_matrix());
             if(debug){
                std::cout << "rank=" << rank << " ldiff,cdiff,rdiff=" 
                   << ldiff << "," << cdiff << "," << rdiff << std::endl;
