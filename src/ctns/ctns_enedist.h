@@ -241,9 +241,10 @@ namespace ctns{
 
          // print final resuls
          if(rank == 0){
-            std::cout << ">>> Final enedist: (omegaR,omegaI)= " 
+            std::cout << ">>> Final enedist: (omegaR,omegaI)= "
+              << std::fixed << std::setprecision(12) 
               << schd.ctns.omegaR << " " << schd.ctns.omegaI
-              << " val= " << std::setprecision(12) << sweeps.get_eminlast(0)
+              << " val= " << sweeps.get_eminlast(0)
               << " valspec= " << -sweeps.get_eminlast(0) << "\n"
               << std::endl;
          }
