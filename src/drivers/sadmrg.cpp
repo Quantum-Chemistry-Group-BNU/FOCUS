@@ -156,12 +156,18 @@ void SADMRG(const input::schedule& schd){
       icomb.display_size();
       // consistency check
       if(schd.sorb != 2*icomb.get_nphysical()){
+         std::cout << "schd.sorb=" << schd.sorb << std::endl;
+         std::cout << "2*icomb.get_nphysical()=" << 2*icomb.get_nphysical() << std::endl; 
          tools::exit("error in sadmrg: schd.sorb != 2*icomb.get_nphysical()");
       }
       if(schd.nelec != icomb.get_qsym_state().ne()){
+         std::cout << "schd.nelec=" << schd.nelec << std::endl;
+         std::cout << "icomb.get_qsym_state().ne()=" << icomb.get_qsym_state().ne() << std::endl;
          tools::exit("error in sadmrg: schd.nelec != icomb.get_qsym_state().ne()");
       }
       if(schd.twos != icomb.get_qsym_state().ts()){
+         std::cout << "schd.twos=" << schd.twos << std::endl;
+         std::cout << "icomb.get_qsym_state().ts()=" << icomb.get_qsym_state().ts() << std::endl;
          tools::exit("error in sadmrg: schd.twos != icomb.get_qsym_state().ts()");
       }
    } // rank 0

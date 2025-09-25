@@ -689,12 +689,16 @@
                      and x0 is copied to gpu each time in HVecs only at rank 0, when nccl=true. 
                      For ifnccl=false, the behaviors are the same as only using mpi.
    - support outcore [DONE@2025/09/16]
-
    - future improvements:
-
-      - large-scale test on jinan: is a better scaling factor needed for RHS? 
-
-      - iterative method via gcrotmk?
-
-      - is adding (H-E)*|psi> in renormalization useful?
+      - large-scale test on jinan: is a better scaling factor needed for RHS? [DONE@2025/09/24]
+         - test for fe2s2 is working! - single peak well produced by a lorentzian fitting
+         - however, a good solver is needed with small omegaI close to resonance?
+      - improved algorithm for difficult cases:
+         - identify difficult case for fe2s2?
+         - is adding H*|psi> in renormalization useful?
+         - better iterative method via gcrotmk?
+      - larger test on jinan:
+         - test for fe4s4?
+         - test for fe8s7?
+         - test for femoco?
 

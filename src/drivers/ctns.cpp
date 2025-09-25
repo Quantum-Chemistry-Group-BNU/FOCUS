@@ -142,12 +142,18 @@ void CTNS(const input::schedule& schd){
       icomb.display_size();
       // consistency check
       if(schd.sorb != 2*icomb.get_nphysical()){
+         std::cout << "schd.sorb=" << schd.sorb << std::endl;
+         std::cout << "2*icomb.get_nphysical()=" << 2*icomb.get_nphysical() << std::endl; 
          tools::exit("error in ctns: schd.sorb != 2*icomb.get_nphysical()");
       }
       if(schd.nelec != icomb.get_qsym_state().ne()){
+         std::cout << "schd.nelec=" << schd.nelec << std::endl;
+         std::cout << "icomb.get_qsym_state().ne()=" << icomb.get_qsym_state().ne() << std::endl;
          tools::exit("error in ctns: schd.nelec != icomb.get_qsym_state().ne()");
       }
       if(schd.twom != icomb.get_qsym_state().tm()){
+         std::cout << "schd.twom=" << schd.twom << std::endl;
+         std::cout << "icomb.get_qsym_state().tm()=" << icomb.get_qsym_state().tm() << std::endl;
          tools::exit("error in ctns: schd.twom != icomb.get_qsym_state().tm()");
       }
    } // rank 0

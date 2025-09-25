@@ -52,10 +52,11 @@ namespace ctns{
             //------------------------------------------------------------
             // TO BE IMPROVED IN FUTURE: 
             // FOR INTERFACING WITH BLOCK2, WE ONLY CONSIDER SINGLE STATE 
-            // AND THE CWF MATRIX MUST BE SIMPLY [1].
+            // AND THE CWF MATRIX MUST BE SIMPLY [(+/-)1].
             //------------------------------------------------------------
-            if(nroots != 1 or deviationFromIdentity(cwf.to_matrix())>1.e-10){
-               std::cout << "error: lcanon only supports nroots=1 and cwf=Id currently!" << std::endl;
+            if(nroots != 1 or !(deviationFromIdentity(cwf.to_matrix())<1.e-10
+                  or deviationFromIdentity(-cwf.to_matrix())<1.e-10)){
+               std::cout << "error: lcanon only supports nroots=1 and cwf=(+/-)Id currently!" << std::endl;
                std::cout << "nroots=" << nroots << std::endl;
                cwf.to_matrix().print("cwf",12);
                exit(1); 
