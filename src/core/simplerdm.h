@@ -386,7 +386,7 @@ namespace fock{
          if(debug){
             for(int i=0; i<ks; i++){
                std::cout << " i=" << i 
-                  << " lambda={" << std::fixed << std::setprecision(3)
+                  << " lambda={" << std::fixed << std::setprecision(5)
                   << "0:" << lambda[4*i] << ", a:" << lambda[4*i+1] 
                   << ", b:" << lambda[4*i+2] << ", ab:" << lambda[4*i+3] << "}" 
                   << " Sp=" << std::fixed << std::setprecision(12) << sp[i]
