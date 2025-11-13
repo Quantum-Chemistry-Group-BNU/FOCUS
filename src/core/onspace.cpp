@@ -45,10 +45,10 @@ onspace fock::get_fci_space(const int ks, const int na, const int nb){
    //cout << "\nfock::get_fci_space (ks,na,nb)=" << ks << "," << na << "," << nb << endl;
    onspace space_a = fock::get_fci_space(ks,na);
    onspace space_b = fock::get_fci_space(ks,nb);
-   onspace space;
+   onspace space(space_a.size()*space_b.size());
    for(size_t ia=0; ia<space_a.size(); ia++){
       for(size_t ib=0; ib<space_b.size(); ib++){
-         space.push_back( move(onstate(space_a[ia],space_b[ib])) );
+         space[ia*space_b.size()+ib] = move(onstate(space_a[ia],space_b[ib]));
       }
    }
    return space;

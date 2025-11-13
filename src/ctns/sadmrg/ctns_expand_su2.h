@@ -87,7 +87,7 @@ namespace ctns{
                std::cout << " i=" << i << " idx=" << idx
                   << " state=" << state
                   << " coeff=" << std::scientific << std::setw(10)
-                  << std::setprecision(3) << coeff[idx] 
+                  << std::setprecision(5) << coeff[idx] 
                   << " pop=" << pop[idx]
                   << std::endl;
             }
@@ -95,7 +95,7 @@ namespace ctns{
          return std::make_pair(fci_space,coeff); 
       }
 
-   // expand CTNS into det
+   // expand CTNS into det via csf (just for debug)
    template <typename Qm, typename Tm, std::enable_if_t<!Qm::ifabelian,int> = 0>
       std::pair<fock::onspace,std::vector<Tm>> rcanon_expand_onspace0(const comb<Qm,Tm>& icomb,
             const int iroot,
@@ -160,7 +160,7 @@ namespace ctns{
             std::cout << " i=" << i << " idx=" << idx
                << " state=" << state
                << " coeff=" << std::scientific << std::setw(10)
-               << std::setprecision(3) << coeff[idx] 
+               << std::setprecision(5) << coeff[idx] 
                << " pop=" << pop[idx]
                << std::endl;
          }
@@ -174,7 +174,7 @@ namespace ctns{
             const double pthrd=1.e-2,
             const int iprt=1){
          auto t0 = tools::get_time();
-         const bool debug = true;
+         const bool debug = false;
          if(iprt>0){
             std::cout << "ctns::rcanon_expand_onspace:"
                << " ifab=" << Qm::ifabelian
@@ -188,10 +188,18 @@ namespace ctns{
          int na = (ne+tm)/2, nb = ne-na;
          assert(na >= 0 and nb >= 0);
          int ks = icomb.get_nphysical();
+        
+         // generation of FCI space
+         auto t0x = tools::get_time();
          auto fci_space = fock::get_fci_space(ks,na,nb);
+         auto t0y = tools::get_time();
+         auto dt0 = tools::get_duration(t0y-t0x);
+         std::cout << "TIMING FOR get_fci_space=" << dt0 << " S" << std::endl;
+         
+         // compute exact coefficients <n|CTNS>
+         auto t1x = tools::get_time();
          size_t dim = fci_space.size();
          std::vector<Tm> coeff(dim,0.0);
-         // compute exact coefficients <n|CTNS>
          std::vector<double> pop(dim,0.0);
          double ovlp = 0.0;
          for(int i=0; i<dim; i++){
@@ -199,13 +207,21 @@ namespace ctns{
             coeff[i] = rcanon_CIcoeff(icomb, state)[iroot];
             pop[i] = std::norm(coeff[i]);
             ovlp += pop[i];
+            std::cout << "i= " << i << " state= " << state 
+               << " coeff= " << std::scientific << std::setprecision(5) << coeff[i] 
+               << " accum= " << ovlp << std::endl;
          }
+         auto t1y = tools::get_time();
+         auto dt1 = tools::get_duration(t1y-t1x);
+         std::cout << "TIMING FOR rcanon_CIcoeff=" << dt1 << " S" << std::endl;
+         
          if(iprt > 0){
             std::cout << "ovlp=" << ovlp << std::endl;
             if(std::abs(ovlp-1.0)>1.e-8){
                std::cout << "error: ovlp deviates from 1! dev=" << ovlp-1.0 << std::endl;
                exit(1);
             }
+            auto t2x = tools::get_time();
             auto indx = tools::sort_index(pop,1);
             for(int i=0; i<dim; i++){
                int idx = indx[i];
@@ -214,11 +230,15 @@ namespace ctns{
                std::cout << " i=" << i << " idx=" << idx
                   << " state=" << state
                   << " coeff=" << std::scientific << std::setw(10) 
-                  << std::setprecision(3) << coeff[idx] 
+                  << std::setprecision(5) << coeff[idx] 
                   << " pop=" << pop[idx]
                   << std::endl;
             }
+            auto t2y = tools::get_time();
+            auto dt2 = tools::get_duration(t2y-t2x);
+            std::cout << "TIMING FOR sort&print=" << dt2 << " S with pthrd=" << pthrd << std::endl;
          }
+
          if(debug){
             auto t1 = tools::get_time();
             auto result = rcanon_expand_onspace0(icomb, iroot, pthrd);
