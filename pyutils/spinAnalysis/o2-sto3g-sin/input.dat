@@ -1,0 +1,38 @@
+dtype 0
+sorb 20
+nelec 16
+twom 0
+twos 1
+integral_file mole.info
+scratch ./scratch
+
+$ci
+init_aufbau
+checkms
+nroots 10
+schedule
+0 1.e-1
+1 1.e-2
+2 1.e-3
+3 1.e-4
+4 1.e-5
+end
+maxiter 6
+$end
+
+$ctns
+verbose 1
+qkind rNS
+tosu2
+maxdets 2000 # keep dets as much as possible
+thresh_proj 1.e-16
+thresh_ortho 1.e-8
+schedule
+0  2 200 1.e-4 0.0
+end
+maxsweep 2
+task_dmrg
+alg_hvec 4
+alg_renorm 4
+singlet
+$end
