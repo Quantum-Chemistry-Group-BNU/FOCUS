@@ -1,0 +1,16 @@
+dtype 0
+sorb 20
+nelec 14
+twom 2
+twos 2
+integral_file /yeesuanAI03/lzd/tests/03-n2-su2-triplet-topo/fmole.info
+scratch scratch
+
+$ctns
+qkind rNS
+topology_file topo
+rcanon_file rcanon_isweep0_su2
+savebin
+#singlet
+lcanon
+$end
