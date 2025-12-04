@@ -256,7 +256,7 @@ class iface:
       return 0
 
    # <SA*SB> = 0.5*(<SA*SB>+<SB*SA>) [symmetrized form]
-   def get_integral_SiSj(self,orblsti,orblstj,nact):
+   def get_integral_SiSj(self,nact,orblsti,orblstj):
        ecore = 0.0
        # 3/4*Epq*delta[pq]
        hij = numpy.zeros((nact,nact))
@@ -265,11 +265,13 @@ class iface:
                if p == q: hij[p,q] = 0.75
        # -1/2*e[pqpq] - 1/4*e[pqqp]
        eri = numpy.zeros((nact,nact,nact,nact))
+       # <SA*SB>
        for p in orblsti:
            for q in orblstj:
               # must use accumulation as p can equal to q (consider one orbital case!)
               eri[p,q,q,p] += -1
               eri[p,p,q,q] += -0.5
+       # <SB*SA>
        for p in orblstj:
            for q in orblsti:
               # must use accumulation as p can equal to q (consider one orbital case!)
@@ -278,10 +280,11 @@ class iface:
        eri = 0.5*eri 
        return ecore,hij,eri
    
-   def dumpSiSj(self,orblsti,orblstj,fname='sisj.info'):
+   def dumpSiSj(self,nact,orblsti,orblstj,fname='sisj.info'):
        print('\n[iface.dumpSiSj] fname=',fname)
+       print(' nact=',nact)
        print(' orblsti=',orblsti)
        print(' orblstj=',orblstj)
-       info = self.get_integral_SiSj(orblsti,orblstj,self.nact)
+       info = self.get_integral_SiSj(nact,orblsti,orblstj)
        self.dump(info,fname)
        return 0
