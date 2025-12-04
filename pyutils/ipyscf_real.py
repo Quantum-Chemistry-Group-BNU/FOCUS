@@ -17,19 +17,20 @@ class iface:
       self.unrestricted = False
       self.mol = None
       self.mf = None
-      self.nfrozen = None
       self.ecore = None
       self.hmo = None
       self.eri = None
+      self.nact = None
 
    # This is the central part
    def get_integral(self,mo_coeff):
        shape = mo_coeff.shape
        self.unrestricted = len(shape) == 3
+       self.nact = mo_coeff.shape[1]-self.nfrozen
        print('\n[iface.get_integral] unrestricted=',self.unrestricted,
               ' nmo=',mo_coeff.shape[1],\
               ' nfrozen=',self.nfrozen,\
-              ' nact=',mo_coeff.shape[1]-self.nfrozen)
+              ' nact=',self.nact)
        if not self.unrestricted:
           result = self.get_integral_r(mo_coeff)
        else:
@@ -192,7 +193,21 @@ class iface:
          h2e[1::2,1::2,0::2,0::2] = int2e_aabb.transpose(2,3,0,1) # BBAA
       # antisymmetrize 
       h2e = h2e.transpose(0,2,1,3) # <ij|kl> = [ik|jl]
-      h2e = h2e-h2e.transpose(0,1,3,2) # Antisymmetrize V[pqrs]=<pq||rs>
+      h2e = h2e-h2e.transpose(0,1,3,2) # Antisymmetrize V[pqrs]=<pq||rs>=<pq|rs>-<pq|sr>
+      
+      # ZL@2025/12/04
+      thresh = 1.e-8
+      print('check symmetry of h2e with thresh=',thresh)
+      diff1 = numpy.linalg.norm(h2e + h2e.transpose(1,0,2,3))
+      diff2 = numpy.linalg.norm(h2e + h2e.transpose(0,1,3,2))
+      diff3 = numpy.linalg.norm(h2e - h2e.transpose(2,3,0,1).conj())
+      print('   diff(1,0,2,3)=',diff1)
+      print('   diff(0,1,3,2)=',diff2)
+      print('   diff(2,3,0,1)=',diff3)
+      assert diff1 < thresh 
+      assert diff2 < thresh
+      assert diff3 < thresh
+
       self.dumpAERI(ecore,h1e,h2e,fname)
       return 0
 
@@ -239,3 +254,34 @@ class iface:
          f.writelines(line)
       print('finished')
       return 0
+
+   # <SA*SB> = 0.5*(<SA*SB>+<SB*SA>) [symmetrized form]
+   def get_integral_SiSj(self,orblsti,orblstj,nact):
+       ecore = 0.0
+       # 3/4*Epq*delta[pq]
+       hij = numpy.zeros((nact,nact))
+       for p in orblsti:
+           for q in orblstj:
+               if p == q: hij[p,q] = 0.75
+       # -1/2*e[pqpq] - 1/4*e[pqqp]
+       eri = numpy.zeros((nact,nact,nact,nact))
+       for p in orblsti:
+           for q in orblstj:
+              # must use accumulation as p can equal to q (consider one orbital case!)
+              eri[p,q,q,p] += -1
+              eri[p,p,q,q] += -0.5
+       for p in orblstj:
+           for q in orblsti:
+              # must use accumulation as p can equal to q (consider one orbital case!)
+              eri[p,q,q,p] += -1
+              eri[p,p,q,q] += -0.5
+       eri = 0.5*eri 
+       return ecore,hij,eri
+   
+   def dumpSiSj(self,orblsti,orblstj,fname='sisj.info'):
+       print('\n[iface.dumpSiSj] fname=',fname)
+       print(' orblsti=',orblsti)
+       print(' orblstj=',orblstj)
+       info = self.get_integral_SiSj(orblsti,orblstj,self.nact)
+       self.dump(info,fname)
+       return 0
