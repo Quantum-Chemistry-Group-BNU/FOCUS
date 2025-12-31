@@ -18,21 +18,20 @@ from pyblock2.algebra.io import MPSTools
 #   For starting two-site dmrg in block2 using the imported mps:
 #        Use ``mps = driver.adjust_mps(mps, dot=2)[0]``.
 
-mpsfile = './tmp/scratch/rcanon_isweep0_su2.lcanon.singlet.bin'
-#mpsfile = './tmp/scratch/rcanon_isweep0_su2.lcanon.bin'
-#mpsfile = './scratch/rcanon_isweep39_su2.bin'
-fcidumpfile = 'N2.STO3G.FCIDUMP'
-topofile = './tmp/topo'
-spin = 2
-dmax = 10
+mpsfile = './scratch/rcanon_isweep11_su2.lcanon.singlet.bin'
+fcidumpfile = 'FCIDUMP'
+topofile = None #'./tmp/topo'
+spin = 0
+dmax = 1000 #100
 ifSE = True #False
 
-topo = []
-f = open(topofile)
-for line in f.readlines():
-   topo.append(eval(line))
-f.close()
-topo = np.array(topo)
+topo = np.arange(36) # no need to reverse ordering in lcanon case
+#topo = []
+#f = open(topofile)
+#for line in f.readlines():
+#   topo.append(eval(line))
+#f.close()
+#topo = np.array(topo)
 #topo = np.array(topo[::-1])
 print('topo=',topo)
 
@@ -50,19 +49,21 @@ g2e = driver.g2e
 ecore = driver.ecore
 
 driver.initialize_system(n_sites=ncas, n_elec=n_elec, spin=spin, orb_sym=orb_sym, singlet_embedding=ifSE)
-mpo = driver.get_qc_mpo(h1e=h1e, g2e=g2e, ecore=ecore, iprint=1, reorder=topo)
-impo = driver.get_identity_mpo()
 
 #=== import MPS from file ===
 pymps = MPSTools.from_focus_mps_file(fname=mpsfile, is_su2=True)
 left_vacuum = None if not ifSE else driver.bw.SX(spin, spin, 0)
 mps = MPSTools.to_block2(pymps, driver.basis, center=driver.n_sites - 1, left_vacuum=left_vacuum)
 
-expt = driver.expectation(mps, mpo, mps) / driver.expectation(mps, impo, mps)
-print('Energy from expectation = %20.15f' % expt)
+ifEnergyExpect = False
+if ifEnergyExpect:
+   mpo = driver.get_qc_mpo(h1e=h1e, g2e=g2e, ecore=ecore, iprint=1, reorder=topo)
+   impo = driver.get_identity_mpo()
+   expt = driver.expectation(mps, mpo, mps) / driver.expectation(mps, impo, mps)
+   print('Energy from expectation = %20.15f' % expt)
 
 # pdms & expectations
-for fac in [1,2,3,4,5]:
+for fac in [1]:
    dcut = fac*dmax
    print('\nGenerate n-pdm with dcut=',dcut)
 

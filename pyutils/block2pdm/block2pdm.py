@@ -14,7 +14,7 @@ f = open(topofile)
 for line in f.readlines():
    topo.append(eval(line))
 f.close()
-topo = np.array(topo[::-1])
+topo = np.array(topo[::-1]) # need to reverse in rcanon case
 print('topo=',topo)
 
 driver = DMRGDriver(scratch="./tmp", symm_type=SymmetryTypes.SAnySZ, \
@@ -93,9 +93,12 @@ for fac in [1]:
    
    pdm1spin = pdm1[0] - pdm1[1]
    k = 76
+   
+   # reverse back to the original ordering
    rdx = range(k)[-1::-1]
    sdm1r = pdm1spin[np.ix_(rdx,rdx)]
    pdm1r = pdm1spatial[np.ix_(rdx,rdx)]
+   
    ng = len(groups)
    print('\ntr(Sz)=',np.trace(pdm1spin))
    ne_sum = 0.0
