@@ -1,5 +1,5 @@
 import numpy as np
-import spinTools
+from spinAnalysis import spinTools
 import matplotlib.pyplot as plt
 from matplotlib import cm
 

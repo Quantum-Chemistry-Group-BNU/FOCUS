@@ -13,22 +13,25 @@ import time
 # Provide the basic interface
 class iface:
    def __init__(self):
-      self.nfrozen = 0
       self.unrestricted = False
       self.mol = None
       self.mf = None
       self.ecore = None
       self.hmo = None
       self.eri = None
+      self.nfrozen = 0
+      self.norb = None
       self.nact = None
+      self.modelH = False
 
    # This is the central part
    def get_integral(self,mo_coeff):
        shape = mo_coeff.shape
        self.unrestricted = len(shape) == 3
-       self.nact = mo_coeff.shape[1]-self.nfrozen
+       self.norb = mo_coeff.shape[1]
+       self.nact = self.norb-self.nfrozen
        print('\n[iface.get_integral] unrestricted=',self.unrestricted,
-              ' nmo=',mo_coeff.shape[1],\
+              ' norb=',self.norb,\
               ' nfrozen=',self.nfrozen,\
               ' nact=',self.nact)
        if not self.unrestricted:
@@ -65,7 +68,6 @@ class iface:
       t1 = time.time()
       print(' time for heff=',t1-t0,'S')
       # Active part
-      nact = mcoeffA_a.shape[1]
       eri_aaaa,eri_bbbb,eri_aabb = self.get_eri_u(mcoeffA_a,mcoeffA_b)
       t2 = time.time()
       print(' time for h2e=',t2-t0,'S')
@@ -82,11 +84,19 @@ class iface:
       # Intergrals
       mcoeffC = mo_coeff[:,:self.nfrozen].copy()
       mcoeffA = mo_coeff[:,self.nfrozen:].copy()
+      print(' mcoeffC,mcoeffA=',mcoeffC.shape,mcoeffA.shape)
       hcore = self.mf.get_hcore()
       if self.nfrozen>0:
          # Core part
          pCore = 2.0*mcoeffC.dot(mcoeffC.T)
-         vj,vk = hf.get_jk(self.mol,pCore)
+         if self.modelH:
+            # J[pq] = [pq|sr]Drs
+            # K[pq] = [pr|sq]Drs
+            eri_full = ao2mo.restore(1, self.mf._eri, mo_coeff.shape[1])
+            vj = numpy.einsum('pqsr,rs->pq',eri_full,pCore)
+            vk = numpy.einsum('prsq,rs->pq',eri_full,pCore)
+         else:
+            vj,vk = hf.get_jk(self.mol,pCore)
          fock = hcore + vj - 0.5*vk  
          hmo = functools.reduce(numpy.dot,(mcoeffA.T,fock,mcoeffA))
          ecore += 0.5*numpy.trace(pCore.dot(hcore+fock))
@@ -95,7 +105,6 @@ class iface:
       t1 = time.time()
       print(' time for heff=',t1-t0,'S')
       # Active part
-      nact = mcoeffA.shape[1]
       eri = self.get_eri_r(mcoeffA)
       t2 = time.time()
       print(' time for h2e=',t2-t0,'S')
@@ -107,28 +116,30 @@ class iface:
       return ecore,hmo,eri
 
    def get_eri_u(self,mcoeffA_a,mcoeffA_b):
-        nact = mcoeffA_a.shape[1]
-        try:
+        nact = self.nact
+        norb = self.norb
+        if self.modelH == False:
             print(' try Molecular Hamiltonian')
             eri_aaaa = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_a,mcoeffA_a),compact=0).reshape(nact,nact,nact,nact)
             eri_bbbb = ao2mo.general(self.mol,(mcoeffA_b,mcoeffA_b,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
             eri_aabb = ao2mo.general(self.mol,(mcoeffA_a,mcoeffA_a,mcoeffA_b,mcoeffA_b),compact=0).reshape(nact,nact,nact,nact)
-        except:
+        else:
             print(' found Model Hamiltonian')
-            h2 =  ao2mo.restore(1, self.mf._eri, nact)
+            h2 =  ao2mo.restore(1, self.mf._eri, norb)
             eri_aaaa =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_a,mcoeffA_a,optimize=True)
             eri_bbbb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_b,mcoeffA_b,mcoeffA_b,mcoeffA_b,optimize=True)
             eri_aabb =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA_a,mcoeffA_a,mcoeffA_b,mcoeffA_b,optimize=True)
         return eri_aaaa,eri_bbbb,eri_aabb
 
    def get_eri_r(self,mcoeffA):
-        nact = mcoeffA.shape[1]
-        try:
+        nact = self.nact
+        norb = self.norb
+        if self.modelH == False:
             print(' try Molecular Hamiltonian')
             eri = ao2mo.general(self.mol,(mcoeffA,mcoeffA,mcoeffA,mcoeffA),compact=0).reshape(nact,nact,nact,nact)
-        except:
+        else:
             print(' found Model Hamiltonian')
-            h2 =  ao2mo.restore(1, self.mf._eri, nact)
+            h2 =  ao2mo.restore(1, self.mf._eri, norb)
             eri =  numpy.einsum("pqrs,pi,qj,rk,sl->ijkl",h2,mcoeffA,mcoeffA,mcoeffA,mcoeffA,optimize=True)
         return eri
 
@@ -288,3 +299,25 @@ class iface:
        info = self.get_integral_SiSj(nact,orblsti,orblstj)
        self.dump(info,fname)
        return 0
+
+
+### EM localization ###
+
+from pyscf.lo import EdmistonRuedenberg
+from functools import reduce
+
+class EMlocalization(EdmistonRuedenberg):
+    
+    def get_jk(self, u):
+        mo_coeff = numpy.dot(self.mo_coeff, u)
+        nmo = mo_coeff.shape[1]
+        dms = [numpy.einsum('i,j->ij', mo_coeff[:,i], mo_coeff[:,i]) for i in range(nmo)]
+        if self.modelH == True:
+            eri_full = ao2mo.restore(1, self.mf._eri, mo_coeff.shape[1])
+            vj = [numpy.einsum('pqsr,rs->pq',eri_full,dm) for dm in dms]
+            vk = [numpy.einsum('prsq,rs->pq',eri_full,dm) for dm in dms]
+        else:
+            vj, vk = hf.get_jk(self.mol, dms, hermi=1)
+        vj = numpy.asarray([reduce(numpy.dot, (mo_coeff.T, v, mo_coeff)) for v in vj])
+        vk = numpy.asarray([reduce(numpy.dot, (mo_coeff.T, v, mo_coeff)) for v in vk])
+        return vj, vk
