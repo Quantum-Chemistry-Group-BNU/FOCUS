@@ -3,15 +3,30 @@ import numpy as np
 from pyblock2.driver.core import DMRGDriver, SymmetryTypes
 from pyblock2.algebra.io import MPSTools
 
-dmax = 500
-mpsfile = './rcanon_dcompress'+str(dmax)+'.bin'
-fcidumpfile = './FCIDUMP'
-spin = 0
+#dmax = 500
+#mpsfile = './rcanon_dcompress'+str(dmax)+'.bin'
+#fcidumpfile = './FCIDUMP'
+#spin = 0
+#
+#norb = 36
+#topo = range(norb)
+#topo = np.array(topo[::-1]) # need to reverse in rcanon case
+#print('topo=',topo)
 
-norb = 36
-topo = range(norb)
+mpsfile = '../scratch2/rcanon_dcompress100.bin'
+dmax = 100
+fcidumpfile = './fmole.info.FCIDUMP'
+spin = 3
+topofile = '../topology/topoA'
+
+topo = []
+f = open(topofile)
+for line in f.readlines():
+   topo.append(eval(line))
+f.close()
 topo = np.array(topo[::-1]) # need to reverse in rcanon case
 print('topo=',topo)
+
 
 driver = DMRGDriver(scratch="./tmp", symm_type=SymmetryTypes.SAnySZ, \
       n_threads=28,
@@ -50,18 +65,22 @@ for fac in [1]:
    pdm1spatial = pdm1[0]+pdm1[1]
    rdx = topo
    pdm1spatial = pdm1spatial[np.ix_(rdx,rdx)]
-   np.save('pdm1_d'+str(dcut),pdm1spatial)
    print('|dm1-dm1.T|=',np.linalg.norm(pdm1spatial-pdm1spatial.T))
    print('tr(dm1)=',np.trace(pdm1spatial))
    print('diag(dm1)=',np.diag(pdm1spatial))
+   
+   pdm1aa = pdm1[0][np.ix_(rdx,rdx)]
+   pdm1bb = pdm1[1][np.ix_(rdx,rdx)]
+   np.save('pdm1aa_d'+str(dcut),pdm1aa)
+   np.save('pdm1bb_d'+str(dcut),pdm1bb)
+   np.save('pdm1_d'+str(dcut),pdm1spatial)
 
    ifpdm2 = True #False
    if ifpdm2:
       pdm2 = driver.get_2pdm(mps, max_bond_dim=dcut)
       pdm2spatial = pdm2[0]+pdm2[1]+pdm2[1].transpose(1,0,3,2)+pdm2[2]
       pdm2spatial = pdm2spatial[np.ix_(rdx,rdx,rdx,rdx)]
-      np.save('pdm2_d'+str(dcut),pdm2spatial)
-       
+
       # spin-free rdms
       print(pdm1spatial.shape)
       print(pdm2spatial.shape)
@@ -72,6 +91,17 @@ for fac in [1]:
       print('Energy from pdms = %20.15f' % (np.einsum('ij,ij->', pdm1spatial, h1e)
          + 0.5 * np.einsum('ijkl,ijkl->', pdm2b, driver.unpack_g2e(g2e)) + ecore))
 
+      # G[i,j,k,l] = <ia+ ja+ ka la>
+      #              <ia+ jb+ kb la>
+      #              <ib+ jb+ kb lb>
+      pdm2aaaa = pdm2[0][np.ix_(rdx,rdx,rdx,rdx)]
+      pdm2abba = pdm2[1][np.ix_(rdx,rdx,rdx,rdx)]
+      pdm2bbbb = pdm2[2][np.ix_(rdx,rdx,rdx,rdx)]
+      np.save('pdm2aaaa_d'+str(dcut),pdm2aaaa)
+      np.save('pdm2abba_d'+str(dcut),pdm2abba)
+      np.save('pdm2bbbb_d'+str(dcut),pdm2bbbb)
+      np.save('pdm2_d'+str(dcut),pdm2spatial)
+       
    t1 = time.time()
    print('\ndt=',t1-t0)
 
