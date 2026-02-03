@@ -1,8 +1,0 @@
-dtype 0
-sorb 20
-nelec 14
-twom 2
-twos 2
-integral_file ./fmole.info
-scratch scratch
-

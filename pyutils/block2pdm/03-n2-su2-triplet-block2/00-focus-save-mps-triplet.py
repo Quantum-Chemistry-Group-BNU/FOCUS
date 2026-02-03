@@ -39,9 +39,10 @@ ctns.nroots = 1
 ctns.maxdets = 100
 ctns.thresh_proj = 1.e-14
 ctns.topology_file = 'topo'
-ctns.topo = range(n_sites)
+ctns.topo = [4,0,3,1,5,9,8,7,6,2]
+assert len(ctns.topo) == n_sites
 ctns.schedule = [(0,2,64,1.e-4,1.e-8)]
-ctns.maxsweep = 4
+ctns.maxsweep = 2
 ctns.tasks = ['task_dmrg']
 ctns.alg_hvec = 4
 ctns.alg_renorm = 4
@@ -49,7 +50,6 @@ ctns.kernel(fname='ctns.dat', output='ctns.out', iprt=0)
 
 os_system_orig = os.system
 os.system = lambda cmd: os_system_orig(cmd.replace('rdm.x ', 'prop.x '))
-ctns.savebin(isweep=1, iprt=0)
+ctns.additional = ['singlet', 'lcanon']
+ctns.savebin(isweep=1, iprt=1)
 
-# will generate tmp/scratch/rcanon_isweep1_su2.bin
-# copy it to ./rcanon_isweep1_su2.bin

@@ -18,21 +18,19 @@ from pyblock2.algebra.io import MPSTools
 #   For starting two-site dmrg in block2 using the imported mps:
 #        Use ``mps = driver.adjust_mps(mps, dot=2)[0]``.
 
-mpsfile = './scratch/rcanon_isweep11_su2.lcanon.singlet.bin'
-fcidumpfile = 'FCIDUMP'
-topofile = None #'./tmp/topo'
-spin = 0
-dmax = 1000 #100
-ifSE = True #False
+mpsfile = './tmp/scratch/rcanon_isweep1_su2.bin'
+fcidumpfile = 'N2.STO3G.FCIDUMP'
+topofile = './tmp/topo'
+spin = 2
+dmax = 64 #100
+ifEnergyExpect = False #True 
 
-topo = np.arange(36) # no need to reverse ordering in lcanon case
-#topo = []
-#f = open(topofile)
-#for line in f.readlines():
-#   topo.append(eval(line))
-#f.close()
-#topo = np.array(topo)
-#topo = np.array(topo[::-1])
+topo = []
+f = open(topofile)
+for line in f.readlines():
+   topo.append(eval(line))
+f.close()
+topo = np.array(topo[::-1])
 print('topo=',topo)
 
 driver = DMRGDriver(scratch="./tmp", symm_type=SymmetryTypes.SU2, \
@@ -43,19 +41,19 @@ driver.read_fcidump(filename=fcidumpfile, pg='nopg')
 
 ncas = driver.n_sites
 n_elec = driver.n_elec
+spin = driver.spin
 orb_sym = driver.orb_sym
 h1e = driver.h1e
 g2e = driver.g2e
 ecore = driver.ecore
+print('ncas=',ncas,'n_elec=',n_elec)
 
-driver.initialize_system(n_sites=ncas, n_elec=n_elec, spin=spin, orb_sym=orb_sym, singlet_embedding=ifSE)
+driver.initialize_system(n_sites=ncas, n_elec=n_elec, spin=spin, orb_sym=orb_sym, singlet_embedding=True)
 
 #=== import MPS from file ===
 pymps = MPSTools.from_focus_mps_file(fname=mpsfile, is_su2=True)
-left_vacuum = None if not ifSE else driver.bw.SX(spin, spin, 0)
-mps = MPSTools.to_block2(pymps, driver.basis, center=driver.n_sites - 1, left_vacuum=left_vacuum)
+mps = MPSTools.to_block2(pymps, driver.basis, center=driver.n_sites - 1)
 
-ifEnergyExpect = False
 if ifEnergyExpect:
    mpo = driver.get_qc_mpo(h1e=h1e, g2e=g2e, ecore=ecore, iprint=1, reorder=topo)
    impo = driver.get_identity_mpo()
@@ -63,16 +61,25 @@ if ifEnergyExpect:
    print('Energy from expectation = %20.15f' % expt)
 
 # pdms & expectations
-for fac in [1]:
+for fac in [1,4]:
    dcut = fac*dmax
    print('\nGenerate n-pdm with dcut=',dcut)
 
    t0 = time.time()
 
+   if ifEnergyExpect:
+      rdx = range(len(topo)) # reorder is automatically handled when building mpo
+   else:
+      rdx = np.argsort(topo)
+
    pdm1 = driver.get_1pdm(mps, max_bond_dim=dcut) #, iprint=2)
+   pdm1 = pdm1[np.ix_(rdx,rdx)]
+   print(np.sum(pdm1[0,:]),np.sum(pdm1[1,:]))
    np.save('pdm1',pdm1)
    print('|dm1-dm1.T|=',np.linalg.norm(pdm1-pdm1.T))
+
    pdm2 = driver.get_2pdm(mps, max_bond_dim=dcut) #, iprint=2)
+   pdm2 = pdm2[np.ix_(rdx,rdx,rdx,rdx)]
    np.save('pdm2',pdm2)
 
    # spin-free rdms

@@ -11,6 +11,6 @@ qkind rNS
 topology_file topo
 rcanon_file rcanon_isweep0_su2
 savebin
-#singlet
+singlet
 lcanon
 $end

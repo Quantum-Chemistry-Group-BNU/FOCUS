@@ -3,10 +3,6 @@ import numpy as np
 from pyblock2.driver.core import DMRGDriver, SymmetryTypes
 from pyblock2.algebra.io import MPSTools
 
-bond_dims = [250] * 4 + [500] * 4
-noises = [1e-4] * 4 + [1e-5] * 4 + [0]
-thrds = [1e-10] * 8
-
 # Note: to align the fermion / su2 convention and orbital ordering between focus and block2:
 #   U1:  Use SymmetryTypes.SAnySZ symmetry mode and hints=['ALT'] in ``driver.set_symmetry_groups``.
 #        Use reorder=np.arange(ncas)[::-1] in ``driver.get_qc_mpo``.
@@ -42,7 +38,8 @@ mpo = driver.get_qc_mpo(h1e=h1e, g2e=g2e, ecore=ecore, iprint=1, reorder=np.aran
 impo = driver.get_identity_mpo()
 
 # import MPS from file
-pymps = MPSTools.from_focus_mps_file(fname='rcanon_isweep1_su2.bin', is_su2=True)
+mpsfile = 'rcanon_isweep1_su2.bin'
+pymps = MPSTools.from_focus_mps_file(fname=mpsfile, is_su2=True)
 mps = MPSTools.to_block2(pymps, driver.basis, center=driver.n_sites - 1)
 
 # pdms & expectations
@@ -53,6 +50,10 @@ print('Energy from pdms = %20.15f' % (np.einsum('ij,ij->', pdm1, h1e)
 expt = driver.expectation(mps, mpo, mps) / driver.expectation(mps, impo, mps)
 print('Energy from expectation = %20.15f' % expt)
 exit(1)
+
+bond_dims = [250] * 4 + [500] * 4
+noises = [1e-4] * 4 + [1e-5] * 4 + [0]
+thrds = [1e-10] * 8
 
 # two-site dmrg from imported mps
 mps = driver.adjust_mps(mps, dot=2)[0]
