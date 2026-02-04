@@ -6,17 +6,20 @@ from pyblock2.algebra.io import MPSTools
 #dmax = 500
 #mpsfile = './rcanon_dcompress'+str(dmax)+'.bin'
 #fcidumpfile = './FCIDUMP'
+#spin = 0
 #
 #norb = 36
 #topo = range(norb)
 #topo = np.array(topo[::-1]) # need to reverse in rcanon case
 #print('topo=',topo)
 
-mpsfile = '../scratch2/rcanon_dcompress100.bin'
 dmax = 100
+mpsfile = './rcanon_dcompress'+str(dmax)+'.bin'
 fcidumpfile = './fmole.info.FCIDUMP'
-topofile = '../topology/topoA'
+spin = 3
+topofile = './topoA'
 ifEnergyExpect = False #True 
+ifpdm2 = True #False
 
 topo = []
 f = open(topofile)
@@ -41,6 +44,7 @@ orb_sym = driver.orb_sym
 h1e = driver.h1e
 g2e = driver.g2e
 ecore = driver.ecore
+print('ncas=',ncas,'n_elec=',n_elec)
 
 driver.initialize_system(n_sites=ncas, n_elec=n_elec, spin=spin, orb_sym=orb_sym, singlet_embedding=False)
 
@@ -75,16 +79,15 @@ for fac in [1]:
    np.save('pdm1aa_d'+str(dcut),pdm1aa)
    np.save('pdm1bb_d'+str(dcut),pdm1bb)
    np.save('pdm1_d'+str(dcut),pdm1spatial)
-   # check 
+   # check
    print('|dm1-dm1.T|=',np.linalg.norm(pdm1spatial-pdm1spatial.T))
    print('tr(dm1)=',np.trace(pdm1spatial))
    print('diag(dm1)=',np.diag(pdm1spatial))
 
-   ifpdm2 = True #False
    if ifpdm2:
       pdm2 = driver.get_2pdm(mps, max_bond_dim=dcut)
       pdm2spatial = pdm2[0]+pdm2[1]+pdm2[1].transpose(1,0,3,2)+pdm2[2]
-      # save 
+      # save
       pdm2spatial = pdm2spatial[np.ix_(rdx,rdx,rdx,rdx)]
       # G[i,j,k,l] = <ia+ ja+ ka la>
       #              <ia+ jb+ kb la>
@@ -97,12 +100,8 @@ for fac in [1]:
       np.save('pdm2bbbb_d'+str(dcut),pdm2bbbb)
       np.save('pdm2_d'+str(dcut),pdm2spatial)
       # check
-      # spin-free rdms
-      print(pdm1spatial.shape)
-      print(pdm2spatial.shape)
       pdm1tmp = np.einsum('ijjk->ik',pdm2spatial)/(n_elec-1)
       print('diff=',np.linalg.norm(pdm1tmp-pdm1spatial))
-      # check energy
       pdm2b = pdm2spatial.transpose(0, 3, 1, 2)
       print('Energy from pdms = %20.15f' % (np.einsum('ij,ij->', pdm1spatial, h1e)
          + 0.5 * np.einsum('ijkl,ijkl->', pdm2b, driver.unpack_g2e(g2e)) + ecore))
