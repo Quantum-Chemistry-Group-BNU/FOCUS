@@ -43,7 +43,9 @@ When using FOCUS for research projects, please cite
 @article{li2025entanglement,
   title={Entanglement-minimized orbitals enable faster quantum simulation of molecules},
   author={Li, Zhendong},
-  journal={arXiv preprint arXiv:2506.13386},
+  journal={Physical Review Letters},
+  volume={135},
+  pages={210601},
   year={2025}
 }
 ```
