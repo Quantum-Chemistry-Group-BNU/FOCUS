@@ -1,7 +1,7 @@
 
 To use these functions, add path to PYTHONPATH:
 
-   export PYTHONPATH="/Users/zhendongli/Desktop/FOCUS/pyutils:${PYTHONPATH}"
+   export PYTHONPATH="/Users/zhendongli/Desktop/FOCUS/pyfocus:${PYTHONPATH}"
 
 Example for input for prop.x
 
