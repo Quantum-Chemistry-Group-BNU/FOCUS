@@ -13,9 +13,11 @@ FOCUS is developed to explore the complexity of electronic structure problems.
 
 2. DMRG for non-spin-adapted and spin-adapted DMRG with nonrelativistic Hamiltonian (MPI/OpenMP and MPI/GPU parallelization)
 
-3. CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians (CPU version)
+3. Entanglement-minimized orbitals (EMOs)
 
-4. Clifford-augumented DMRG (working)
+4. CTNS algorithms for both nonrelativistic and relativistic Hamiltonians (CPU version only)
+
+5. Clifford-augumented DMRG (working)
 
 ## Requirement and Installation
 
