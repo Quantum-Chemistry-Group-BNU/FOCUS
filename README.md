@@ -6,8 +6,16 @@ FOCUS (FermiOniC qUantum Simulation)
 -----------------------------------------------
 
 FOCUS is developed to explore the complexity of electronic structure problems. 
-It supports FCI/SCI and CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians. 
-Currently, it supports both MPI/OpenMP and MPI/GPU parallelizations for non-spin-adapted and spin-adapted DMRG with nonrelativistic Hamiltonian.
+
+## Avaiable methods
+
+1. FCI/SCI 
+
+2. DMRG for non-spin-adapted and spin-adapted DMRG with nonrelativistic Hamiltonian (MPI/OpenMP and MPI/GPU parallelization)
+
+3. CTNS/DMRG algorithms for both nonrelativistic and relativistic Hamiltonians (CPU version)
+
+4. Clifford-augumented DMRG (working)
 
 ## Requirement and Installation
 
