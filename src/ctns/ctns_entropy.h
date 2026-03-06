@@ -166,7 +166,7 @@ namespace ctns{
          auto svalues = get_schmidt_values(icomb, iroot, singlet, debug);
 
          // compute the entropy
-         std::cout << "von Neumann / Renyi[0.5] entropies across all bonds:" << std::endl;
+         std::cout << "von Neumann / Renyi[0.5] / Renyi[2.0] entropies across all bonds:" << std::endl;
          double s_sum = 0.0, sh_sum = 0.0, s2_sum = 0.0;
          double s_max = -1.0, sh_max = -1.0, s2_max = -1.0;
          for(int i=0; i<svalues.size(); i++){
