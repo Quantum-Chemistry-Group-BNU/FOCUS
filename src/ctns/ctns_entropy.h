@@ -188,10 +188,12 @@ namespace ctns{
          }
          std::cout << "SvN[sum]=" << s_sum 
             << " Sr[sum]=" << sh_sum 
-            << " S2[sum]=" << std::endl;
+            << " S2[sum]=" << s2_sum
+            << std::endl;
          std::cout << "SvN[max]=" << s_max
             << " Sr[max]=" << sh_max 
-            << " S2[max]=" << std::endl; 
+            << " S2[max]=" << s2_max
+            << std::endl; 
 
          // save into file
          if(save_schmidt){
