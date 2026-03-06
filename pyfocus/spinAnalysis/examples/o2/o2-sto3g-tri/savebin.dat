@@ -1,0 +1,15 @@
+dtype 0
+sorb 20
+nelec 16
+twom 0
+twos 0
+integral_file mole.info
+scratch ./scratch
+
+$ctns
+qkind rNS
+rcanon_file rcanon_isweep1_su2
+savebin
+singlet
+lcanon
+$end
