@@ -1,1 +1,4 @@
-sphinx-markdown-tables==0.0.15
+sphinx-markdown-tables
+sphinx-rtd-theme
+recommonmark
+sphinx
