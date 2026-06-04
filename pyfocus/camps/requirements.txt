@@ -1,0 +1,21 @@
+# Core CAMPS runtime
+numpy
+scipy
+torch
+h5py
+opt-einsum
+loguru
+renormalizer
+openfermion
+numba
+optree
+typing-extensions
+
+# Utilities and example workflows
+quimb
+pyscf
+
+# Optional developer/diagnostic dependencies used by selected helper functions
+# stim
+# matplotlib
+# line-profiler

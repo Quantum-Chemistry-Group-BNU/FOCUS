@@ -41,11 +41,14 @@ pyfocus/camps/
 
 ## Installation And Imports
 
-Install FOCUS from the repository root, preferably in the Python environment used for PySCF, OpenFermion, Renormalizer, PyTorch, NumPy, SciPy, opt_einsum, and loguru.
+Install the CAMPS requirements and FOCUS from the repository root:
 
 ```bash
+python -m pip install -r pyfocus/camps/requirements.txt
 python -m pip install -e .
 ```
+
+If your Python environment already provides GPU-enabled PyTorch, install or verify that environment first, then install the remaining CAMPS requirements.
 
 Use the package through the `pyfocus.camps` namespace:
 

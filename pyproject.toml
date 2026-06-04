@@ -17,4 +17,4 @@ include = ["pyfocus.camps*"]
 namespaces = true
 
 [tool.setuptools.package-data]
-"pyfocus.camps" = ["file/*.npz"]
+"pyfocus.camps" = ["file/*.npz", "requirements.txt"]
