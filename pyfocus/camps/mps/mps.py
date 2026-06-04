@@ -10,11 +10,22 @@ from camps.utils.config import dtype_config
 
 from renormalizer import Model, Mps, Mpo
 from renormalizer.model import Op, OpSum
-from renormalizer.model.basis import BasisHalfSpin, BasisSet, BasisTwoHalfSpin
+from renormalizer.model.basis import BasisHalfSpin, BasisSet
+
+try:
+    from renormalizer.model.basis import BasisTwoHalfSpin
+except ImportError:
+    BasisTwoHalfSpin = None
 
 ######################################### basis ############################################
 def set_basis(nsites, use_orb):
     if use_orb:
+        if BasisTwoHalfSpin is None:
+            raise ImportError(
+                "The installed renormalizer package does not provide "
+                "BasisTwoHalfSpin; use_orb=True is not supported in this "
+                "environment."
+            )
         return [BasisTwoHalfSpin(i) for i in range(nsites)]
     else:
         return [BasisHalfSpin(i) for i in range(nsites)]

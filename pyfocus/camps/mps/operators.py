@@ -1,6 +1,10 @@
 import numpy as np
 from numpy.typing import NDArray
-from renormalizer.model.basis import BasisHalfSpin, BasisTwoHalfSpin
+from renormalizer.model.basis import BasisHalfSpin
+try:
+    from renormalizer.model.basis import BasisTwoHalfSpin
+except ImportError:
+    BasisTwoHalfSpin = None
 # from renormalizer.model.model import Model
 # from renormalizer.mps.mpo import Mpo
 from renormalizer.mps.mps import Mps
@@ -16,7 +20,22 @@ from openfermion.utils import up_then_down
 from openfermion import QubitOperator
 from camps.utils.typing import PauliArray, Sites, Hamiltonian
 from camps.mps.mpo import construct_mpo_pauli
-from pyscf_helper.operator import operators as operators_pyhp
+try:
+    from pyscf_helper.operator import operators as operators_pyhp
+except ImportError:
+    operators_pyhp = None
+
+
+def _number_ops_from_pyscf_helper(sorb: int, nelec: tuple):
+    if operators_pyhp is None:
+        raise ImportError(
+            "pyscf_helper is required when penalty_nanb is enabled. "
+            "Install pyscf_helper or pass penalty_nanb=None."
+        )
+    na, nb = nelec
+    opss = operators_pyhp(sorb, False)
+    ops_a, ops_b = opss["Na"], opss["Nb"]
+    return na, nb, ops_a, ops_b
 
 def get_fermion_ham(h1s, h2s, ecore):
     h2s = h2s.transpose(0, 1, 3, 2)  # <pq||rs> -> <pq||sr>
@@ -118,9 +137,7 @@ def integral2pauli_JW(
     fermion_H = get_fermion_ham(h1e, h2e, ecore)
     sorb = h1e.shape[0]
     if penalty_nanb is not None:
-        na, nb = nelec
-        opss= operators_pyhp(sorb, False)
-        ops_a, ops_b = opss['Na'], opss['Nb']
+        na, nb, ops_a, ops_b = _number_ops_from_pyscf_helper(sorb, nelec)
         Na_op = get_fermion_ham(ops_a[0], ops_a[1], 0.0)
         Nb_op = get_fermion_ham(ops_b[0], ops_b[1], 0.0)
         op_pn = ((Na_op-na)+(Nb_op-nb))**2
@@ -141,9 +158,7 @@ def integral2pauli_parity_abab(
     fermion_H = get_fermion_ham(h1e, h2e, ecore)
     sorb = h1e.shape[0]
     if penalty_nanb is not None:
-        na, nb = nelec
-        opss= operators_pyhp(sorb, False)
-        ops_a, ops_b = opss['Na'], opss['Nb']
+        na, nb, ops_a, ops_b = _number_ops_from_pyscf_helper(sorb, nelec)
         Na_op = get_fermion_ham(ops_a[0], ops_a[1], 0.0)
         Nb_op = get_fermion_ham(ops_b[0], ops_b[1], 0.0)
         op_pn = ((Na_op-na)+(Nb_op-nb))**2
@@ -163,9 +178,7 @@ def integral2pauli_parity_aabb(
     fermion_H = get_fermion_ham(h1e, h2e, ecore)
     sorb = h1e.shape[0]
     if penalty_nanb is not None:
-        na, nb = nelec
-        opss= operators_pyhp(sorb, False)
-        ops_a, ops_b = opss['Na'], opss['Nb']
+        na, nb, ops_a, ops_b = _number_ops_from_pyscf_helper(sorb, nelec)
         Na_op = get_fermion_ham(ops_a[0], ops_a[1], 0.0)
         Nb_op = get_fermion_ham(ops_b[0], ops_b[1], 0.0)
         op_pn = ((Na_op-na)+(Nb_op-nb))**2
@@ -195,9 +208,7 @@ def integral2pauli_BK(
     fermion_H = get_fermion_ham(h1e, h2e, ecore)
     sorb = h1e.shape[0]
     if penalty_nanb is not None:
-        na, nb = nelec
-        opss= operators_pyhp(sorb, False)
-        ops_a, ops_b = opss['Na'], opss['Nb']
+        na, nb, ops_a, ops_b = _number_ops_from_pyscf_helper(sorb, nelec)
         Na_op = get_fermion_ham(ops_a[0], ops_a[1], 0.0)
         Nb_op = get_fermion_ham(ops_b[0], ops_b[1], 0.0)
         op_pn = ((Na_op-na)+(Nb_op-nb))**2
@@ -220,6 +231,12 @@ def ops_expectation(
     """
 
     if use_orb:
+        if BasisTwoHalfSpin is None:
+            raise ImportError(
+                "The installed renormalizer package does not provide "
+                "BasisTwoHalfSpin; use_orb=True is not supported in this "
+                "environment."
+            )
         # sigmaqn = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
         # # [0, b, a, ab]
         basis = [BasisTwoHalfSpin(i) for i in range(sorb // 2)]

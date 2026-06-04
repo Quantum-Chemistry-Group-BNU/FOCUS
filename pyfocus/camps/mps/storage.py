@@ -68,11 +68,14 @@ class MPSStorage:
             self.h5_file = h5py.File(self.file_path, 'r')
 
     def __del__(self):
-        if hasattr(self, 'h5_file') and self.h5_file:
-            self.h5_file.close()
-        mode = "write" if self._is_writer else "read"
-        sys.stdout.write(f"Close HDF5 file {self.file_path} ({mode} mode)" + "\n")
-        sys.stdout.flush()
+        try:
+            if getattr(self, 'h5_file', None) is not None:
+                self.h5_file.close()
+            mode = "write" if self._is_writer else "read"
+            sys.stdout.write(f"Close HDF5 file {self.file_path} ({mode} mode)" + "\n")
+            sys.stdout.flush()
+        except Exception:
+            pass
 
     def _get_h5_dataset_path(self, siteidx: int) -> str:
         return f"mps/{siteidx}"
@@ -464,16 +467,19 @@ class MPOStorage:
             self.store_mpo_list(mpo_list)
 
     def __del__(self):
-        if self.storage_backend == "h5py":
-            if hasattr(self, 'h5_file') and self.h5_file:
-                self.h5_file.close()
-            if hasattr(self, '_temp_file') and os.path.exists(self._temp_file.name):
-                try:
-                    os.unlink(self._temp_file.name)
-                except:
-                    pass
-            sys.stdout.write(f"del temprary HDF5 file {self._temp_file.name}" + "\n")
-            sys.stdout.flush()
+        try:
+            if self.storage_backend == "h5py":
+                if getattr(self, 'h5_file', None) is not None:
+                    self.h5_file.close()
+                if hasattr(self, '_temp_file') and os.path.exists(self._temp_file.name):
+                    try:
+                        os.unlink(self._temp_file.name)
+                    except:
+                        pass
+                sys.stdout.write(f"del temprary HDF5 file {self._temp_file.name}" + "\n")
+                sys.stdout.flush()
+        except Exception:
+            pass
 
     def _get_h5_dataset_path(self, siteidx: int) -> str:
         return f"mpo/{siteidx}"
