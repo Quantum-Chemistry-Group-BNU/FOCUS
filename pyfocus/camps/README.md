@@ -23,6 +23,8 @@ pyfocus/camps/
     DMRG.py              # current CAMPS/DMRG driver
     simple_DMRG.py       # simpler reference driver
     pdvdson.py           # Davidson solver utilities
+  examples/
+    h_chain_sto3g_tets.py
   mps/
     mps.py               # MPS initialization helpers
     mpo.py               # Pauli Hamiltonian to MPO construction
@@ -54,6 +56,28 @@ from pyfocus.camps.utils.typing import Clifford, Hamiltonian
 ```
 
 The historical top-level `camps` import path is not the preferred public entry point.
+
+## Examples
+
+Runnable examples are collected in `pyfocus/camps/examples/`.
+
+| File | Description |
+| --- | --- |
+| `h_chain_sto3g_tets.py` | Linear H-chain STO-3G CAMPS smoke test converted from the old notebook. It keeps parameters explicit at the top of the script and defaults to a small H4 calculation. |
+
+Run the H-chain smoke test from the repository root:
+
+```bash
+python -m pyfocus.camps.examples.h_chain_sto3g_tets
+```
+
+Direct script execution is also supported:
+
+```bash
+python pyfocus/camps/examples/h_chain_sto3g_tets.py
+```
+
+The H-chain example uses `SAVE_MODE = "save"` by default so that MPS/MPO intermediates are stored through the HDF5-backed CAMPS storage classes. Switch it to `"normal"` in the script for small in-memory tests.
 
 ## Basic Calling Pattern
 
