@@ -4,13 +4,13 @@ import random
 
 from numpy.typing import NDArray
 
-from camps.utils.pauli_alg import (
+from pyfocus.camps.utils.pauli_alg import (
     pauli_to_matrix,
     pauli_to_vector,
     pauli_transform,
     vector_to_pauli,
 )
-from camps.utils.typing import Clifford, RandomClifford
+from pyfocus.camps.utils.typing import Clifford, RandomClifford
 
 
 def check_operator_endian(

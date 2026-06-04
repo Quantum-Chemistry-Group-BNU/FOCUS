@@ -2,7 +2,7 @@ import quimb
 import quimb.tensor as qtn
 import torch
 import numpy as np
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.config import dtype_config
 
 def to_backend(x):
     import torch

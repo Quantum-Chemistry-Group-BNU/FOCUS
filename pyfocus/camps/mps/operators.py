@@ -18,8 +18,8 @@ from openfermion.transforms import (get_fermion_operator,
                                     reorder)
 from openfermion.utils import up_then_down
 from openfermion import QubitOperator
-from camps.utils.typing import PauliArray, Sites, Hamiltonian
-from camps.mps.mpo import construct_mpo_pauli
+from pyfocus.camps.utils.typing import PauliArray, Sites, Hamiltonian
+from pyfocus.camps.mps.mpo import construct_mpo_pauli
 try:
     from pyscf_helper.operator import operators as operators_pyhp
 except ImportError:

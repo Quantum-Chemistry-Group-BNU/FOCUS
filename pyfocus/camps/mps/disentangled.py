@@ -14,23 +14,23 @@ from loguru import logger
 from numpy.typing import NDArray
 from torch import Tensor
 
-from camps.mps.mps_simple import sumOfReyniEntropyFromSites, RenyiEntropy, overlap
-from camps.mps.storage import MPSStorage, MPOStorage
-from camps.utils.pauli_alg import (
+from pyfocus.camps.mps.mps_simple import sumOfReyniEntropyFromSites, RenyiEntropy, overlap
+from pyfocus.camps.mps.storage import MPSStorage, MPOStorage
+from pyfocus.camps.utils.pauli_alg import (
     mapping_inverse,
     pauli_transform,
     pauli_to_vector,
     vector_to_pauli,
 )
-from camps.utils.typing import Sites, PauliArray, RandomClifford, Clifford, Endianness
-from camps.utils.clifford import random_clifford
-from camps.utils.config import dtype_config, batch_svd_config
-from camps.linalg import backend_svd
+from pyfocus.camps.utils.typing import Sites, PauliArray, RandomClifford, Clifford, Endianness
+from pyfocus.camps.utils.clifford import random_clifford
+from pyfocus.camps.utils.config import dtype_config, batch_svd_config
+from pyfocus.camps.linalg import backend_svd
 
 ContractPath = Literal["badc", "abcd"]
 ENDIAN_CONTACT_MAP: dict[Endianness, ContractPath] = {"big": "abcd", "little": "badc"}
 
-# from camps.linalg.svd import optimized_svd
+# from pyfocus.camps.linalg.svd import optimized_svd
 
 
 def s2forPsi4_clifford(

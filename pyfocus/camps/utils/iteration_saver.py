@@ -8,8 +8,8 @@ from pathlib import Path
 from datetime import datetime
 from loguru import logger
 
-from camps.utils.typing import SaveInfo
-from camps.utils.tools import random_str
+from pyfocus.camps.utils.typing import SaveInfo
+from pyfocus.camps.utils.tools import random_str
 
 
 class LoggerInfo(TypedDict):

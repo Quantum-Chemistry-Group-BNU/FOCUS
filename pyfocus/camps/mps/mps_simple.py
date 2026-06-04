@@ -8,9 +8,9 @@ from opt_einsum import contract
 #from numpy.typing import NDArray
 from torch.types import Tensor
 
-from camps.utils.typing import Sites
-# from camps.linalg.svd import optimized_svd   # todo: change the driver to the torch version.
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.typing import Sites
+# from pyfocus.camps.linalg.svd import optimized_svd   # todo: change the driver to the torch version.
+from pyfocus.camps.utils.config import dtype_config
 
 print = partial(print, flush=True)
 

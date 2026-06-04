@@ -3,7 +3,7 @@ import time
 # import scipy.linalg
 import torch
 from functools import reduce
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.config import dtype_config
 
 
 #

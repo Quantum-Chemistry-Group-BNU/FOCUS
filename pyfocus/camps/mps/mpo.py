@@ -7,7 +7,7 @@ from renormalizer.model.model import Model
 from renormalizer.model.op import Op, OpSum
 
 from renormalizer.mps.mpo import Mpo
-from camps.utils.typing import Hamiltonian
+from pyfocus.camps.utils.typing import Hamiltonian
 
 
 # copy from renormalizer

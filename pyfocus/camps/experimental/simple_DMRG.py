@@ -10,14 +10,14 @@ from torch import Tensor
 from functools import partial
 from opt_einsum import contract, contract_expression
 
-from camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
-from camps.mps.mpo import construct_mpo_pauli
-from camps.mps.mps import random_state
-from camps.experimental.pdvdson_sg import mask, eigenSolver
-from camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
-from camps.utils.config import dtype_config
-from camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
-from camps.utils.environ import Environ, env_L_i
+from pyfocus.camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
+from pyfocus.camps.mps.mpo import construct_mpo_pauli
+from pyfocus.camps.mps.mps import random_state
+from pyfocus.camps.experimental.pdvdson_sg import mask, eigenSolver
+from pyfocus.camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
+from pyfocus.camps.utils.config import dtype_config
+from pyfocus.camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
+from pyfocus.camps.utils.environ import Environ, env_L_i
 from loguru import logger
 import time
 

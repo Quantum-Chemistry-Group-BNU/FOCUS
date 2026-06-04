@@ -6,7 +6,7 @@ from numpy import ndarray
 
 from functools import reduce
 
-from camps.utils.typing import PauliArray
+from pyfocus.camps.utils.typing import PauliArray
 
 PAULI_LOOKUP = np.array([b"I", b"Z", b"X", b"Y"], dtype="S1")
 

@@ -8,10 +8,10 @@ from renormalizer.mps.gs import optimize_mps
 from renormalizer.mps.mpo import Mpo
 from renormalizer.mps.mps import Mps
 
-from camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
-from camps.mps.mpo import construct_mpo_pauli
-from camps.mps.operators import ops_expectation
-from camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
+from pyfocus.camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
+from pyfocus.camps.mps.mpo import construct_mpo_pauli
+from pyfocus.camps.mps.operators import ops_expectation
+from pyfocus.camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
 
 def optimize_mps_disentangle(
     hams_lst: list[Hamiltonian] | Hamiltonian,

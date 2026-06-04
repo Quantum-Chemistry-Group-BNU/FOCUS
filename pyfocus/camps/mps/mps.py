@@ -5,8 +5,8 @@ import h5py
 from pathlib import Path
 
 import torch
-# from camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
-from camps.utils.config import dtype_config
+# from pyfocus.camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
+from pyfocus.camps.utils.config import dtype_config
 
 from renormalizer import Model, Mps, Mpo
 from renormalizer.model import Op, OpSum

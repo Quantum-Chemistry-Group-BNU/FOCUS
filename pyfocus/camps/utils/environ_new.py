@@ -16,7 +16,7 @@ import h5py
 import numpy as np
 import torch
 
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.config import dtype_config
 
 STORAGE_BACKEND = "h5py"
 

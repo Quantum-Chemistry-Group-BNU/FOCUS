@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 import torch
 from opt_einsum import contract
 # from torch import Tensor
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.config import dtype_config
 
 def RenyiEntropy(pop: NDArray, alpha: float) -> NDArray:
     if alpha == -1:

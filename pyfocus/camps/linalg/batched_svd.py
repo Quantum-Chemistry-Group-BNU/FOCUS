@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from torch import Tensor
 from loguru import logger
 
-from camps.utils.config import DtypeConfig, batch_svd_config
+from pyfocus.camps.utils.config import DtypeConfig, batch_svd_config
 
 
 def split_batch_idx(dim: int, min_batch: int) -> list[int]:

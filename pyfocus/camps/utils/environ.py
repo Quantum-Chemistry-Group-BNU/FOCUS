@@ -12,7 +12,7 @@ import opt_einsum
 from functools import lru_cache
 from typing import Tuple, List, Dict, Optional, Union
 from torch import Tensor
-from camps.utils.config import dtype_config
+from pyfocus.camps.utils.config import dtype_config
 from opt_einsum import contract
 from loguru import logger
 

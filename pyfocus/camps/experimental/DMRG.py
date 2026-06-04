@@ -8,17 +8,17 @@ from typing import Tuple, List, Union
 from torch import Tensor
 from functools import partial
 from opt_einsum import contract #, contract_expression, contract_path
-from camps.experimental.batched_einsum import TorchCachedBatchedEinsum
-from camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
-from camps.mps.mpo import construct_mpo_pauli
-from camps.mps.mps import random_state
-from camps.mps.storage import MPSStorage, MPOStorage
-from camps.experimental.pdvdson import eigenSolver, mask
-from camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
-from camps.utils.config import dtype_config
-from camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
-from camps.utils.environ import Environ, env_L_i
-from camps.utils.memorytrack import MemoryTrack, calculate_tensor_memory
+from pyfocus.camps.experimental.batched_einsum import TorchCachedBatchedEinsum
+from pyfocus.camps.mps.disentangled import minimize_entropy_multiSweep, update_ham_multiSweep
+from pyfocus.camps.mps.mpo import construct_mpo_pauli
+from pyfocus.camps.mps.mps import random_state
+from pyfocus.camps.mps.storage import MPSStorage, MPOStorage
+from pyfocus.camps.experimental.pdvdson import eigenSolver, mask
+from pyfocus.camps.mps.mps_simple import leftCanonicalization, rightCanonicalization
+from pyfocus.camps.utils.config import dtype_config
+from pyfocus.camps.utils.typing import Clifford, SaveInfo, Sites, Hamiltonian
+from pyfocus.camps.utils.environ import Environ, env_L_i
+from pyfocus.camps.utils.memorytrack import MemoryTrack, calculate_tensor_memory
 from loguru import logger
 import time
 
