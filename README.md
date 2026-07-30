@@ -27,7 +27,7 @@ See the [FOCUS documentation](https://quantum-chemistry-group-bnu.github.io/FOCU
 
 ## How to cite
 
-When using FOCUS for research projects, please cite
+When using FOCUS for research projects, please cite the relevant references.
 
 ```bash
 @article{li2021expressibility,
