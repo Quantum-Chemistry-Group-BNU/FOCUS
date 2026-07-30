@@ -9,7 +9,7 @@ FOCUS is developed to explore the complexity of electronic structure problems.
 
 ## Avaiable methods
 
-1. FCI/SCI 
+1. FCI/SCI (mainly for debugging and preparation of initial guess for DMRG) 
 
 2. DMRG for non-spin-adapted and spin-adapted DMRG with nonrelativistic Hamiltonian (MPI/OpenMP and MPI/GPU parallelization)
 
@@ -17,11 +17,13 @@ FOCUS is developed to explore the complexity of electronic structure problems.
 
 4. CTNS algorithms for both nonrelativistic and relativistic Hamiltonians (CPU version only)
 
-5. Clifford-augumented DMRG (working)
+5. Clifford-augumented and Matchgate-Clifford-augumented MPS (CA-MPS and MCA-MPS)
+
+6. MPS to Quantum Circuits (working)
 
 ## Requirement and Installation
 
-See documentation.
+See the [FOCUS documentation](https://quantum-chemistry-group-bnu.github.io/FOCUS/).
 
 ## How to cite
 
@@ -57,6 +59,24 @@ When using FOCUS for research projects, please cite
   volume={135},
   pages={210601},
   year={2025}
+}
+
+@article{huang2026augmenting,
+  title={Augmenting density matrix renormalization group with matchgates and Clifford circuits},
+  author={Huang, Jiale and Qian, Xiangjian and Li, Zhendong and Qin, Mingpu},
+  journal={Chinese Physics Letters},
+  volume={43},
+  number={4},
+  pages={040708},
+  year={2026},
+  publisher={Chinese Physical Society and IOP Publishing Ltd}
+}
+
+@article{chang2026clifford,
+  title={Clifford disentanglers for entanglement reduction in molecular electronic structure simulations},
+  author={Chang, Longfei and Wu, Zibo and Li, Yunzhi and Liu, Haiqi and Ren, Jiajun and Qin, Mingpu and Li, Zhendong and Fang, Wei-Hai},
+  journal={arXiv preprint arXiv:2606.12056},
+  year={2026}
 }
 ```
 
