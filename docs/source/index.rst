@@ -29,6 +29,7 @@ and spin-adapted DMRG with nonrelativistic Hamiltonian.
    tutorials/ctns
    tutorials/sadmrg
    tutorials/prop
+   tutorials/pyfocus
 
 .. toctree::
    :maxdepth: 1

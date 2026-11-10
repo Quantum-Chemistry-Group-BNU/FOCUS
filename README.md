@@ -19,7 +19,7 @@ FOCUS is developed to explore the complexity of electronic structure problems.
 
 5. Clifford-augumented and Matchgate-Clifford-augumented MPS (CA-MPS and MCA-MPS)
 
-6. MPS to Quantum Circuits (working)
+6. MPS to Quantum Circuits (MPD, MPD+EV, MPD+Full, DCD, and DCE)
 
 ## Requirement and Installation
 
@@ -76,6 +76,13 @@ When using FOCUS for research projects, please cite the relevant references.
   title={Clifford disentanglers for entanglement reduction in molecular electronic structure simulations},
   author={Chang, Longfei and Wu, Zibo and Li, Yunzhi and Liu, Haiqi and Ren, Jiajun and Qin, Mingpu and Li, Zhendong and Fang, Wei-Hai},
   journal={arXiv preprint arXiv:2606.12056},
+  year={2026}
+}
+
+@article{liu2026initial,
+  title={Initial-State Preparation for Strongly Correlated Molecules from Matrix Product States: Benchmarking and Environment-Aware Divide-and-Conquer Compilation},
+  author={Liu, Haiqi and Chang, Longfei and Li, Zhendong and Fang, Wei-Hai},
+  journal={arXiv preprint arXiv:2610.33834},
   year={2026}
 }
 ```
